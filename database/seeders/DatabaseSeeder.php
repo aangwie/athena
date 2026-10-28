@@ -2,14 +2,17 @@
 
 namespace Database\Seeders;
 
+use App\Models\Instansi;
 use App\Models\JabatanFungsional;
 use App\Models\JabatanStruktural;
 use App\Models\Kepangkatan;
 use App\Models\PengajuanJabatan;
 use App\Models\ProfilDosen;
 use App\Models\RiwayatPendidikan;
+use App\Models\StrukturInstansi;
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -195,6 +198,92 @@ class DatabaseSeeder extends Seeder
 
             $this->seedPendidikan($user, $profilData[$user->nidn]['pendidikan']);
         }
+
+        $this->seedInstansi($dosen);
+    }
+
+    /**
+     * Seed profil instansi dan struktur pejabat demonstrasi.
+     *
+     * @param  Collection<int, User>  $dosenUsers
+     */
+    private function seedInstansi($dosenUsers): void
+    {
+        $instansi = Instansi::query()->firstOrNew([]);
+
+        if (! $instansi->exists) {
+            $instansi->fill([
+                'nama_instansi' => 'Universitas Athena Nusantara',
+                'nomor_sk_operasional' => 'SK-MENDIKBUD/001/ATHENA/2026',
+                'alamat' => 'Jl. Pendidikan No. 1, Bandung, Jawa Barat 40123',
+                'no_telp' => '(022) 1234567',
+                'website' => 'https://athena.ac.id',
+            ]);
+        }
+
+        if (! $instansi->logo_path || ! Storage::disk('public')->exists($instansi->logo_path)) {
+            $instansi->logo_path = $this->simpanLogoContoh();
+        }
+
+        $instansi->save();
+
+        $susunan = [
+            'Rektor' => 0,
+            'Wakil Rektor' => 1,
+            'Dekan' => 2,
+            'Ketua Program Studi' => 1,
+        ];
+
+        foreach ($susunan as $namaJabatan => $index) {
+            $jabatan = JabatanStruktural::query()->where('nama', $namaJabatan)->first();
+            $pejabat = $dosenUsers->values()->get($index);
+
+            if (! $jabatan || ! $pejabat) {
+                continue;
+            }
+
+            StrukturInstansi::query()->updateOrCreate([
+                'jabatan_struktural_id' => $jabatan->id,
+                'user_id' => $pejabat->id,
+            ]);
+        }
+    }
+
+    /**
+     * Buat logo instansi contoh (PNG) untuk data demonstrasi.
+     */
+    private function simpanLogoContoh(): string
+    {
+        $size = 480;
+        $image = imagecreatetruecolor($size, $size);
+
+        $teal = imagecolorallocate($image, 15, 118, 110);
+        $dark = imagecolorallocate($image, 13, 92, 86);
+        $white = imagecolorallocate($image, 255, 255, 255);
+
+        imagefill($image, 0, 0, $teal);
+        imagefilledellipse($image, intdiv($size, 2), intdiv($size, 2), 400, 400, $dark);
+
+        imagesetthickness($image, 34);
+        imageline($image, 240, 105, 145, 350, $white);
+        imageline($image, 240, 105, 335, 350, $white);
+        imageline($image, 188, 280, 292, 280, $white);
+
+        $teks = 'ATHENA';
+        $lebarTeks = imagefontwidth(5) * strlen($teks);
+        imagestring($image, 5, intdiv($size - $lebarTeks, 2), 398, $teks, $white);
+
+        ob_start();
+        imagepng($image);
+        $biner = (string) ob_get_clean();
+        imagedestroy($image);
+
+        $nama = sprintf('logo_instansi_%s.png', Str::random(16));
+        $path = 'instansi/logo/'.$nama;
+
+        Storage::disk('public')->put($path, $biner);
+
+        return $path;
     }
 
     /**

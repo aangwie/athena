@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Instansi\InstansiController;
+use App\Http\Controllers\Instansi\StrukturInstansiController;
 use App\Http\Controllers\Kepegawaian\JabatanFungsionalController;
 use App\Http\Controllers\Kepegawaian\JabatanStrukturalController;
 use App\Http\Controllers\Kepegawaian\KepangkatanController;
@@ -53,5 +55,17 @@ Route::middleware('auth')->group(function () {
         Route::resource('kepangkatan', KepangkatanController::class)
             ->except('show')
             ->parameters(['kepangkatan' => 'id']);
+    });
+
+    Route::middleware('admin')->prefix('instansi')->name('instansi.')->group(function () {
+        Route::get('/', [InstansiController::class, 'edit'])->name('profil.edit');
+        Route::put('/', [InstansiController::class, 'update'])->name('profil.update');
+
+        Route::get('/struktur', [StrukturInstansiController::class, 'index'])->name('struktur.index');
+        Route::get('/struktur/create', [StrukturInstansiController::class, 'create'])->name('struktur.create');
+        Route::post('/struktur', [StrukturInstansiController::class, 'store'])->name('struktur.store');
+        Route::get('/struktur/{struktur}/edit', [StrukturInstansiController::class, 'edit'])->name('struktur.edit');
+        Route::put('/struktur/{struktur}', [StrukturInstansiController::class, 'update'])->name('struktur.update');
+        Route::delete('/struktur/{struktur}', [StrukturInstansiController::class, 'destroy'])->name('struktur.destroy');
     });
 });

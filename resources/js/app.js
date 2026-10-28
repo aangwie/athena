@@ -317,6 +317,54 @@ const boot = () => {
         });
     });
 
+    document.querySelectorAll('[data-image-input]').forEach((input) => {
+        const field = input.closest('[data-image-field]');
+        const errorBox = field?.querySelector('[data-image-error]');
+        const preview = field?.querySelector('[data-image-preview]');
+        const placeholder = field?.querySelector('[data-image-placeholder]');
+        const maxKb = Number(input.dataset.maxKb ?? 500);
+
+        const setImageError = (message) => {
+            if (errorBox) {
+                errorBox.textContent = message;
+                errorBox.classList.toggle('hidden', message === '');
+            }
+
+            input.setCustomValidity(message);
+        };
+
+        input.addEventListener('change', () => {
+            const file = input.files?.[0];
+
+            if (!file) {
+                setImageError('');
+
+                return;
+            }
+
+            if (!file.type.startsWith('image/')) {
+                setImageError('Berkas harus berupa gambar.');
+
+                return;
+            }
+
+            if (file.size > maxKb * 1024) {
+                setImageError(`Ukuran gambar maksimal ${maxKb} KB.`);
+
+                return;
+            }
+
+            setImageError('');
+
+            if (preview) {
+                preview.src = URL.createObjectURL(file);
+                preview.classList.remove('hidden');
+            }
+
+            placeholder?.classList.add('hidden');
+        });
+    });
+
     document.querySelectorAll('form[data-confirm]').forEach((form) => {
         form.addEventListener('submit', (event) => {
             if (!window.confirm(form.dataset.confirm)) {
