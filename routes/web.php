@@ -95,5 +95,6 @@ Route::middleware('auth')->group(function () {
         Route::post('/clear-cache', [PengaturanController::class, 'clearCache'])->name('clear-cache');
         Route::post('/migrate', [PengaturanController::class, 'migrate'])->name('migrate');
         Route::post('/storage-link', [PengaturanController::class, 'storageLink'])->name('storage-link');
+        Route::delete('/log', [PengaturanController::class, 'hapusLog'])->name('log.hapus');
     });
 });

@@ -80,6 +80,17 @@ class PengaturanController extends Controller
         return $this->catat('Symlink storage', $this->jalankan($this->artisan('storage:link', '--force')));
     }
 
+    public function hapusLog(): RedirectResponse
+    {
+        session()->forget('log-pengaturan');
+
+        Log::info('[pengaturan] Hapus log terminal', ['oleh' => auth()->user()->nidn]);
+
+        return redirect()
+            ->route('pengaturan.index')
+            ->with('status', 'Log terminal dibersihkan.');
+    }
+
     /**
      * Jalankan perintah lalu kembalikan baris keluaran untuk panel terminal.
      *

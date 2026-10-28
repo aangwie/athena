@@ -49,6 +49,7 @@ Aplikasi berbasis **Laravel 12** untuk mengelola pengajuan jabatan akademik dose
   - **Migrasi tabel** — `php artisan migrate --force`
   - **Symlink storage** — `php artisan storage:link --force`
   - setiap tindakan ditampilkan pada panel **terminal log** halaman pengaturan dan ditulis ke `storage/logs/laravel.log`
+  - **Hapus log** — membersihkan isi panel terminal (tindakan tetap tercatat di `storage/logs/laravel.log`)
 
 ## Akun demo
 

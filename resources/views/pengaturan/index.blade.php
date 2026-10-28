@@ -149,6 +149,18 @@
                 <span class="ml-auto rounded-md bg-white/5 px-1.5 py-0.5 font-mono text-[10px] text-slate-400">
                     {{ count($log) }} tindakan
                 </span>
+                <form method="POST" action="{{ route('pengaturan.log.hapus') }}" data-confirm="Hapus seluruh isi terminal log?">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit"
+                            class="flex items-center gap-1 rounded-md bg-white/5 px-2 py-1 font-mono text-[10px] text-slate-400 transition hover:bg-rose-500/15 hover:text-rose-300 disabled:cursor-not-allowed disabled:opacity-40"
+                            @disabled($log === [])>
+                        <svg class="size-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <path d="M5 7h14M10 7V5.5A1.5 1.5 0 0 1 11.5 4h1A1.5 1.5 0 0 1 14 5.5V7M6.5 7l.8 12a1.5 1.5 0 0 0 1.5 1.4h6.4a1.5 1.5 0 0 0 1.5-1.4l.8-12" stroke-linecap="round" />
+                        </svg>
+                        Hapus log
+                    </button>
+                </form>
             </div>
 
             <div class="max-h-96 space-y-4 overflow-y-auto px-4 py-4 font-mono text-[11.5px] leading-relaxed">

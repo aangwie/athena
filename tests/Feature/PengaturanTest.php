@@ -58,6 +58,17 @@ class PengaturanTest extends TestCase
             ->assertSessionHasErrors('token_github');
     }
 
+    public function test_admin_can_clear_terminal_log(): void
+    {
+        $this->actingAs($this->makeAdmin())
+            ->withSession(['log-pengaturan' => [
+                ['waktu' => '2026-10-28 19:30:00', 'judul' => 'Bersihkan cache', 'sukses' => true, 'baris' => ['$ ok']],
+            ]])
+            ->delete('/pengaturan/log')
+            ->assertRedirect(route('pengaturan.index'))
+            ->assertSessionMissing('log-pengaturan');
+    }
+
     public function test_runner_masks_secret_and_reports_exit_code(): void
     {
         $controller = new PengaturanController;
