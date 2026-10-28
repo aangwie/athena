@@ -9,6 +9,7 @@
         $anak = $profil?->anak ?? collect();
         $isMenikah = $profil?->status_pernikahan === 'menikah';
         $isLajang = $profil?->status_pernikahan === 'lajang';
+        $riwayatList = $riwayatPendidikan ?? collect();
 
         $steps = [
             [
@@ -25,6 +26,11 @@
                 'label' => 'Data anak',
                 'status' => ! $profil ? 'Belum lengkap' : ($isLajang ? 'Tidak berlaku' : ($anak->isNotEmpty() ? $anak->count().' data' : 'Belum ditambahkan')),
                 'state' => ! $profil ? 'missing' : ($isLajang ? 'neutral' : ($anak->isNotEmpty() ? 'done' : 'neutral')),
+            ],
+            [
+                'label' => 'Riwayat pendidikan',
+                'status' => $riwayatList->isNotEmpty() ? $riwayatList->count().' data' : 'Belum ditambahkan',
+                'state' => $riwayatList->isNotEmpty() ? 'done' : 'missing',
             ],
         ];
     @endphp
@@ -320,28 +326,85 @@
                 @endif
 
                 {{-- Riwayat pendidikan --}}
-                <section class="section-card flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-                    <div class="flex items-start gap-3">
-                        <span class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-500">
-                            <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                                <path d="M3 9.4 12 5l9 4.4-9 4.4L3 9.4Z" stroke-linejoin="round" />
-                                <path d="M6.4 11.3v4.2c0 .5.3 1 .8 1.2 1.5.7 3 1 4.8 1s3.3-.3 4.8-1c.5-.2.8-.7.8-1.2v-4.2" stroke-linecap="round" />
-                            </svg>
-                        </span>
-                        <div>
-                            <div class="flex flex-wrap items-center gap-2">
-                                <h3 class="text-sm font-extrabold text-slate-800">Riwayat Pendidikan</h3>
-                                <span class="rounded-full bg-indigo-50 px-2 py-0.5 text-[9px] font-bold tracking-wide text-indigo-600 uppercase">Segera</span>
+                <section class="section-card">
+                    <div class="section-heading items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <span class="flex size-9 items-center justify-center rounded-xl bg-indigo-50 text-indigo-500">
+                                <svg class="size-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                    <path d="M3 9.4 12 5l9 4.4-9 4.4L3 9.4Z" stroke-linejoin="round" />
+                                    <path d="M6.4 11.3v4.2c0 .5.3 1 .8 1.2 1.5.7 3 1 4.8 1s3.3-.3 4.8-1c.5-.2.8-.7.8-1.2v-4.2" stroke-linecap="round" />
+                                </svg>
+                            </span>
+                            <div>
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <h3 class="text-sm font-extrabold text-slate-800">Riwayat Pendidikan</h3>
+                                    @if ($riwayatList->isNotEmpty())
+                                        <span class="rounded-full bg-indigo-50 px-2 py-0.5 text-[9px] font-bold tracking-wide text-indigo-600 uppercase">
+                                            {{ $riwayatList->count() }} riwayat
+                                        </span>
+                                    @endif
+                                </div>
+                                <p class="mt-0.5 text-xs text-slate-400">Pendidikan formal dari jenjang dasar hingga perguruan tinggi.</p>
                             </div>
-                            <p class="mt-0.5 text-xs text-slate-400">Data riwayat pendidikan akan tersedia pada tahap berikutnya.</p>
                         </div>
+                        <a href="{{ route('profil.pendidikan.index') }}" class="text-[11px] font-bold text-teal-700 transition hover:text-teal-800 hover:underline">
+                            Kelola
+                        </a>
                     </div>
-                    <a href="{{ route('profil.pendidikan.index') }}" class="btn-secondary shrink-0 self-start sm:self-auto">
-                        Lihat Halaman
-                        <svg class="size-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                            <path fill-rule="evenodd" d="M3 10a.75.75 0 0 1 .75-.75h10.638L10.23 5.29a.75.75 0 1 1 1.04-1.08l5.5 5.25a.75.75 0 0 1 0 1.08l-5.5 5.25a.75.75 0 1 1-1.04-1.08l4.158-3.96H3.75A.75.75 0 0 1 3 10Z" clip-rule="evenodd" />
-                        </svg>
-                    </a>
+
+                    @if ($riwayatList->isNotEmpty())
+                        <div class="divide-y divide-slate-100">
+                            @foreach ($riwayatList as $item)
+                                <div class="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+                                    <div class="flex min-w-0 items-start gap-3">
+                                        <span @class([
+                                            'badge-status shrink-0',
+                                            'bg-teal-50 text-teal-700 ring-teal-200' => ! $item->isPerguruanTinggi(),
+                                            'bg-indigo-50 text-indigo-700 ring-indigo-200' => $item->isPerguruanTinggi(),
+                                        ])>
+                                            {{ $item->jenjangLabel() }}
+                                        </span>
+                                        <div class="min-w-0">
+                                            <p class="truncate text-sm font-bold text-slate-800">{{ $item->nama_institusi }}</p>
+                                            <p class="mt-0.5 text-[11px] text-slate-400">
+                                                {{ $item->jurusan ?: '—' }}
+                                                <span class="mx-1">·</span> {{ $item->tahunLabel() }}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex flex-wrap items-center gap-1.5 pl-16 sm:pl-0">
+                                        @if ($item->ijazah_path)
+                                            <a href="{{ route('profil.pendidikan.berkas', [$item, 'ijazah']) }}" target="_blank" rel="noopener"
+                                               class="inline-flex items-center gap-1 rounded-lg bg-teal-50 px-2 py-1 text-[10px] font-bold text-teal-700 ring-1 ring-teal-100 ring-inset transition hover:bg-teal-100">
+                                                Ijazah
+                                            </a>
+                                        @endif
+                                        @if ($item->transkrip_path)
+                                            <a href="{{ route('profil.pendidikan.berkas', [$item, 'transkrip']) }}" target="_blank" rel="noopener"
+                                               class="inline-flex items-center gap-1 rounded-lg bg-indigo-50 px-2 py-1 text-[10px] font-bold text-indigo-700 ring-1 ring-indigo-100 ring-inset transition hover:bg-indigo-100">
+                                                Transkrip
+                                            </a>
+                                        @endif
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <div class="px-5 py-10 text-center sm:px-6">
+                            <span class="mx-auto flex size-12 items-center justify-center rounded-2xl bg-slate-50 text-slate-300 ring-1 ring-slate-100">
+                                <svg class="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+                                    <path d="M3 9.4 12 5l9 4.4-9 4.4L3 9.4Z" stroke-linejoin="round" />
+                                    <path d="M6.4 11.3v4.2c0 .5.3 1 .8 1.2 1.5.7 3 1 4.8 1s3.3-.3 4.8-1c.5-.2.8-.7.8-1.2v-4.2" stroke-linecap="round" />
+                                </svg>
+                            </span>
+                            <p class="mt-3 text-sm font-bold text-slate-600">Belum ada riwayat pendidikan</p>
+                            <p class="mt-1 text-xs text-slate-400">Tambahkan riwayat pendidikan beserta bukti ijazah dan transkrip.</p>
+                            <a href="{{ route('profil.pendidikan.create') }}" class="btn-small mt-4">
+                                Tambah Riwayat
+                            </a>
+                        </div>
+                    @endif
                 </section>
             </div>
 

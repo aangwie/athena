@@ -4,9 +4,12 @@ namespace Database\Seeders;
 
 use App\Models\PengajuanJabatan;
 use App\Models\ProfilDosen;
+use App\Models\RiwayatPendidikan;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class DatabaseSeeder extends Seeder
 {
@@ -110,6 +113,13 @@ class DatabaseSeeder extends Seeder
                         'pekerjaan' => 'Pelajar',
                     ],
                 ],
+                'pendidikan' => [
+                    ['jenjang' => 'sd', 'nama_institusi' => 'SD Negeri 1 Bandung', 'jurusan' => null, 'tahun_masuk' => 1993, 'tahun_lulus' => 1999],
+                    ['jenjang' => 'smp', 'nama_institusi' => 'SMP Negeri 2 Bandung', 'jurusan' => null, 'tahun_masuk' => 1999, 'tahun_lulus' => 2002],
+                    ['jenjang' => 'sma', 'nama_institusi' => 'SMA Negeri 3 Bandung', 'jurusan' => 'Ilmu Pengetahuan Alam', 'tahun_masuk' => 2002, 'tahun_lulus' => 2005],
+                    ['jenjang' => 's1', 'nama_institusi' => 'Universitas Pendidikan Indonesia', 'jurusan' => 'Pendidikan Informatika', 'tahun_masuk' => 2005, 'tahun_lulus' => 2009],
+                    ['jenjang' => 's2', 'nama_institusi' => 'Institut Teknologi Bandung', 'jurusan' => 'Ilmu Komputer', 'tahun_masuk' => 2010, 'tahun_lulus' => 2012],
+                ],
             ],
             '1990011220' => [
                 'profil' => [
@@ -134,6 +144,13 @@ class DatabaseSeeder extends Seeder
                         'pekerjaan' => 'Pelajar',
                     ],
                 ],
+                'pendidikan' => [
+                    ['jenjang' => 'sd', 'nama_institusi' => 'SD Negeri 1 Sleman', 'jurusan' => null, 'tahun_masuk' => 1996, 'tahun_lulus' => 2002],
+                    ['jenjang' => 'smp', 'nama_institusi' => 'SMP Negeri 1 Sleman', 'jurusan' => null, 'tahun_masuk' => 2002, 'tahun_lulus' => 2005],
+                    ['jenjang' => 'sma', 'nama_institusi' => 'SMA Negeri 1 Yogyakarta', 'jurusan' => 'Ilmu Pengetahuan Alam', 'tahun_masuk' => 2005, 'tahun_lulus' => 2008],
+                    ['jenjang' => 's1', 'nama_institusi' => 'Universitas Gadjah Mada', 'jurusan' => 'Pendidikan Matematika', 'tahun_masuk' => 2008, 'tahun_lulus' => 2012],
+                    ['jenjang' => 's2', 'nama_institusi' => 'Universitas Negeri Yogyakarta', 'jurusan' => 'Pendidikan Matematika', 'tahun_masuk' => 2013, 'tahun_lulus' => 2015],
+                ],
             ],
             '1985041722' => [
                 'profil' => [
@@ -144,6 +161,14 @@ class DatabaseSeeder extends Seeder
                     'status_pernikahan' => 'lajang',
                 ],
                 'anak' => [],
+                'pendidikan' => [
+                    ['jenjang' => 'sd', 'nama_institusi' => 'SD Negeri 1 Surabaya', 'jurusan' => null, 'tahun_masuk' => 1991, 'tahun_lulus' => 1997],
+                    ['jenjang' => 'smp', 'nama_institusi' => 'SMP Negeri 1 Surabaya', 'jurusan' => null, 'tahun_masuk' => 1997, 'tahun_lulus' => 2000],
+                    ['jenjang' => 'sma', 'nama_institusi' => 'SMA Negeri 1 Surabaya', 'jurusan' => 'Ilmu Pengetahuan Alam', 'tahun_masuk' => 2000, 'tahun_lulus' => 2003],
+                    ['jenjang' => 's1', 'nama_institusi' => 'Institut Teknologi Sepuluh Nopember', 'jurusan' => 'Teknik Informatika', 'tahun_masuk' => 2003, 'tahun_lulus' => 2007],
+                    ['jenjang' => 's2', 'nama_institusi' => 'Institut Teknologi Sepuluh Nopember', 'jurusan' => 'Teknik Informatika', 'tahun_masuk' => 2008, 'tahun_lulus' => 2010],
+                    ['jenjang' => 's3', 'nama_institusi' => 'Institut Teknologi Sepuluh Nopember', 'jurusan' => 'Teknik Informatika', 'tahun_masuk' => 2011, 'tahun_lulus' => 2016],
+                ],
             ],
         ];
 
@@ -162,6 +187,87 @@ class DatabaseSeeder extends Seeder
             foreach ($profilData[$user->nidn]['anak'] as $anak) {
                 $profil->anak()->create($anak);
             }
+
+            $this->seedPendidikan($user, $profilData[$user->nidn]['pendidikan']);
         }
+    }
+
+    /**
+     * Buat data riwayat pendidikan demonstrasi beserta berkas PDF contoh.
+     *
+     * @param  list<array<string, mixed>>  $items
+     */
+    private function seedPendidikan(User $user, array $items): void
+    {
+        $user->riwayatPendidikan()->get()->each(function (RiwayatPendidikan $riwayat) {
+            Storage::disk('local')->delete(array_filter([
+                $riwayat->ijazah_path,
+                $riwayat->transkrip_path,
+            ]));
+
+            $riwayat->delete();
+        });
+
+        foreach ($items as $item) {
+            $jenjang = $item['jenjang'];
+            $isPerguruanTinggi = in_array($jenjang, RiwayatPendidikan::PERGURUAN_TINGGI, true);
+
+            $user->riwayatPendidikan()->create($item + [
+                'user_id' => $user->id,
+                'ijazah_path' => $this->simpanPdfContoh($user, $jenjang, 'Ijazah '.strtoupper($jenjang)),
+                'transkrip_path' => $isPerguruanTinggi
+                    ? $this->simpanPdfContoh($user, $jenjang, 'Transkrip '.strtoupper($jenjang))
+                    : null,
+            ]);
+        }
+    }
+
+    /**
+     * Simpan PDF contoh dengan pola nama jenjang_nidn_kode_acak.pdf.
+     */
+    private function simpanPdfContoh(User $user, string $jenjang, string $judul): string
+    {
+        $nama = sprintf('%s_%s_%s.pdf', $jenjang, $user->nidn, Str::random(16));
+        $path = "riwayat-pendidikan/{$user->nidn}/{$nama}";
+
+        Storage::disk('local')->put($path, $this->pdfSederhana($judul));
+
+        return $path;
+    }
+
+    /**
+     * PDF minimal untuk keperluan data demonstrasi.
+     */
+    private function pdfSederhana(string $judul): string
+    {
+        $judul = str_replace(['\\', '(', ')'], ['\\\\', '\\(', '\\)'], $judul);
+        $content = "BT /F1 18 Tf 60 780 Td (Athena - Data Demonstrasi) Tj 0 -28 Td ({$judul}) Tj ET";
+
+        $objects = [
+            '<< /Type /Catalog /Pages 2 0 R >>',
+            '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+            '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>',
+            '<< /Length '.strlen($content)." >>\nstream\n{$content}\nendstream",
+            '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>',
+        ];
+
+        $pdf = "%PDF-1.4\n";
+        $offsets = [];
+
+        foreach ($objects as $index => $object) {
+            $offsets[] = strlen($pdf);
+            $pdf .= ($index + 1)." 0 obj\n{$object}\nendobj\n";
+        }
+
+        $xref = strlen($pdf);
+        $pdf .= "xref\n0 ".(count($objects) + 1)."\n0000000000 65535 f \n";
+
+        foreach ($offsets as $offset) {
+            $pdf .= sprintf("%010d 00000 n \n", $offset);
+        }
+
+        $pdf .= "trailer\n<< /Size ".(count($objects) + 1)." /Root 1 0 R >>\nstartxref\n{$xref}\n%%EOF\n";
+
+        return $pdf;
     }
 }

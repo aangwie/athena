@@ -18,6 +18,9 @@ class ProfilDosenController extends Controller
         return view('profil.show', [
             'user' => $user,
             'profil' => $user->profilDosen,
+            'riwayatPendidikan' => $user->riwayatPendidikan
+                ->sortBy(fn ($item) => ($item->jenjangRank() * 10000) + $item->tahun_masuk)
+                ->values(),
         ]);
     }
 
@@ -83,6 +86,6 @@ class ProfilDosenController extends Controller
 
     private function userWithProfile(Request $request): User
     {
-        return $request->user()->load('profilDosen.anak');
+        return $request->user()->load('profilDosen.anak', 'riwayatPendidikan');
     }
 }

@@ -251,6 +251,80 @@ const boot = () => {
         syncAnakState();
     }
 
+    const jenjangSelect = document.querySelector('[data-jenjang-select]');
+    const transkripField = document.querySelector('[data-transkrip-field]');
+    const transkripInput = transkripField?.querySelector('input[type="file"]');
+    const jenjangPerguruanTinggi = ['d3', 'd4', 's1', 's2', 's3'];
+
+    const syncTranskripField = () => {
+        const isPerguruanTinggi = jenjangPerguruanTinggi.includes(jenjangSelect?.value);
+
+        transkripField?.classList.toggle('hidden', !isPerguruanTinggi);
+
+        if (transkripInput) {
+            transkripInput.disabled = !isPerguruanTinggi;
+
+            if (!isPerguruanTinggi) {
+                transkripInput.value = '';
+                transkripInput.setCustomValidity('');
+            }
+        }
+    };
+
+    if (jenjangSelect) {
+        jenjangSelect.addEventListener('change', syncTranskripField);
+        syncTranskripField();
+    }
+
+    document.querySelectorAll('[data-pdf-input]').forEach((input) => {
+        const field = input.closest('[data-file-field]');
+        const errorBox = field?.querySelector('[data-file-error]');
+        const maxKb = Number(input.dataset.maxKb ?? 500);
+
+        const setFileError = (message) => {
+            if (errorBox) {
+                errorBox.textContent = message;
+                errorBox.classList.toggle('hidden', message === '');
+            }
+
+            input.setCustomValidity(message);
+        };
+
+        input.addEventListener('change', () => {
+            const file = input.files?.[0];
+
+            if (!file) {
+                setFileError('');
+
+                return;
+            }
+
+            const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+
+            if (!isPdf) {
+                setFileError('Berkas harus berformat PDF.');
+
+                return;
+            }
+
+            if (file.size > maxKb * 1024) {
+                setFileError(`Ukuran berkas maksimal ${maxKb} KB.`);
+
+                return;
+            }
+
+            setFileError('');
+        });
+    });
+
+    document.querySelectorAll('form[data-confirm]').forEach((form) => {
+        form.addEventListener('submit', (event) => {
+            if (!window.confirm(form.dataset.confirm)) {
+                event.preventDefault();
+            }
+        });
+    });
+
     const sidebar = document.querySelector('[data-sidebar]');
     const sidebarOverlay = document.querySelector('[data-sidebar-overlay]');
 

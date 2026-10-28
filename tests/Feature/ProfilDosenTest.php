@@ -229,7 +229,8 @@ class ProfilDosenTest extends TestCase
             ->get('/profil/riwayat-pendidikan')
             ->assertOk()
             ->assertSee('Riwayat Pendidikan')
-            ->assertSee('Dalam pengembangan');
+            ->assertSee('Tambah Riwayat')
+            ->assertSee('Belum ada riwayat pendidikan');
     }
 
     public function test_admin_cannot_access_profile_pages(): void
