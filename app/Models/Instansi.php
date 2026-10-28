@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Storage;
 
 class Instansi extends Model
 {
@@ -20,11 +19,14 @@ class Instansi extends Model
 
     /**
      * URL publik logo instansi.
+     *
+     * Memakai host dan port dari request aktif sehingga logo tetap tampil
+     * meskipun APP_URL tidak memuat port (mis. saat `artisan serve`).
      */
     public function logoUrl(): ?string
     {
         return $this->logo_path
-            ? Storage::disk('public')->url($this->logo_path)
+            ? asset('storage/'.ltrim($this->logo_path, '/'))
             : null;
     }
 }

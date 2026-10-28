@@ -159,6 +159,22 @@ class InstansiTest extends TestCase
         Storage::disk('public')->assertExists($newPath);
     }
 
+    public function test_logo_url_follows_the_request_host_and_port(): void
+    {
+        $admin = $this->makeAdmin();
+
+        $this->actingAs($admin)->put('/instansi', $this->payload([
+            'logo' => UploadedFile::fake()->image('logo.png')->size(100),
+        ]));
+
+        $path = Instansi::firstOrFail()->logo_path;
+
+        $this->actingAs($admin)
+            ->get('http://127.0.0.1:8000/instansi')
+            ->assertOk()
+            ->assertSee('http://127.0.0.1:8000/storage/'.$path, false);
+    }
+
     public function test_dosen_cannot_access_instansi_pages(): void
     {
         $dosen = $this->makeDosen();
