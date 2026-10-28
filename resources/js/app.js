@@ -167,6 +167,90 @@ const boot = () => {
         passwordField.addEventListener('blur', () => capsWarning.classList.add('hidden'));
     }
 
+    const maritalInputs = document.querySelectorAll('[data-marital-status]');
+    const marriedSections = document.querySelectorAll('[data-married-section]');
+    const spouseOccupation = document.querySelector('[data-spouse-occupation]');
+    const nipWrapper = document.querySelector('[data-nip-wrapper]');
+
+    const syncMarriedSection = () => {
+        const selected = document.querySelector('[data-marital-status]:checked');
+        const isMarried = selected?.value === 'menikah';
+
+        marriedSections.forEach((section) => {
+            section.classList.toggle('hidden', !isMarried);
+        });
+    };
+
+    if (maritalInputs.length > 0) {
+        maritalInputs.forEach((input) => {
+            input.addEventListener('change', syncMarriedSection);
+        });
+        syncMarriedSection();
+    }
+
+    const syncNipField = () => {
+        if (!nipWrapper) {
+            return;
+        }
+
+        nipWrapper.classList.toggle('hidden', spouseOccupation?.value !== 'asn');
+    };
+
+    if (spouseOccupation) {
+        spouseOccupation.addEventListener('change', syncNipField);
+        syncNipField();
+    }
+
+    const anakContainer = document.querySelector('[data-anak-container]');
+    const anakTemplate = document.querySelector('[data-anak-template]');
+    const anakEmptyState = document.querySelector('[data-anak-empty]');
+    let nextAnakIndex = Number(anakContainer?.dataset.nextIndex ?? 0);
+
+    const syncAnakState = () => {
+        if (!anakContainer) {
+            return;
+        }
+
+        const rows = anakContainer.querySelectorAll('[data-anak-row]');
+
+        rows.forEach((row, index) => {
+            const number = row.querySelector('[data-anak-number]');
+
+            if (number) {
+                number.textContent = index + 1;
+            }
+        });
+
+        anakEmptyState?.classList.toggle('hidden', rows.length > 0);
+    };
+
+    document.querySelector('[data-add-anak]')?.addEventListener('click', () => {
+        if (!anakContainer || !anakTemplate) {
+            return;
+        }
+
+        const markup = anakTemplate.innerHTML.replaceAll('__INDEX__', String(nextAnakIndex));
+        nextAnakIndex += 1;
+        anakContainer.insertAdjacentHTML('beforeend', markup);
+        syncAnakState();
+        anakContainer.lastElementChild?.querySelector('input, select')?.focus();
+    });
+
+    anakContainer?.addEventListener('click', (event) => {
+        const removeButton = event.target.closest('[data-remove-anak]');
+
+        if (!removeButton) {
+            return;
+        }
+
+        removeButton.closest('[data-anak-row]')?.remove();
+        syncAnakState();
+    });
+
+    if (anakContainer) {
+        syncAnakState();
+    }
+
     const sidebar = document.querySelector('[data-sidebar]');
     const sidebarOverlay = document.querySelector('[data-sidebar-overlay]');
 

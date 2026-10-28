@@ -24,6 +24,12 @@ Aplikasi berbasis **Laravel 12** untuk mengelola pengajuan jabatan akademik dose
   - tampilan responsif (baris dapat diperluas di layar kecil)
 - Sidebar responsif dengan drawer di perangkat mobile
 - Pembatasan data: dosen hanya melihat pengajuannya sendiri, admin melihat seluruh pengajuan
+- **Profil Dosen** (khusus role dosen):
+  - **Data Pribadi** — nama, tempat/tanggal lahir, alamat, no. HP, dan status pernikahan
+  - Data pasangan otomatis tampil jika status **Menikah**: nama, pekerjaan (ASN/Non ASN), NIP (jika ASN), tempat/tanggal lahir, dan tanggal nikah
+  - Data anak dinamis (bisa lebih dari satu): nama, tempat/tanggal lahir, jenis kelamin, dan pekerjaan
+  - **Portofolio Saya** — menampilkan data pribadi, pasangan, dan anak yang telah diisi
+  - **Riwayat Pendidikan** — halaman modul (dalam pengembangan)
 
 ## Akun demo
 
@@ -83,19 +89,27 @@ Pengujian menggunakan SQLite in-memory sehingga tidak mengubah data MySQL.
 ```
 app/Http/Controllers/Auth/AuthenticatedSessionController.php  # login/logout NIDN
 app/Http/Controllers/DashboardController.php                  # statistik & data dashboard
+app/Http/Controllers/ProfilDosenController.php                 # data pribadi & portofolio dosen
+app/Http/Middleware/EnsureUserIsDosen.php                      # pembatasan akses role dosen
+app/Http/Requests/UpdateDataPribadiRequest.php                 # validasi data pribadi & keluarga
 app/Models/User.php                                           # user + NIDN + peran
 app/Models/PengajuanJabatan.php                               # pengajuan jabatan akademik
-database/migrations/                                          # skema users, pengajuan_jabatan
+app/Models/ProfilDosen.php                                    # profil dosen + data pasangan
+app/Models/AnakDosen.php                                      # data anak dosen
+database/migrations/                                          # skema users, pengajuan_jabatan, profil_dosen, anak_dosen
 database/seeders/DatabaseSeeder.php                           # akun & data demo
 resources/views/auth/login.blade.php                          # halaman login
 resources/views/dashboard.blade.php                           # dashboard + DataTables
+resources/views/profil/                                       # data pribadi, portofolio, riwayat pendidikan
 resources/views/layouts/                                      # layout auth & aplikasi
 resources/css/app.css                                         # tema Tailwind + DataTables
-resources/js/app.js                                           # DataTables, toggle password, sidebar
+resources/js/app.js                                           # DataTables, toggle password, form profil, sidebar
+tests/Feature/ProfilDosenTest.php                             # pengujian modul profil dosen
 ```
 
 ## Rencana modul berikutnya
 
+- Detail **Riwayat Pendidikan** (jenjang, institusi, tahun lulus, berkas)
 - Form pengajuan jabatan akademik beserta unggah berkas
 - Alur verifikasi berjenjang (admin kepegawaian / tim penilai)
 - Manajemen data dosen dan riwayat jabatan

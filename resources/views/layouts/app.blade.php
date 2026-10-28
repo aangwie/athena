@@ -41,7 +41,9 @@
                 </button>
             </div>
 
-            <div class="mx-5 mb-5 flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.06] p-3">
+            <a href="{{ auth()->user()->isDosen() ? route('profil.show') : route('dashboard') }}"
+               class="mx-5 mb-5 flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.06] p-3 transition hover:border-teal-300/25 hover:bg-white/10"
+               title="{{ auth()->user()->isDosen() ? 'Buka portofolio saya' : 'Dashboard' }}">
                 <span class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-teal-400/15 text-sm font-bold text-teal-100 ring-1 ring-teal-300/20">
                     {{ auth()->user()->initials() }}
                 </span>
@@ -50,7 +52,7 @@
                     <p class="truncate text-[11px] text-teal-200/60">{{ auth()->user()->isAdmin() ? 'Administrator' : auth()->user()->program_studi }}</p>
                 </div>
                 <span class="size-2 shrink-0 rounded-full bg-emerald-400 ring-2 ring-emerald-400/20" title="Akun aktif"></span>
-            </div>
+            </a>
 
             <nav class="flex-1 space-y-6 overflow-y-auto px-4 pb-5">
                 <div>
@@ -73,17 +75,40 @@
                             </svg>
                             Riwayat Pengajuan
                         </a>
-                        <span class="sidebar-link cursor-not-allowed opacity-45">
-                            <svg class="size-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                                <circle cx="12" cy="8" r="3.5" />
-                                <path d="M4.5 20a7.5 7.5 0 0 1 15 0" stroke-linecap="round" />
-                            </svg>
-                            Profil Saya
-                            <span class="ml-auto rounded-md bg-white/10 px-1.5 py-0.5 text-[9px] font-bold tracking-wide text-teal-200/70 uppercase">Soon</span>
-                        </span>
+                        @if (auth()->user()->isDosen())
+                            <a href="{{ route('profil.show') }}" @class(['sidebar-link', 'sidebar-link-active' => request()->routeIs('profil.show')])>
+                                <svg class="size-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                    <circle cx="12" cy="8" r="3.5" />
+                                    <path d="M4.5 20a7.5 7.5 0 0 1 15 0" stroke-linecap="round" />
+                                </svg>
+                                Portofolio Saya
+                            </a>
+                        @endif
                     </div>
                 </div>
 
+                @if (auth()->user()->isDosen())
+                    <div>
+                        <p class="mb-2 px-3 text-[10px] font-bold tracking-[0.14em] text-teal-300/50 uppercase">Profil Dosen</p>
+                        <div class="space-y-1">
+                            <a href="{{ route('profil.data-pribadi.edit') }}" @class(['sidebar-link', 'sidebar-link-active' => request()->routeIs('profil.data-pribadi.*')])>
+                                <svg class="size-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                    <rect x="3.5" y="4.5" width="17" height="15" rx="2.5" />
+                                    <circle cx="9" cy="10" r="2.2" />
+                                    <path d="M5.8 16.5a3.7 3.7 0 0 1 6.4 0M14.5 9h3.2M14.5 12.5h3.2" stroke-linecap="round" />
+                                </svg>
+                                Data Pribadi
+                            </a>
+                            <a href="{{ route('profil.pendidikan.index') }}" @class(['sidebar-link', 'sidebar-link-active' => request()->routeIs('profil.pendidikan.*')])>
+                                <svg class="size-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                    <path d="M3 9.4 12 5l9 4.4-9 4.4L3 9.4Z" stroke-linejoin="round" />
+                                    <path d="M6.4 11.3v4.2c0 .5.3 1 .8 1.2 1.5.7 3 1 4.8 1s3.3-.3 4.8-1c.5-.2.8-.7.8-1.2v-4.2" stroke-linecap="round" />
+                                </svg>
+                                Riwayat Pendidikan
+                            </a>
+                        </div>
+                    </div>
+                @endif
                 @if (auth()->user()->isAdmin())
                     <div>
                         <p class="mb-2 px-3 text-[10px] font-bold tracking-[0.14em] text-teal-300/50 uppercase">Administrasi</p>
@@ -246,6 +271,24 @@
             </header>
 
             <main class="flex-1 px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+                @if (session('status'))
+                    <div class="mb-5 flex items-start gap-3 rounded-xl border border-teal-200 bg-teal-50 px-4 py-3.5 text-sm text-teal-800 shadow-sm" role="status">
+                        <svg class="mt-0.5 size-4 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clip-rule="evenodd" />
+                        </svg>
+                        <p>{{ session('status') }}</p>
+                    </div>
+                @endif
+
+                @if (session('error'))
+                    <div class="mb-5 flex items-start gap-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3.5 text-sm text-rose-700 shadow-sm" role="alert">
+                        <svg class="mt-0.5 size-4 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0Zm-8-5a.75.75 0 0 1 .75.75v4.5a.75.75 0 0 1-1.5 0v-4.5A.75.75 0 0 1 10 5Zm0 10a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" clip-rule="evenodd" />
+                        </svg>
+                        <p>{{ session('error') }}</p>
+                    </div>
+                @endif
+
                 @yield('content')
             </main>
 
