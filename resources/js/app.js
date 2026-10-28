@@ -394,6 +394,70 @@ const boot = () => {
 
     sidebarOverlay?.addEventListener('click', closeSidebar);
 
+    const sidebarRoot = document.documentElement;
+    const collapseButtons = document.querySelectorAll('[data-sidebar-collapse]');
+    const sidebarDesktop = window.matchMedia('(min-width: 1024px)');
+    const forcedOpenDetails = new Set();
+
+    const syncSidebarDetails = () => {
+        if (!sidebar) {
+            return;
+        }
+
+        const revealAll = sidebarRoot.classList.contains('sidebar-collapsed') && sidebarDesktop.matches;
+
+        sidebar.querySelectorAll('details').forEach((details) => {
+            if (revealAll) {
+                if (!details.open) {
+                    details.open = true;
+                    forcedOpenDetails.add(details);
+                }
+
+                return;
+            }
+
+            if (forcedOpenDetails.has(details)) {
+                details.open = false;
+                forcedOpenDetails.delete(details);
+            }
+        });
+    };
+
+    const syncSidebarCollapse = () => {
+        const isCollapsed = sidebarRoot.classList.contains('sidebar-collapsed');
+        const label = isCollapsed ? 'Perluas sidebar' : 'Minimalkan sidebar';
+
+        collapseButtons.forEach((button) => {
+            button.setAttribute('aria-expanded', String(!isCollapsed));
+            button.setAttribute('aria-label', label);
+            button.setAttribute('title', label);
+            button.querySelector('[data-collapse-icon-open]')?.classList.toggle('hidden', isCollapsed);
+            button.querySelector('[data-collapse-icon-closed]')?.classList.toggle('hidden', !isCollapsed);
+        });
+
+        syncSidebarDetails();
+    };
+
+    collapseButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+            const isCollapsed = sidebarRoot.classList.toggle('sidebar-collapsed');
+
+            try {
+                localStorage.setItem('athena-sidebar', isCollapsed ? 'collapsed' : 'expanded');
+            } catch (error) {
+                // localStorage tidak tersedia, abaikan.
+            }
+
+            syncSidebarCollapse();
+        });
+    });
+
+    if (typeof sidebarDesktop.addEventListener === 'function') {
+        sidebarDesktop.addEventListener('change', syncSidebarDetails);
+    }
+
+    syncSidebarCollapse();
+
     document.querySelectorAll('[data-user-menu-button]').forEach((button) => {
         const menu = button.parentElement?.querySelector('[data-user-menu]');
 

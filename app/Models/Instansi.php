@@ -14,19 +14,14 @@ class Instansi extends Model
         'alamat',
         'no_telp',
         'website',
-        'logo_path',
+        'logo_base64',
     ];
 
     /**
-     * URL publik logo instansi.
-     *
-     * Memakai host dan port dari request aktif sehingga logo tetap tampil
-     * meskipun APP_URL tidak memuat port (mis. saat `artisan serve`).
+     * Data URI logo instansi yang siap dipakai sebagai atribut src gambar.
      */
-    public function logoUrl(): ?string
+    public function logoDataUri(): ?string
     {
-        return $this->logo_path
-            ? asset('storage/'.ltrim($this->logo_path, '/'))
-            : null;
+        return $this->logo_base64 ?: null;
     }
 }

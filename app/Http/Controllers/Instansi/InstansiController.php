@@ -6,9 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\InstansiRequest;
 use App\Models\Instansi;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class InstansiController extends Controller
@@ -28,11 +25,13 @@ class InstansiController extends Controller
         unset($data['logo']);
 
         if ($request->hasFile('logo')) {
-            if ($instansi->logo_path) {
-                Storage::disk('public')->delete($instansi->logo_path);
-            }
+            $logo = $request->file('logo');
 
-            $data['logo_path'] = $this->simpanLogo($request->file('logo'));
+            $data['logo_base64'] = sprintf(
+                'data:%s;base64,%s',
+                $logo->getMimeType(),
+                base64_encode($logo->get()),
+            );
         }
 
         $instansi->fill($data)->save();
@@ -40,15 +39,5 @@ class InstansiController extends Controller
         return redirect()
             ->route('instansi.profil.edit')
             ->with('status', 'Data instansi berhasil disimpan.');
-    }
-
-    /**
-     * Simpan logo instansi pada disk publik dengan nama acak.
-     */
-    private function simpanLogo(UploadedFile $logo): string
-    {
-        $nama = sprintf('logo_instansi_%s.%s', Str::random(16), $logo->extension());
-
-        return $logo->storeAs('instansi/logo', $nama, 'public');
     }
 }

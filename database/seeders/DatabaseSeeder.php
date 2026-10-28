@@ -221,8 +221,8 @@ class DatabaseSeeder extends Seeder
             ]);
         }
 
-        if (! $instansi->logo_path || ! Storage::disk('public')->exists($instansi->logo_path)) {
-            $instansi->logo_path = $this->simpanLogoContoh();
+        if (! $instansi->logo_base64) {
+            $instansi->logo_base64 = $this->buatLogoContoh();
         }
 
         $instansi->save();
@@ -250,9 +250,9 @@ class DatabaseSeeder extends Seeder
     }
 
     /**
-     * Buat logo instansi contoh (PNG) untuk data demonstrasi.
+     * Buat logo instansi contoh (PNG) dalam bentuk data URI base64.
      */
-    private function simpanLogoContoh(): string
+    private function buatLogoContoh(): string
     {
         $size = 480;
         $image = imagecreatetruecolor($size, $size);
@@ -278,12 +278,7 @@ class DatabaseSeeder extends Seeder
         $biner = (string) ob_get_clean();
         imagedestroy($image);
 
-        $nama = sprintf('logo_instansi_%s.png', Str::random(16));
-        $path = 'instansi/logo/'.$nama;
-
-        Storage::disk('public')->put($path, $biner);
-
-        return $path;
+        return 'data:image/png;base64,'.base64_encode($biner);
     }
 
     /**

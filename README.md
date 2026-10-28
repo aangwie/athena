@@ -42,7 +42,7 @@ Aplikasi berbasis **Laravel 12** untuk mengelola pengajuan jabatan akademik dose
 - **Instansi** (khusus role admin) — identitas resmi instansi dan susunan pejabat:
   - **Data Instansi** — nama instansi, nomor SK operasional, alamat, no. telp, website, dan logo (JPG/PNG/WEBP, maks. 500 KB)
   - **Struktur Instansi** — tabel pejabat struktural yang menghubungkan master **Jabatan Struktural** dengan **data dosen aktif**, lengkap dengan CRUD, pencarian, dan sorting
-  - data instansi disimpan sebagai satu profil tunggal; logo disimpan di disk `public` (`storage/app/public/instansi/logo`) sehingga dapat ditampilkan pada halaman
+  - data instansi disimpan sebagai satu profil tunggal; logo disimpan sebagai data URI base64 pada kolom `logo_base64` di tabel `instansi`
 
 ## Akun demo
 
@@ -77,12 +77,11 @@ Jalankan migrasi, seeder, dan build aset:
 
 ```bash
 php artisan migrate:fresh --seed
-php artisan storage:link
 npm run build
 php artisan serve
 ```
 
-`php artisan storage:link` diperlukan agar logo instansi yang tersimpan di disk `public` dapat diakses melalui URL `/storage/...`.
+Logo instansi disimpan langsung di database sebagai data URI base64, sehingga tidak memerlukan symlink `public/storage`.
 
 Buka `http://127.0.0.1:8000`.
 
@@ -102,7 +101,7 @@ Pengujian menggunakan SQLite in-memory sehingga tidak mengubah data MySQL.
 
 > Berkas pendidikan disimpan secara privat di `storage/app/private/riwayat-pendidikan/{nidn}` dan hanya dapat diunduh oleh dosen pemilik akun melalui route yang terautentikasi.
 >
-> Logo instansi disimpan secara publik di `storage/app/public/instansi/logo` agar dapat ditampilkan pada halaman. Jalankan `php artisan storage:link` setelah clone atau deploy.
+> Logo instansi disimpan sebagai data URI base64 pada kolom `instansi.logo_base64`, sehingga tidak memerlukan berkas atau symlink `public/storage`.
 
 ## Struktur utama
 

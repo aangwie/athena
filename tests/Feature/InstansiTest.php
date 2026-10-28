@@ -9,19 +9,11 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class InstansiTest extends TestCase
 {
     use RefreshDatabase;
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        Storage::fake('public');
-    }
 
     private function makeAdmin(): User
     {
@@ -90,11 +82,8 @@ class InstansiTest extends TestCase
         $this->assertSame('Universitas Athena Nusantara', $instansi->nama_instansi);
         $this->assertSame('SK-MENDIKBUD/001/2026', $instansi->nomor_sk_operasional);
         $this->assertSame('(022) 1234567', $instansi->no_telp);
-        $this->assertMatchesRegularExpression(
-            '/^instansi\/logo\/logo_instansi_[A-Za-z0-9]{16}\.png$/',
-            $instansi->logo_path,
-        );
-        Storage::disk('public')->assertExists($instansi->logo_path);
+        $this->assertStringStartsWith('data:image/png;base64,', $instansi->logo_base64);
+        $this->assertNotFalse(base64_decode(substr($instansi->logo_base64, strlen('data:image/png;base64,')), true));
     }
 
     public function test_instansi_profile_is_stored_as_a_single_record(): void
@@ -138,28 +127,27 @@ class InstansiTest extends TestCase
             ->assertSessionHasErrors('logo');
     }
 
-    public function test_replacing_logo_deletes_the_old_file(): void
+    public function test_replacing_logo_updates_the_stored_base64(): void
     {
         $admin = $this->makeAdmin();
 
         $this->actingAs($admin)->put('/instansi', $this->payload([
-            'logo' => UploadedFile::fake()->image('logo.png')->size(100),
+            'logo' => UploadedFile::fake()->image('logo.png', 120, 120)->size(100),
         ]));
 
-        $oldPath = Instansi::firstOrFail()->logo_path;
+        $oldLogo = Instansi::firstOrFail()->logo_base64;
 
         $this->actingAs($admin)->put('/instansi', $this->payload([
-            'logo' => UploadedFile::fake()->image('logo-baru.png')->size(80),
+            'logo' => UploadedFile::fake()->image('logo-baru.png', 80, 80)->size(80),
         ]));
 
-        $newPath = Instansi::firstOrFail()->logo_path;
+        $newLogo = Instansi::firstOrFail()->logo_base64;
 
-        $this->assertNotSame($oldPath, $newPath);
-        Storage::disk('public')->assertMissing($oldPath);
-        Storage::disk('public')->assertExists($newPath);
+        $this->assertNotSame($oldLogo, $newLogo);
+        $this->assertStringStartsWith('data:image/png;base64,', $newLogo);
     }
 
-    public function test_logo_url_follows_the_request_host_and_port(): void
+    public function test_logo_is_rendered_as_data_uri(): void
     {
         $admin = $this->makeAdmin();
 
@@ -167,12 +155,27 @@ class InstansiTest extends TestCase
             'logo' => UploadedFile::fake()->image('logo.png')->size(100),
         ]));
 
-        $path = Instansi::firstOrFail()->logo_path;
+        $logo = Instansi::firstOrFail()->logo_base64;
 
         $this->actingAs($admin)
             ->get('http://127.0.0.1:8000/instansi')
             ->assertOk()
-            ->assertSee('http://127.0.0.1:8000/storage/'.$path, false);
+            ->assertSee('src="'.$logo.'"', false);
+    }
+
+    public function test_instansi_logo_is_rendered_inline_without_external_url(): void
+    {
+        $admin = $this->makeAdmin();
+
+        $this->actingAs($admin)->put('/instansi', $this->payload([
+            'logo' => UploadedFile::fake()->image('logo.png', 120, 120)->size(80),
+        ]));
+
+        $this->actingAs($admin)
+            ->get('/instansi')
+            ->assertOk()
+            ->assertSee('data:image/png;base64,', false)
+            ->assertDontSee('/storage/instansi/logo', false);
     }
 
     public function test_dosen_cannot_access_instansi_pages(): void

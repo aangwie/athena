@@ -117,8 +117,8 @@
                 <div class="px-5 py-5 sm:px-6">
                     <div class="flex flex-col gap-4 sm:flex-row sm:items-start">
                         <div class="flex size-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
-                            @if ($instansi->logo_path)
-                                <img data-image-preview src="{{ $instansi->logoUrl() }}" alt="Logo {{ $instansi->nama_instansi }}"
+                            @if ($instansi->logo_base64)
+                                <img data-image-preview src="{{ $instansi->logoDataUri() }}" alt="Logo {{ $instansi->nama_instansi }}"
                                      class="size-full object-contain p-2">
                             @else
                                 <img data-image-preview alt="Pratinjau logo" class="hidden size-full object-contain p-2">
@@ -146,7 +146,7 @@
                                    ])>
                             <p class="mt-1.5 text-[11px] leading-relaxed text-slate-400">
                                 Format JPG, PNG, atau WEBP. Maksimal 500 KB.
-                                @if ($instansi->logo_path)
+                                @if ($instansi->logo_base64)
                                     Unggah berkas baru untuk mengganti logo saat ini.
                                 @endif
                             </p>
