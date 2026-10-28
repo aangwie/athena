@@ -131,6 +131,40 @@
                             </span>
                         </div>
                     </div>
+
+                    <details class="group" @if (request()->routeIs('kepegawaian.*')) open @endif>
+                        <summary class="mb-2 flex cursor-pointer list-none items-center gap-2 px-3 text-[10px] font-bold tracking-[0.14em] text-teal-300/50 uppercase transition select-none hover:text-teal-200/80 [&::-webkit-details-marker]:hidden">
+                            <span class="flex-1">Kepegawaian</span>
+                            <svg class="size-3.5 transition-transform duration-200 group-open:rotate-90" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M7.2 4.2a.75.75 0 0 1 1.06 0l5.3 5.3a.75.75 0 0 1 0 1.06l-5.3 5.3a.75.75 0 1 1-1.06-1.06L11.7 10 7.2 5.26a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
+                            </svg>
+                        </summary>
+                        <div class="space-y-1">
+                            <a href="{{ route('kepegawaian.jabatan-fungsional.index') }}" @class(['sidebar-link', 'sidebar-link-active' => request()->routeIs('kepegawaian.jabatan-fungsional.*')])>
+                                <svg class="size-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                    <path d="M3 9.4 12 5l9 4.4-9 4.4L3 9.4Z" stroke-linejoin="round" />
+                                    <path d="M6.4 11.3v4.2c0 .5.3 1 .8 1.2 1.5.7 3 1 4.8 1s3.3-.3 4.8-1c.5-.2.8-.7.8-1.2v-4.2" stroke-linecap="round" />
+                                </svg>
+                                Jabatan Fungsional
+                            </a>
+                            <a href="{{ route('kepegawaian.jabatan-struktural.index') }}" @class(['sidebar-link', 'sidebar-link-active' => request()->routeIs('kepegawaian.jabatan-struktural.*')])>
+                                <svg class="size-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                    <rect x="9" y="3.5" width="6" height="4.5" rx="1.5" />
+                                    <rect x="3.5" y="16" width="6" height="4.5" rx="1.5" />
+                                    <rect x="14.5" y="16" width="6" height="4.5" rx="1.5" />
+                                    <path d="M12 8v3.5M6.5 16v-4.5h11V16" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                                Jabatan Struktural
+                            </a>
+                            <a href="{{ route('kepegawaian.kepangkatan.index') }}" @class(['sidebar-link', 'sidebar-link-active' => request()->routeIs('kepegawaian.kepangkatan.*')])>
+                                <svg class="size-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                    <path d="m5 15 7-4 7 4-7 4-7-4Z" stroke-linejoin="round" />
+                                    <path d="m5 10 7-4 7 4M5 5l7-4 7 4" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                                Kepangkatan
+                            </a>
+                        </div>
+                    </details>
                 @endif
 
                 <div>

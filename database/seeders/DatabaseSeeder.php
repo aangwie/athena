@@ -2,6 +2,9 @@
 
 namespace Database\Seeders;
 
+use App\Models\JabatanFungsional;
+use App\Models\JabatanStruktural;
+use App\Models\Kepangkatan;
 use App\Models\PengajuanJabatan;
 use App\Models\ProfilDosen;
 use App\Models\RiwayatPendidikan;
@@ -18,6 +21,8 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        $this->seedKepegawaian();
+
         $admin = User::updateOrCreate(
             ['nidn' => '0000000001'],
             [
@@ -189,6 +194,43 @@ class DatabaseSeeder extends Seeder
             }
 
             $this->seedPendidikan($user, $profilData[$user->nidn]['pendidikan']);
+        }
+    }
+
+    /**
+     * Seed data master menu Kepegawaian.
+     */
+    private function seedKepegawaian(): void
+    {
+        $data = [
+            JabatanFungsional::class => [
+                'Asisten Ahli',
+                'Lektor',
+                'Lektor Kepala',
+                'Profesor',
+            ],
+            JabatanStruktural::class => [
+                'Rektor',
+                'Wakil Rektor',
+                'Dekan',
+                'Wakil Dekan',
+                'Ketua Program Studi',
+                'Sekretaris Program Studi',
+            ],
+            Kepangkatan::class => [
+                'Penata Muda',
+                'Penata Muda Tingkat I',
+                'Penata',
+                'Penata Tingkat I',
+                'Pembina',
+                'Pembina Tingkat I',
+            ],
+        ];
+
+        foreach ($data as $model => $namaList) {
+            foreach ($namaList as $nama) {
+                $model::firstOrCreate(['nama' => $nama]);
+            }
         }
     }
 

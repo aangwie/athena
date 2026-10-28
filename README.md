@@ -34,6 +34,11 @@ Aplikasi berbasis **Laravel 12** untuk mengelola pengajuan jabatan akademik dose
     - unggah **ijazah + transkrip** untuk jenjang perguruan tinggi
     - berkas disimpan privat dengan pola nama `jenjang_nidn_kode_acak.pdf`
     - daftar riwayat dengan pencarian, sorting, dan tautan unduh berkas
+- **Kepegawaian** (khusus role admin) — menu dengan tiga sub menu data master:
+  - **Jabatan Fungsional** — daftar jabatan fungsional dosen
+  - **Jabatan Struktural** — daftar jabatan struktural
+  - **Kepangkatan** — daftar pangkat/golongan
+  - setiap data master hanya berisi **ID** dan **nama**, dengan CRUD, pencarian, dan sorting
 
 ## Akun demo
 
@@ -97,6 +102,8 @@ app/Http/Controllers/Auth/AuthenticatedSessionController.php  # login/logout NID
 app/Http/Controllers/DashboardController.php                  # statistik & data dashboard
 app/Http/Controllers/ProfilDosenController.php                 # data pribadi & portofolio dosen
 app/Http/Controllers/RiwayatPendidikanController.php           # CRUD & unduh berkas pendidikan
+app/Http/Controllers/Kepegawaian/                              # CRUD data master kepegawaian
+app/Http/Middleware/EnsureUserIsAdmin.php                       # pembatasan akses role admin
 app/Http/Middleware/EnsureUserIsDosen.php                      # pembatasan akses role dosen
 app/Http/Requests/UpdateDataPribadiRequest.php                 # validasi data pribadi & keluarga
 app/Http/Requests/RiwayatPendidikanRequest.php                 # validasi data pendidikan & berkas PDF
@@ -105,16 +112,21 @@ app/Models/PengajuanJabatan.php                               # pengajuan jabata
 app/Models/ProfilDosen.php                                    # profil dosen + data pasangan
 app/Models/AnakDosen.php                                      # data anak dosen
 app/Models/RiwayatPendidikan.php                              # jenjang, institusi, dan berkas pendidikan
-database/migrations/                                          # skema users, pengajuan, profil, anak, riwayat pendidikan
+app/Models/JabatanFungsional.php                              # master jabatan fungsional
+app/Models/JabatanStruktural.php                              # master jabatan struktural
+app/Models/Kepangkatan.php                                    # master kepangkatan
+database/migrations/                                          # skema users, pengajuan, profil, pendidikan, kepegawaian
 database/seeders/DatabaseSeeder.php                           # akun & data demo
 resources/views/auth/login.blade.php                          # halaman login
 resources/views/dashboard.blade.php                           # dashboard + DataTables
 resources/views/profil/                                       # data pribadi, portofolio, riwayat pendidikan
+resources/views/kepegawaian/                                  # daftar & form data master kepegawaian
 resources/views/layouts/                                      # layout auth & aplikasi
 resources/css/app.css                                         # tema Tailwind + DataTables
 resources/js/app.js                                           # DataTables, toggle password, form profil, sidebar
 tests/Feature/ProfilDosenTest.php                             # pengujian modul profil dosen
 tests/Feature/RiwayatPendidikanTest.php                       # pengujian CRUD & berkas pendidikan
+tests/Feature/KepegawaianTest.php                             # pengujian data master kepegawaian
 ```
 
 ## Rencana modul berikutnya

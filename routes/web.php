@@ -2,6 +2,9 @@
 
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Kepegawaian\JabatanFungsionalController;
+use App\Http\Controllers\Kepegawaian\JabatanStrukturalController;
+use App\Http\Controllers\Kepegawaian\KepangkatanController;
 use App\Http\Controllers\ProfilDosenController;
 use App\Http\Controllers\RiwayatPendidikanController;
 use Illuminate\Support\Facades\Auth;
@@ -36,5 +39,19 @@ Route::middleware('auth')->group(function () {
         Route::get('/riwayat-pendidikan/{riwayatPendidikan}/berkas/{jenis}', [RiwayatPendidikanController::class, 'berkas'])
             ->whereIn('jenis', ['ijazah', 'transkrip'])
             ->name('pendidikan.berkas');
+    });
+
+    Route::middleware('admin')->prefix('kepegawaian')->name('kepegawaian.')->group(function () {
+        Route::resource('jabatan-fungsional', JabatanFungsionalController::class)
+            ->except('show')
+            ->parameters(['jabatan-fungsional' => 'id']);
+
+        Route::resource('jabatan-struktural', JabatanStrukturalController::class)
+            ->except('show')
+            ->parameters(['jabatan-struktural' => 'id']);
+
+        Route::resource('kepangkatan', KepangkatanController::class)
+            ->except('show')
+            ->parameters(['kepangkatan' => 'id']);
     });
 });
