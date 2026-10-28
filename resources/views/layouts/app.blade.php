@@ -130,14 +130,13 @@
                                 <span class="sidebar-label">Verifikasi Berkas</span>
                                 <span class="sidebar-badge sidebar-collapse-hide ml-auto rounded-md bg-white/10 px-1.5 py-0.5 text-[9px] font-bold tracking-wide text-teal-200/70 uppercase">Soon</span>
                             </span>
-                            <span class="sidebar-link cursor-not-allowed opacity-45" title="Data Dosen (segera hadir)">
+                            <a href="{{ route('data-dosen.index') }}" title="Data Dosen" @class(['sidebar-link', 'sidebar-link-active' => request()->routeIs('data-dosen.*')])>
                                 <svg class="size-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
                                     <circle cx="9" cy="8" r="3" />
                                     <path d="M3.5 19a5.5 5.5 0 0 1 11 0M16 5.3a3 3 0 0 1 0 5.4M18.5 19a5.5 5.5 0 0 0-2.6-4.6" stroke-linecap="round" />
                                 </svg>
                                 <span class="sidebar-label">Data Dosen</span>
-                                <span class="sidebar-badge sidebar-collapse-hide ml-auto rounded-md bg-white/10 px-1.5 py-0.5 text-[9px] font-bold tracking-wide text-teal-200/70 uppercase">Soon</span>
-                            </span>
+                            </a>
                         </div>
                     </div>
 
@@ -164,14 +163,14 @@
                                 </svg>
                                 <span class="sidebar-label">Prodi</span>
                             </a>
-                            <a href="{{ route('instansi.struktur.index') }}" title="Struktur Instansi" @class(['sidebar-link', 'sidebar-link-active' => request()->routeIs('instansi.struktur.*')])>
+                            <a href="{{ route('instansi.struktur.index') }}" title="Pejabat Struktural" @class(['sidebar-link', 'sidebar-link-active' => request()->routeIs('instansi.struktur.*')])>
                                 <svg class="size-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
                                     <rect x="9" y="3.5" width="6" height="4.5" rx="1.5" />
                                     <rect x="3.5" y="16" width="6" height="4.5" rx="1.5" />
                                     <rect x="14.5" y="16" width="6" height="4.5" rx="1.5" />
                                     <path d="M12 8v3.5M6.5 16v-4.5h11V16" stroke-linecap="round" stroke-linejoin="round" />
                                 </svg>
-                                <span class="sidebar-label">Struktur Instansi</span>
+                                <span class="sidebar-label">Pejabat Struktural</span>
                             </a>
                         </div>
                     </details>

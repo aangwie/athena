@@ -64,7 +64,7 @@ class InstansiTest extends TestCase
             ->assertSee('No. Telp')
             ->assertSee('Website')
             ->assertSee('Logo Instansi')
-            ->assertSee('Struktur Instansi');
+            ->assertSee('Pejabat Struktural');
     }
 
     public function test_admin_can_save_instansi_profile_with_logo(): void
@@ -208,7 +208,7 @@ class InstansiTest extends TestCase
         $this->actingAs($admin)
             ->get('/instansi/struktur')
             ->assertOk()
-            ->assertSee('Struktur Instansi')
+            ->assertSee('Pejabat Struktural')
             ->assertSee('Daftar Pejabat Struktural')
             ->assertSee('Dekan')
             ->assertSee('Dr. Ayu Lestari, M.Kom.')

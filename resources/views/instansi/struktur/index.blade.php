@@ -1,8 +1,8 @@
 @extends('layouts.app')
 
-@section('title', 'Struktur Instansi')
+@section('title', 'Pejabat Struktural')
 @section('breadcrumb', 'Instansi')
-@section('page-title', 'Struktur Instansi')
+@section('page-title', 'Pejabat Struktural')
 
 @section('content')
     @php
@@ -16,7 +16,7 @@
                     <span class="h-px w-6 bg-teal-500"></span>
                     Instansi
                 </span>
-                <h2 class="text-xl font-extrabold tracking-tight text-slate-900 sm:text-2xl">Struktur Instansi</h2>
+                <h2 class="text-xl font-extrabold tracking-tight text-slate-900 sm:text-2xl">Pejabat Struktural</h2>
                 <p class="mt-1.5 max-w-2xl text-sm leading-relaxed text-slate-500">
                     Susunan pejabat struktural instansi berdasarkan jabatan struktural dan data dosen.
                 </p>

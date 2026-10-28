@@ -25,7 +25,7 @@
                     <rect x="14.5" y="16" width="6" height="4.5" rx="1.5" />
                     <path d="M12 8v3.5M6.5 16v-4.5h11V16" stroke-linecap="round" stroke-linejoin="round" />
                 </svg>
-                Struktur Instansi
+                Pejabat Struktural
             </a>
         </div>
 

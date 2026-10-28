@@ -41,7 +41,7 @@ Aplikasi berbasis **Laravel 12** untuk mengelola pengajuan jabatan akademik dose
   - setiap data master hanya berisi **ID** dan **nama**, dengan CRUD, pencarian, dan sorting
 - **Instansi** (khusus role admin) — identitas resmi instansi dan susunan pejabat:
   - **Data Instansi** — nama instansi, nomor SK operasional, alamat, no. telp, website, dan logo (JPG/PNG/WEBP, maks. 500 KB)
-  - **Struktur Instansi** — tabel pejabat struktural yang menghubungkan master **Jabatan Struktural** dengan **data dosen aktif**, lengkap dengan CRUD, pencarian, dan sorting
+  - **Pejabat Struktural** — tabel pejabat struktural yang menghubungkan master **Jabatan Struktural** dengan **data dosen aktif**, lengkap dengan CRUD, pencarian, dan sorting
   - data instansi disimpan sebagai satu profil tunggal; logo disimpan sebagai data URI base64 pada kolom `logo_base64` di tabel `instansi`
 
 ## Akun demo

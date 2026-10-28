@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\DataDosenController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Instansi\InstansiController;
 use App\Http\Controllers\Instansi\ProdiController;
@@ -27,6 +28,15 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
     Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
+
+    Route::middleware('admin')->prefix('data-dosen')->name('data-dosen.')->group(function () {
+        Route::get('/', [DataDosenController::class, 'index'])->name('index');
+        Route::get('/create', [DataDosenController::class, 'create'])->name('create');
+        Route::post('/', [DataDosenController::class, 'store'])->name('store');
+        Route::get('/{id}/edit', [DataDosenController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [DataDosenController::class, 'update'])->name('update');
+        Route::delete('/{id}', [DataDosenController::class, 'destroy'])->name('destroy');
+    });
 
     Route::middleware('dosen')->prefix('profil')->name('profil.')->group(function () {
         Route::get('/', [ProfilDosenController::class, 'show'])->name('show');
