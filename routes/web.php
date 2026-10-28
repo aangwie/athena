@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Instansi\InstansiController;
+use App\Http\Controllers\Instansi\ProdiController;
 use App\Http\Controllers\Instansi\StrukturInstansiController;
 use App\Http\Controllers\Kepegawaian\JabatanFungsionalController;
 use App\Http\Controllers\Kepegawaian\JabatanStrukturalController;
@@ -67,5 +68,12 @@ Route::middleware('auth')->group(function () {
         Route::get('/struktur/{struktur}/edit', [StrukturInstansiController::class, 'edit'])->name('struktur.edit');
         Route::put('/struktur/{struktur}', [StrukturInstansiController::class, 'update'])->name('struktur.update');
         Route::delete('/struktur/{struktur}', [StrukturInstansiController::class, 'destroy'])->name('struktur.destroy');
+
+        Route::get('/prodi', [ProdiController::class, 'index'])->name('prodi.index');
+        Route::get('/prodi/create', [ProdiController::class, 'create'])->name('prodi.create');
+        Route::post('/prodi', [ProdiController::class, 'store'])->name('prodi.store');
+        Route::get('/prodi/{prodi}/edit', [ProdiController::class, 'edit'])->name('prodi.edit');
+        Route::put('/prodi/{prodi}', [ProdiController::class, 'update'])->name('prodi.update');
+        Route::delete('/prodi/{prodi}', [ProdiController::class, 'destroy'])->name('prodi.destroy');
     });
 });

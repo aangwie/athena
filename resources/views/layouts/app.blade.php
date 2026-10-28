@@ -157,6 +157,13 @@
                                 </svg>
                                 <span class="sidebar-label">Data Instansi</span>
                             </a>
+                            <a href="{{ route('instansi.prodi.index') }}" title="Prodi" @class(['sidebar-link', 'sidebar-link-active' => request()->routeIs('instansi.prodi.*')])>
+                                <svg class="size-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                    <path d="M3 9.4 12 5l9 4.4-9 4.4L3 9.4Z" stroke-linejoin="round" />
+                                    <path d="M6.4 11.3v4.2c0 .5.3 1 .8 1.2 1.5.7 3 1 4.8 1s3.3-.3 4.8-1c.5-.2.8-.7.8-1.2v-4.2" stroke-linecap="round" />
+                                </svg>
+                                <span class="sidebar-label">Prodi</span>
+                            </a>
                             <a href="{{ route('instansi.struktur.index') }}" title="Struktur Instansi" @class(['sidebar-link', 'sidebar-link-active' => request()->routeIs('instansi.struktur.*')])>
                                 <svg class="size-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
                                     <rect x="9" y="3.5" width="6" height="4.5" rx="1.5" />
