@@ -224,6 +224,20 @@
                         </span>
                     </div>
                 </div>
+                @if (auth()->user()->isAdmin())
+                    <div>
+                        <p class="sidebar-section-title sidebar-collapse-hide mb-2 px-3 text-[10px] font-bold tracking-[0.14em] text-teal-300/50 uppercase">Pengaturan</p>
+                        <div class="space-y-1">
+                            <a href="{{ route('pengaturan.index') }}" title="Pengaturan" @class(['sidebar-link', 'sidebar-link-active' => request()->routeIs('pengaturan.*')])>
+                                <svg class="size-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                    <circle cx="12" cy="12" r="3" />
+                                    <path d="M19.4 14.5a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-2.9 1.2 2 2 0 1 1-4 0 1.7 1.7 0 0 0-2.9-1.2l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0-1.2-2.9 2 2 0 1 1 0-4 1.7 1.7 0 0 0 1.2-2.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 2.9-1.2 2 2 0 1 1 4 0 1.7 1.7 0 0 0 2.9 1.2l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0 1.2 2.9 2 2 0 1 1 0 4 1.7 1.7 0 0 0-1.5 1Z" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                                <span class="sidebar-label">Pengaturan</span>
+                            </a>
+                        </div>
+                    </div>
+                @endif
             </nav>
 
             <div class="sidebar-help sidebar-collapse-hide mx-4 mb-4 rounded-2xl border border-teal-400/15 bg-gradient-to-br from-teal-500/15 to-emerald-400/5 p-4">

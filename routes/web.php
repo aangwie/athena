@@ -9,6 +9,7 @@ use App\Http\Controllers\Instansi\StrukturInstansiController;
 use App\Http\Controllers\Kepegawaian\JabatanFungsionalController;
 use App\Http\Controllers\Kepegawaian\JabatanStrukturalController;
 use App\Http\Controllers\Kepegawaian\KepangkatanController;
+use App\Http\Controllers\PengaturanController;
 use App\Http\Controllers\ProfilDosenController;
 use App\Http\Controllers\RiwayatPendidikanController;
 use Illuminate\Support\Facades\Auth;
@@ -85,5 +86,14 @@ Route::middleware('auth')->group(function () {
         Route::get('/prodi/{prodi}/edit', [ProdiController::class, 'edit'])->name('prodi.edit');
         Route::put('/prodi/{prodi}', [ProdiController::class, 'update'])->name('prodi.update');
         Route::delete('/prodi/{prodi}', [ProdiController::class, 'destroy'])->name('prodi.destroy');
+    });
+
+    Route::middleware('admin')->prefix('pengaturan')->name('pengaturan.')->group(function () {
+        Route::get('/', [PengaturanController::class, 'index'])->name('index');
+        Route::post('/token', [PengaturanController::class, 'simpanToken'])->name('token');
+        Route::post('/update', [PengaturanController::class, 'update'])->name('update');
+        Route::post('/clear-cache', [PengaturanController::class, 'clearCache'])->name('clear-cache');
+        Route::post('/migrate', [PengaturanController::class, 'migrate'])->name('migrate');
+        Route::post('/storage-link', [PengaturanController::class, 'storageLink'])->name('storage-link');
     });
 });

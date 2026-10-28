@@ -43,6 +43,12 @@ Aplikasi berbasis **Laravel 12** untuk mengelola pengajuan jabatan akademik dose
   - **Data Instansi** — nama instansi, nomor SK operasional, alamat, no. telp, website, dan logo (JPG/PNG/WEBP, maks. 500 KB)
   - **Pejabat Struktural** — tabel pejabat struktural yang menghubungkan master **Jabatan Struktural** dengan **data dosen aktif**, lengkap dengan CRUD, pencarian, dan sorting
   - data instansi disimpan sebagai satu profil tunggal; logo disimpan sebagai data URI base64 pada kolom `logo_base64` di tabel `instansi`
+- **Pengaturan** (khusus role admin, menu paling bawah):
+  - **Data Update** — simpan token GitHub berformat `github_patxxxxxxxxx` ke berkas `.token-gh`, lalu jalankan `git pull --ff-only`
+  - **Clear cache** — `php artisan optimize:clear`
+  - **Migrasi tabel** — `php artisan migrate --force`
+  - **Symlink storage** — `php artisan storage:link --force`
+  - setiap tindakan ditampilkan pada panel **terminal log** halaman pengaturan dan ditulis ke `storage/logs/laravel.log`
 
 ## Akun demo
 
@@ -112,6 +118,7 @@ app/Http/Controllers/ProfilDosenController.php                 # data pribadi & 
 app/Http/Controllers/RiwayatPendidikanController.php           # CRUD & unduh berkas pendidikan
 app/Http/Controllers/Kepegawaian/                              # CRUD data master kepegawaian
 app/Http/Controllers/Instansi/                                  # profil & struktur instansi
+app/Http/Controllers/PengaturanController.php                   # token GitHub, update, cache, migrasi, symlink
 app/Http/Middleware/EnsureUserIsAdmin.php                       # pembatasan akses role admin
 app/Http/Middleware/EnsureUserIsDosen.php                      # pembatasan akses role dosen
 app/Http/Requests/UpdateDataPribadiRequest.php                 # validasi data pribadi & keluarga
@@ -133,6 +140,7 @@ resources/views/dashboard.blade.php                           # dashboard + Data
 resources/views/profil/                                       # data pribadi, portofolio, riwayat pendidikan
 resources/views/kepegawaian/                                  # daftar & form data master kepegawaian
 resources/views/instansi/                                     # profil & struktur instansi
+resources/views/pengaturan/                                    # token GitHub, tindakan sistem, terminal log
 resources/views/layouts/                                      # layout auth & aplikasi
 resources/css/app.css                                         # tema Tailwind + DataTables
 resources/js/app.js                                           # DataTables, toggle password, form profil, sidebar
@@ -140,6 +148,7 @@ tests/Feature/ProfilDosenTest.php                             # pengujian modul 
 tests/Feature/RiwayatPendidikanTest.php                       # pengujian CRUD & berkas pendidikan
 tests/Feature/KepegawaianTest.php                             # pengujian data master kepegawaian
 tests/Feature/InstansiTest.php                                # pengujian profil & struktur instansi
+tests/Feature/PengaturanTest.php                              # pengujian pengaturan & terminal log
 ```
 
 ## Rencana modul berikutnya
