@@ -61,6 +61,9 @@ Route::middleware('auth')->group(function () {
         Route::post('/pengajuan/abdimas', [PengajuanDosenController::class, 'storeAbdimas'])->name('pengajuan.abdimas.store');
         Route::put('/pengajuan/abdimas/{kegiatan}', [PengajuanDosenController::class, 'updateAbdimas'])->name('pengajuan.abdimas.update');
         Route::delete('/pengajuan/abdimas/{kegiatan}', [PengajuanDosenController::class, 'destroyAbdimas'])->name('pengajuan.abdimas.destroy');
+        Route::post('/pengajuan/penunjang', [PengajuanDosenController::class, 'storePenunjang'])->name('pengajuan.penunjang.store');
+        Route::put('/pengajuan/penunjang/{kegiatan}', [PengajuanDosenController::class, 'updatePenunjang'])->name('pengajuan.penunjang.update');
+        Route::delete('/pengajuan/penunjang/{kegiatan}', [PengajuanDosenController::class, 'destroyPenunjang'])->name('pengajuan.penunjang.destroy');
 
         Route::get('/riwayat-pendidikan', [RiwayatPendidikanController::class, 'index'])->name('pendidikan.index');
         Route::get('/riwayat-pendidikan/create', [RiwayatPendidikanController::class, 'create'])->name('pendidikan.create');

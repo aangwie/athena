@@ -52,6 +52,13 @@
                         <span class="whitespace-nowrap">{{ $item['label'] }}</span>
                     </button>
                 @endforeach
+
+                {{-- Tab rekap: tidak termasuk KOMPONEN karena hanya menampilkan hasil entri bidang di atasnya. --}}
+                <button type="button" role="tab" id="tab-review" aria-controls="panel-review"
+                        aria-selected="false" tabindex="-1" data-tab-target="review" class="tab-button">
+                    <span class="flex size-5 items-center justify-center rounded-md bg-slate-100 text-[10px] font-extrabold text-slate-500">{{ count($komponen) + 1 }}</span>
+                    <span class="whitespace-nowrap">Review</span>
+                </button>
             </div>
 
             @foreach ($komponen as $key => $item)
@@ -109,20 +116,45 @@
                             'placeholderKomponen' => 'Pilih komponen pengabdian kepada masyarakat',
                             'placeholderNama' => 'Contoh: Penyuluhan Literasi Digital bagi UMKM Desa Sukamaju',
                         ]])
-                    @else
-                        <div class="rounded-xl border border-dashed border-slate-300 bg-slate-50/60 px-5 py-12 text-center">
-                            <span class="mx-auto flex size-14 items-center justify-center rounded-2xl bg-white text-slate-300 shadow-sm ring-1 ring-slate-100">
-                                <svg class="size-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-                                    <path d="M6 3.5h8l4 4V20a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 6 20V5A1.5 1.5 0 0 1 7.5 3.5Z" stroke-linejoin="round" />
-                                    <path d="M14 3.5v4.5h4M9 13h6M9 16.5h4" stroke-linecap="round" />
-                                </svg>
-                            </span>
-                            <p class="mt-3 text-sm font-bold text-slate-700">Formulir {{ $item['label'] }} belum tersedia</p>
-                            <p class="mt-1 text-xs text-slate-400">{{ $item['singkat'] }} Rincian isian akan tampil di bagian ini.</p>
-                        </div>
+                    @elseif ($key === 'penunjang')
+                        @include('profil.pengajuan.partials.bidang', ['bidang' => [
+                            'kode' => 'E',
+                            'nama' => 'Penunjang',
+                            'suffix' => 'penunjang',
+                            'tab' => 'penunjang',
+                            'route' => 'profil.pengajuan.penunjang',
+                            'jenis' => 'JENIS_PENUNJANG',
+                            'sub' => 'SUB_PENUNJANG',
+                            'rincian' => 'RINCIAN_PENUNJANG',
+                            'edit' => $entriEditPenunjang,
+                            'entri' => $kegiatanPenunjang,
+                            'placeholderKomponen' => 'Pilih komponen penunjang',
+                            'placeholderNama' => 'Contoh: Anggota Panitia Seminar Nasional Teknologi Pendidikan',
+                        ]])
                     @endif
                 </div>
             @endforeach
+
+            {{-- Rekap seluruh entri dari keempat bidang di atasnya. --}}
+            <div role="tabpanel" id="panel-review" aria-labelledby="tab-review"
+                 data-tab-panel="review" tabindex="0" class="hidden p-5 sm:p-6">
+                <div class="flex items-center gap-2.5">
+                    <span class="section-number">{{ count($komponen) + 1 }}</span>
+                    <div>
+                        <h4 class="text-sm font-extrabold text-slate-800">Review Pengajuan</h4>
+                        <p class="mt-0.5 text-xs text-slate-400">
+                            Rekap seluruh entri dari keempat bidang dalam satu formulir. Periksa kesesuaian unsur, sub unsur, dan link buktinya.
+                        </p>
+                    </div>
+                    <span class="ml-auto whitespace-nowrap rounded-full bg-teal-50 px-2.5 py-1 text-[10px] font-bold text-teal-700 ring-1 ring-teal-100 ring-inset">
+                        {{ \App\Models\KegiatanDupak::labelPeriode($tahun, $semester) }}
+                    </span>
+                </div>
+
+                <div class="mt-5 overflow-hidden rounded-xl border border-slate-200 bg-white p-2 shadow-sm sm:p-4">
+                    @include('profil.pengajuan.partials.review')
+                </div>
+            </div>
         </section>
     </div>
 @endsection

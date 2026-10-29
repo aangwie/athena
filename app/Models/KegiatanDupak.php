@@ -181,6 +181,113 @@ class KegiatanDupak extends Model
         ],
     ];
 
+    /**
+     * Komponen Bidang E — Penunjang.
+     *
+     * @var array<string, string>
+     */
+    public const JENIS_PENUNJANG = [
+        'panitia_pt' => 'Menjadi Anggota dalam Suatu Panitia/Badan pada Perguruan Tinggi',
+        'panitia_pemerintah' => 'Menjadi Anggota Panitia/Badan pada Lembaga Pemerintah',
+        'organisasi_profesi' => 'Menjadi Anggota Organisasi Profesi',
+        'panitia_antar_lembaga' => 'Mewakili Perguruan Tinggi/Lembaga Pemerintah Duduk dalam Panitia Antar Lembaga',
+        'delegasi_nasional' => 'Menjadi Anggota Delegasi Nasional ke Pertemuan Internasional',
+        'pertemuan_ilmiah' => 'Berperan Aktif dalam Pertemuan Ilmiah',
+        'penghargaan' => 'Mendapatkan Penghargaan/Tanda Jasa',
+        'buku_pelajaran' => 'Menulis Buku Pelajaran SMA ke Bawah yang Diterbitkan dan Diedarkan Secara Nasional',
+        'prestasi' => 'Mempunyai Prestasi di Bidang Olahraga/Humaniora',
+        'tim_penilaian_ja' => 'Keanggotaan dalam Tim Penilaian Jabatan Akademik',
+    ];
+
+    /**
+     * Rincian tiap komponen Bidang E. Komponen tanpa rincian tidak ada di sini.
+     *
+     * @var array<string, array<string, string>>
+     */
+    public const SUB_PENUNJANG = [
+        'panitia_pt' => [
+            'ketua_wakil_ketua' => 'Sebagai Ketua/Wakil Ketua Merangkap Anggota',
+            'anggota' => 'Sebagai Anggota',
+        ],
+        'panitia_pemerintah' => [
+            'panitia_pusat' => 'Panitia Pusat',
+            'panitia_daerah' => 'Panitia Daerah',
+        ],
+        'organisasi_profesi' => [
+            'profesi_internasional' => 'Tingkat Internasional',
+            'profesi_nasional' => 'Tingkat Nasional',
+        ],
+        'delegasi_nasional' => [
+            'ketua_delegasi' => 'Ketua Delegasi',
+            'anggota_delegasi' => 'Anggota Delegasi',
+        ],
+        'pertemuan_ilmiah' => [
+            'internasional_nasional_regional' => 'Tingkat Internasional/Nasional/Regional',
+            'lingkungan_pt' => 'Di Lingkungan Perguruan Tinggi',
+        ],
+        'penghargaan' => [
+            'satya_lancana_karya_satya' => 'Penghargaan/Tanda Jasa Satya Lancana Karya Satya',
+            'penghargaan_lainnya' => 'Memperoleh Penghargaan Lainnya',
+        ],
+        'buku_pelajaran' => [
+            'sma' => 'SMA Sederajat',
+            'smp' => 'SMP Sederajat',
+            'sd' => 'SD Sederajat',
+        ],
+        'prestasi' => [
+            'prestasi_internasional' => 'Tingkat Internasional',
+            'prestasi_nasional' => 'Tingkat Nasional',
+            'prestasi_daerah_lokal' => 'Tingkat Daerah/Lokal',
+        ],
+    ];
+
+    /**
+     * Rincian tingkat ketiga Bidang E, dikelompokkan per `sub_jenis`.
+     *
+     * Kunci `sub_jenis` wajib unik lintas seluruh konstanta `SUB_*`, karena
+     * `rincianMap()` pada request hanya melihat `sub_jenis`, bukan `jenis`.
+     *
+     * @var array<string, array<string, string>>
+     */
+    public const RINCIAN_PENUNJANG = [
+        'panitia_pusat' => [
+            'ketua_wakil_ketua' => 'Ketua/Wakil Ketua',
+            'anggota' => 'Anggota',
+        ],
+        'panitia_daerah' => [
+            'ketua_wakil_ketua' => 'Ketua/Wakil Ketua',
+            'anggota' => 'Anggota',
+        ],
+        'profesi_internasional' => [
+            'pengurus' => 'Pengurus',
+            'anggota_atas_permintaan' => 'Anggota atas Permintaan',
+            'anggota' => 'Anggota',
+        ],
+        'profesi_nasional' => [
+            'pengurus' => 'Pengurus',
+            'anggota_atas_permintaan' => 'Anggota atas Permintaan',
+            'anggota' => 'Anggota',
+        ],
+        'internasional_nasional_regional' => [
+            'ketua' => 'Ketua',
+            'anggota' => 'Anggota',
+        ],
+        'lingkungan_pt' => [
+            'ketua' => 'Ketua',
+            'anggota' => 'Anggota',
+        ],
+        'satya_lancana_karya_satya' => [
+            'tiga_puluh_tahun' => 'Tiga Puluh Tahun',
+            'dua_puluh_tahun' => 'Dua Puluh Tahun',
+            'sepuluh_tahun' => 'Sepuluh Tahun',
+        ],
+        'penghargaan_lainnya' => [
+            'internasional' => 'Tingkat Internasional',
+            'nasional' => 'Tingkat Nasional',
+            'provinsi' => 'Tingkat Provinsi',
+        ],
+    ];
+
     public const SEMESTER = [
         'ganjil' => 'Ganjil',
         'genap' => 'Genap',
@@ -225,6 +332,7 @@ class KegiatanDupak extends Model
             ?? self::JENIS_PELAKSANAAN[$this->jenis]
             ?? self::JENIS_PENELITIAN[$this->jenis]
             ?? self::JENIS_PENGABDIAN[$this->jenis]
+            ?? self::JENIS_PENUNJANG[$this->jenis]
             ?? str_replace('_', ' ', (string) $this->jenis);
     }
 
@@ -233,6 +341,7 @@ class KegiatanDupak extends Model
         return self::SUB_PELAKSANAAN[$this->jenis][$this->sub_jenis]
             ?? self::SUB_PENELITIAN[$this->jenis][$this->sub_jenis]
             ?? self::SUB_PENGABDIAN[$this->jenis][$this->sub_jenis]
+            ?? self::SUB_PENUNJANG[$this->jenis][$this->sub_jenis]
             ?? null;
     }
 
@@ -240,6 +349,7 @@ class KegiatanDupak extends Model
     {
         return self::RINCIAN_PENELITIAN[$this->sub_jenis][$this->rincian]
             ?? self::RINCIAN_PENGABDIAN[$this->sub_jenis][$this->rincian]
+            ?? self::RINCIAN_PENUNJANG[$this->sub_jenis][$this->rincian]
             ?? null;
     }
 }

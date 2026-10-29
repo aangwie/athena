@@ -882,4 +882,325 @@ class PengajuanDosenTest extends TestCase
 
         $this->assertDatabaseCount('kegiatan_dupak', 0);
     }
+
+    public function test_dosen_can_add_penunjang_entry_with_rincian_and_link_bukti(): void
+    {
+        $dosen = $this->makeUser('dosen');
+
+        $this->actingAs($dosen)
+            ->post('/profil/pengajuan/penunjang', [
+                'tahun' => 2026,
+                'semester' => 'ganjil',
+                'jenis' => 'panitia_pemerintah',
+                'sub_jenis' => 'panitia_pusat',
+                'rincian' => 'ketua_wakil_ketua',
+                'nama_kegiatan' => 'Ketua Panitia Pelatihan Literasi Digital Nasional',
+                'link_bukti' => 'https://drive.google.com/file/d/panitia/view',
+            ])
+            ->assertRedirect(route('profil.pengajuan.create', ['tahun' => 2026, 'semester' => 'ganjil']).'#penunjang');
+
+        $this->assertDatabaseHas('kegiatan_dupak', [
+            'user_id' => $dosen->id,
+            'komponen' => 'penunjang',
+            'jenis' => 'panitia_pemerintah',
+            'sub_jenis' => 'panitia_pusat',
+            'rincian' => 'ketua_wakil_ketua',
+            'nama_kegiatan' => 'Ketua Panitia Pelatihan Literasi Digital Nasional',
+            'link_bukti' => 'https://drive.google.com/file/d/panitia/view',
+        ]);
+
+        $response = $this->actingAs($dosen)
+            ->get('/profil/pengajuan/create?tahun=2026&semester=ganjil')
+            ->assertOk()
+            ->assertSee('Bidang E — Penunjang')
+            ->assertSee(route('profil.pengajuan.penunjang.store'), false)
+            ->assertSee('data-reveal-select="#bukti-penunjang"', false)
+            ->assertSee('data-dependent-select="#sub_jenis-penunjang"', false)
+            ->assertSee('data-dependent-select="#rincian-penunjang"', false)
+            ->assertSee('id="rincian-penunjang"', false)
+            ->assertSee('data-confirm="Hapus entri Menjadi Anggota Panitia/Badan pada Lembaga Pemerintah?"', false);
+
+        foreach (\App\Models\KegiatanDupak::JENIS_PENUNJANG as $label) {
+            $response->assertSee($label);
+        }
+
+        foreach (\App\Models\KegiatanDupak::SUB_PENUNJANG as $subs) {
+            foreach ($subs as $label) {
+                $response->assertSee($label);
+            }
+        }
+
+        // Tingkat ketiga (mis. Pengurus/Anggota, Ketua/Wakil Ketua) dikirim sebagai opsi rincian kegiatan.
+        foreach (\App\Models\KegiatanDupak::RINCIAN_PENUNJANG as $rincian) {
+            foreach ($rincian as $label) {
+                $response->assertSee($label);
+            }
+        }
+    }
+
+    public function test_penunjang_entry_requires_rincian_only_for_komponen_with_sub_jenis(): void
+    {
+        $dosen = $this->makeUser('dosen');
+
+        // Komponen dengan rincian komponen tapi tanpa tingkat ketiga: sub_jenis wajib, rincian tidak.
+        $this->actingAs($dosen)
+            ->from('/profil/pengajuan/create?tahun=2026&semester=ganjil')
+            ->post('/profil/pengajuan/penunjang', [
+                'tahun' => 2026,
+                'semester' => 'ganjil',
+                'jenis' => 'panitia_pt',
+                'nama_kegiatan' => 'Anggota Senat Perguruan Tinggi',
+                'link_bukti' => 'https://drive.google.com/file/d/senat/view',
+            ])
+            ->assertSessionHasErrors(['sub_jenis']);
+
+        // Rincian komponen bercabang wajib memilih tingkat ketiga.
+        $this->actingAs($dosen)
+            ->from('/profil/pengajuan/create?tahun=2026&semester=ganjil')
+            ->post('/profil/pengajuan/penunjang', [
+                'tahun' => 2026,
+                'semester' => 'ganjil',
+                'jenis' => 'organisasi_profesi',
+                'sub_jenis' => 'profesi_nasional',
+                'nama_kegiatan' => 'Anggota Asosiasi Profesi Teknologi Pendidikan',
+                'link_bukti' => 'https://drive.google.com/file/d/asosiasi/view',
+            ])
+            ->assertSessionHasErrors(['rincian']);
+
+        $this->actingAs($dosen)
+            ->from('/profil/pengajuan/create?tahun=2026&semester=ganjil')
+            ->post('/profil/pengajuan/penunjang', [
+                'tahun' => 2026,
+                'semester' => 'ganjil',
+                'jenis' => 'penghargaan',
+                'sub_jenis' => 'satya_lancana_karya_satya',
+                'rincian' => 'tingkat_palsu',
+                'nama_kegiatan' => 'Satya Lancana Karya Satya',
+                'link_bukti' => 'https://drive.google.com/file/d/satya/view',
+            ])
+            ->assertSessionHasErrors(['rincian']);
+
+        $this->actingAs($dosen)
+            ->from('/profil/pengajuan/create?tahun=2026&semester=ganjil')
+            ->post('/profil/pengajuan/penunjang', ['jenis' => 'penunjang_palsu', 'link_bukti' => 'bukan-link'])
+            ->assertSessionHasErrors(['tahun', 'semester', 'jenis', 'nama_kegiatan', 'link_bukti']);
+
+        $this->assertDatabaseCount('kegiatan_dupak', 0);
+
+        // Komponen dua tingkat: sub_jenis tersimpan, rincian dikosongkan.
+        $this->actingAs($dosen)
+            ->post('/profil/pengajuan/penunjang', [
+                'tahun' => 2026,
+                'semester' => 'ganjil',
+                'jenis' => 'prestasi',
+                'sub_jenis' => 'prestasi_nasional',
+                'rincian' => 'sisa_rincian_lama',
+                'nama_kegiatan' => 'Juara 1 Lomba Debat Pendidikan Nasional',
+                'link_bukti' => 'https://drive.google.com/file/d/debat/view',
+            ])
+            ->assertRedirect(route('profil.pengajuan.create', ['tahun' => 2026, 'semester' => 'ganjil']).'#penunjang');
+
+        $this->assertDatabaseHas('kegiatan_dupak', [
+            'jenis' => 'prestasi',
+            'sub_jenis' => 'prestasi_nasional',
+            'rincian' => null,
+        ]);
+
+        // Komponen tanpa rincian komponen: sub_jenis & rincian dikosongkan.
+        $this->actingAs($dosen)
+            ->post('/profil/pengajuan/penunjang', [
+                'tahun' => 2026,
+                'semester' => 'ganjil',
+                'jenis' => 'tim_penilaian_ja',
+                'sub_jenis' => 'sisa_pilihan_lama',
+                'rincian' => 'sisa_rincian_lama',
+                'nama_kegiatan' => 'Anggota Tim Penilai Jabatan Akademik',
+                'link_bukti' => 'https://drive.google.com/file/d/tim/view',
+            ])
+            ->assertRedirect(route('profil.pengajuan.create', ['tahun' => 2026, 'semester' => 'ganjil']).'#penunjang');
+
+        $this->assertDatabaseHas('kegiatan_dupak', [
+            'jenis' => 'tim_penilaian_ja',
+            'sub_jenis' => null,
+            'rincian' => null,
+        ]);
+    }
+
+    public function test_dosen_can_update_delete_and_prefill_own_penunjang_entry_only(): void
+    {
+        $dosen = $this->makeUser('dosen');
+        $lain = User::create([
+            'nidn' => '1990010120',
+            'name' => 'Dosen Lain',
+            'email' => 'lain@example.test',
+            'role' => 'dosen',
+            'is_active' => true,
+            'password' => Hash::make('password'),
+        ]);
+
+        $entri = $dosen->kegiatanDupak()->create([
+            'komponen' => 'penunjang',
+            'tahun' => 2025,
+            'semester' => 'ganjil',
+            'jenis' => 'penghargaan',
+            'sub_jenis' => 'satya_lancana_karya_satya',
+            'rincian' => 'sepuluh_tahun',
+            'nama_kegiatan' => 'Satya Lancana Karya Satya Sepuluh Tahun',
+            'link_bukti' => 'https://drive.google.com/file/d/satya-10/view',
+        ]);
+
+        $perubahan = [
+            'tahun' => 2025,
+            'semester' => 'ganjil',
+            'jenis' => 'panitia_antar_lembaga',
+            'sub_jenis' => null,
+            'rincian' => null,
+            'nama_kegiatan' => 'Wakil Perguruan Tinggi pada Panitia Antar Lembaga',
+            'link_bukti' => 'https://drive.google.com/file/d/antar-lembaga/view',
+        ];
+
+        $this->actingAs($lain)
+            ->put('/profil/pengajuan/penunjang/'.$entri->id, $perubahan)
+            ->assertNotFound();
+
+        $this->actingAs($dosen)
+            ->put('/profil/pengajuan/penunjang/'.$entri->id, $perubahan)
+            ->assertRedirect(route('profil.pengajuan.create', ['tahun' => 2025, 'semester' => 'ganjil']).'#penunjang');
+
+        $this->assertDatabaseHas('kegiatan_dupak', [
+            'id' => $entri->id,
+            'komponen' => 'penunjang',
+            ...$perubahan,
+        ]);
+
+        // Entri bidang E tidak boleh dihapus lewat rute bidang lain.
+        foreach (['pendidikan', 'pelaksanaan-pendidikan', 'penelitian', 'abdimas'] as $rute) {
+            $this->actingAs($dosen)
+                ->delete('/profil/pengajuan/'.$rute.'/'.$entri->id)
+                ->assertNotFound();
+        }
+
+        $this->actingAs($lain)
+            ->delete('/profil/pengajuan/penunjang/'.$entri->id)
+            ->assertNotFound();
+
+        // Form edit terisi ulang sesuai entri tersebut.
+        $this->actingAs($dosen)
+            ->get('/profil/pengajuan/create?edit='.$entri->id)
+            ->assertOk()
+            ->assertSee('Edit Entri Bidang E')
+            ->assertSee('value="panitia_antar_lembaga" selected', false)
+            ->assertSee('value="Wakil Perguruan Tinggi pada Panitia Antar Lembaga"', false)
+            ->assertSee(route('profil.pengajuan.penunjang.update', $entri), false)
+            ->assertSee('aria-label="Hapus entri Mewakili Perguruan Tinggi/Lembaga Pemerintah Duduk dalam Panitia Antar Lembaga"', false);
+
+        $this->actingAs($dosen)
+            ->delete('/profil/pengajuan/penunjang/'.$entri->id)
+            ->assertRedirect(route('profil.pengajuan.create', ['tahun' => 2025, 'semester' => 'ganjil']).'#penunjang');
+
+        $this->assertDatabaseCount('kegiatan_dupak', 0);
+    }
+    public function test_sub_jenis_keys_are_unique_across_all_bidang(): void
+    {
+        // rincianMap() pada request hanya melihat sub_jenis, jadi kunci sub_jenis wajib
+        // unik lintas bidang agar rincian bidang lain tidak ikut diminta.
+        $subJenis = collect([
+            \App\Models\KegiatanDupak::SUB_PELAKSANAAN,
+            \App\Models\KegiatanDupak::SUB_PENELITIAN,
+            \App\Models\KegiatanDupak::SUB_PENGABDIAN,
+            \App\Models\KegiatanDupak::SUB_PENUNJANG,
+        ])->flatMap(fn (array $map) => $map)
+            ->flatMap(fn (array $subs) => array_keys($subs))
+            ->sort()
+            ->values()
+            ->all();
+
+        $this->assertSame($subJenis, array_values(array_unique($subJenis)));
+    }
+
+    public function test_review_tab_recaps_entries_from_all_bidang_in_tab_order(): void
+    {
+        $dosen = $this->makeUser('dosen');
+
+        $entri = [
+            ['komponen' => 'pendidikan', 'jenis' => 'pendidikan_formal', 'nama_kegiatan' => 'Ijazah Magister Teknologi Pendidikan'],
+            ['komponen' => 'pelaksanaan_pendidikan', 'jenis' => 'perkuliahan', 'nama_kegiatan' => 'Perkuliahan Pemrograman Web Kelas A'],
+            ['komponen' => 'penelitian', 'jenis' => 'karya_ilmiah', 'sub_jenis' => 'dipublikasikan', 'rincian' => 'jurnal_internasional', 'nama_kegiatan' => 'Artikel Jurnal Internasional Bereputasi'],
+            ['komponen' => 'abdimas', 'jenis' => 'latihan_penyuluhan', 'sub_jenis' => 'terjadwal_satu_semester', 'rincian' => 'nasional', 'nama_kegiatan' => 'Penyuluhan Literasi Digital UMKM'],
+            ['komponen' => 'penunjang', 'jenis' => 'penghargaan', 'sub_jenis' => 'satya_lancana_karya_satya', 'rincian' => 'sepuluh_tahun', 'nama_kegiatan' => 'Satya Lancana Karya Satya Sepuluh Tahun'],
+        ];
+
+        foreach ($entri as $data) {
+            $dosen->kegiatanDupak()->create([
+                'tahun' => 2026,
+                'semester' => 'ganjil',
+                'link_bukti' => 'https://drive.google.com/file/d/'.$data['komponen'].'/view',
+                ...$data,
+            ]);
+        }
+
+        $html = $this->actingAs($dosen)
+            ->get('/profil/pengajuan/create?tahun=2026&semester=ganjil')
+            ->assertOk()
+            ->assertSee('data-tab-target="review"', false)
+            ->assertSee('data-tab-panel="review"', false)
+            ->getContent();
+
+        // Tab review berada paling akhir, setelah tab bidang terakhir.
+        $this->assertGreaterThan(
+            strpos($html, 'data-tab-target="penunjang"'),
+            strpos($html, 'data-tab-target="review"'),
+        );
+
+        $panel = str($html)->after('data-tab-panel="review"')->toString();
+
+        // Kepala formulir DUPAK: grup kolom "Angka Kredit Menurut Instansi Pengusul".
+        $kepala = [
+            'Unsur yang Dinilai',
+            'Unsur, Sub Unsur, dan Butir Kegiatan',
+            'Angka Kredit Menurut',
+            'Instansi Pengusul',
+            'Lama',
+            'Baru',
+            'Jumlah',
+            'Link Bukti',
+        ];
+        $posisiKepala = array_map(fn (string $teks) => strpos($panel, '>'.$teks.'</th>'), $kepala);
+
+        $this->assertNotContains(false, $posisiKepala);
+        $this->assertSame($posisiKepala, collect($posisiKepala)->sort()->values()->all());
+
+        // Satu baris per bidang (I-V), berurutan sesuai urutan tab.
+        $bidang = [
+            'Pendidikan (Bidang A)',
+            'Pelaksanaan Pendidikan (Bidang B)',
+            'Penelitian (Bidang C)',
+            'Pengabdian kepada Masyarakat (Bidang D)',
+            'Penunjang (Bidang E)',
+        ];
+        $posisiBidang = array_map(fn (string $teks) => strpos($panel, '>'.$teks.'</td>'), $bidang);
+
+        $this->assertNotContains(false, $posisiBidang);
+        $this->assertSame($posisiBidang, collect($posisiBidang)->sort()->values()->all());
+
+        foreach (['I', 'II', 'III', 'IV', 'V'] as $romawi) {
+            $this->assertStringContainsString('>'.$romawi.'</td>', $panel);
+        }
+
+        // Tiap bidang ditutup baris JUMLAH, semua entri punya link bukti.
+        $this->assertSame(5, substr_count($panel, '>Jumlah</td>'));
+        $this->assertSame(5, substr_count($panel, 'href="https://drive.google.com'));
+        $this->assertStringNotContainsString('Tidak ada bukti', $panel);
+
+        // Hirarki unsur - sub unsur - butir kegiatan memakai label konstanta, bukan slug.
+        foreach (['Pendidikan Formal', 'Melaksanakan Perkuliahan', 'Jurnal Ilmiah Internasional', 'Tingkat Nasional', 'Sepuluh Tahun'] as $label) {
+            $this->assertStringContainsString($label, $panel);
+        }
+
+        // Baris mengikuti urutan tab, bukan urutan input.
+        $posisiNama = array_map(fn (array $data) => strpos($panel, $data['nama_kegiatan']), $entri);
+
+        $this->assertNotContains(false, $posisiNama);
+        $this->assertSame($posisiNama, collect($posisiNama)->sort()->values()->all());
+    }
 }

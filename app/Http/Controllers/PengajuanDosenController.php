@@ -6,6 +6,7 @@ use App\Http\Requests\KegiatanPelaksanaanRequest;
 use App\Http\Requests\KegiatanPendidikanRequest;
 use App\Http\Requests\KegiatanPenelitianRequest;
 use App\Http\Requests\KegiatanPengabdianRequest;
+use App\Http\Requests\KegiatanPenunjangRequest;
 use App\Models\KegiatanDupak;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -16,27 +17,23 @@ class PengajuanDosenController extends Controller
     /**
      * Empat komponen kegiatan DUPAK. Urutan array menentukan urutan tab.
      *
-     * @var array<string, array{label: string, singkat: string, deskripsi: string}>
+     * @var array<string, array{label: string, deskripsi: string}>
      */
     public const KOMPONEN = [
         'pendidikan' => [
             'label' => 'Pendidikan',
-            'singkat' => 'Pendidikan formal, diklat, perkuliahan, pembimbingan, dan pengujian.',
             'deskripsi' => 'Ijazah, diklat prajabatan, kegiatan perkuliahan, pembimbingan, pengujian, dan pengembangan bahan ajar.',
         ],
         'penelitian' => [
             'label' => 'Penelitian',
-            'singkat' => 'Karya ilmiah, publikasi, buku, dan paten.',
             'deskripsi' => 'Hasil penelitian, publikasi ilmiah, buku ajar, dan kekayaan intelektual yang diakui.',
         ],
         'abdimas' => [
             'label' => 'Pengabdian kepada Masyarakat',
-            'singkat' => 'Kegiatan pengabdian dan pemberdayaan masyarakat.',
             'deskripsi' => 'Kegiatan pengabdian kepada masyarakat beserta hasil dan bukti pelaksanaannya.',
         ],
         'penunjang' => [
             'label' => 'Penunjang',
-            'singkat' => 'Organisasi profesi, penghargaan, dan tugas tambahan.',
             'deskripsi' => 'Kegiatan penunjang tugas dosen: organisasi profesi, penghargaan, dan tugas tambahan.',
         ],
     ];
@@ -72,10 +69,12 @@ class PengajuanDosenController extends Controller
             'entriEditPelaksanaan' => $entriEdit?->komponen === 'pelaksanaan_pendidikan' ? $entriEdit : null,
             'entriEditPenelitian' => $entriEdit?->komponen === 'penelitian' ? $entriEdit : null,
             'entriEditAbdimas' => $entriEdit?->komponen === 'abdimas' ? $entriEdit : null,
+            'entriEditPenunjang' => $entriEdit?->komponen === 'penunjang' ? $entriEdit : null,
             'kegiatanPendidikan' => (clone $entri)->where('komponen', 'pendidikan')->get(),
             'kegiatanPelaksanaan' => (clone $entri)->where('komponen', 'pelaksanaan_pendidikan')->get(),
             'kegiatanPenelitian' => (clone $entri)->where('komponen', 'penelitian')->get(),
             'kegiatanAbdimas' => (clone $entri)->where('komponen', 'abdimas')->get(),
+            'kegiatanPenunjang' => (clone $entri)->where('komponen', 'penunjang')->get(),
         ]);
     }
 
@@ -189,6 +188,34 @@ class PengajuanDosenController extends Controller
         $kegiatan->delete();
 
         return $this->kembaliKeTab('Entri bidang pengabdian kepada masyarakat berhasil dihapus.', $kegiatan, 'abdimas');
+    }
+
+    public function storePenunjang(KegiatanPenunjangRequest $request): RedirectResponse
+    {
+        $kegiatan = $request->user()->kegiatanDupak()->create([
+            'komponen' => 'penunjang',
+            ...$request->validated(),
+        ]);
+
+        return $this->kembaliKeTab('Entri bidang penunjang berhasil ditambahkan.', $kegiatan, 'penunjang');
+    }
+
+    public function updatePenunjang(KegiatanPenunjangRequest $request, KegiatanDupak $kegiatan): RedirectResponse
+    {
+        $this->ensureKegiatan($request, $kegiatan, 'penunjang');
+
+        $kegiatan->update($request->validated());
+
+        return $this->kembaliKeTab('Entri bidang penunjang berhasil diperbarui.', $kegiatan, 'penunjang');
+    }
+
+    public function destroyPenunjang(Request $request, KegiatanDupak $kegiatan): RedirectResponse
+    {
+        $this->ensureKegiatan($request, $kegiatan, 'penunjang');
+
+        $kegiatan->delete();
+
+        return $this->kembaliKeTab('Entri bidang penunjang berhasil dihapus.', $kegiatan, 'penunjang');
     }
 
     private function ensureKegiatan(Request $request, KegiatanDupak $kegiatan, string $komponen): void
