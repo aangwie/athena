@@ -34,6 +34,7 @@ class DatabaseSeeder extends Seeder
                 'program_studi' => 'Rektorat',
                 'jabatan_fungsional' => 'Administrator',
                 'role' => 'admin',
+                'roles' => ['admin'],
                 'is_active' => true,
                 'password' => Hash::make('password'),
             ],
@@ -46,6 +47,7 @@ class DatabaseSeeder extends Seeder
                 'email' => 'ayu.lestari@athena.test',
                 'program_studi' => 'Pendidikan Informatika',
                 'jabatan_fungsional' => 'Lektor',
+                'roles' => ['dosen'],
             ],
             [
                 'nidn' => '1990011220',
@@ -53,6 +55,7 @@ class DatabaseSeeder extends Seeder
                 'email' => 'budi.santoso@athena.test',
                 'program_studi' => 'Pendidikan Matematika',
                 'jabatan_fungsional' => 'Asisten Ahli',
+                'roles' => ['dosen'],
             ],
             [
                 'nidn' => '1985041722',
@@ -60,6 +63,7 @@ class DatabaseSeeder extends Seeder
                 'email' => 'citra.maharani@athena.test',
                 'program_studi' => 'Pendidikan Biologi',
                 'jabatan_fungsional' => 'Lektor Kepala',
+                'roles' => ['dosen', 'tim_pak'],
             ],
         ])->map(fn (array $data) => User::updateOrCreate(
             ['nidn' => $data['nidn']],

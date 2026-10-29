@@ -16,6 +16,17 @@ class User extends Authenticatable
     use HasFactory, Notifiable;
 
     /**
+     * Role yang tersedia beserta labelnya.
+     *
+     * @var array<string, string>
+     */
+    public const ROLES = [
+        'dosen' => 'Dosen',
+        'tim_pak' => 'TIM PAK',
+        'admin' => 'Admin',
+    ];
+
+    /**
      * The attributes that are mass assignable.
      *
      * @var list<string>
@@ -27,6 +38,7 @@ class User extends Authenticatable
         'program_studi',
         'jabatan_fungsional',
         'role',
+        'roles',
         'is_active',
         'password',
     ];
@@ -51,6 +63,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'is_active' => 'boolean',
+            'roles' => 'array',
             'password' => 'hashed',
         ];
     }
@@ -75,14 +88,81 @@ class User extends Authenticatable
         return $this->hasMany(KegiatanDupak::class);
     }
 
+    /**
+     * Role yang dimiliki user. Kolom role lama dipakai sebagai cadangan.
+     *
+     * @return list<string>
+     */
+    public function roleList(): array
+    {
+        return array_values(array_intersect(
+            array_keys(self::ROLES),
+            $this->roles ?: [$this->role],
+        ));
+    }
+
+    /**
+     * Label role yang dimiliki user, siap ditampilkan.
+     *
+     * @return list<string>
+     */
+    public function roleLabels(): array
+    {
+        return array_map(fn (string $role) => self::ROLES[$role], $this->roleList());
+    }
+
+    public function hasRole(string $role): bool
+    {
+        return in_array($role, $this->roleList(), true);
+    }
+
+    /**
+     * Role yang sedang dipakai pada sesi ini. Bila user punya beberapa role
+     * dan belum memilih, dipakai role pertama sebagai cadangan.
+     */
+    public function activeRole(): string
+    {
+        $roles = $this->roleList();
+        $active = session('active_role');
+
+        return in_array($active, $roles, true) ? $active : ($roles[0] ?? 'dosen');
+    }
+
+    public function activeRoleLabel(): string
+    {
+        return self::ROLES[$this->activeRole()];
+    }
+
+    /**
+     * User dengan lebih dari satu role wajib memilih peran setelah login.
+     */
+    public function needsRoleSelection(): bool
+    {
+        return count($this->roleList()) > 1
+            && ! in_array(session('active_role'), $this->roleList(), true);
+    }
+
     public function isAdmin(): bool
     {
-        return $this->role === 'admin';
+        return $this->activeRole() === 'admin';
     }
 
     public function isDosen(): bool
     {
-        return $this->role === 'dosen';
+        return $this->activeRole() === 'dosen';
+    }
+
+    public function isTimPak(): bool
+    {
+        return $this->activeRole() === 'tim_pak';
+    }
+
+    /**
+     * Admin dan TIM PAK boleh melihat pengajuan seluruh dosen.
+     */
+    public function canReview(): bool
+    {
+        return $this->isAdmin() || $this->isTimPak();
     }
 
     public function initials(): string

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureRoleSelected;
 use App\Http\Middleware\EnsureUserIsAdmin;
 use App\Http\Middleware\EnsureUserIsDosen;
 use Illuminate\Foundation\Application;
@@ -16,6 +17,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'admin' => EnsureUserIsAdmin::class,
             'dosen' => EnsureUserIsDosen::class,
+        ]);
+
+        $middleware->web(append: [
+            EnsureRoleSelected::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

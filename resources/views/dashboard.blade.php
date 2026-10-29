@@ -25,7 +25,7 @@
                 <div class="mb-2 flex flex-wrap items-center gap-2">
                     <span class="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-2.5 py-1 text-[10px] font-bold tracking-wide text-teal-100 uppercase backdrop-blur">
                         <span class="size-1.5 rounded-full bg-emerald-300"></span>
-                        {{ auth()->user()->isAdmin() ? 'Ruang Administrasi' : 'Ruang Dosen' }}
+                        {{ 'Ruang '.auth()->user()->activeRoleLabel() }}
                     </span>
                     <span class="text-[11px] font-medium text-teal-200/70">{{ now()->translatedFormat('l, d F Y') }}</span>
                 </div>
@@ -33,11 +33,11 @@
                     {{ $greeting }}, {{ $firstName }}!
                 </h2>
                 <p class="mt-1.5 max-w-xl text-sm leading-relaxed text-teal-50/70">
-                    @if (auth()->user()->isAdmin())
-                        Pantau dan verifikasi pengajuan jabatan akademik dosen dalam satu tempat.
-                    @else
-                        Pantau status pengajuan jabatan akademik Anda dan lengkapi berkas dengan mudah.
-                    @endif
+                    {{ match (auth()->user()->activeRole()) {
+                        'admin' => 'Pantau dan verifikasi pengajuan jabatan akademik dosen dalam satu tempat.',
+                        'tim_pak' => 'Tinjau dan nilai usulan angka kredit dosen yang masuk.',
+                        default => 'Pantau status pengajuan jabatan akademik Anda dan lengkapi berkas dengan mudah.',
+                    } }}
                 </p>
             </div>
 
@@ -158,7 +158,7 @@
                         </span>
                     </div>
                     <p class="mt-1 text-xs text-slate-500">
-                        @if (auth()->user()->isAdmin())
+                        @if (auth()->user()->canReview())
                             Daftar pengajuan jabatan akademik dari seluruh dosen.
                         @else
                             Daftar pengajuan jabatan akademik yang Anda ajukan.
@@ -186,7 +186,7 @@
 
                     <div class="relative">
                         <label for="statusFilter" class="sr-only">Filter status</label>
-                        <select id="statusFilter" data-table-filter data-column="{{ auth()->user()->isAdmin() ? 6 : 5 }}"
+                        <select id="statusFilter" data-table-filter data-column="{{ auth()->user()->canReview() ? 6 : 5 }}"
                                 class="h-10 w-full appearance-none rounded-xl border border-slate-200 bg-slate-50/60 pr-9 pl-3 text-xs font-medium text-slate-600 transition hover:border-slate-300 focus:border-teal-500 focus:bg-white focus:ring-4 focus:ring-teal-500/10 focus:outline-none sm:w-40">
                             <option value="">Semua status</option>
                             <option value="Draft">Draft</option>
@@ -209,7 +209,7 @@
                     <thead>
                         <tr>
                             <th scope="col">No. Pengajuan</th>
-                            @if (auth()->user()->isAdmin())
+                            @if (auth()->user()->canReview())
                                 <th scope="col">Dosen</th>
                             @endif
                             <th scope="col">Jabatan</th>
@@ -226,7 +226,7 @@
                                     <span class="font-mono text-xs font-bold text-teal-700">{{ $item->nomor_pengajuan }}</span>
                                     <span class="mt-0.5 block text-[10px] text-slate-400">Diperbarui {{ $item->updated_at->diffForHumans() }}</span>
                                 </td>
-                                @if (auth()->user()->isAdmin())
+                                @if (auth()->user()->canReview())
                                     <td>
                                         <div class="flex items-center gap-2.5">
                                             <span class="flex size-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-[10px] font-bold text-slate-600">
@@ -261,7 +261,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="{{ auth()->user()->isAdmin() ? 7 : 6 }}" class="px-5 py-16 text-center">
+                                <td colspan="{{ auth()->user()->canReview() ? 7 : 6 }}" class="px-5 py-16 text-center">
                                     <span class="mx-auto flex size-14 items-center justify-center rounded-2xl bg-slate-50 text-slate-300">
                                         <svg class="size-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
                                             <path d="M6 3.5h8l4 4V20a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 6 20V5A1.5 1.5 0 0 1 7.5 3.5Z" stroke-linejoin="round" />

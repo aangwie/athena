@@ -83,6 +83,27 @@
                     </div>
 
                     <div>
+                        <span class="form-label">Role <span class="text-rose-500">*</span></span>
+                        <p class="mb-2 text-[11px] text-slate-400">Satu user dapat memiliki lebih dari satu role.</p>
+                        <div class="grid gap-3 sm:grid-cols-3">
+                            @foreach (\App\Models\User::ROLES as $value => $label)
+                                <label class="choice-card items-center">
+                                    <input type="checkbox" name="roles[]" value="{{ $value }}" class="sr-only"
+                                           @checked(in_array($value, old('roles', $item?->roleList() ?? ['dosen']), true))>
+                                    <span class="choice-indicator">
+                                        <svg class="size-3 opacity-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                            <path fill-rule="evenodd" d="M16.704 5.29a1 1 0 0 1 .006 1.414l-7.25 7.313a1 1 0 0 1-1.42.002L4.29 10.27a1 1 0 1 1 1.42-1.408l3.043 3.067 6.537-6.596a1 1 0 0 1 1.414-.043Z" clip-rule="evenodd" />
+                                        </svg>
+                                    </span>
+                                    <span class="min-w-0 flex-1 text-sm font-bold text-slate-800">{{ $label }}</span>
+                                </label>
+                            @endforeach
+                        </div>
+                        @error('roles') <p class="form-error">{{ $message }}</p> @enderror
+                        @error('roles.*') <p class="form-error">{{ $message }}</p> @enderror
+                    </div>
+
+                    <div>
                         <div class="mb-2 flex items-center justify-between gap-3">
                             <label for="password" class="form-label">Password @if(!$isEdit)<span class="text-rose-500">*</span>@endif</label>
                         </div>

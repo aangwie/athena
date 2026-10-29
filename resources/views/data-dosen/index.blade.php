@@ -13,7 +13,7 @@
                     Administrasi
                 </span>
                 <h2 class="text-xl font-extrabold tracking-tight text-slate-900 sm:text-2xl">Data Dosen</h2>
-                <p class="mt-1.5 text-sm leading-relaxed text-slate-500">Kelola data dosen: nama, NIDN, password, dan pangkat.</p>
+                <p class="mt-1.5 text-sm leading-relaxed text-slate-500">Kelola data dosen: nama, NIDN, password, pangkat, dan role akses.</p>
             </div>
             <a href="{{ route('data-dosen.create') }}" class="btn-primary w-auto px-5 whitespace-nowrap">Tambah Data</a>
         </div>
@@ -33,6 +33,7 @@
                             <th scope="col">Nama Dosen</th>
                             <th scope="col">NIDN</th>
                             <th scope="col">Pangkat</th>
+                            <th scope="col">Role</th>
                             <th scope="col" class="no-sort text-right">Aksi</th>
                         </tr>
                     </thead>
@@ -44,20 +45,34 @@
                                 <td class="px-5 py-3 text-slate-600">{{ $item->nidn }}</td>
                                 <td class="px-5 py-3 text-slate-600">{{ $item->jabatan_fungsional }}</td>
                                 <td class="px-5 py-3">
+                                    <div class="flex flex-wrap items-center gap-1.5">
+                                        @foreach ($item->roleList() as $role)
+                                            <span @class([
+                                                'badge-status',
+                                                'bg-teal-50 text-teal-700 ring-teal-200' => $role === 'dosen',
+                                                'bg-amber-50 text-amber-700 ring-amber-200' => $role === 'tim_pak',
+                                                'bg-indigo-50 text-indigo-700 ring-indigo-200' => $role === 'admin',
+                                            ])>{{ \App\Models\User::ROLES[$role] }}</span>
+                                        @endforeach
+                                    </div>
+                                </td>
+                                <td class="px-5 py-3">
                                     <div class="flex items-center gap-2">
                                         <a href="{{ route('data-dosen.edit', $item->id) }}" class="btn-secondary px-3 py-1.5 text-xs">Edit</a>
-                                        <form method="POST" action="{{ route('data-dosen.destroy', $item->id) }}"
-                                              data-confirm="Hapus data dosen {{ $item->name }}? Tindakan ini tidak dapat dibatalkan.">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn-secondary px-3 py-1.5 text-xs text-rose-600">Hapus</button>
-                                        </form>
+                                        @if ($item->id !== auth()->id())
+                                            <form method="POST" action="{{ route('data-dosen.destroy', $item->id) }}"
+                                                  data-confirm="Hapus data dosen {{ $item->name }}? Tindakan ini tidak dapat dibatalkan.">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn-secondary px-3 py-1.5 text-xs text-rose-600">Hapus</button>
+                                            </form>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="px-5 py-8 text-center text-sm text-slate-400">Belum ada data dosen.</td>
+                                <td colspan="6" class="px-5 py-8 text-center text-sm text-slate-400">Belum ada data dosen.</td>
                             </tr>
                         @endforelse
                     </tbody>

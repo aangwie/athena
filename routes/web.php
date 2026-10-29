@@ -1,8 +1,9 @@
 <?php
 
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
-use App\Http\Controllers\DataDosenController;
+use App\Http\Controllers\Auth\RoleSelectionController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DataDosenController;
 use App\Http\Controllers\Instansi\InstansiController;
 use App\Http\Controllers\Instansi\ProdiController;
 use App\Http\Controllers\Instansi\StrukturInstansiController;
@@ -29,6 +30,8 @@ Route::middleware('guest')->group(function () {
 
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
+    Route::get('/pilih-role', [RoleSelectionController::class, 'create'])->name('role.select');
+    Route::post('/pilih-role', [RoleSelectionController::class, 'store'])->name('role.select.store');
     Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
 
     Route::middleware('admin')->prefix('data-dosen')->name('data-dosen.')->group(function () {

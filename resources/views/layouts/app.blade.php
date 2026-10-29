@@ -308,7 +308,7 @@
                                 </span>
                                 <span class="hidden text-left sm:block">
                                     <span class="block max-w-36 truncate text-xs leading-tight font-bold text-slate-800">{{ auth()->user()->name }}</span>
-                                    <span class="block text-[10px] leading-tight text-slate-400">{{ auth()->user()->isAdmin() ? 'Administrator' : 'Dosen' }}</span>
+                                    <span class="block text-[10px] leading-tight text-slate-400">{{ implode(' · ', auth()->user()->roleLabels()) }}</span>
                                 </span>
                                 <svg class="hidden size-3.5 text-slate-400 sm:block" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                                     <path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
@@ -321,6 +321,16 @@
                                     <p class="mt-0.5 font-mono text-[11px] text-slate-500">NIDN {{ auth()->user()->nidn }}</p>
                                 </div>
                                 <div class="p-1.5">
+                                    @if (count(auth()->user()->roleList()) > 1)
+                                        <a href="{{ route('role.select') }}"
+                                           class="flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-100">
+                                            <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                                <path d="M4 8h13m0 0-3-3m3 3-3 3M20 16H7m0 0 3-3m-3 3 3 3" stroke-linecap="round" stroke-linejoin="round" />
+                                            </svg>
+                                            Ganti peran
+                                            <span class="ml-auto rounded-md bg-teal-50 px-1.5 py-0.5 text-[9px] font-bold tracking-wide text-teal-700 uppercase">{{ auth()->user()->activeRoleLabel() }}</span>
+                                        </a>
+                                    @endif
                                     <span class="flex cursor-not-allowed items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-medium text-slate-400">
                                         <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
                                             <circle cx="12" cy="8" r="3.5" />

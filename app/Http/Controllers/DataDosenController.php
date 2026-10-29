@@ -6,7 +6,6 @@ use App\Models\Kepangkatan;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -16,7 +15,6 @@ class DataDosenController extends Controller
     {
         return view('data-dosen.index', [
             'items' => User::query()
-                ->where('role', 'dosen')
                 ->orderBy('name')
                 ->get(),
         ]);
@@ -35,7 +33,8 @@ class DataDosenController extends Controller
         $data = $this->validated($request);
 
         User::create([
-            'role' => 'dosen',
+            'role' => $data['roles'][0],
+            'roles' => $data['roles'],
             'is_active' => true,
             'name' => $data['name'],
             'nidn' => $data['nidn'],
@@ -62,6 +61,8 @@ class DataDosenController extends Controller
         $data = $this->validated($request, $item);
 
         $update = [
+            'role' => $data['roles'][0],
+            'roles' => $data['roles'],
             'name' => $data['name'],
             'nidn' => $data['nidn'],
             'jabatan_fungsional' => $data['pangkat'],
@@ -78,9 +79,13 @@ class DataDosenController extends Controller
             ->with('status', 'Data Dosen berhasil diperbarui.');
     }
 
-    public function destroy(string $id): RedirectResponse
+    public function destroy(Request $request, string $id): RedirectResponse
     {
-        $this->find($id)->delete();
+        $item = $this->find($id);
+
+        abort_if($item->is($request->user()), 403, 'Anda tidak dapat menghapus akun sendiri.');
+
+        $item->delete();
 
         return redirect()
             ->route('data-dosen.index')
@@ -89,7 +94,7 @@ class DataDosenController extends Controller
 
     private function find(string $id): User
     {
-        return User::query()->where('role', 'dosen')->findOrFail($id);
+        return User::query()->findOrFail($id);
     }
 
     private function validated(Request $request, ?User $item = null): array
@@ -99,17 +104,29 @@ class DataDosenController extends Controller
             $uniqueNidn->ignore($item->id);
         }
 
-        return $request->validate([
+        $data = $request->validate([
             'name' => ['required', 'string', 'max:100'],
             'nidn' => ['required', 'string', 'max:20', $uniqueNidn],
             'pangkat' => ['required', 'string', 'max:100'],
+            'roles' => ['required', 'array', 'min:1'],
+            'roles.*' => ['string', Rule::in(array_keys(User::ROLES))],
             'password' => [$item === null ? 'required' : 'nullable', 'string', 'min:8', 'confirmed'],
         ], [
             'name.required' => 'Nama Dosen wajib diisi.',
             'nidn.required' => 'NIDN wajib diisi.',
             'nidn.unique' => 'NIDN tersebut sudah terdaftar.',
             'pangkat.required' => 'Pangkat wajib diisi.',
+            'roles.required' => 'Pilih minimal satu role.',
+            'roles.min' => 'Pilih minimal satu role.',
             'password.required' => 'Password wajib diisi.',
         ]);
+
+        // Urutkan sesuai urutan role di form agar kolom role lama konsisten.
+        $data['roles'] = array_values(array_filter(
+            array_keys(User::ROLES),
+            fn (string $role) => in_array($role, $data['roles'], true),
+        ));
+
+        return $data;
     }
 }

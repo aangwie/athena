@@ -39,7 +39,7 @@ class PengajuanJabatan extends Model
 
     public function scopeForUser(Builder $query, User $user): Builder
     {
-        return $user->isAdmin() ? $query : $query->where('user_id', $user->id);
+        return $user->canReview() ? $query : $query->where('user_id', $user->id);
     }
 
     public function statusLabel(): string
