@@ -9,6 +9,7 @@ use App\Http\Controllers\Instansi\StrukturInstansiController;
 use App\Http\Controllers\Kepegawaian\JabatanFungsionalController;
 use App\Http\Controllers\Kepegawaian\JabatanStrukturalController;
 use App\Http\Controllers\Kepegawaian\KepangkatanController;
+use App\Http\Controllers\PengajuanDosenController;
 use App\Http\Controllers\PengaturanController;
 use App\Http\Controllers\ProfilDosenController;
 use App\Http\Controllers\RiwayatPendidikanController;
@@ -43,6 +44,20 @@ Route::middleware('auth')->group(function () {
         Route::get('/', [ProfilDosenController::class, 'show'])->name('show');
         Route::get('/data-pribadi', [ProfilDosenController::class, 'edit'])->name('data-pribadi.edit');
         Route::put('/data-pribadi', [ProfilDosenController::class, 'update'])->name('data-pribadi.update');
+
+        Route::get('/pengajuan/periode', [PengajuanDosenController::class, 'periode'])->name('pengajuan.periode');
+        Route::get('/pengajuan/create', [PengajuanDosenController::class, 'create'])->name('pengajuan.create');
+        Route::post('/pengajuan/pendidikan', [PengajuanDosenController::class, 'storePendidikan'])->name('pengajuan.pendidikan.store');
+        Route::put('/pengajuan/pendidikan/{kegiatan}', [PengajuanDosenController::class, 'updatePendidikan'])->name('pengajuan.pendidikan.update');
+        Route::delete('/pengajuan/pendidikan/{kegiatan}', [PengajuanDosenController::class, 'destroyPendidikan'])->name('pengajuan.pendidikan.destroy');
+
+        Route::post('/pengajuan/pelaksanaan-pendidikan', [PengajuanDosenController::class, 'storePelaksanaan'])->name('pengajuan.pelaksanaan.store');
+        Route::put('/pengajuan/pelaksanaan-pendidikan/{kegiatan}', [PengajuanDosenController::class, 'updatePelaksanaan'])->name('pengajuan.pelaksanaan.update');
+        Route::delete('/pengajuan/pelaksanaan-pendidikan/{kegiatan}', [PengajuanDosenController::class, 'destroyPelaksanaan'])->name('pengajuan.pelaksanaan.destroy');
+
+        Route::post('/pengajuan/penelitian', [PengajuanDosenController::class, 'storePenelitian'])->name('pengajuan.penelitian.store');
+        Route::put('/pengajuan/penelitian/{kegiatan}', [PengajuanDosenController::class, 'updatePenelitian'])->name('pengajuan.penelitian.update');
+        Route::delete('/pengajuan/penelitian/{kegiatan}', [PengajuanDosenController::class, 'destroyPenelitian'])->name('pengajuan.penelitian.destroy');
 
         Route::get('/riwayat-pendidikan', [RiwayatPendidikanController::class, 'index'])->name('pendidikan.index');
         Route::get('/riwayat-pendidikan/create', [RiwayatPendidikanController::class, 'create'])->name('pendidikan.create');

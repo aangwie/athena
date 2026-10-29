@@ -137,6 +137,18 @@
         @apply flex size-11 shrink-0 items-center justify-center rounded-xl;
     }
 
+    .tab-button {
+        @apply inline-flex shrink-0 cursor-pointer items-center gap-2 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-slate-500 transition hover:bg-white hover:text-teal-700;
+    }
+
+    .tab-button-active {
+        @apply bg-white text-teal-700 shadow-sm ring-1 ring-slate-200;
+    }
+
+    .tab-button-active > span:first-child {
+        @apply bg-teal-600 text-white;
+    }
+
     .badge-status {
         @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset;
     }

@@ -46,7 +46,8 @@
                                 <td class="px-5 py-3">
                                     <div class="flex items-center gap-2">
                                         <a href="{{ route('data-dosen.edit', $item->id) }}" class="btn-secondary px-3 py-1.5 text-xs">Edit</a>
-                                        <form method="POST" action="{{ route('data-dosen.destroy', $item->id) }}" onsubmit="return confirm('Hapus data dosen ini?');">
+                                        <form method="POST" action="{{ route('data-dosen.destroy', $item->id) }}"
+                                              data-confirm="Hapus data dosen {{ $item->name }}? Tindakan ini tidak dapat dibatalkan.">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn-secondary px-3 py-1.5 text-xs text-rose-600">Hapus</button>

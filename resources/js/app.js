@@ -1,4 +1,6 @@
 import './bootstrap';
+import 'sweetalert2/dist/sweetalert2.min.css';
+import Swal from 'sweetalert2';
 import $ from 'jquery';
 import DataTable from 'datatables.net';
 import 'datatables.net-responsive';
@@ -365,11 +367,38 @@ const boot = () => {
         });
     });
 
-    document.querySelectorAll('form[data-confirm]').forEach((form) => {
-        form.addEventListener('submit', (event) => {
-            if (!window.confirm(form.dataset.confirm)) {
-                event.preventDefault();
+    // Konfirmasi global: setiap <form data-confirm="..."> dicek lewat SweetAlert2.
+    // Delegasi ke document supaya form di dalam tabel (yang bisa di-render ulang
+    // DataTables) tetap ikut terkonfirmasi.
+    document.addEventListener('submit', (event) => {
+        const form = event.target.closest('form[data-confirm]');
+
+        if (!form || form.dataset.confirmed === 'true') {
+            return;
+        }
+
+        event.preventDefault();
+
+        const isDelete = (form.querySelector('input[name="_method"]')?.value ?? '').toUpperCase() === 'DELETE';
+
+        Swal.fire({
+            title: form.dataset.confirmTitle || (isDelete ? 'Hapus data ini?' : 'Konfirmasi'),
+            text: form.dataset.confirm,
+            icon: isDelete ? 'warning' : 'question',
+            showCancelButton: true,
+            confirmButtonText: isDelete ? 'Ya, hapus' : 'Ya, lanjutkan',
+            cancelButtonText: 'Batal',
+            confirmButtonColor: isDelete ? '#e11d48' : '#0d9488',
+            cancelButtonColor: '#64748b',
+            reverseButtons: true,
+            focusCancel: true,
+        }).then((result) => {
+            if (!result.isConfirmed) {
+                return;
             }
+
+            form.dataset.confirmed = 'true';
+            form.requestSubmit();
         });
     });
 
@@ -457,6 +486,138 @@ const boot = () => {
     }
 
     syncSidebarCollapse();
+
+    document.querySelectorAll('[data-tabs]').forEach((group) => {
+        const tabs = Array.from(group.querySelectorAll('[data-tab-target]'));
+        const panels = Array.from(group.querySelectorAll('[data-tab-panel]'));
+
+        const activate = (name, remember) => {
+            if (!panels.some((panel) => panel.dataset.tabPanel === name)) {
+                return;
+            }
+
+            tabs.forEach((tab) => {
+                const isActive = tab.dataset.tabTarget === name;
+                tab.classList.toggle('tab-button-active', isActive);
+                tab.setAttribute('aria-selected', String(isActive));
+                tab.setAttribute('tabindex', isActive ? '0' : '-1');
+            });
+
+            panels.forEach((panel) => {
+                panel.classList.toggle('hidden', panel.dataset.tabPanel !== name);
+            });
+
+            // DataTables perlu hitung ulang lebar kolom saat panel tersembunyi ditampilkan.
+            window.dispatchEvent(new Event('resize'));
+
+            if (remember) {
+                history.replaceState(null, '', `#${name}`);
+            }
+        };
+
+        tabs.forEach((tab, index) => {
+            tab.addEventListener('click', () => activate(tab.dataset.tabTarget, true));
+
+            tab.addEventListener('keydown', (event) => {
+                if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') {
+                    return;
+                }
+
+                event.preventDefault();
+                const step = event.key === 'ArrowRight' ? 1 : tabs.length - 1;
+                const next = tabs[(index + step) % tabs.length];
+
+                next.focus();
+                activate(next.dataset.tabTarget, true);
+            });
+        });
+
+        activate(location.hash.slice(1) || tabs[0]?.dataset.tabTarget, false);
+    });
+
+    document.querySelectorAll('[data-reveal-select]').forEach((select) => {
+        const target = document.querySelector(select.dataset.revealSelect);
+
+        if (!target) {
+            return;
+        }
+
+        const sync = () => target.classList.toggle('hidden', select.value === '');
+
+        select.addEventListener('change', sync);
+        sync();
+    });
+
+    document.querySelectorAll('[data-dependent-select]').forEach((select) => {
+        const target = document.querySelector(select.dataset.dependentSelect);
+        const field = target?.closest('[data-dependent-field]');
+
+        if (!target || !field) {
+            return;
+        }
+
+        const options = JSON.parse(select.dataset.subOptions || '{}');
+        const placeholder = target.dataset.placeholder || 'Pilih rincian';
+
+        const sync = () => {
+            const subs = options[select.value] || {};
+            const keys = Object.keys(subs);
+            const previous = target.dataset.selected || target.value || '';
+
+            target.innerHTML = '';
+            target.add(new Option(keys.length ? placeholder : 'Tidak ada rincian', ''));
+            keys.forEach((key) => target.add(new Option(subs[key], key)));
+
+            target.value = keys.includes(previous) ? previous : '';
+            target.dataset.selected = '';
+            target.disabled = keys.length === 0;
+            field.classList.toggle('hidden', keys.length === 0);
+
+            // Teruskan ke select tingkat berikutnya (komponen → rincian → rincian kegiatan).
+            target.dispatchEvent(new Event('change'));
+        };
+
+        select.addEventListener('change', sync);
+        sync();
+    });
+
+    document.querySelectorAll('[data-link-input]').forEach((input) => {
+        const field = input.closest('div');
+        const preview = field?.querySelector('[data-link-preview]');
+        const host = field?.querySelector('[data-link-host]');
+        const url = field?.querySelector('[data-link-url]');
+        const invalid = field?.querySelector('[data-link-invalid]');
+
+        if (!preview || !host || !url || !invalid) {
+            return;
+        }
+
+        const sync = () => {
+            const value = input.value.trim();
+            let parsed = null;
+
+            try {
+                parsed = new URL(value);
+            } catch (error) {
+                // URL belum lengkap, tampilkan sebagai peringatan.
+            }
+
+            const isValid = parsed !== null && ['http:', 'https:'].includes(parsed.protocol);
+
+            preview.classList.toggle('hidden', !isValid);
+            preview.classList.toggle('flex', isValid);
+            invalid.classList.toggle('hidden', value === '' || isValid);
+
+            if (isValid) {
+                host.textContent = parsed.host;
+                url.textContent = value;
+                url.href = value;
+            }
+        };
+
+        input.addEventListener('input', sync);
+        sync();
+    });
 
     document.querySelectorAll('[data-user-menu-button]').forEach((button) => {
         const menu = button.parentElement?.querySelector('[data-user-menu]');

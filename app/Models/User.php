@@ -70,6 +70,11 @@ class User extends Authenticatable
         return $this->hasMany(RiwayatPendidikan::class);
     }
 
+    public function kegiatanDupak(): HasMany
+    {
+        return $this->hasMany(KegiatanDupak::class);
+    }
+
     public function isAdmin(): bool
     {
         return $this->role === 'admin';

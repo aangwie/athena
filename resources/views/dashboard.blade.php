@@ -46,13 +46,23 @@
                     <p class="text-[10px] font-semibold tracking-wide text-teal-200/70 uppercase">Periode aktif</p>
                     <p class="mt-0.5 text-sm font-bold text-white">{{ now()->format('Y') }}</p>
                 </div>
-                <span class="inline-flex cursor-not-allowed items-center gap-2 rounded-xl bg-white px-4 py-3 text-sm font-bold text-teal-800 opacity-90 shadow-lg shadow-teal-950/20" title="Modul pengajuan segera hadir">
-                    <svg class="size-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                        <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm.75-11.25a.75.75 0 0 0-1.5 0v2.5h-2.5a.75.75 0 0 0 0 1.5h2.5v2.5a.75.75 0 0 0 1.5 0v-2.5h2.5a.75.75 0 0 0 0-1.5h-2.5v-2.5Z" clip-rule="evenodd" />
-                    </svg>
-                    Pengajuan Baru
-                    <span class="rounded-md bg-teal-50 px-1.5 py-0.5 text-[9px] font-extrabold tracking-wide text-teal-600 uppercase">Soon</span>
-                </span>
+                @if (auth()->user()->isDosen())
+                    <a href="{{ route('profil.pengajuan.periode') }}"
+                       class="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-3 text-sm font-bold text-teal-800 shadow-lg shadow-teal-950/20 transition hover:bg-teal-50 active:scale-[0.99]">
+                        <svg class="size-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm.75-11.25a.75.75 0 0 0-1.5 0v2.5h-2.5a.75.75 0 0 0 0 1.5h2.5v2.5a.75.75 0 0 0 1.5 0v-2.5h2.5a.75.75 0 0 0 0-1.5h-2.5v-2.5Z" clip-rule="evenodd" />
+                        </svg>
+                        Pengajuan Baru
+                    </a>
+                @else
+                    <span class="inline-flex cursor-not-allowed items-center gap-2 rounded-xl bg-white px-4 py-3 text-sm font-bold text-teal-800 opacity-90 shadow-lg shadow-teal-950/20" title="Modul pengajuan segera hadir">
+                        <svg class="size-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm.75-11.25a.75.75 0 0 0-1.5 0v2.5h-2.5a.75.75 0 0 0 0 1.5h2.5v2.5a.75.75 0 0 0 1.5 0v-2.5h2.5a.75.75 0 0 0 0-1.5h-2.5v-2.5Z" clip-rule="evenodd" />
+                        </svg>
+                        Pengajuan Baru
+                        <span class="rounded-md bg-teal-50 px-1.5 py-0.5 text-[9px] font-extrabold tracking-wide text-teal-600 uppercase">Soon</span>
+                    </span>
+                @endif
             </div>
         </div>
     </section>
