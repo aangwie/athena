@@ -40,7 +40,7 @@
 
         <section data-tabs class="section-card overflow-hidden">
             <div role="tablist" aria-label="Komponen kegiatan"
-                 class="flex gap-1.5 overflow-x-auto border-b border-slate-100 bg-slate-50/60 px-3 py-3 sm:px-4">
+                 class="flex flex-wrap gap-1.5 border-b border-slate-100 bg-slate-50/60 px-3 py-3 sm:px-4">
                 @foreach ($komponen as $key => $item)
                     <button type="button" role="tab" id="tab-{{ $key }}"
                             aria-controls="panel-{{ $key }}"
