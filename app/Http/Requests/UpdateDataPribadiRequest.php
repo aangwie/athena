@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\Models\ProfilDosen;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateDataPribadiRequest extends FormRequest
 {
@@ -61,6 +63,7 @@ class UpdateDataPribadiRequest extends FormRequest
             'tempat_lahir' => ['required', 'string', 'max:100'],
             'tanggal_lahir' => ['required', 'date', 'before:today'],
             'alamat' => ['required', 'string', 'max:500'],
+            'agama' => ['nullable', Rule::in(array_keys(ProfilDosen::AGAMA))],
             'no_hp' => ['required', 'string', 'max:20', 'regex:/^[0-9+\-\s()]+$/'],
             'status_pernikahan' => ['required', 'in:lajang,menikah'],
             'nama_pasangan' => ['nullable', 'required_if:status_pernikahan,menikah', 'string', 'max:100'],
@@ -90,6 +93,7 @@ class UpdateDataPribadiRequest extends FormRequest
             'tempat_lahir' => 'tempat lahir',
             'tanggal_lahir' => 'tanggal lahir',
             'alamat' => 'alamat',
+            'agama' => 'agama',
             'no_hp' => 'nomor HP',
             'status_pernikahan' => 'status pernikahan',
             'nama_pasangan' => 'nama pasangan',

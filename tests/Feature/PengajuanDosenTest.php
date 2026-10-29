@@ -114,6 +114,35 @@ class PengajuanDosenTest extends TestCase
             ->assertSee('data-confirm="Hapus entri Pendidikan dan Pelatihan Prajabatan?"', false);
     }
 
+    public function test_create_page_only_lists_entries_of_selected_periode(): void
+    {
+        $dosen = $this->makeUser('dosen');
+
+        $periode = [
+            ['tahun' => 2026, 'semester' => 'ganjil', 'nama' => 'Diklat Prajabatan Periode Ganjil 2026'],
+            ['tahun' => 2026, 'semester' => 'genap', 'nama' => 'Diklat Prajabatan Periode Genap 2026'],
+            ['tahun' => 2025, 'semester' => 'ganjil', 'nama' => 'Diklat Prajabatan Periode Ganjil 2025'],
+        ];
+
+        foreach ($periode as $item) {
+            $dosen->kegiatanDupak()->create([
+                'komponen' => 'pendidikan',
+                'tahun' => $item['tahun'],
+                'semester' => $item['semester'],
+                'jenis' => 'diklat_prajabatan',
+                'nama_kegiatan' => $item['nama'],
+                'link_bukti' => 'https://drive.google.com/file/d/'.$item['tahun'].$item['semester'].'/view',
+            ]);
+        }
+
+        $this->actingAs($dosen)
+            ->get('/profil/pengajuan/create?tahun=2026&semester=ganjil')
+            ->assertOk()
+            ->assertSee('Diklat Prajabatan Periode Ganjil 2026')
+            ->assertDontSee('Diklat Prajabatan Periode Genap 2026')
+            ->assertDontSee('Diklat Prajabatan Periode Ganjil 2025');
+    }
+
     public function test_pendidikan_entry_requires_valid_jenis_nama_kegiatan_and_link(): void
     {
         $this->actingAs($this->makeUser('dosen'))

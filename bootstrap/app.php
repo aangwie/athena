@@ -3,6 +3,7 @@
 use App\Http\Middleware\EnsureRoleSelected;
 use App\Http\Middleware\EnsureUserIsAdmin;
 use App\Http\Middleware\EnsureUserIsDosen;
+use App\Http\Middleware\EnsureUserIsTimPak;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -17,6 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'admin' => EnsureUserIsAdmin::class,
             'dosen' => EnsureUserIsDosen::class,
+            'tim_pak' => EnsureUserIsTimPak::class,
         ]);
 
         $middleware->web(append: [

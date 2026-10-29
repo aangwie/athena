@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -304,11 +305,20 @@ class KegiatanDupak extends Model
         'rincian',
         'nama_kegiatan',
         'link_bukti',
+        'nilai_baru',
     ];
 
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Batasi query pada satu periode (tahun akademik + semester).
+     */
+    public function scopePeriode(Builder $query, int $tahun, string $semester): Builder
+    {
+        return $query->where('tahun', $tahun)->where('semester', $semester);
     }
 
     public static function labelPeriode(int $tahun, string $semester): string

@@ -619,6 +619,40 @@ const boot = () => {
         sync();
     });
 
+    // TIM PAK: baris "Jumlah" tiap bidang mengikuti nilai yang sedang diketik.
+    const nilaiInputs = document.querySelectorAll('[data-nilai]');
+
+    if (nilaiInputs.length > 0) {
+        const formatKredit = (nilai) => String(Math.round(nilai * 100) / 100).replace('.', ',');
+
+        const syncJumlahBidang = () => {
+            const total = new Map();
+
+            nilaiInputs.forEach((input) => {
+                const grup = input.dataset.nilaiGrup;
+                const nilai = Number.parseFloat(input.value);
+
+                total.set(grup, (total.get(grup) ?? 0) + (Number.isFinite(nilai) ? nilai : 0));
+            });
+
+            total.forEach((nilai, grup) => {
+                document.querySelectorAll(`[data-jumlah-total="${grup}"]`).forEach((sel) => {
+                    sel.textContent = formatKredit(nilai);
+                });
+            });
+
+            // Baris "Jumlah Total": akumulasi seluruh bidang.
+            const grandTotal = [...total.values()].reduce((jumlah, nilai) => jumlah + nilai, 0);
+
+            document.querySelectorAll('[data-jumlah-grand-total]').forEach((sel) => {
+                sel.textContent = formatKredit(grandTotal);
+            });
+        };
+
+        nilaiInputs.forEach((input) => input.addEventListener('input', syncJumlahBidang));
+        syncJumlahBidang();
+    }
+
     document.querySelectorAll('[data-user-menu-button]').forEach((button) => {
         const menu = button.parentElement?.querySelector('[data-user-menu]');
 

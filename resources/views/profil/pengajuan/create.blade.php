@@ -154,6 +154,46 @@
                 <div class="mt-5 overflow-hidden rounded-xl border border-slate-200 bg-white p-2 shadow-sm sm:p-4">
                     @include('profil.pengajuan.partials.review')
                 </div>
+
+                {{-- Aksi usulan: kirim ke TIM PAK, ajukan DUPAK final, dan cetak PDF. --}}
+                <div class="mt-4 flex flex-col gap-3 rounded-xl border border-slate-200 bg-slate-50/60 px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between">
+                    <div class="flex flex-wrap items-center gap-2 text-xs">
+                        <span class="font-bold text-slate-600">Status usulan:</span>
+                        <span class="rounded-full px-2.5 py-1 text-[10px] font-bold ring-1 ring-inset {{ $pengajuan?->statusClasses() ?? 'bg-slate-100 text-slate-600 ring-slate-200' }}">
+                            {{ $pengajuan?->statusLabel() ?? 'Belum diajukan' }}
+                        </span>
+                        @if ($pengajuan?->dinilai_at)
+                            <span class="text-slate-400">dinilai {{ $pengajuan->dinilai_at->translatedFormat('d M Y') }}</span>
+                        @endif
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-2">
+                        <form method="POST" action="{{ route('profil.pengajuan.ajukan') }}"
+                              data-confirm="Usulan periode ini akan dikirim ke TIM PAK untuk dinilai."
+                              data-confirm-title="Ajukan ke TIM PAK?">
+                            @csrf
+                            <input type="hidden" name="tahun" value="{{ $tahun }}">
+                            <input type="hidden" name="semester" value="{{ $semester }}">
+                            <button type="submit" class="btn-secondary" @disabled($pengajuan?->nilaiTerkunci())>Ajukan ke TIM PAK</button>
+                        </form>
+
+                        <form method="POST" action="{{ route('profil.pengajuan.ajukan-dupak') }}"
+                              data-confirm="DUPAK periode ini akan diajukan memakai nilai dari TIM PAK."
+                              data-confirm-title="Ajukan DUPAK?">
+                            @csrf
+                            <input type="hidden" name="tahun" value="{{ $tahun }}">
+                            <input type="hidden" name="semester" value="{{ $semester }}">
+                            <button type="submit" class="btn-primary w-auto px-4 py-2.5 text-sm" @disabled($pengajuan?->status !== 'dinilai')>
+                                Ajukan Dupak
+                            </button>
+                        </form>
+
+                        <a href="{{ route('profil.pengajuan.cetak', ['tahun' => $tahun, 'semester' => $semester]) }}"
+                           target="_blank" rel="noopener" class="btn-secondary">
+                            Cetak Dupak ke PDF
+                        </a>
+                    </div>
+                </div>
             </div>
         </section>
     </div>

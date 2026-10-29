@@ -152,6 +152,16 @@
     .badge-status {
         @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset;
     }
+
+    /* Kolom alasan hanya tampil saat keputusan bukan "Disetujui". */
+    [data-keputusan] [data-catatan] {
+        display: none;
+    }
+
+    [data-keputusan]:has(input[value='perlu_perbaikan']:checked) [data-catatan],
+    [data-keputusan]:has(input[value='ditolak']:checked) [data-catatan] {
+        display: block;
+    }
 }
 
 /* --------------------------------------------------------------------------

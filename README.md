@@ -44,6 +44,7 @@ Aplikasi berbasis **Laravel 12** untuk mengelola pengajuan jabatan akademik dose
   - **Pejabat Struktural** — tabel pejabat struktural yang menghubungkan master **Jabatan Struktural** dengan **data dosen aktif**, lengkap dengan CRUD, pencarian, dan sorting
   - data instansi disimpan sebagai satu profil tunggal; logo disimpan sebagai data URI base64 pada kolom `logo_base64` di tabel `instansi`
 - **Pengaturan** (khusus role admin, menu paling bawah):
+  - **Nama Web** — ubah nama aplikasi (maks. 10 karakter) yang tampil di sidebar, judul tab, dan footer semua halaman; disimpan pada tabel `pengaturan`
   - **Data Update** — simpan token GitHub berformat `github_patxxxxxxxxx` ke berkas `.token-gh`, lalu jalankan `git pull --ff-only`
   - **Clear cache** — `php artisan optimize:clear`
   - **Migrasi tabel** — `php artisan migrate --force`

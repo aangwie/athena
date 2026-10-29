@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Pengaturan;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -22,11 +23,33 @@ class PengaturanController extends Controller
         $token = $this->token();
 
         return view('pengaturan.index', [
+            'namaWeb' => Pengaturan::namaWeb(),
             'tokenSamar' => $token === null ? null : substr($token, 0, 15).'…'.substr($token, -4),
             'storageTertaut' => file_exists(public_path('storage')),
             'cabang' => $this->cabang(),
             'log' => session('log-pengaturan', []),
         ]);
+    }
+
+    /**
+     * Nama web yang tampil di sidebar, judul halaman, dan footer — maksimal 10 karakter.
+     */
+    public function simpanNamaWeb(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'nama_web' => ['required', 'string', 'max:10'],
+        ], [
+            'nama_web.required' => 'Nama web wajib diisi.',
+            'nama_web.max' => 'Nama web maksimal 10 karakter.',
+        ]);
+
+        Pengaturan::simpanNamaWeb($data['nama_web']);
+
+        Log::info('[pengaturan] Ubah nama web', ['nama' => $data['nama_web'], 'oleh' => auth()->user()->nidn]);
+
+        return redirect()
+            ->route('pengaturan.index')
+            ->with('status', 'Nama web diperbarui menjadi "'.trim($data['nama_web']).'".');
     }
 
     public function simpanToken(Request $request): RedirectResponse

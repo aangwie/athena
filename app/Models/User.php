@@ -83,9 +83,46 @@ class User extends Authenticatable
         return $this->hasMany(RiwayatPendidikan::class);
     }
 
+    public function riwayatKepangkatan(): HasMany
+    {
+        return $this->hasMany(RiwayatKepangkatan::class);
+    }
+
+    public function riwayatJabatanStruktural(): HasMany
+    {
+        return $this->hasMany(RiwayatJabatanStruktural::class);
+    }
+
     public function kegiatanDupak(): HasMany
     {
         return $this->hasMany(KegiatanDupak::class);
+    }
+
+    public function pengajuanDupak(): HasMany
+    {
+        return $this->hasMany(PengajuanDupak::class);
+    }
+
+    /**
+     * Entri DUPAK pada satu periode, dikelompokkan per komponen kegiatan.
+     *
+     * @return array<string, \Illuminate\Support\Collection<int, KegiatanDupak>>
+     */
+    public function kegiatanPeriode(int $tahun, string $semester): array
+    {
+        $entri = $this->kegiatanDupak()
+            ->periode($tahun, $semester)
+            ->latest()
+            ->get()
+            ->groupBy('komponen');
+
+        return [
+            'kegiatanPendidikan' => $entri->get('pendidikan') ?? collect(),
+            'kegiatanPelaksanaan' => $entri->get('pelaksanaan_pendidikan') ?? collect(),
+            'kegiatanPenelitian' => $entri->get('penelitian') ?? collect(),
+            'kegiatanAbdimas' => $entri->get('abdimas') ?? collect(),
+            'kegiatanPenunjang' => $entri->get('penunjang') ?? collect(),
+        ];
     }
 
     /**

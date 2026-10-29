@@ -18,7 +18,7 @@
                 <a href="{{ url('/') }}" class="inline-flex w-fit items-center gap-3">
                     <x-brand-mark class="size-11" />
                     <span>
-                        <span class="block text-xl font-extrabold tracking-tight text-white">Athena</span>
+                        <span class="block text-xl font-extrabold tracking-tight text-white">{{ $namaWeb }}</span>
                         <span class="block text-[11px] font-medium tracking-[0.18em] text-teal-100/80 uppercase">Jabatan Akademik</span>
                     </span>
                 </a>
@@ -58,7 +58,7 @@
                 </div>
 
                 <div class="flex items-center justify-between gap-6 border-t border-white/10 pt-6">
-                    <p class="text-xs text-teal-100/60">&copy; {{ date('Y') }} Athena Campus Suite</p>
+                    <p class="text-xs text-teal-100/60">&copy; {{ date('Y') }} {{ $namaWeb }} Campus Suite</p>
                     <span class="inline-flex items-center gap-1.5 text-xs font-medium text-teal-100/70">
                         <svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
                             <path d="M12 3 5 6v5c0 4.4 2.9 8.4 7 9.5 4.1-1.1 7-5.1 7-9.5V6l-7-3Z" stroke-linejoin="round" />
@@ -80,7 +80,7 @@
                     <div class="mb-9 flex items-center gap-3 lg:hidden">
                         <x-brand-mark variant="dark" class="size-11" />
                         <span>
-                            <span class="block text-lg font-extrabold tracking-tight text-slate-900">Athena</span>
+                            <span class="block text-lg font-extrabold tracking-tight text-slate-900">{{ $namaWeb }}</span>
                             <span class="block text-[10px] font-semibold tracking-[0.16em] text-teal-700 uppercase">Jabatan Akademik</span>
                         </span>
                     </div>
@@ -160,7 +160,7 @@
                         <div>
                             <div class="mb-2 flex items-center justify-between gap-3">
                                 <label for="password" class="block text-sm font-semibold text-slate-700">Password</label>
-                                <a href="mailto:admin@athena.test?subject=Bantuan%20akun%20Athena"
+                                <a href="mailto:admin@athena.test?subject=Bantuan%20akun%20{{ $namaWeb }}"
                                    class="text-xs font-semibold text-teal-700 transition hover:text-teal-800 hover:underline">
                                     Lupa password?
                                 </a>
@@ -274,7 +274,7 @@
             </div>
 
             <footer class="relative border-t border-slate-200/70 px-5 py-4 text-center text-[11px] text-slate-400 sm:px-8 lg:border-t-0">
-                &copy; {{ date('Y') }} Athena · Sistem Pengajuan Jabatan Akademik Dosen
+                &copy; {{ date('Y') }} {{ $namaWeb }} · Sistem Pengajuan Jabatan Akademik Dosen
             </footer>
         </main>
     </div>

@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="theme-color" content="#0f766e">
-    <meta name="description" content="Athena — Sistem Pengajuan Jabatan Akademik Dosen.">
+    <meta name="description" content="{{ $namaWeb }} — Sistem Pengajuan Jabatan Akademik Dosen.">
 
-    <title>@yield('title', 'Masuk') · {{ config('app.name', 'Athena') }}</title>
+    <title>@yield('title', 'Masuk') · {{ $namaWeb }}</title>
 
     <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
     <link rel="preconnect" href="https://fonts.googleapis.com">

@@ -11,9 +11,11 @@ use App\Http\Controllers\Kepegawaian\JabatanFungsionalController;
 use App\Http\Controllers\Kepegawaian\JabatanStrukturalController;
 use App\Http\Controllers\Kepegawaian\KepangkatanController;
 use App\Http\Controllers\PengajuanDosenController;
+use App\Http\Controllers\PengajuanDupakController;
 use App\Http\Controllers\PengaturanController;
 use App\Http\Controllers\ProfilDosenController;
 use App\Http\Controllers\RiwayatPendidikanController;
+use App\Http\Controllers\RiwayatPekerjaanController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -50,6 +52,11 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/pengajuan/periode', [PengajuanDosenController::class, 'periode'])->name('pengajuan.periode');
         Route::get('/pengajuan/create', [PengajuanDosenController::class, 'create'])->name('pengajuan.create');
+        Route::post('/pengajuan/ajukan', [PengajuanDosenController::class, 'ajukan'])->name('pengajuan.ajukan');
+        Route::post('/pengajuan/ajukan-dupak', [PengajuanDosenController::class, 'ajukanDupak'])->name('pengajuan.ajukan-dupak');
+        Route::get('/pengajuan/riwayat', [PengajuanDosenController::class, 'riwayat'])->name('pengajuan.riwayat');
+        Route::post('/pengajuan/ajukan-ulang', [PengajuanDosenController::class, 'ajukanUlang'])->name('pengajuan.ajukan-ulang');
+        Route::get('/pengajuan/cetak', [PengajuanDosenController::class, 'cetak'])->name('pengajuan.cetak');
         Route::post('/pengajuan/pendidikan', [PengajuanDosenController::class, 'storePendidikan'])->name('pengajuan.pendidikan.store');
         Route::put('/pengajuan/pendidikan/{kegiatan}', [PengajuanDosenController::class, 'updatePendidikan'])->name('pengajuan.pendidikan.update');
         Route::delete('/pengajuan/pendidikan/{kegiatan}', [PengajuanDosenController::class, 'destroyPendidikan'])->name('pengajuan.pendidikan.destroy');
@@ -77,6 +84,28 @@ Route::middleware('auth')->group(function () {
         Route::get('/riwayat-pendidikan/{riwayatPendidikan}/berkas/{jenis}', [RiwayatPendidikanController::class, 'berkas'])
             ->whereIn('jenis', ['ijazah', 'transkrip'])
             ->name('pendidikan.berkas');
+
+        Route::get('/riwayat-pekerjaan', [RiwayatPekerjaanController::class, 'index'])->name('pekerjaan.index');
+        Route::put('/riwayat-pekerjaan', [RiwayatPekerjaanController::class, 'updateIdentitas'])->name('pekerjaan.update');
+
+        Route::post('/riwayat-pekerjaan/kepangkatan', [RiwayatPekerjaanController::class, 'storeKepangkatan'])->name('pekerjaan.kepangkatan.store');
+        Route::put('/riwayat-pekerjaan/kepangkatan/{riwayatKepangkatan}', [RiwayatPekerjaanController::class, 'updateKepangkatan'])->name('pekerjaan.kepangkatan.update');
+        Route::delete('/riwayat-pekerjaan/kepangkatan/{riwayatKepangkatan}', [RiwayatPekerjaanController::class, 'destroyKepangkatan'])->name('pekerjaan.kepangkatan.destroy');
+
+        Route::post('/riwayat-pekerjaan/jabatan', [RiwayatPekerjaanController::class, 'storeJabatan'])->name('pekerjaan.jabatan.store');
+        Route::put('/riwayat-pekerjaan/jabatan/{riwayatJabatan}', [RiwayatPekerjaanController::class, 'updateJabatan'])->name('pekerjaan.jabatan.update');
+        Route::delete('/riwayat-pekerjaan/jabatan/{riwayatJabatan}', [RiwayatPekerjaanController::class, 'destroyJabatan'])->name('pekerjaan.jabatan.destroy');
+    });
+
+    Route::middleware('admin')->prefix('verifikasi-dupak')->name('verifikasi-dupak.')->group(function () {
+        Route::get('/{pengajuan}', [PengajuanDupakController::class, 'verifikasi'])->name('show');
+        Route::put('/{pengajuan}', [PengajuanDupakController::class, 'putuskan'])->name('update');
+    });
+
+    Route::middleware('tim_pak')->prefix('tim-pak')->name('tim-pak.')->group(function () {
+        Route::get('/pengajuan', [PengajuanDupakController::class, 'index'])->name('pengajuan.index');
+        Route::get('/pengajuan/{pengajuan}', [PengajuanDupakController::class, 'show'])->name('pengajuan.show');
+        Route::put('/pengajuan/{pengajuan}', [PengajuanDupakController::class, 'update'])->name('pengajuan.update');
     });
 
     Route::middleware('admin')->prefix('kepegawaian')->name('kepegawaian.')->group(function () {
@@ -115,6 +144,7 @@ Route::middleware('auth')->group(function () {
     Route::middleware('admin')->prefix('pengaturan')->name('pengaturan.')->group(function () {
         Route::get('/', [PengaturanController::class, 'index'])->name('index');
         Route::post('/token', [PengaturanController::class, 'simpanToken'])->name('token');
+        Route::post('/nama-web', [PengaturanController::class, 'simpanNamaWeb'])->name('nama-web');
         Route::post('/update', [PengaturanController::class, 'update'])->name('update');
         Route::post('/clear-cache', [PengaturanController::class, 'clearCache'])->name('clear-cache');
         Route::post('/migrate', [PengaturanController::class, 'migrate'])->name('migrate');

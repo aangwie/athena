@@ -106,6 +106,18 @@
                                   @class(['form-input resize-none', 'border-rose-300 bg-rose-50/40' => $errors->has('alamat')])>{{ old('alamat', $profil->alamat ?? '') }}</textarea>
                         @error('alamat') <p class="form-error">{{ $message }}</p> @enderror
                     </div>
+
+                    <div class="sm:col-span-2">
+                        <label for="agama" class="form-label">Agama</label>
+                        <select id="agama" name="agama"
+                                @class(['form-select', 'border-rose-300 bg-rose-50/40' => $errors->has('agama')])>
+                            <option value="">Pilih agama</option>
+                            @foreach (\App\Models\ProfilDosen::AGAMA as $nilai => $label)
+                                <option value="{{ $nilai }}" @selected(old('agama', $profil->agama ?? '') === $nilai)>{{ $label }}</option>
+                            @endforeach
+                        </select>
+                        @error('agama') <p class="form-error">{{ $message }}</p> @enderror
+                    </div>
                 </div>
             </section>
 

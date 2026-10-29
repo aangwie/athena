@@ -102,33 +102,26 @@ class AuthenticationTest extends TestCase
             'email' => 'budi@example.test',
         ]);
 
-        PengajuanJabatan::create([
-            'user_id' => $dosen->id,
-            'nomor_pengajuan' => 'PJA-TEST-001',
-            'jabatan_asal' => 'Asisten Ahli',
-            'jabatan_tujuan' => 'Lektor',
-            'program_studi' => 'Pendidikan Informatika',
-            'periode' => 'Oktober 2026',
-            'tanggal_pengajuan' => now(),
-            'status' => 'diajukan',
+        // Dashboard dosen menampilkan riwayat ajuan DUPAK, bukan pengajuan jabatan.
+        $dosen->pengajuanDupak()->create([
+            'tahun' => 2026,
+            'semester' => 'ganjil',
+            'status' => 'diajukan_dupak',
+            'diajukan_at' => now(),
         ]);
 
-        PengajuanJabatan::create([
-            'user_id' => $otherDosen->id,
-            'nomor_pengajuan' => 'PJA-TEST-002',
-            'jabatan_asal' => 'Asisten Ahli',
-            'jabatan_tujuan' => 'Lektor',
-            'program_studi' => 'Pendidikan Matematika',
-            'periode' => 'Oktober 2026',
-            'tanggal_pengajuan' => now(),
-            'status' => 'diajukan',
+        $otherDosen->pengajuanDupak()->create([
+            'tahun' => 2025,
+            'semester' => 'genap',
+            'status' => 'diajukan_dupak',
+            'diajukan_at' => now(),
         ]);
 
         $this->actingAs($dosen)
             ->get('/dashboard')
             ->assertOk()
-            ->assertSee('PJA-TEST-001')
-            ->assertDontSee('PJA-TEST-002');
+            ->assertSee('2026/2027 · Ganjil')
+            ->assertDontSee('2025/2026 · Genap');
     }
 
     public function test_admin_sees_all_submissions(): void

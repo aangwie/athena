@@ -5,6 +5,12 @@
     $huruf = fn (int $i) => chr(65 + $i);
     $hurufKecil = fn (int $i) => strtolower($huruf($i));
 
+    // TIM PAK mengisi kolom "Baru"; dosen hanya melihat hasilnya.
+    $editable = $editable ?? false;
+    $angka = fn ($nilai) => $nilai === null || $nilai === ''
+        ? ''
+        : rtrim(rtrim(number_format((float) $nilai, 2, ',', '.'), '0'), ',');
+
     $grup = [
         ['nomor' => 'I', 'judul' => 'Pendidikan (Bidang A)', 'entri' => $kegiatanPendidikan, 'jenis' => 'JENIS_PENDIDIKAN', 'sub' => null, 'rincian' => null],
         ['nomor' => 'II', 'judul' => 'Pelaksanaan Pendidikan (Bidang B)', 'entri' => $kegiatanPelaksanaan, 'jenis' => 'JENIS_PELAKSANAAN', 'sub' => 'SUB_PELAKSANAAN', 'rincian' => null],
@@ -16,15 +22,18 @@
     // Semua baris diratakan (flat) supaya markup <tr> hanya ditulis sekali.
     // tingkat: 0 bidang, 1 komponen, 2 rincian komponen, 3 rincian kegiatan, 4 butir entri, 5 jumlah.
     $baris = [];
-    $butir = fn ($entri, string $nomor) => [
+    $butir = fn ($entri, string $nomor, string $idGrup) => [
         'tingkat' => 4,
         'nomor' => $nomor,
         'label' => $entri->nama_kegiatan,
-        'kredit' => 1,
+        'id' => $entri->id,
+        'nilai' => $entri->nilai_baru,
+        'grup' => $idGrup,
         'link' => $entri->link_bukti,
     ];
 
-    foreach ($grup as $g) {
+    foreach ($grup as $iGrup => $g) {
+        $idGrup = 'g'.$iGrup;
         $jenisMap = $peta($g['jenis']);
         $subMap = $g['sub'] ? $peta($g['sub']) : [];
         $rincianMap = $g['rincian'] ? $peta($g['rincian']) : [];
@@ -48,7 +57,7 @@
             // Komponen tanpa rincian komponen: entri langsung menjadi butir kegiatan.
             if (($subMap[$jenis] ?? []) === []) {
                 foreach ($itemsJenis->values() as $i => $entri) {
-                    $baris[] = $butir($entri, ($i + 1).'.');
+                    $baris[] = $butir($entri, ($i + 1).'.', $idGrup);
                 }
 
                 continue;
@@ -71,7 +80,7 @@
                 // Rincian komponen tanpa rincian kegiatan: entri menjadi butir beraplikasi huruf.
                 if (($rincianMap[$sub] ?? []) === []) {
                     foreach ($itemsSub->values() as $i => $entri) {
-                        $baris[] = $butir($entri, $hurufKecil($i).'.');
+                        $baris[] = $butir($entri, $hurufKecil($i).'.', $idGrup);
                     }
 
                     continue;
@@ -92,14 +101,31 @@
                     ];
 
                     foreach ($itemsRincian->values() as $i => $entri) {
-                        $baris[] = $butir($entri, ($i + 1).'.');
+                        $baris[] = $butir($entri, ($i + 1).'.', $idGrup);
                     }
                 }
             }
         }
 
-        $baris[] = ['tingkat' => 5, 'nomor' => null, 'label' => 'Jumlah', 'kredit' => $g['entri']->count(), 'link' => null];
+        $baris[] = [
+            'tingkat' => 5,
+            'nomor' => null,
+            'label' => 'Jumlah',
+            'kredit' => $g['entri']->sum('nilai_baru'),
+            'grup' => $idGrup,
+            'link' => null,
+        ];
     }
+
+    // Akumulasi seluruh baris "Jumlah" (Bidang I–V) di paling bawah tabel.
+    $baris[] = [
+        'tingkat' => 6,
+        'nomor' => null,
+        'label' => 'Jumlah Total',
+        'kredit' => collect($baris)->where('tingkat', 5)->sum('kredit'),
+        'grup' => 'total',
+        'link' => null,
+    ];
 
     // Sel tabel formulir: garis penuh, padding rapat.
     $sel = 'border border-slate-300 px-2.5 py-1.5 align-top';
@@ -136,6 +162,7 @@
                 <tr @class([
                     'bg-slate-50' => $r['tingkat'] === 0,
                     'bg-slate-50/70' => $r['tingkat'] === 5,
+                    'bg-teal-50' => $r['tingkat'] === 6,
                 ])>
                     @if ($r['tingkat'] === 0)
                         <td class="{{ $selAngka }} font-extrabold text-slate-700">{{ $r['nomor'] }}</td>
@@ -163,13 +190,26 @@
                         <td class="{{ $sel }} text-slate-700">
                             <span class="mr-1 text-slate-400">{{ $r['nomor'] }}</span> {{ $r['label'] }}
                         </td>
-                    @else
+                    @elseif ($r['tingkat'] === 5)
                         <td colspan="5" class="{{ $sel }} text-right font-extrabold tracking-wide text-slate-700 uppercase">{{ $r['label'] }}</td>
+                    @else
+                        <td colspan="5" class="{{ $sel }} text-right font-extrabold tracking-wide text-teal-800 uppercase">{{ $r['label'] }}</td>
                     @endif
 
                     @if ($r['tingkat'] === 4)
                         <td class="{{ $selAngka }}"></td>
-                        <td class="{{ $selAngka }} text-slate-700">{{ $r['kredit'] }}</td>
+                        <td class="{{ $selAngka }} text-slate-700">
+                            @if ($editable)
+                                <input type="number" step="0.01" min="0" max="9999.99" inputmode="decimal"
+                                       name="nilai[{{ $r['id'] }}]"
+                                       value="{{ $r['nilai'] !== null ? number_format((float) $r['nilai'], 2, '.', '') : '' }}"
+                                       data-nilai data-nilai-grup="{{ $r['grup'] }}"
+                                       aria-label="Angka kredit baru: {{ $r['label'] }}"
+                                       class="w-16 rounded-md border border-slate-300 px-1.5 py-1 text-center text-xs text-slate-800 shadow-sm focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none">
+                            @else
+                                {{ $angka($r['nilai']) }}
+                            @endif
+                        </td>
                         <td class="{{ $selAngka }}"></td>
                         <td class="{{ $sel }}">
                             @if ($r['link'])
@@ -188,8 +228,13 @@
                         </td>
                     @elseif ($r['tingkat'] === 5)
                         <td class="{{ $selAngka }} font-extrabold text-slate-700">0</td>
-                        <td class="{{ $selAngka }} font-extrabold text-slate-700">{{ $r['kredit'] }}</td>
-                        <td class="{{ $selAngka }} font-extrabold text-slate-700">{{ $r['kredit'] }}</td>
+                        <td class="{{ $selAngka }} font-extrabold text-slate-700" data-jumlah-total="{{ $r['grup'] }}">{{ $angka($r['kredit']) }}</td>
+                        <td class="{{ $selAngka }} font-extrabold text-slate-700" data-jumlah-total="{{ $r['grup'] }}">{{ $angka($r['kredit']) }}</td>
+                        <td class="{{ $sel }}"></td>
+                    @elseif ($r['tingkat'] === 6)
+                        <td class="{{ $selAngka }} font-extrabold text-teal-800">0</td>
+                        <td class="{{ $selAngka }} font-extrabold text-teal-800" data-jumlah-grand-total>{{ $angka($r['kredit']) }}</td>
+                        <td class="{{ $selAngka }} font-extrabold text-teal-800" data-jumlah-grand-total>{{ $angka($r['kredit']) }}</td>
                         <td class="{{ $sel }}"></td>
                     @else
                         <td class="{{ $sel }}"></td>
@@ -204,5 +249,7 @@
 </div>
 
 <p class="mt-3 text-[11px] leading-relaxed text-slate-400">
-    Kolom angka kredit mengikuti jumlah entri yang diajukan karena nilai kredit per butir belum diinput pada entri.
+    Kolom <span class="font-semibold">Baru</span> diisi oleh TIM PAK saat menilai usulan; baris
+    <span class="font-semibold">Jumlah</span> di setiap bidang dan <span class="font-semibold">Jumlah Total</span>
+    di paling bawah dihitung otomatis dari nilai tersebut.
 </p>

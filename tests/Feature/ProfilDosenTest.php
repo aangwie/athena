@@ -110,6 +110,27 @@ class ProfilDosenTest extends TestCase
         $this->assertDatabaseHas('anak_dosen', ['nama' => 'Fajar Pratama', 'jenis_kelamin' => 'L']);
     }
 
+    public function test_dosen_can_save_agama_on_data_pribadi(): void
+    {
+        $dosen = $this->makeDosen();
+
+        $this->actingAs($dosen)
+            ->put('/profil/data-pribadi', $this->payload(['agama' => 'islam']))
+            ->assertRedirect(route('profil.show'));
+
+        $this->assertDatabaseHas('profil_dosen', [
+            'user_id' => $dosen->id,
+            'agama' => 'islam',
+        ]);
+    }
+
+    public function test_agama_must_be_one_of_the_available_options(): void
+    {
+        $this->actingAs($this->makeDosen())
+            ->put('/profil/data-pribadi', $this->payload(['agama' => 'lainnya']))
+            ->assertSessionHasErrors('agama');
+    }
+
     public function test_profile_switch_to_lajang_clears_spouse_and_children(): void
     {
         $dosen = $this->makeDosen();

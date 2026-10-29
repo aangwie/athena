@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="theme-color" content="#0f766e">
-    <meta name="description" content="Athena — Sistem Pengajuan Jabatan Akademik Dosen.">
+    <meta name="description" content="{{ $namaWeb }} — Sistem Pengajuan Jabatan Akademik Dosen.">
 
     <script>
         // Terapkan preferensi sidebar sebelum halaman dirender agar tidak berkedip.
@@ -18,7 +18,7 @@
         }
     </script>
 
-    <title>@yield('title', 'Dashboard') · {{ config('app.name', 'Athena') }}</title>
+    <title>@yield('title', 'Dashboard') · {{ $namaWeb }}</title>
 
     <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -39,7 +39,7 @@
                 <a href="{{ route('dashboard') }}" class="sidebar-brand flex items-center gap-3">
                     <x-brand-mark class="size-10" />
                     <span class="sidebar-label">
-                        <span class="block text-lg leading-tight font-extrabold tracking-tight text-white">Athena</span>
+                        <span class="block text-lg leading-tight font-extrabold tracking-tight text-white">{{ $namaWeb }}</span>
                         <span class="block text-[9.5px] font-semibold tracking-[0.16em] text-teal-300/80 uppercase">Jabatan Akademik</span>
                     </span>
                 </a>
@@ -76,14 +76,24 @@
                             </svg>
                             <span class="sidebar-label">Dashboard</span>
                         </a>
-                        <a href="{{ route('dashboard') }}#riwayat" class="sidebar-link" title="Riwayat Pengajuan">
-                            <svg class="size-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                                <path d="M9 5H6.5A1.5 1.5 0 0 0 5 6.5v13A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5v-13A1.5 1.5 0 0 0 17.5 5H15" stroke-linecap="round" />
-                                <rect x="9" y="3" width="6" height="4" rx="1.5" />
-                                <path d="M9 12h6M9 16h4" stroke-linecap="round" />
-                            </svg>
-                            <span class="sidebar-label">Riwayat Pengajuan</span>
-                        </a>
+                        @php
+                            // Dosen punya halaman riwayat sendiri; TIM PAK memakai tabel di dashboard;
+                            // role lain tetap memakai rekap di dashboard.
+                            $riwayatUrl = auth()->user()->isDosen()
+                                ? route('profil.pengajuan.riwayat')
+                                : route('dashboard').'#riwayat';
+                        @endphp
+                        @if (! auth()->user()->isTimPak())
+                            <a href="{{ $riwayatUrl }}" title="Riwayat Pengajuan"
+                               @class(['sidebar-link', 'sidebar-link-active' => request()->routeIs('profil.pengajuan.riwayat')])>
+                                <svg class="size-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                    <path d="M9 5H6.5A1.5 1.5 0 0 0 5 6.5v13A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5v-13A1.5 1.5 0 0 0 17.5 5H15" stroke-linecap="round" />
+                                    <rect x="9" y="3" width="6" height="4" rx="1.5" />
+                                    <path d="M9 12h6M9 16h4" stroke-linecap="round" />
+                                </svg>
+                                <span class="sidebar-label">Riwayat Pengajuan</span>
+                            </a>
+                        @endif
                         @if (auth()->user()->isDosen())
                             <a href="{{ route('profil.show') }}" title="Portofolio Saya" @class(['sidebar-link', 'sidebar-link-active' => request()->routeIs('profil.show')])>
                                 <svg class="size-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
@@ -95,6 +105,21 @@
                         @endif
                     </div>
                 </div>
+
+                @if (auth()->user()->isTimPak())
+                    <div>
+                        <p class="sidebar-section-title sidebar-collapse-hide mb-2 px-3 text-[10px] font-bold tracking-[0.14em] text-teal-300/50 uppercase">Penilaian</p>
+                        <div class="space-y-1">
+                            <a href="{{ route('tim-pak.pengajuan.index') }}" title="Pengajuan Masuk" @class(['sidebar-link', 'sidebar-link-active' => request()->routeIs('tim-pak.pengajuan.*')])>
+                                <svg class="size-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                    <path d="M9 12.5 11 14.5 15.5 10" stroke-linecap="round" stroke-linejoin="round" />
+                                    <path d="M12 3.5 5.5 6v5.2c0 4.2 2.8 7.9 6.5 9.3 3.7-1.4 6.5-5.1 6.5-9.3V6L12 3.5Z" stroke-linejoin="round" />
+                                </svg>
+                                <span class="sidebar-label">Pengajuan Masuk</span>
+                            </a>
+                        </div>
+                    </div>
+                @endif
 
                 @if (auth()->user()->isDosen())
                     <div>
@@ -114,6 +139,13 @@
                                     <path d="M6.4 11.3v4.2c0 .5.3 1 .8 1.2 1.5.7 3 1 4.8 1s3.3-.3 4.8-1c.5-.2.8-.7.8-1.2v-4.2" stroke-linecap="round" />
                                 </svg>
                                 <span class="sidebar-label">Riwayat Pendidikan</span>
+                            </a>
+                            <a href="{{ route('profil.pekerjaan.index') }}" title="Riwayat Pekerjaan" @class(['sidebar-link', 'sidebar-link-active' => request()->routeIs('profil.pekerjaan.*')])>
+                                <svg class="size-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                    <rect x="3.5" y="7.5" width="17" height="12" rx="2.5" />
+                                    <path d="M9 7.5V6a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 6v1.5M3.5 12h17" stroke-linecap="round" />
+                                </svg>
+                                <span class="sidebar-label">Riwayat Pekerjaan</span>
                             </a>
                         </div>
                     </div>
@@ -273,7 +305,7 @@
                         </button>
                         <div class="min-w-0">
                             <div class="flex items-center gap-1.5 text-[11px] font-medium text-slate-400">
-                                <span>Athena</span>
+                                <span>{{ $namaWeb }}</span>
                                 <svg class="size-3" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                                     <path fill-rule="evenodd" d="M7.2 4.2a.75.75 0 0 1 1.06 0l5.3 5.3a.75.75 0 0 1 0 1.06l-5.3 5.3a.75.75 0 1 1-1.06-1.06L11.7 10 7.2 5.26a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
                                 </svg>
@@ -382,7 +414,7 @@
 
             <footer class="border-t border-slate-200/80 px-4 py-4 sm:px-6 lg:px-8">
                 <div class="flex flex-col items-center justify-between gap-2 text-[11px] text-slate-400 sm:flex-row">
-                    <p>&copy; {{ date('Y') }} Athena · Sistem Pengajuan Jabatan Akademik Dosen</p>
+                    <p>&copy; {{ date('Y') }} {{ $namaWeb }} · Sistem Pengajuan Jabatan Akademik Dosen</p>
                     <p class="flex items-center gap-1.5">
                         <span class="size-1.5 rounded-full bg-teal-500"></span>
                         Versi 0.1.0 · Lingkungan {{ app()->environment() }}

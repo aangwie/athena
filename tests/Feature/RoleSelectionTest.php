@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Models\PengajuanJabatan;
+use App\Models\PengajuanDupak;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -106,15 +106,12 @@ class RoleSelectionTest extends TestCase
             'email' => 'budi@example.test',
         ]);
 
-        PengajuanJabatan::create([
+        PengajuanDupak::create([
             'user_id' => $dosen->id,
-            'nomor_pengajuan' => 'PJA-TEST-009',
-            'jabatan_asal' => 'Asisten Ahli',
-            'jabatan_tujuan' => 'Lektor',
-            'program_studi' => 'Pendidikan Informatika',
-            'periode' => 'Oktober 2026',
-            'tanggal_pengajuan' => now(),
-            'status' => 'diajukan',
+            'tahun' => 2026,
+            'semester' => 'ganjil',
+            'status' => 'diajukan_dupak',
+            'diajukan_at' => now(),
         ]);
 
         $this->login($timPak);
@@ -122,10 +119,12 @@ class RoleSelectionTest extends TestCase
         $this->post('/pilih-role', ['role' => 'tim_pak'])
             ->assertRedirect(route('dashboard'));
 
+        // Dashboard TIM PAK memakai tabel pengajuan DUPAK masuk.
         $this->get('/dashboard')
             ->assertOk()
             ->assertSee('Ruang TIM PAK')
-            ->assertSee('PJA-TEST-009');
+            ->assertSee('Budi Santoso, M.Pd.')
+            ->assertSee('2026/2027 · Ganjil');
 
         $this->get('/profil')->assertForbidden();
         $this->get('/data-dosen')->assertForbidden();

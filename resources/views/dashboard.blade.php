@@ -54,6 +54,14 @@
                         </svg>
                         Pengajuan Baru
                     </a>
+                @elseif (auth()->user()->isTimPak())
+                    <a href="{{ route('tim-pak.pengajuan.index') }}"
+                       class="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-3 text-sm font-bold text-teal-800 shadow-lg shadow-teal-950/20 transition hover:bg-teal-50 active:scale-[0.99]">
+                        <svg class="size-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm.75-11.25a.75.75 0 0 0-1.5 0v2.5h-2.5a.75.75 0 0 0 0 1.5h2.5v2.5a.75.75 0 0 0 1.5 0v-2.5h2.5a.75.75 0 0 0 0-1.5h-2.5v-2.5Z" clip-rule="evenodd" />
+                        </svg>
+                        Pengajuan Masuk
+                    </a>
                 @else
                     <span class="inline-flex cursor-not-allowed items-center gap-2 rounded-xl bg-white px-4 py-3 text-sm font-bold text-teal-800 opacity-90 shadow-lg shadow-teal-950/20" title="Modul pengajuan segera hadir">
                         <svg class="size-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -68,13 +76,15 @@
     </section>
 
     {{-- Statistik --}}
-    <section class="mb-6 grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4" aria-label="Ringkasan pengajuan">
+    <section class="mb-6 grid grid-cols-2 gap-3 sm:gap-4 {{ auth()->user()->isDosen() ? 'xl:grid-cols-5' : 'xl:grid-cols-4' }}" aria-label="Ringkasan pengajuan">
         @php
+            $isDosen = auth()->user()->isDosen();
+
             $cards = [
                 [
-                    'label' => 'Total Pengajuan',
+                    'label' => $isDosen ? 'Total Ajuan' : 'Total Pengajuan',
                     'value' => $statistics['total'],
-                    'description' => 'Seluruh pengajuan tercatat',
+                    'description' => $isDosen ? 'Seluruh ajuan DUPAK Anda' : 'Seluruh pengajuan tercatat',
                     'tag' => 'Semua',
                     'icon' => 'document',
                     'iconClass' => 'bg-teal-50 text-teal-600',
@@ -83,7 +93,7 @@
                 [
                     'label' => 'Menunggu Verifikasi',
                     'value' => $statistics['menunggu'],
-                    'description' => 'Sedang diproses admin',
+                    'description' => $isDosen ? 'Menunggu keputusan admin' : 'Sedang diproses admin',
                     'tag' => 'Proses',
                     'icon' => 'clock',
                     'iconClass' => 'bg-amber-50 text-amber-600',
@@ -92,7 +102,7 @@
                 [
                     'label' => 'Disetujui',
                     'value' => $statistics['disetujui'],
-                    'description' => 'Pengajuan telah disetujui',
+                    'description' => $isDosen ? 'DUPAK disetujui admin' : 'Pengajuan telah disetujui',
                     'tag' => 'Final',
                     'icon' => 'check',
                     'iconClass' => 'bg-emerald-50 text-emerald-600',
@@ -101,13 +111,26 @@
                 [
                     'label' => 'Perlu Perbaikan',
                     'value' => $statistics['perbaikan'],
-                    'description' => 'Pengajuan ditolak / revisi',
+                    'description' => $isDosen ? 'DUPAK dikembalikan admin' : 'Pengajuan ditolak / revisi',
                     'tag' => 'Revisi',
                     'icon' => 'alert',
                     'iconClass' => 'bg-rose-50 text-rose-600',
                     'accent' => 'bg-rose-500',
                 ],
             ];
+
+            // Dosen: status DUPAK dipisah antara perlu perbaikan dan ditolak.
+            if ($isDosen) {
+                $cards[] = [
+                    'label' => 'Ditolak',
+                    'value' => $statistics['ditolak'],
+                    'description' => 'DUPAK ditolak admin',
+                    'tag' => 'Tolak',
+                    'icon' => 'alert',
+                    'iconClass' => 'bg-slate-100 text-slate-600',
+                    'accent' => 'bg-slate-400',
+                ];
+            }
         @endphp
 
         @foreach ($cards as $card)
@@ -147,18 +170,26 @@
     </section>
 
     {{-- Tabel riwayat --}}
+    @php
+        // Dosen & TIM PAK memakai tabel DUPAK; role lain memakai tabel pengajuan jabatan.
+        $dupakTable = auth()->user()->isDosen() || auth()->user()->isTimPak();
+    @endphp
     <section id="riwayat" class="scroll-mt-24" data-table-card>
         <div class="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
             <div class="flex flex-col gap-4 border-b border-slate-100 px-5 py-5 sm:px-6 lg:flex-row lg:items-center lg:justify-between">
                 <div>
                     <div class="flex flex-wrap items-center gap-2">
-                        <h2 class="text-base font-extrabold tracking-tight text-slate-900">Riwayat Pengajuan</h2>
+                        <h2 class="text-base font-extrabold tracking-tight text-slate-900">{{ auth()->user()->isTimPak() ? 'Pengajuan DUPAK Masuk' : 'Riwayat Pengajuan' }}</h2>
                         <span class="rounded-full bg-teal-50 px-2 py-0.5 text-[10px] font-bold text-teal-700 ring-1 ring-teal-100 ring-inset">
-                            {{ $pengajuan->count() }} data
+                            {{ $dupakTable ? $dupak->count() : $pengajuan->count() }} data
                         </span>
                     </div>
                     <p class="mt-1 text-xs text-slate-500">
-                        @if (auth()->user()->canReview())
+                        @if (auth()->user()->isDosen())
+                            Riwayat ajuan DUPAK (jabatan akademik) yang Anda kirim.
+                        @elseif (auth()->user()->isTimPak())
+                            Daftar pengajuan DUPAK yang masuk dari dosen untuk dinilai.
+                        @elseif (auth()->user()->canReview())
                             Daftar pengajuan jabatan akademik dari seluruh dosen.
                         @else
                             Daftar pengajuan jabatan akademik yang Anda ajukan.
@@ -175,7 +206,7 @@
                                 <path d="m16 16 4 4" stroke-linecap="round" />
                             </svg>
                         </span>
-                        <input type="search" data-table-search placeholder="Cari nomor, jabatan, prodi…"
+                        <input type="search" data-table-search placeholder="{{ $dupakTable ? 'Cari dosen, periode…' : 'Cari nomor, jabatan, prodi…' }}"
                                class="h-10 w-full rounded-xl border border-slate-200 bg-slate-50/60 pr-9 pl-9 text-xs text-slate-700 transition placeholder:text-slate-400 hover:border-slate-300 focus:border-teal-500 focus:bg-white focus:ring-4 focus:ring-teal-500/10 focus:outline-none sm:w-64">
                         <button type="button" data-table-search-clear class="absolute top-1/2 right-2 hidden size-6 -translate-y-1/2 items-center justify-center rounded-md text-slate-400 transition hover:bg-slate-200/60 hover:text-slate-600" aria-label="Bersihkan pencarian">
                             <svg class="size-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -186,14 +217,20 @@
 
                     <div class="relative">
                         <label for="statusFilter" class="sr-only">Filter status</label>
-                        <select id="statusFilter" data-table-filter data-column="{{ auth()->user()->canReview() ? 6 : 5 }}"
+                        <select id="statusFilter" data-table-filter data-column="{{ auth()->user()->isDosen() ? 3 : (auth()->user()->isTimPak() ? 2 : (auth()->user()->canReview() ? 6 : 5)) }}"
                                 class="h-10 w-full appearance-none rounded-xl border border-slate-200 bg-slate-50/60 pr-9 pl-3 text-xs font-medium text-slate-600 transition hover:border-slate-300 focus:border-teal-500 focus:bg-white focus:ring-4 focus:ring-teal-500/10 focus:outline-none sm:w-40">
                             <option value="">Semua status</option>
-                            <option value="Draft">Draft</option>
-                            <option value="Diajukan">Diajukan</option>
-                            <option value="Diverifikasi">Diverifikasi</option>
-                            <option value="Disetujui">Disetujui</option>
-                            <option value="Ditolak">Ditolak</option>
+                            @if ($dupakTable)
+                                @foreach (\App\Models\PengajuanDupak::STATUS_DUPAK as $statusDupak)
+                                    <option value="{{ \App\Models\PengajuanDupak::STATUS[$statusDupak] }}">{{ \App\Models\PengajuanDupak::STATUS[$statusDupak] }}</option>
+                                @endforeach
+                            @else
+                                <option value="Draft">Draft</option>
+                                <option value="Diajukan">Diajukan</option>
+                                <option value="Diverifikasi">Diverifikasi</option>
+                                <option value="Disetujui">Disetujui</option>
+                                <option value="Ditolak">Ditolak</option>
+                            @endif
                         </select>
                         <span class="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-slate-400">
                             <svg class="size-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -205,6 +242,61 @@
             </div>
 
             <div class="overflow-x-auto px-2 pb-2 sm:px-4">
+                @php
+                    // Format angka kredit: 12,5 — sama dengan rekap DUPAK.
+                    $angka = fn ($nilai) => $nilai === null
+                        ? '0'
+                        : rtrim(rtrim(number_format((float) $nilai, 2, ',', '.'), '0'), ',');
+                    $totalNilai = fn ($item) => $nilai->get($item->tahun.'-'.$item->semester)?->total;
+                @endphp
+
+                @if (auth()->user()->isDosen())
+                    {{-- Sama dengan tabel Riwayat Ajuan DUPAK, tanpa kolom aksi. --}}
+                    <table id="riwayatTable" data-datatable data-page-length="10" class="w-full text-left text-sm">
+                        <thead>
+                            <tr>
+                                <th scope="col">Periode</th>
+                                <th scope="col" class="text-right">Nilai PAK</th>
+                                <th scope="col">Dinilai</th>
+                                <th scope="col">Hasil Pengajuan</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse ($dupak as $item)
+                                <tr>
+                                    <td class="whitespace-nowrap">
+                                        <p class="text-xs font-bold text-slate-700">{{ $item->periodeLabel() }}</p>
+                                    </td>
+                                    <td class="text-right whitespace-nowrap">
+                                        <span class="text-xs font-extrabold text-slate-800">{{ $angka($totalNilai($item)) }}</span>
+                                    </td>
+                                    <td data-order="{{ $item->dinilai_at?->timestamp ?? 0 }}" class="whitespace-nowrap">
+                                        <span class="text-xs text-slate-600">{{ $item->dinilai_at?->translatedFormat('d M Y') ?? '—' }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge-status {{ $item->statusClasses() }}">{{ $item->statusLabel() }}</span>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="4" class="px-5 py-16 text-center">
+                                        <span class="mx-auto flex size-14 items-center justify-center rounded-2xl bg-slate-50 text-slate-300">
+                                            <svg class="size-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                                                <path d="M6 3.5h8l4 4V20a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 6 20V5A1.5 1.5 0 0 1 7.5 3.5Z" stroke-linejoin="round" />
+                                                <path d="M14 3.5v4.5h4M9 13h6M9 16.5h4" stroke-linecap="round" />
+                                            </svg>
+                                        </span>
+                                        <p class="mt-3 text-sm font-bold text-slate-700">Belum ada ajuan DUPAK</p>
+                                        <p class="mt-1 text-xs text-slate-400">DUPAK bisa diajukan setelah nilai PAK periode tersebut tersedia.</p>
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                @elseif (auth()->user()->isTimPak())
+                    {{-- Tabel yang sama dengan menu Pengajuan Masuk. --}}
+                    @include('tim-pak.pengajuan.partials.table')
+                @else
                 <table id="riwayatTable" data-datatable data-page-length="10" class="w-full text-left text-sm">
                     <thead>
                         <tr>
@@ -275,6 +367,7 @@
                         @endforelse
                     </tbody>
                 </table>
+                @endif
             </div>
 
             <div class="flex flex-col gap-2 border-t border-slate-100 bg-slate-50/50 px-5 py-3 text-[11px] text-slate-400 sm:flex-row sm:items-center sm:justify-between sm:px-6">
@@ -284,8 +377,134 @@
                     </svg>
                     Klik judul kolom untuk mengurutkan data.
                 </p>
-                <p>Data demonstrasi · Athena v0.1.0</p>
+                <p>Data demonstrasi · {{ $namaWeb }} v0.1.0</p>
             </div>
         </div>
     </section>
+
+    @if (auth()->user()->isAdmin())
+        {{-- Ajuan DUPAK dari dosen: admin memutuskan setujui / butuh perbaikan / tolak. --}}
+        <section id="dupak" class="mt-6 scroll-mt-24" data-table-card>
+            <div class="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
+                <div class="flex flex-col gap-4 border-b border-slate-100 px-5 py-5 sm:px-6 lg:flex-row lg:items-center lg:justify-between">
+                    <div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <h2 class="text-base font-extrabold tracking-tight text-slate-900">Ajuan DUPAK Masuk</h2>
+                            <span class="rounded-full bg-teal-50 px-2 py-0.5 text-[10px] font-bold text-teal-700 ring-1 ring-teal-100 ring-inset">
+                                {{ $dupak->count() }} data
+                            </span>
+                        </div>
+                        <p class="mt-1 text-xs text-slate-500">
+                            DUPAK yang diajukan dosen setelah dinilai TIM PAK. Buka ikon mata untuk melihat rincian lalu memutuskan.
+                        </p>
+                    </div>
+
+                    <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+                        <label class="relative block">
+                            <span class="sr-only">Cari ajuan DUPAK</span>
+                            <span class="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-slate-400">
+                                <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                    <circle cx="10.5" cy="10.5" r="6.5" />
+                                    <path d="m16 16 4 4" stroke-linecap="round" />
+                                </svg>
+                            </span>
+                            <input type="search" data-table-search placeholder="Cari dosen, periode..."
+                                   class="h-10 w-full rounded-xl border border-slate-200 bg-slate-50/60 pr-9 pl-9 text-xs text-slate-700 transition placeholder:text-slate-400 hover:border-slate-300 focus:border-teal-500 focus:bg-white focus:ring-4 focus:ring-teal-500/10 focus:outline-none sm:w-64">
+                            <button type="button" data-table-search-clear class="absolute top-1/2 right-2 hidden size-6 -translate-y-1/2 items-center justify-center rounded-md text-slate-400 transition hover:bg-slate-200/60 hover:text-slate-600" aria-label="Bersihkan pencarian">
+                                <svg class="size-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                    <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
+                                </svg>
+                            </button>
+                        </label>
+
+                        <div class="relative">
+                            <label for="dupakStatusFilter" class="sr-only">Filter status DUPAK</label>
+                            <select id="dupakStatusFilter" data-table-filter data-column="3"
+                                    class="h-10 w-full appearance-none rounded-xl border border-slate-200 bg-slate-50/60 pr-9 pl-3 text-xs font-medium text-slate-600 transition hover:border-slate-300 focus:border-teal-500 focus:bg-white focus:ring-4 focus:ring-teal-500/10 focus:outline-none sm:w-44">
+                                <option value="">Semua status</option>
+                                @foreach (\App\Models\PengajuanDupak::STATUS_DUPAK as $statusDupak)
+                                    <option value="{{ \App\Models\PengajuanDupak::STATUS[$statusDupak] }}">
+                                        {{ \App\Models\PengajuanDupak::STATUS[$statusDupak] }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <span class="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-slate-400">
+                                <svg class="size-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                    <path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
+                                </svg>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto px-2 pb-2 sm:px-4">
+                    <table data-datatable data-page-length="10" class="w-full text-left text-sm">
+                        <thead>
+                            <tr>
+                                <th scope="col">Dosen</th>
+                                <th scope="col">Periode</th>
+                                <th scope="col">Diajukan</th>
+                                <th scope="col">Status</th>
+                                <th scope="col">Catatan</th>
+                                <th scope="col" class="no-sort text-right">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse ($dupak as $item)
+                                <tr>
+                                    <td>
+                                        <div class="flex items-center gap-2.5">
+                                            <span class="flex size-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-[10px] font-bold text-slate-600">
+                                                {{ $item->user->initials() }}
+                                            </span>
+                                            <div class="min-w-0">
+                                                <p class="truncate text-xs font-bold text-slate-700">{{ $item->user->name }}</p>
+                                                <p class="font-mono text-[10px] text-slate-400">{{ $item->user->nidn ?? '—' }}</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="whitespace-nowrap">
+                                        <span class="text-xs font-medium text-slate-600">{{ $item->periodeLabel() }}</span>
+                                    </td>
+                                    <td data-order="{{ $item->diajukan_at?->timestamp ?? 0 }}" class="whitespace-nowrap">
+                                        <span class="text-xs text-slate-500">{{ $item->diajukan_at?->translatedFormat('d M Y') ?? '—' }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge-status {{ $item->statusClasses() }}">{{ $item->statusLabel() }}</span>
+                                    </td>
+                                    <td class="max-w-56">
+                                        <span class="line-clamp-2 text-[11px] leading-relaxed text-slate-500" title="{{ $item->catatan }}">
+                                            {{ $item->catatan ?: '—' }}
+                                        </span>
+                                    </td>
+                                    <td class="text-right">
+                                        <a href="{{ route('verifikasi-dupak.show', $item) }}" class="btn-small"
+                                           title="Lihat DUPAK" aria-label="Lihat DUPAK {{ $item->user->name }}">
+                                            <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                                <path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z" stroke-linejoin="round" />
+                                                <circle cx="12" cy="12" r="3" />
+                                            </svg>
+                                        </a>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="6" class="px-5 py-16 text-center">
+                                        <span class="mx-auto flex size-14 items-center justify-center rounded-2xl bg-slate-50 text-slate-300">
+                                            <svg class="size-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                                                <path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z" stroke-linejoin="round" />
+                                                <circle cx="12" cy="12" r="3" />
+                                            </svg>
+                                        </span>
+                                        <p class="mt-3 text-sm font-bold text-slate-700">Belum ada ajuan DUPAK</p>
+                                        <p class="mt-1 text-xs text-slate-400">DUPAK akan tampil di sini setelah dosen mengajukannya.</p>
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    @endif
 @endsection

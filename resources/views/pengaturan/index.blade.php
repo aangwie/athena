@@ -18,10 +18,43 @@
             </p>
         </div>
 
-        {{-- 01 · Data update --}}
+        {{-- 01 · Identitas web --}}
         <section class="section-card mb-5">
             <div class="section-heading">
                 <span class="section-number">01</span>
+                <div>
+                    <h3 class="text-sm font-extrabold text-slate-800">Nama Web</h3>
+                    <p class="mt-0.5 text-xs text-slate-400">Nama yang tampil di sidebar, judul tab, dan footer seluruh halaman.</p>
+                </div>
+            </div>
+
+            <div class="px-5 py-5 sm:px-6">
+                <form method="POST" action="{{ route('pengaturan.nama-web') }}" class="space-y-3">
+                    @csrf
+                    <div>
+                        <label for="nama_web" class="form-label">
+                            Nama web <span class="text-rose-500">*</span>
+                        </label>
+                        <input type="text" id="nama_web" name="nama_web" maxlength="10" required
+                               value="{{ old('nama_web', $namaWeb) }}"
+                               placeholder="Contoh: Athena"
+                               @class(['form-input sm:max-w-xs', 'border-rose-300 bg-rose-50/40' => $errors->has('nama_web')])>
+                        @error('nama_web') <p class="form-error">{{ $message }}</p> @enderror
+                        <p class="mt-1.5 text-[11px] leading-relaxed text-slate-400">
+                            Maksimal 10 karakter. Nama saat ini:
+                            <span class="font-semibold text-slate-600">{{ $namaWeb }}</span>.
+                        </p>
+                    </div>
+
+                    <button type="submit" class="btn-primary w-auto justify-center px-5">Simpan Nama Web</button>
+                </form>
+            </div>
+        </section>
+
+        {{-- 02 · Data update --}}
+        <section class="section-card mb-5">
+            <div class="section-heading">
+                <span class="section-number">02</span>
                 <div>
                     <h3 class="text-sm font-extrabold text-slate-800">Data Update</h3>
                     <p class="mt-0.5 text-xs text-slate-400">Token GitHub untuk menarik pembaruan dari repositori.</p>
@@ -80,10 +113,10 @@
                 </div>
             </div>
         </section>
-        {{-- 02 · Pemeliharaan --}}
+        {{-- 03 · Pemeliharaan --}}
         <section class="section-card mb-5">
             <div class="section-heading">
-                <span class="section-number">02</span>
+                <span class="section-number">03</span>
                 <div>
                     <h3 class="text-sm font-extrabold text-slate-800">Pemeliharaan Sistem</h3>
                     <p class="mt-0.5 text-xs text-slate-400">Tindakan cepat untuk cache, skema database, dan tautan penyimpanan.</p>
@@ -139,7 +172,7 @@
             </div>
         </section>
 
-        {{-- 03 · Terminal log --}}
+        {{-- 04 · Terminal log --}}
         <section class="overflow-hidden rounded-2xl border border-slate-800 bg-slate-950 shadow-lg">
             <div class="flex items-center gap-2 border-b border-slate-800 bg-slate-900/80 px-4 py-3">
                 <span class="size-2.5 rounded-full bg-rose-500/80"></span>

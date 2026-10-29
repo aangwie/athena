@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Http\Controllers\PengaturanController;
+use App\Models\Pengaturan;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -67,6 +68,32 @@ class PengaturanTest extends TestCase
             ->delete('/pengaturan/log')
             ->assertRedirect(route('pengaturan.index'))
             ->assertSessionMissing('log-pengaturan');
+    }
+
+    public function test_admin_can_rename_web_and_name_shows_in_sidebar(): void
+    {
+        $this->actingAs($this->makeAdmin())
+            ->post('/pengaturan/nama-web', ['nama_web' => 'SIGAP'])
+            ->assertRedirect(route('pengaturan.index'))
+            ->assertSessionHas('status');
+
+        $this->assertDatabaseHas('pengaturan', ['kunci' => 'nama_web', 'nilai' => 'SIGAP']);
+        $this->assertSame('SIGAP', Pengaturan::namaWeb());
+
+        $this->get('/dashboard')->assertOk()->assertSee('SIGAP');
+        $this->get('/pengaturan')->assertOk()->assertSee('value="SIGAP"', false);
+
+        auth()->logout();
+        $this->get('/login')->assertOk()->assertSee('SIGAP');
+    }
+
+    public function test_web_name_is_limited_to_ten_characters(): void
+    {
+        $this->actingAs($this->makeAdmin())
+            ->post('/pengaturan/nama-web', ['nama_web' => 'SEBELASHRF1'])
+            ->assertSessionHasErrors('nama_web');
+
+        $this->assertDatabaseMissing('pengaturan', ['kunci' => 'nama_web']);
     }
 
     public function test_runner_masks_secret_and_reports_exit_code(): void

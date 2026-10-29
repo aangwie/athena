@@ -8,8 +8,11 @@ use App\Http\Requests\KegiatanPenelitianRequest;
 use App\Http\Requests\KegiatanPengabdianRequest;
 use App\Http\Requests\KegiatanPenunjangRequest;
 use App\Models\KegiatanDupak;
+use App\Models\PengajuanDupak;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class PengajuanDosenController extends Controller
@@ -59,22 +62,158 @@ class PengajuanDosenController extends Controller
             return redirect()->route('profil.pengajuan.periode');
         }
 
-        $entri = $request->user()->kegiatanDupak()->latest();
-
         return view('profil.pengajuan.create', [
             'komponen' => self::KOMPONEN,
             'tahun' => $tahun,
             'semester' => $semester,
+            'pengajuan' => $request->user()->pengajuanDupak()
+                ->where('tahun', $tahun)
+                ->where('semester', $semester)
+                ->first(),
             'entriEdit' => $entriEdit?->komponen === 'pendidikan' ? $entriEdit : null,
             'entriEditPelaksanaan' => $entriEdit?->komponen === 'pelaksanaan_pendidikan' ? $entriEdit : null,
             'entriEditPenelitian' => $entriEdit?->komponen === 'penelitian' ? $entriEdit : null,
             'entriEditAbdimas' => $entriEdit?->komponen === 'abdimas' ? $entriEdit : null,
             'entriEditPenunjang' => $entriEdit?->komponen === 'penunjang' ? $entriEdit : null,
-            'kegiatanPendidikan' => (clone $entri)->where('komponen', 'pendidikan')->get(),
-            'kegiatanPelaksanaan' => (clone $entri)->where('komponen', 'pelaksanaan_pendidikan')->get(),
-            'kegiatanPenelitian' => (clone $entri)->where('komponen', 'penelitian')->get(),
-            'kegiatanAbdimas' => (clone $entri)->where('komponen', 'abdimas')->get(),
-            'kegiatanPenunjang' => (clone $entri)->where('komponen', 'penunjang')->get(),
+            ...$request->user()->kegiatanPeriode($tahun, $semester),
+        ]);
+    }
+
+    /**
+     * Kirim usulan periode ini ke TIM PAK untuk dinilai.
+     */
+    public function ajukan(Request $request): RedirectResponse
+    {
+        [$tahun, $semester] = $this->periodeInput($request);
+
+        if ($request->user()->pengajuanDupak()
+            ->where('tahun', $tahun)
+            ->where('semester', $semester)
+            ->first()?->nilaiTerkunci()) {
+            return $this->kembaliKeReview($tahun, $semester)
+                ->with('error', 'DUPAK periode ini sudah disetujui admin, usulan tidak bisa diajukan lagi.');
+        }
+
+        if ($request->user()->kegiatanDupak()->periode($tahun, $semester)->doesntExist()) {
+            return $this->kembaliKeReview($tahun, $semester)
+                ->with('error', 'Belum ada kegiatan pada periode ini yang bisa diajukan.');
+        }
+
+        $request->user()->pengajuanDupak()->updateOrCreate(
+            ['tahun' => $tahun, 'semester' => $semester],
+            ['status' => 'diajukan', 'diajukan_at' => now(), 'dinilai_at' => null],
+        );
+
+        return $this->kembaliKeReview($tahun, $semester)
+            ->with('status', 'Usulan dikirim ke TIM PAK. Nilai angka kredit akan muncul setelah dinilai.');
+    }
+
+    /**
+     * Ajukan DUPAK final setelah nilai dari TIM PAK tersedia.
+     */
+    public function ajukanDupak(Request $request): RedirectResponse
+    {
+        [$tahun, $semester] = $this->periodeInput($request);
+
+        $pengajuan = $request->user()->pengajuanDupak()
+            ->where('tahun', $tahun)
+            ->where('semester', $semester)
+            ->first();
+
+        if ($pengajuan?->status !== 'dinilai') {
+            return $this->kembaliKeReview($tahun, $semester)
+                ->with('error', 'DUPAK bisa diajukan setelah TIM PAK menyimpan nilai periode ini.');
+        }
+
+        $pengajuan->update(['status' => 'diajukan_dupak']);
+
+        return $this->kembaliKeReview($tahun, $semester)
+            ->with('status', 'DUPAK periode ini berhasil diajukan.');
+    }
+
+    /**
+     * Riwayat pengajuan: tab nilai PAK dan tab ajuan DUPAK.
+     */
+    public function riwayat(Request $request): View
+    {
+        $pengajuan = $request->user()->pengajuanDupak()
+            ->whereNotNull('diajukan_at')
+            ->orderByDesc('tahun')
+            ->orderByDesc('semester')
+            ->get();
+
+        // Satu query: total angka kredit hasil penilaian TIM PAK per periode.
+        $nilai = $request->user()->kegiatanDupak()
+            ->selectRaw('tahun, semester, SUM(nilai_baru) as total')
+            ->groupBy('tahun', 'semester')
+            ->get()
+            ->keyBy(fn ($baris) => $baris->tahun.'-'.$baris->semester);
+
+        return view('profil.pengajuan.riwayat', [
+            'pengajuan' => $pengajuan,
+            'dupak' => $pengajuan->whereIn('status', PengajuanDupak::STATUS_DUPAK)->values(),
+            'nilai' => $nilai,
+        ]);
+    }
+
+    /**
+     * Ajukan ulang nilai PAK satu periode setelah dosen melakukan perbaikan.
+     */
+    public function ajukanUlang(Request $request): RedirectResponse
+    {
+        [$tahun, $semester] = $this->periodeInput($request);
+
+        $pengajuan = $request->user()->pengajuanDupak()
+            ->where('tahun', $tahun)
+            ->where('semester', $semester)
+            ->first();
+
+        if ($pengajuan?->nilaiTerkunci()) {
+            return redirect()->route('profil.pengajuan.riwayat')
+                ->with('error', 'DUPAK periode ini sudah disetujui admin, nilai tidak bisa diajukan ulang.');
+        }
+
+        if ($pengajuan?->dinilai_at === null) {
+            return redirect()->route('profil.pengajuan.riwayat')
+                ->with('error', 'Nilai PAK periode ini belum tersedia untuk diajukan ulang.');
+        }
+
+        $pengajuan->update(['status' => 'diajukan', 'diajukan_at' => now(), 'dinilai_at' => null]);
+
+        return redirect()->route('profil.pengajuan.riwayat')
+            ->with('status', 'Nilai PAK periode '.$pengajuan->periodeLabel().' diajukan ulang ke TIM PAK.');
+    }
+
+    /**
+     * Halaman cetak DUPAK (disimpan sebagai PDF lewat dialog cetak peramban).
+     */
+    public function cetak(Request $request): View|RedirectResponse
+    {
+        $tahun = (int) $request->query('tahun');
+        $semester = $request->query('semester');
+
+        if ($tahun < 2000 || $tahun > 2100
+            || ! is_string($semester) || ! array_key_exists($semester, KegiatanDupak::SEMESTER)) {
+            return redirect()->route('profil.pengajuan.periode');
+        }
+
+        return view('profil.pengajuan.cetak', [
+            'tahun' => $tahun,
+            'semester' => $semester,
+            'pengajuan' => $request->user()->pengajuanDupak()
+                ->where('tahun', $tahun)
+                ->where('semester', $semester)
+                ->first(),
+            // Penanda tangan DUPAK: akun TIM PAK yang aktif.
+            // ponytail: belum dicatat per penilaian (tidak ada kolom dinilai_oleh);
+            // tambahkan kolom itu kalau penilai TIM PAK lebih dari satu orang.
+            'penilai' => User::query()
+                ->where('is_active', true)
+                ->where(fn ($query) => $query->where('role', 'tim_pak')
+                    ->orWhereJsonContains('roles', 'tim_pak'))
+                ->orderBy('name')
+                ->first(),
+            ...$request->user()->kegiatanPeriode($tahun, $semester),
         ]);
     }
 
@@ -216,6 +355,29 @@ class PengajuanDosenController extends Controller
         $kegiatan->delete();
 
         return $this->kembaliKeTab('Entri bidang penunjang berhasil dihapus.', $kegiatan, 'penunjang');
+    }
+
+    /**
+     * Periode yang dikirim tombol aksi pada tab Review.
+     *
+     * @return array{0: int, 1: string}
+     */
+    private function periodeInput(Request $request): array
+    {
+        $data = $request->validate([
+            'tahun' => ['required', 'integer', 'between:2000,2100'],
+            'semester' => ['required', Rule::in(array_keys(KegiatanDupak::SEMESTER))],
+        ]);
+
+        return [(int) $data['tahun'], (string) $data['semester']];
+    }
+
+    private function kembaliKeReview(int $tahun, string $semester): RedirectResponse
+    {
+        return redirect()->to(route('profil.pengajuan.create', [
+            'tahun' => $tahun,
+            'semester' => $semester,
+        ]).'#review');
     }
 
     private function ensureKegiatan(Request $request, KegiatanDupak $kegiatan, string $komponen): void
