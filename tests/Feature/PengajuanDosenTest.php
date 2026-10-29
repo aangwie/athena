@@ -661,4 +661,225 @@ class PengajuanDosenTest extends TestCase
             ->assertSee(route('profil.pengajuan.penelitian.update', $entri), false)
             ->assertSee('aria-label="Hapus entri Menghasilkan Karya Ilmiah"', false);
     }
+
+    public function test_dosen_can_add_abdimas_entry_with_rincian_and_link_bukti(): void
+    {
+        $dosen = $this->makeUser('dosen');
+
+        $this->actingAs($dosen)
+            ->post('/profil/pengajuan/abdimas', [
+                'tahun' => 2026,
+                'semester' => 'genap',
+                'jenis' => 'latihan_penyuluhan',
+                'sub_jenis' => 'terjadwal_satu_semester',
+                'rincian' => 'nasional',
+                'nama_kegiatan' => 'Penyuluhan Literasi Digital bagi UMKM Desa Sukamaju',
+                'link_bukti' => 'https://drive.google.com/file/d/penyuluhan/view',
+            ])
+            ->assertRedirect(route('profil.pengajuan.create', ['tahun' => 2026, 'semester' => 'genap']).'#abdimas');
+
+        $this->assertDatabaseHas('kegiatan_dupak', [
+            'user_id' => $dosen->id,
+            'komponen' => 'abdimas',
+            'tahun' => 2026,
+            'semester' => 'genap',
+            'jenis' => 'latihan_penyuluhan',
+            'sub_jenis' => 'terjadwal_satu_semester',
+            'rincian' => 'nasional',
+            'nama_kegiatan' => 'Penyuluhan Literasi Digital bagi UMKM Desa Sukamaju',
+            'link_bukti' => 'https://drive.google.com/file/d/penyuluhan/view',
+        ]);
+
+        $response = $this->actingAs($dosen)
+            ->get('/profil/pengajuan/create?tahun=2026&semester=genap')
+            ->assertOk()
+            ->assertSee('Bidang D — Pengabdian kepada Masyarakat')
+            ->assertSee(route('profil.pengajuan.abdimas.store'), false)
+            ->assertSee('data-reveal-select="#bukti-abdimas"', false)
+            ->assertSee('data-dependent-select="#sub_jenis-abdimas"', false)
+            ->assertSee('data-dependent-select="#rincian-abdimas"', false)
+            ->assertSee('id="rincian-abdimas"', false)
+            ->assertSee('data-confirm="Hapus entri Memberikan Latihan/Penyuluhan/Penataran/Ceramah pada Masyarakat?"', false);
+
+        foreach (\App\Models\KegiatanDupak::JENIS_PENGABDIAN as $label) {
+            $response->assertSee($label);
+        }
+
+        foreach (\App\Models\KegiatanDupak::SUB_PENGABDIAN['latihan_penyuluhan'] as $label) {
+            $response->assertSee($label);
+        }
+
+        foreach (\App\Models\KegiatanDupak::SUB_PENGABDIAN['pelayanan_masyarakat'] as $label) {
+            $response->assertSee($label);
+        }
+
+        // Tingkat pelaksanaan ikut terkirim sebagai opsi rincian kegiatan (dirender oleh JS).
+        foreach (\App\Models\KegiatanDupak::RINCIAN_PENGABDIAN['kurang_satu_semester'] as $label) {
+            $response->assertSee($label);
+        }
+    }
+
+    public function test_abdimas_entry_requires_rincian_only_for_komponen_with_sub_jenis(): void
+    {
+        $dosen = $this->makeUser('dosen');
+
+        // Komponen yang punya rincian wajib memilih salah satu.
+        $this->actingAs($dosen)
+            ->from('/profil/pengajuan/create?tahun=2026&semester=ganjil')
+            ->post('/profil/pengajuan/abdimas', [
+                'tahun' => 2026,
+                'semester' => 'ganjil',
+                'jenis' => 'latihan_penyuluhan',
+                'nama_kegiatan' => 'Ceramah Kewirausahaan Pemuda',
+                'link_bukti' => 'https://drive.google.com/file/d/ceramah/view',
+            ])
+            ->assertSessionHasErrors(['sub_jenis']);
+
+        // Tingkat pelaksanaan wajib dipilih selama rincian komponen masih bercabang.
+        $this->actingAs($dosen)
+            ->from('/profil/pengajuan/create?tahun=2026&semester=ganjil')
+            ->post('/profil/pengajuan/abdimas', [
+                'tahun' => 2026,
+                'semester' => 'ganjil',
+                'jenis' => 'latihan_penyuluhan',
+                'sub_jenis' => 'kurang_satu_semester',
+                'nama_kegiatan' => 'Ceramah Kewirausahaan Pemuda',
+                'link_bukti' => 'https://drive.google.com/file/d/ceramah/view',
+            ])
+            ->assertSessionHasErrors(['rincian']);
+
+        $this->actingAs($dosen)
+            ->from('/profil/pengajuan/create?tahun=2026&semester=ganjil')
+            ->post('/profil/pengajuan/abdimas', [
+                'tahun' => 2026,
+                'semester' => 'ganjil',
+                'jenis' => 'latihan_penyuluhan',
+                'sub_jenis' => 'terjadwal_satu_semester',
+                'rincian' => 'tingkat_palsu',
+                'nama_kegiatan' => 'Pelayanan Konsultasi Sistem Informasi Desa',
+                'link_bukti' => 'https://drive.google.com/file/d/palsu/view',
+            ])
+            ->assertSessionHasErrors(['rincian']);
+
+        $this->actingAs($dosen)
+            ->from('/profil/pengajuan/create?tahun=2026&semester=ganjil')
+            ->post('/profil/pengajuan/abdimas', ['jenis' => 'abdimas_palsu', 'link_bukti' => 'bukan-link'])
+            ->assertSessionHasErrors(['tahun', 'semester', 'jenis', 'nama_kegiatan', 'link_bukti']);
+
+        $this->assertDatabaseCount('kegiatan_dupak', 0);
+
+        // Rincian komponen dua tingkat (pelayanan masyarakat) tidak butuh tingkat pelaksanaan.
+        $this->actingAs($dosen)
+            ->post('/profil/pengajuan/abdimas', [
+                'tahun' => 2026,
+                'semester' => 'ganjil',
+                'jenis' => 'pelayanan_masyarakat',
+                'sub_jenis' => 'bidang_keahlian',
+                'nama_kegiatan' => 'Pelayanan Konsultasi Sistem Informasi Desa',
+                'link_bukti' => 'https://drive.google.com/file/d/pelayanan/view',
+            ])
+            ->assertRedirect(route('profil.pengajuan.create', ['tahun' => 2026, 'semester' => 'ganjil']).'#abdimas');
+
+        $this->assertDatabaseHas('kegiatan_dupak', [
+            'jenis' => 'pelayanan_masyarakat',
+            'sub_jenis' => 'bidang_keahlian',
+            'rincian' => null,
+        ]);
+
+        // Komponen tanpa rincian tetap boleh disimpan; pilihan lama harus dikosongkan.
+        $this->actingAs($dosen)
+            ->post('/profil/pengajuan/abdimas', [
+                'tahun' => 2026,
+                'semester' => 'ganjil',
+                'jenis' => 'jabatan_pimpinan',
+                'sub_jenis' => 'sisa_pilihan_lama',
+                'rincian' => 'sisa_rincian_lama',
+                'nama_kegiatan' => 'Ketua Lembaga Pengabdian Masyarakat',
+                'link_bukti' => 'https://drive.google.com/file/d/jabatan/view',
+            ])
+            ->assertRedirect(route('profil.pengajuan.create', ['tahun' => 2026, 'semester' => 'ganjil']).'#abdimas');
+
+        $this->assertDatabaseHas('kegiatan_dupak', [
+            'komponen' => 'abdimas',
+            'jenis' => 'jabatan_pimpinan',
+            'sub_jenis' => null,
+            'rincian' => null,
+        ]);
+    }
+
+    public function test_dosen_can_update_delete_and_prefill_own_abdimas_entry_only(): void
+    {
+        $dosen = $this->makeUser('dosen');
+        $lain = User::create([
+            'nidn' => '1990010120',
+            'name' => 'Dosen Lain',
+            'email' => 'lain@example.test',
+            'role' => 'dosen',
+            'is_active' => true,
+            'password' => Hash::make('password'),
+        ]);
+
+        $entri = $dosen->kegiatanDupak()->create([
+            'komponen' => 'abdimas',
+            'tahun' => 2025,
+            'semester' => 'genap',
+            'jenis' => 'pelayanan_masyarakat',
+            'sub_jenis' => 'bidang_keahlian',
+            'rincian' => 'lokal',
+            'nama_kegiatan' => 'Pendampingan Digitalisasi Koperasi Desa',
+            'link_bukti' => 'https://drive.google.com/file/d/koperasi/view',
+        ]);
+
+        $perubahan = [
+            'tahun' => 2025,
+            'semester' => 'genap',
+            'jenis' => 'karya_pengabdian',
+            'sub_jenis' => null,
+            'rincian' => null,
+            'nama_kegiatan' => 'Buku Panduan Pengelolaan Sampah Organik',
+            'link_bukti' => 'https://drive.google.com/file/d/buku-abdimas/view',
+        ];
+
+        $this->actingAs($lain)
+            ->put('/profil/pengajuan/abdimas/'.$entri->id, $perubahan)
+            ->assertNotFound();
+
+        $this->actingAs($dosen)
+            ->put('/profil/pengajuan/abdimas/'.$entri->id, $perubahan)
+            ->assertRedirect(route('profil.pengajuan.create', ['tahun' => 2025, 'semester' => 'genap']).'#abdimas');
+
+        $this->assertDatabaseHas('kegiatan_dupak', [
+            'id' => $entri->id,
+            'komponen' => 'abdimas',
+            ...$perubahan,
+        ]);
+
+        // Entri bidang D tidak boleh dihapus lewat rute bidang lain.
+        foreach (['pendidikan', 'pelaksanaan-pendidikan', 'penelitian'] as $rute) {
+            $this->actingAs($dosen)
+                ->delete('/profil/pengajuan/'.$rute.'/'.$entri->id)
+                ->assertNotFound();
+        }
+
+        $this->actingAs($lain)
+            ->delete('/profil/pengajuan/abdimas/'.$entri->id)
+            ->assertNotFound();
+
+        // Form edit terisi ulang sesuai entri milik dosen tersebut.
+        $this->actingAs($dosen)
+            ->get('/profil/pengajuan/create?edit='.$entri->id)
+            ->assertOk()
+            ->assertSee('Edit Entri Bidang D')
+            ->assertSee('2025/2026 · Genap')
+            ->assertSee('value="karya_pengabdian" selected', false)
+            ->assertSee('value="Buku Panduan Pengelolaan Sampah Organik"', false)
+            ->assertSee(route('profil.pengajuan.abdimas.update', $entri), false)
+            ->assertSee('aria-label="Hapus entri Membuat atau Menulis Karya Pengabdian"', false);
+
+        $this->actingAs($dosen)
+            ->delete('/profil/pengajuan/abdimas/'.$entri->id)
+            ->assertRedirect(route('profil.pengajuan.create', ['tahun' => 2025, 'semester' => 'genap']).'#abdimas');
+
+        $this->assertDatabaseCount('kegiatan_dupak', 0);
+    }
 }

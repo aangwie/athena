@@ -133,6 +133,54 @@ class KegiatanDupak extends Model
         ],
     ];
 
+    /**
+     * Komponen Bidang D — Pengabdian kepada Masyarakat.
+     *
+     * @var array<string, string>
+     */
+    public const JENIS_PENGABDIAN = [
+        'jabatan_pimpinan' => 'Menduduki Jabatan Pimpinan',
+        'pengembangan_hasil' => 'Melaksanakan Pengembangan Hasil Pendidikan dan Penelitian',
+        'latihan_penyuluhan' => 'Memberikan Latihan/Penyuluhan/Penataran/Ceramah pada Masyarakat',
+        'pelayanan_masyarakat' => 'Memberi Pelayanan kepada Masyarakat atau Kegiatan Lain yang Menunjang Pelaksanaan Tujuan Umum Pemerintah dan Pembangunan',
+        'karya_pengabdian' => 'Membuat atau Menulis Karya Pengabdian',
+    ];
+
+    /**
+     * Rincian tiap komponen Bidang D. Komponen tanpa rincian tidak ada di sini.
+     *
+     * @var array<string, array<string, string>>
+     */
+    public const SUB_PENGABDIAN = [
+        'latihan_penyuluhan' => [
+            'terjadwal_satu_semester' => 'Terjadwal dalam Satu Semester atau Lebih',
+            'kurang_satu_semester' => 'Terjadwal Kurang dari Satu Semester',
+        ],
+        'pelayanan_masyarakat' => [
+            'bidang_keahlian' => 'Berdasarkan Bidang Keahlian',
+            'penugasan_lembaga' => 'Berdasarkan Penugasan Lembaga Perguruan Tinggi',
+            'fungsi_jabatan' => 'Berdasarkan Fungsi/Jabatan',
+        ],
+    ];
+
+    /**
+     * Rincian tingkat ketiga Bidang D (tingkat pelaksanaan), per `sub_jenis`.
+     *
+     * @var array<string, array<string, string>>
+     */
+    public const RINCIAN_PENGABDIAN = [
+        'terjadwal_satu_semester' => [
+            'internasional' => 'Tingkat Internasional',
+            'nasional' => 'Tingkat Nasional',
+            'lokal' => 'Tingkat Lokal',
+        ],
+        'kurang_satu_semester' => [
+            'internasional' => 'Tingkat Internasional',
+            'nasional' => 'Tingkat Nasional',
+            'lokal' => 'Tingkat Lokal',
+        ],
+    ];
+
     public const SEMESTER = [
         'ganjil' => 'Ganjil',
         'genap' => 'Genap',
@@ -176,6 +224,7 @@ class KegiatanDupak extends Model
         return self::JENIS_PENDIDIKAN[$this->jenis]
             ?? self::JENIS_PELAKSANAAN[$this->jenis]
             ?? self::JENIS_PENELITIAN[$this->jenis]
+            ?? self::JENIS_PENGABDIAN[$this->jenis]
             ?? str_replace('_', ' ', (string) $this->jenis);
     }
 
@@ -183,11 +232,14 @@ class KegiatanDupak extends Model
     {
         return self::SUB_PELAKSANAAN[$this->jenis][$this->sub_jenis]
             ?? self::SUB_PENELITIAN[$this->jenis][$this->sub_jenis]
+            ?? self::SUB_PENGABDIAN[$this->jenis][$this->sub_jenis]
             ?? null;
     }
 
     public function rincianLabel(): ?string
     {
-        return self::RINCIAN_PENELITIAN[$this->sub_jenis][$this->rincian] ?? null;
+        return self::RINCIAN_PENELITIAN[$this->sub_jenis][$this->rincian]
+            ?? self::RINCIAN_PENGABDIAN[$this->sub_jenis][$this->rincian]
+            ?? null;
     }
 }

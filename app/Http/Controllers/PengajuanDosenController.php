@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\KegiatanPelaksanaanRequest;
 use App\Http\Requests\KegiatanPendidikanRequest;
 use App\Http\Requests\KegiatanPenelitianRequest;
+use App\Http\Requests\KegiatanPengabdianRequest;
 use App\Models\KegiatanDupak;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -70,9 +71,11 @@ class PengajuanDosenController extends Controller
             'entriEdit' => $entriEdit?->komponen === 'pendidikan' ? $entriEdit : null,
             'entriEditPelaksanaan' => $entriEdit?->komponen === 'pelaksanaan_pendidikan' ? $entriEdit : null,
             'entriEditPenelitian' => $entriEdit?->komponen === 'penelitian' ? $entriEdit : null,
+            'entriEditAbdimas' => $entriEdit?->komponen === 'abdimas' ? $entriEdit : null,
             'kegiatanPendidikan' => (clone $entri)->where('komponen', 'pendidikan')->get(),
             'kegiatanPelaksanaan' => (clone $entri)->where('komponen', 'pelaksanaan_pendidikan')->get(),
             'kegiatanPenelitian' => (clone $entri)->where('komponen', 'penelitian')->get(),
+            'kegiatanAbdimas' => (clone $entri)->where('komponen', 'abdimas')->get(),
         ]);
     }
 
@@ -158,6 +161,34 @@ class PengajuanDosenController extends Controller
         $kegiatan->delete();
 
         return $this->kembaliKeTab('Entri bidang penelitian berhasil dihapus.', $kegiatan, 'penelitian');
+    }
+
+    public function storeAbdimas(KegiatanPengabdianRequest $request): RedirectResponse
+    {
+        $kegiatan = $request->user()->kegiatanDupak()->create([
+            'komponen' => 'abdimas',
+            ...$request->validated(),
+        ]);
+
+        return $this->kembaliKeTab('Entri bidang pengabdian kepada masyarakat berhasil ditambahkan.', $kegiatan, 'abdimas');
+    }
+
+    public function updateAbdimas(KegiatanPengabdianRequest $request, KegiatanDupak $kegiatan): RedirectResponse
+    {
+        $this->ensureKegiatan($request, $kegiatan, 'abdimas');
+
+        $kegiatan->update($request->validated());
+
+        return $this->kembaliKeTab('Entri bidang pengabdian kepada masyarakat berhasil diperbarui.', $kegiatan, 'abdimas');
+    }
+
+    public function destroyAbdimas(Request $request, KegiatanDupak $kegiatan): RedirectResponse
+    {
+        $this->ensureKegiatan($request, $kegiatan, 'abdimas');
+
+        $kegiatan->delete();
+
+        return $this->kembaliKeTab('Entri bidang pengabdian kepada masyarakat berhasil dihapus.', $kegiatan, 'abdimas');
     }
 
     private function ensureKegiatan(Request $request, KegiatanDupak $kegiatan, string $komponen): void

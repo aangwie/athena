@@ -94,6 +94,21 @@
                             'placeholderKomponen' => 'Pilih komponen penelitian',
                             'placeholderNama' => 'Contoh: Publikasi Artikel pada Jurnal Ilmiah Internasional Bereputasi',
                         ]])
+                    @elseif ($key === 'abdimas')
+                        @include('profil.pengajuan.partials.bidang', ['bidang' => [
+                            'kode' => 'D',
+                            'nama' => 'Pengabdian kepada Masyarakat',
+                            'suffix' => 'abdimas',
+                            'tab' => 'abdimas',
+                            'route' => 'profil.pengajuan.abdimas',
+                            'jenis' => 'JENIS_PENGABDIAN',
+                            'sub' => 'SUB_PENGABDIAN',
+                            'rincian' => 'RINCIAN_PENGABDIAN',
+                            'edit' => $entriEditAbdimas,
+                            'entri' => $kegiatanAbdimas,
+                            'placeholderKomponen' => 'Pilih komponen pengabdian kepada masyarakat',
+                            'placeholderNama' => 'Contoh: Penyuluhan Literasi Digital bagi UMKM Desa Sukamaju',
+                        ]])
                     @else
                         <div class="rounded-xl border border-dashed border-slate-300 bg-slate-50/60 px-5 py-12 text-center">
                             <span class="mx-auto flex size-14 items-center justify-center rounded-2xl bg-white text-slate-300 shadow-sm ring-1 ring-slate-100">
