@@ -94,6 +94,16 @@
                             </a>
                         @endif
                         @if (auth()->user()->isDosen())
+                            <a href="{{ route('profil.pengajuan.riwayat-ikd') }}" title="Riwayat IKD"
+                               @class(['sidebar-link', 'sidebar-link-active' => request()->routeIs('profil.pengajuan.riwayat-ikd')])>
+                                <svg class="size-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                    <path d="M9 12.5 11 14.5 15.5 10" stroke-linecap="round" stroke-linejoin="round" />
+                                    <path d="M12 3.5 5.5 6v5.2c0 4.2 2.8 7.9 6.5 9.3 3.7-1.4 6.5-5.1 6.5-9.3V6L12 3.5Z" stroke-linejoin="round" />
+                                </svg>
+                                <span class="sidebar-label">Riwayat IKD</span>
+                            </a>
+                        @endif
+                        @if (auth()->user()->isDosen())
                             <a href="{{ route('profil.show') }}" title="Portofolio Saya" @class(['sidebar-link', 'sidebar-link-active' => request()->routeIs('profil.show')])>
                                 <svg class="size-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
                                     <circle cx="12" cy="8" r="3.5" />
@@ -153,14 +163,13 @@
                     <div>
                         <p class="sidebar-section-title sidebar-collapse-hide mb-2 px-3 text-[10px] font-bold tracking-[0.14em] text-teal-300/50 uppercase">Administrasi</p>
                         <div class="space-y-1">
-                            <span class="sidebar-link cursor-not-allowed opacity-45" title="Verifikasi Berkas (segera hadir)">
+                            <a href="{{ route('verifikasi-berkas.index') }}" title="Verifikasi Berkas" @class(['sidebar-link', 'sidebar-link-active' => request()->routeIs('verifikasi-berkas.*')])>
                                 <svg class="size-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
                                     <path d="M9 12.5 11 14.5 15.5 10" stroke-linecap="round" stroke-linejoin="round" />
                                     <path d="M12 3.5 5.5 6v5.2c0 4.2 2.8 7.9 6.5 9.3 3.7-1.4 6.5-5.1 6.5-9.3V6L12 3.5Z" stroke-linejoin="round" />
                                 </svg>
                                 <span class="sidebar-label">Verifikasi Berkas</span>
-                                <span class="sidebar-badge sidebar-collapse-hide ml-auto rounded-md bg-white/10 px-1.5 py-0.5 text-[9px] font-bold tracking-wide text-teal-200/70 uppercase">Soon</span>
-                            </span>
+                            </a>
                             <a href="{{ route('data-dosen.index') }}" title="Data Dosen" @class(['sidebar-link', 'sidebar-link-active' => request()->routeIs('data-dosen.*')])>
                                 <svg class="size-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
                                     <circle cx="9" cy="8" r="3" />

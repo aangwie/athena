@@ -14,8 +14,8 @@ use App\Http\Controllers\PengajuanDosenController;
 use App\Http\Controllers\PengajuanDupakController;
 use App\Http\Controllers\PengaturanController;
 use App\Http\Controllers\ProfilDosenController;
-use App\Http\Controllers\RiwayatPendidikanController;
 use App\Http\Controllers\RiwayatPekerjaanController;
+use App\Http\Controllers\RiwayatPendidikanController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -54,11 +54,19 @@ Route::middleware('auth')->group(function () {
         Route::get('/data-pribadi', [ProfilDosenController::class, 'edit'])->name('data-pribadi.edit');
         Route::put('/data-pribadi', [ProfilDosenController::class, 'update'])->name('data-pribadi.update');
 
+        Route::get('/pengajuan', [PengajuanDosenController::class, 'mulai'])->name('pengajuan.mulai');
         Route::get('/pengajuan/periode', [PengajuanDosenController::class, 'periode'])->name('pengajuan.periode');
+        Route::get('/pengajuan/periode-pertama', [PengajuanDosenController::class, 'periodePertama'])->name('pengajuan.periode-pertama');
+        Route::get('/pengajuan/syarat-khusus', [PengajuanDosenController::class, 'syaratKhusus'])->name('pengajuan.syarat-khusus');
+        Route::post('/pengajuan/syarat-khusus', [PengajuanDosenController::class, 'simpanSyaratKhusus'])->name('pengajuan.syarat-khusus.store');
+        Route::get('/pengajuan/syarat-khusus/berkas/{jenis}', [PengajuanDosenController::class, 'berkasSyaratKhusus'])->name('pengajuan.syarat-khusus.berkas');
+        Route::post('/pengajuan/syarat-khusus/ajukan-semua', [PengajuanDosenController::class, 'ajukanSemuaSyaratKhusus'])->name('pengajuan.syarat-khusus.ajukan-semua');
+        Route::post('/pengajuan/syarat-khusus/{syaratKhusus}/ajukan', [PengajuanDosenController::class, 'ajukanSyaratKhusus'])->name('pengajuan.syarat-khusus.ajukan');
         Route::get('/pengajuan/create', [PengajuanDosenController::class, 'create'])->name('pengajuan.create');
         Route::post('/pengajuan/ajukan', [PengajuanDosenController::class, 'ajukan'])->name('pengajuan.ajukan');
         Route::post('/pengajuan/ajukan-dupak', [PengajuanDosenController::class, 'ajukanDupak'])->name('pengajuan.ajukan-dupak');
         Route::get('/pengajuan/riwayat', [PengajuanDosenController::class, 'riwayat'])->name('pengajuan.riwayat');
+        Route::get('/pengajuan/riwayat-ikd', [PengajuanDosenController::class, 'riwayatIkd'])->name('pengajuan.riwayat-ikd');
         Route::post('/pengajuan/ajukan-ulang', [PengajuanDosenController::class, 'ajukanUlang'])->name('pengajuan.ajukan-ulang');
         Route::get('/pengajuan/cetak', [PengajuanDosenController::class, 'cetak'])->name('pengajuan.cetak');
         Route::post('/pengajuan/pendidikan', [PengajuanDosenController::class, 'storePendidikan'])->name('pengajuan.pendidikan.store');
@@ -108,6 +116,12 @@ Route::middleware('auth')->group(function () {
     Route::middleware('admin')->prefix('verifikasi-dupak')->name('verifikasi-dupak.')->group(function () {
         Route::get('/{pengajuan}', [PengajuanDupakController::class, 'verifikasi'])->name('show');
         Route::put('/{pengajuan}', [PengajuanDupakController::class, 'putuskan'])->name('update');
+    });
+
+    Route::middleware('admin')->prefix('verifikasi-berkas')->name('verifikasi-berkas.')->group(function () {
+        Route::get('/', [PengajuanDosenController::class, 'verifikasiSyaratKhusus'])->name('index');
+        Route::put('/{syaratKhusus}/berkas/{jenis}', [PengajuanDosenController::class, 'putuskanSyaratKhusus'])->name('update');
+        Route::get('/{syaratKhusus}/berkas/{jenis}', [PengajuanDosenController::class, 'berkasVerifikasi'])->name('berkas');
     });
 
     Route::middleware('tim_pak')->prefix('tim-pak')->name('tim-pak.')->group(function () {

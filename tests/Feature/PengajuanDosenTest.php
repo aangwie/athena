@@ -3,9 +3,13 @@
 namespace Tests\Feature;
 
 use App\Http\Controllers\PengajuanDosenController;
+use App\Models\KegiatanDupak;
+use App\Models\SyaratKhusus;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class PengajuanDosenTest extends TestCase
@@ -49,7 +53,58 @@ class PengajuanDosenTest extends TestCase
         $this->actingAs($this->makeUser('dosen'))
             ->get('/dashboard')
             ->assertOk()
-            ->assertSee(route('profil.pengajuan.periode'), false);
+            ->assertSee(route('profil.pengajuan.mulai'), false);
+    }
+
+    public function test_pengajuan_baru_shows_jabatan_akademik_status_first(): void
+    {
+        $dosen = $this->makeUser('dosen');
+
+        $this->actingAs($dosen)
+            ->get('/profil/pengajuan')
+            ->assertOk()
+            ->assertSee('Status Jabatan Akademik')
+            ->assertSee('Lektor')
+            ->assertSee(route('profil.pengajuan.periode').'"', false)
+            ->assertDontSee(route('profil.pengajuan.periode-pertama'), false);
+
+        $dosen->update(['jabatan_fungsional' => null]);
+
+        $this->actingAs($dosen)
+            ->get('/profil/pengajuan')
+            ->assertOk()
+            ->assertSee('Belum ada')
+            ->assertSee(route('profil.pengajuan.periode-pertama'), false)
+            ->assertDontSee(route('profil.pengajuan.periode').'"', false);
+    }
+
+    public function test_dosen_without_jabatan_akademik_gets_special_periode_then_syarat_khusus(): void
+    {
+        $dosen = $this->makeUser('dosen');
+
+        $this->actingAs($dosen)
+            ->get('/profil/pengajuan/periode-pertama')
+            ->assertOk()
+            ->assertSee('Pilih Periode Pengajuan Pertama')
+            ->assertSee('Tahun Akademik')
+            ->assertSee('Semester')
+            ->assertSee(route('profil.pengajuan.syarat-khusus'), false)
+            ->assertSee('Lanjut ke IKD');
+
+        $this->actingAs($dosen)
+            ->get('/profil/pengajuan/syarat-khusus?tahun=2026&semester=ganjil')
+            ->assertOk()
+            ->assertSee('Syarat Khusus')
+            ->assertSee('2026/2027')
+            ->assertSee('Ganjil');
+
+        $this->actingAs($dosen)
+            ->get('/profil/pengajuan/syarat-khusus')
+            ->assertRedirect(route('profil.pengajuan.periode-pertama'));
+
+        $this->actingAs($dosen)
+            ->get('/profil/pengajuan/syarat-khusus?tahun=2026&semester=palsu')
+            ->assertRedirect(route('profil.pengajuan.periode-pertama'));
     }
 
     public function test_pengajuan_baru_requires_tahun_and_semester_selection_first(): void
@@ -73,11 +128,443 @@ class PengajuanDosenTest extends TestCase
             ->assertSee('name="semester"', false);
     }
 
+    public function test_syarat_khusus_page_shows_two_pdf_upload_fields(): void
+    {
+        $this->actingAs($this->makeUser('dosen'))
+            ->get('/profil/pengajuan/syarat-khusus?tahun=2026&semester=ganjil')
+            ->assertOk()
+            ->assertSee('enctype="multipart/form-data"', false)
+            // Struktur kartu mengikuti form lain: heading bernomor per bagian.
+            ->assertSee('section-heading', false)
+            ->assertSee('Periode Pengajuan')
+            ->assertSee('Berkas Persyaratan')
+            ->assertSee('2026/2027 · Ganjil')
+            ->assertSee('BKD 2 Semester Terakhir (Status Memenuhi, Tridharma PT terpenuhi)')
+            ->assertSee('Unggah Bukti Kompilasi LKD 2 Semester terakhir dalam satu file pdf')
+            ->assertSee('Bukti Pemenuhan Indikator Kinerja Dosen')
+            ->assertSee('name="bkd"', false)
+            ->assertSee('name="ikd"', false)
+            ->assertSee('data-max-kb="3072"', false)
+            ->assertSee('data-max-kb="5120"', false)
+            ->assertSee('maksimal 3 MB')
+            ->assertSee('maksimal 5 MB');
+    }
+
+    public function test_dosen_can_upload_bkd_and_ikd_pdf(): void
+    {
+        Storage::fake('local');
+
+        $dosen = $this->makeUser('dosen');
+
+        $this->actingAs($dosen)
+            ->post('/profil/pengajuan/syarat-khusus', [
+                'tahun' => 2026,
+                'semester' => 'ganjil',
+                'bkd' => UploadedFile::fake()->create('bkd.pdf', 3000, 'application/pdf'),
+                'ikd' => UploadedFile::fake()->create('ikd.pdf', 5000, 'application/pdf'),
+            ])
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(route('profil.pengajuan.syarat-khusus', ['tahun' => 2026, 'semester' => 'ganjil']));
+
+        $syaratKhusus = SyaratKhusus::query()->firstOrFail();
+
+        $this->assertSame($dosen->id, $syaratKhusus->user_id);
+        Storage::disk('local')->assertExists($syaratKhusus->bkd_path);
+        Storage::disk('local')->assertExists($syaratKhusus->ikd_path);
+
+        $this->actingAs($dosen)
+            ->get('/profil/pengajuan/syarat-khusus?tahun=2026&semester=ganjil')
+            ->assertOk()
+            ->assertSee('Berkas saat ini')
+            ->assertSee('syarat-khusus/berkas/bkd', false);
+    }
+
+    public function test_syarat_khusus_rejects_non_pdf_and_oversized_files(): void
+    {
+        Storage::fake('local');
+
+        $dosen = $this->makeUser('dosen');
+
+        $this->actingAs($dosen)
+            ->post('/profil/pengajuan/syarat-khusus', [
+                'tahun' => 2026,
+                'semester' => 'ganjil',
+                'bkd' => UploadedFile::fake()->create('bkd.docx', 100, 'application/msword'),
+                'ikd' => UploadedFile::fake()->create('ikd.pdf', 5121, 'application/pdf'),
+            ])
+            ->assertSessionHasErrors(['bkd', 'ikd']);
+
+        $this->actingAs($dosen)
+            ->post('/profil/pengajuan/syarat-khusus', [
+                'tahun' => 2026,
+                'semester' => 'ganjil',
+                'bkd' => UploadedFile::fake()->create('bkd.pdf', 3073, 'application/pdf'),
+                'ikd' => UploadedFile::fake()->create('ikd.pdf', 100, 'application/pdf'),
+            ])
+            ->assertSessionHasErrors('bkd');
+
+        $this->assertDatabaseCount('syarat_khusus', 0);
+    }
+
+    public function test_syarat_khusus_requires_both_files_on_first_upload(): void
+    {
+        Storage::fake('local');
+
+        $this->actingAs($this->makeUser('dosen'))
+            ->post('/profil/pengajuan/syarat-khusus', [
+                'tahun' => 2026,
+                'semester' => 'ganjil',
+            ])
+            ->assertSessionHasErrors(['bkd', 'ikd']);
+    }
+
+    public function test_berkas_table_lists_saved_files_with_status_and_ajukan_button(): void
+    {
+        Storage::fake('local');
+
+        $dosen = $this->makeUser('dosen');
+
+        $this->actingAs($dosen)->post('/profil/pengajuan/syarat-khusus', [
+            'tahun' => 2026,
+            'semester' => 'ganjil',
+            'bkd' => UploadedFile::fake()->create('bkd.pdf', 300, 'application/pdf'),
+            'ikd' => UploadedFile::fake()->create('ikd.pdf', 300, 'application/pdf'),
+        ])->assertSessionHasNoErrors();
+
+        $this->actingAs($dosen)
+            ->get('/profil/pengajuan/syarat-khusus?tahun=2026&semester=ganjil')
+            ->assertOk()
+            ->assertSee('Ajukan berkas ke admin untuk diverifikasi.')
+            ->assertSee('Catatan')
+            ->assertSee('Belum diajukan')
+            ->assertSee('1 periode siap diajukan.')
+            ->assertSee(route('profil.pengajuan.syarat-khusus.ajukan-semua'), false)
+            ->assertSee('>Ajukan</button>', false)
+            ->assertDontSee('disabled>Ajukan', false);
+    }
+
+    public function test_dosen_can_ajukan_berkas_and_upload_is_locked_afterwards(): void
+    {
+        Storage::fake('local');
+
+        $dosen = $this->makeUser('dosen');
+
+        $this->actingAs($dosen)->post('/profil/pengajuan/syarat-khusus', [
+            'tahun' => 2026,
+            'semester' => 'ganjil',
+            'bkd' => UploadedFile::fake()->create('bkd.pdf', 300, 'application/pdf'),
+            'ikd' => UploadedFile::fake()->create('ikd.pdf', 300, 'application/pdf'),
+        ])->assertSessionHasNoErrors();
+
+        $syaratKhusus = SyaratKhusus::query()->firstOrFail();
+
+        $this->actingAs($dosen)
+            ->post(route('profil.pengajuan.syarat-khusus.ajukan', $syaratKhusus))
+            ->assertRedirect(route('profil.pengajuan.syarat-khusus', ['tahun' => 2026, 'semester' => 'ganjil']))
+            ->assertSessionHas('status');
+
+        $this->assertSame('diajukan', $syaratKhusus->fresh()->status);
+
+        $this->actingAs($dosen)
+            ->get('/profil/pengajuan/syarat-khusus?tahun=2026&semester=ganjil')
+            ->assertOk()
+            ->assertSee('Menunggu verifikasi')
+            ->assertSee('disabled>Ajukan', false)
+            ->assertDontSee('Simpan Berkas');
+
+        $this->actingAs($dosen)
+            ->post(route('profil.pengajuan.syarat-khusus.ajukan', $syaratKhusus))
+            ->assertSessionHas('error');
+        $this->assertSame('diajukan', $syaratKhusus->fresh()->status);
+
+        $lama = $syaratKhusus->bkd_path;
+
+        $this->actingAs($dosen)
+            ->post('/profil/pengajuan/syarat-khusus', [
+                'tahun' => 2026,
+                'semester' => 'ganjil',
+                'bkd' => UploadedFile::fake()->create('bkd-baru.pdf', 300, 'application/pdf'),
+            ])
+            ->assertSessionHas('error');
+
+        $this->assertSame($lama, $syaratKhusus->fresh()->bkd_path);
+    }
+
+    public function test_admin_can_verify_berkas_dan_dosen_melihat_catatan_penolakan(): void
+    {
+        Storage::fake('local');
+
+        $dosen = $this->makeUser('dosen');
+
+        $this->actingAs($dosen)->post('/profil/pengajuan/syarat-khusus', [
+            'tahun' => 2026,
+            'semester' => 'ganjil',
+            'bkd' => UploadedFile::fake()->create('bkd.pdf', 300, 'application/pdf'),
+            'ikd' => UploadedFile::fake()->create('ikd.pdf', 300, 'application/pdf'),
+        ])->assertSessionHasNoErrors();
+
+        $syaratKhusus = SyaratKhusus::query()->firstOrFail();
+        $this->actingAs($dosen)->post(route('profil.pengajuan.syarat-khusus.ajukan', $syaratKhusus));
+
+        $admin = $this->makeUser('admin');
+
+        $this->actingAs($admin)
+            ->get('/verifikasi-berkas')
+            ->assertOk()
+            ->assertSee($dosen->name)
+            ->assertSee('Menunggu verifikasi')
+            ->assertSee('data-table-search', false)
+            ->assertSee('data-table-card', false)
+            ->assertSee('Verifikasi');
+
+        // Catatan wajib saat menolak.
+        $this->actingAs($admin)
+            ->put(route('verifikasi-berkas.update', ['syaratKhusus' => $syaratKhusus, 'jenis' => 'bkd']), ['keputusan' => 'ditolak'])
+            ->assertSessionHasErrors('catatan');
+
+        $this->assertSame('diajukan', $syaratKhusus->fresh()->status);
+
+        $this->actingAs($admin)
+            ->put(route('verifikasi-berkas.update', ['syaratKhusus' => $syaratKhusus, 'jenis' => 'bkd']), [
+                'keputusan' => 'ditolak',
+                'catatan' => 'Scan BKD buram, unggah ulang.',
+            ])
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(route('verifikasi-berkas.index'));
+
+        $syaratKhusus->refresh();
+        $this->assertSame('ditolak', $syaratKhusus->status);
+        $this->assertSame('Scan BKD buram, unggah ulang.', $syaratKhusus->bkd_catatan);
+        // Keputusan pada baris BKD tidak menyentuh berkas IKD.
+        $this->assertSame('diajukan', $syaratKhusus->ikd_status);
+        $this->assertNull($syaratKhusus->ikd_catatan);
+
+        $this->actingAs($dosen)
+            ->get('/profil/pengajuan/syarat-khusus?tahun=2026&semester=ganjil')
+            ->assertOk()
+            ->assertSee('Ditolak')
+            ->assertSee('Menunggu verifikasi')
+            ->assertSee('Scan BKD buram, unggah ulang.')
+            ->assertSee('Edit')
+            // Berkas yang ditolak boleh diajukan ulang lewat tombol di bawah tabel.
+            ->assertDontSee('disabled>Ajukan', false);
+
+        // Berkas yang sudah diputuskan tidak bisa diverifikasi lagi.
+        $this->actingAs($admin)
+            ->put(route('verifikasi-berkas.update', ['syaratKhusus' => $syaratKhusus, 'jenis' => 'bkd']), ['keputusan' => 'diterima'])
+            ->assertSessionHas('error');
+    }
+
+    public function test_admin_verifikasi_menampilkan_satu_baris_per_file(): void
+    {
+        Storage::fake('local');
+
+        $dosen = $this->makeUser('dosen');
+        $admin = $this->makeUser('admin');
+
+        foreach ([['2026', 'ganjil'], ['2026', 'genap']] as [$tahun, $semester]) {
+            $this->actingAs($dosen)->post('/profil/pengajuan/syarat-khusus', [
+                'tahun' => $tahun,
+                'semester' => $semester,
+                'bkd' => UploadedFile::fake()->create("bkd-{$semester}.pdf", 300, 'application/pdf'),
+                'ikd' => UploadedFile::fake()->create("ikd-{$semester}.pdf", 300, 'application/pdf'),
+            ])->assertSessionHasNoErrors();
+
+            $this->actingAs($dosen)->post(route(
+                'profil.pengajuan.syarat-khusus.ajukan',
+                SyaratKhusus::query()->where('semester', $semester)->firstOrFail()
+            ));
+        }
+
+        // Draf (belum diajukan) tidak ikut tampil di tabel berkas masuk.
+        $this->actingAs($dosen)->post('/profil/pengajuan/syarat-khusus', [
+            'tahun' => 2027,
+            'semester' => 'ganjil',
+            'bkd' => UploadedFile::fake()->create('draf-bkd.pdf', 300, 'application/pdf'),
+            'ikd' => UploadedFile::fake()->create('draf-ikd.pdf', 300, 'application/pdf'),
+        ])->assertSessionHasNoErrors();
+
+        $html = $this->actingAs($admin)->get('/verifikasi-berkas')->assertOk()->getContent();
+
+        // 2 ajuan x 2 file (BKD + IKD) = 4 baris berkas yang menunggu keputusan.
+        $this->assertSame(4, substr_count($html, 'name="keputusan"'));
+        $this->assertStringNotContainsString('2027/2028', $html);
+    }
+
+    public function test_admin_verifikasi_menampilkan_aksi_pada_setiap_berkas_belum_diverifikasi(): void
+    {
+        Storage::fake('local');
+
+        $dosen = $this->makeUser('dosen');
+        $admin = $this->makeUser('admin');
+
+        $this->actingAs($dosen)->post('/profil/pengajuan/syarat-khusus', [
+            'tahun' => 2026,
+            'semester' => 'ganjil',
+            'bkd' => UploadedFile::fake()->create('bkd.pdf', 300, 'application/pdf'),
+            'ikd' => UploadedFile::fake()->create('ikd.pdf', 300, 'application/pdf'),
+        ])->assertSessionHasNoErrors();
+
+        $syaratKhusus = SyaratKhusus::query()->firstOrFail();
+        $this->actingAs($dosen)->post(route('profil.pengajuan.syarat-khusus.ajukan', $syaratKhusus));
+
+        // Satu ajuan = 2 baris file, keduanya punya aksi Verifikasi.
+        $html = $this->actingAs($admin)->get('/verifikasi-berkas')->assertOk()->getContent();
+        $this->assertSame(2, substr_count($html, '>Verifikasi</summary>'));
+        $this->assertSame(2, substr_count($html, 'name="keputusan"'));
+
+        // Setelah satu berkas diputuskan, aksi verifikasi hanya hilang di baris tersebut.
+        $this->actingAs($admin)->put(
+            route('verifikasi-berkas.update', ['syaratKhusus' => $syaratKhusus, 'jenis' => 'bkd']),
+            ['keputusan' => 'diterima'],
+        );
+
+        $html = $this->actingAs($admin)->get('/verifikasi-berkas')->assertOk()->getContent();
+        $this->assertSame(1, substr_count($html, '>Verifikasi</summary>'));
+        $this->assertSame(1, substr_count($html, 'name="keputusan"'));
+
+        // Setelah kedua berkas diputuskan, tidak ada lagi aksi verifikasi.
+        $this->actingAs($admin)->put(
+            route('verifikasi-berkas.update', ['syaratKhusus' => $syaratKhusus, 'jenis' => 'ikd']),
+            ['keputusan' => 'diterima'],
+        );
+
+        $html = $this->actingAs($admin)->get('/verifikasi-berkas')->assertOk()->getContent();
+        $this->assertSame(0, substr_count($html, '>Verifikasi</summary>'));
+        $this->assertSame(0, substr_count($html, 'name="keputusan"'));
+    }
+
+    public function test_admin_dapat_menandai_diterima_dan_membuka_berkas_dosen(): void
+    {
+        Storage::fake('local');
+
+        $dosen = $this->makeUser('dosen');
+
+        $this->actingAs($dosen)->post('/profil/pengajuan/syarat-khusus', [
+            'tahun' => 2026,
+            'semester' => 'ganjil',
+            'bkd' => UploadedFile::fake()->create('bkd.pdf', 300, 'application/pdf'),
+            'ikd' => UploadedFile::fake()->create('ikd.pdf', 300, 'application/pdf'),
+        ])->assertSessionHasNoErrors();
+
+        $syaratKhusus = SyaratKhusus::query()->firstOrFail();
+        $this->actingAs($dosen)->post(route('profil.pengajuan.syarat-khusus.ajukan', $syaratKhusus));
+
+        $admin = $this->makeUser('admin');
+
+        $this->actingAs($admin)
+            ->put(route('verifikasi-berkas.update', ['syaratKhusus' => $syaratKhusus, 'jenis' => 'bkd']), ['keputusan' => 'diterima'])
+            ->assertSessionHasNoErrors();
+
+        $syaratKhusus->refresh();
+        $this->assertSame('diterima', $syaratKhusus->bkd_status);
+        // Menerima BKD tidak mengubah status berkas IKD.
+        $this->assertSame('diajukan', $syaratKhusus->ikd_status);
+        $this->assertSame('diajukan', $syaratKhusus->status);
+
+        $html = $this->actingAs($admin)->get('/verifikasi-berkas')->assertOk()->getContent();
+        $this->assertSame(1, substr_count($html, '>Verifikasi</summary>'));
+        $this->assertSame(1, substr_count($html, 'name="keputusan"'));
+
+        $this->actingAs($admin)
+            ->put(route('verifikasi-berkas.update', ['syaratKhusus' => $syaratKhusus, 'jenis' => 'ikd']), ['keputusan' => 'diterima'])
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame('diterima', $syaratKhusus->fresh()->status);
+
+        $this->actingAs($admin)
+            ->get(route('verifikasi-berkas.berkas', ['syaratKhusus' => $syaratKhusus, 'jenis' => 'bkd']))
+            ->assertOk()
+            ->assertHeader('content-type', 'application/pdf');
+
+        $this->actingAs($dosen)
+            ->get('/profil/pengajuan/syarat-khusus?tahun=2026&semester=ganjil')
+            ->assertOk()
+            ->assertSee('Diterima')
+            ->assertSee('disabled>Ajukan', false)
+            ->assertDontSee('Simpan Berkas');
+    }
+
+    public function test_unggah_ulang_setelah_ditolak_menghapus_berkas_lama(): void
+    {
+        Storage::fake('local');
+
+        $dosen = $this->makeUser('dosen');
+
+        $this->actingAs($dosen)->post('/profil/pengajuan/syarat-khusus', [
+            'tahun' => 2026,
+            'semester' => 'ganjil',
+            'bkd' => UploadedFile::fake()->create('bkd.pdf', 300, 'application/pdf'),
+            'ikd' => UploadedFile::fake()->create('ikd.pdf', 300, 'application/pdf'),
+        ])->assertSessionHasNoErrors();
+
+        $syaratKhusus = SyaratKhusus::query()->firstOrFail();
+        $lama = [$syaratKhusus->bkd_path, $syaratKhusus->ikd_path];
+
+        $syaratKhusus->update(['status' => 'ditolak', 'catatan' => 'Scan buram.']);
+
+        $this->actingAs($dosen)->post('/profil/pengajuan/syarat-khusus', [
+            'tahun' => 2026,
+            'semester' => 'ganjil',
+            'bkd' => UploadedFile::fake()->create('bkd-baru.pdf', 300, 'application/pdf'),
+            'ikd' => UploadedFile::fake()->create('ikd-baru.pdf', 300, 'application/pdf'),
+        ])->assertSessionHasNoErrors();
+
+        $syaratKhusus->refresh();
+
+        foreach ($lama as $path) {
+            Storage::disk('local')->assertMissing($path);
+        }
+
+        Storage::disk('local')->assertExists($syaratKhusus->bkd_path);
+        Storage::disk('local')->assertExists($syaratKhusus->ikd_path);
+        $this->assertNotContains($syaratKhusus->bkd_path, $lama);
+        $this->assertSame('draf', $syaratKhusus->status);
+    }
+
+    public function test_dosen_tidak_dapat_mengajukan_berkas_dosen_lain(): void
+    {
+        Storage::fake('local');
+
+        $dosen = $this->makeUser('dosen');
+
+        $this->actingAs($dosen)->post('/profil/pengajuan/syarat-khusus', [
+            'tahun' => 2026,
+            'semester' => 'ganjil',
+            'bkd' => UploadedFile::fake()->create('bkd.pdf', 300, 'application/pdf'),
+            'ikd' => UploadedFile::fake()->create('ikd.pdf', 300, 'application/pdf'),
+        ])->assertSessionHasNoErrors();
+
+        $syaratKhusus = SyaratKhusus::query()->firstOrFail();
+
+        $lain = User::create([
+            'nidn' => '1999000001',
+            'name' => 'Dosen Lain',
+            'email' => 'lain@example.test',
+            'program_studi' => 'Pendidikan Informatika',
+            'role' => 'dosen',
+            'is_active' => true,
+            'password' => Hash::make('password'),
+        ]);
+
+        $this->actingAs($lain)
+            ->post(route('profil.pengajuan.syarat-khusus.ajukan', $syaratKhusus))
+            ->assertNotFound();
+
+        $this->actingAs($lain)->get('/verifikasi-berkas')->assertForbidden();
+
+        $this->assertSame('draf', $syaratKhusus->fresh()->status);
+    }
+
     public function test_admin_cannot_open_pengajuan_baru_page(): void
     {
-        $this->actingAs($this->makeUser('admin'))
-            ->get('/profil/pengajuan/create')
-            ->assertForbidden();
+        $admin = $this->makeUser('admin');
+
+        $this->actingAs($admin)->get('/profil/pengajuan/create')->assertForbidden();
+        $this->actingAs($admin)->get('/profil/pengajuan')->assertForbidden();
+        $this->actingAs($admin)->get('/profil/pengajuan/periode-pertama')->assertForbidden();
+        $this->actingAs($admin)->get('/profil/pengajuan/syarat-khusus?tahun=2026&semester=ganjil')->assertForbidden();
+        $this->actingAs($admin)->post('/profil/pengajuan/syarat-khusus', ['tahun' => 2026, 'semester' => 'ganjil'])->assertForbidden();
     }
 
     public function test_dosen_can_add_pendidikan_entry_with_link_bukti(): void
@@ -485,16 +972,16 @@ class PengajuanDosenTest extends TestCase
             ->assertSee('id="rincian-penelitian"', false)
             ->assertSee('data-confirm="Hapus entri Menghasilkan Karya Ilmiah?"', false);
 
-        foreach (\App\Models\KegiatanDupak::JENIS_PENELITIAN as $label) {
+        foreach (KegiatanDupak::JENIS_PENELITIAN as $label) {
             $response->assertSee($label);
         }
 
-        foreach (\App\Models\KegiatanDupak::SUB_PENELITIAN['karya_ilmiah'] as $label) {
+        foreach (KegiatanDupak::SUB_PENELITIAN['karya_ilmiah'] as $label) {
             $response->assertSee($label);
         }
 
         // Rincian tingkat ketiga ikut terkirim sebagai opsi select (dirender oleh JS).
-        foreach (\App\Models\KegiatanDupak::RINCIAN_PENELITIAN['dipublikasikan'] as $label) {
+        foreach (KegiatanDupak::RINCIAN_PENELITIAN['dipublikasikan'] as $label) {
             $response->assertSee($label);
         }
     }
@@ -730,20 +1217,20 @@ class PengajuanDosenTest extends TestCase
             ->assertSee('id="rincian-abdimas"', false)
             ->assertSee('data-confirm="Hapus entri Memberikan Latihan/Penyuluhan/Penataran/Ceramah pada Masyarakat?"', false);
 
-        foreach (\App\Models\KegiatanDupak::JENIS_PENGABDIAN as $label) {
+        foreach (KegiatanDupak::JENIS_PENGABDIAN as $label) {
             $response->assertSee($label);
         }
 
-        foreach (\App\Models\KegiatanDupak::SUB_PENGABDIAN['latihan_penyuluhan'] as $label) {
+        foreach (KegiatanDupak::SUB_PENGABDIAN['latihan_penyuluhan'] as $label) {
             $response->assertSee($label);
         }
 
-        foreach (\App\Models\KegiatanDupak::SUB_PENGABDIAN['pelayanan_masyarakat'] as $label) {
+        foreach (KegiatanDupak::SUB_PENGABDIAN['pelayanan_masyarakat'] as $label) {
             $response->assertSee($label);
         }
 
         // Tingkat pelaksanaan ikut terkirim sebagai opsi rincian kegiatan (dirender oleh JS).
-        foreach (\App\Models\KegiatanDupak::RINCIAN_PENGABDIAN['kurang_satu_semester'] as $label) {
+        foreach (KegiatanDupak::RINCIAN_PENGABDIAN['kurang_satu_semester'] as $label) {
             $response->assertSee($label);
         }
     }
@@ -949,18 +1436,18 @@ class PengajuanDosenTest extends TestCase
             ->assertSee('id="rincian-penunjang"', false)
             ->assertSee('data-confirm="Hapus entri Menjadi Anggota Panitia/Badan pada Lembaga Pemerintah?"', false);
 
-        foreach (\App\Models\KegiatanDupak::JENIS_PENUNJANG as $label) {
+        foreach (KegiatanDupak::JENIS_PENUNJANG as $label) {
             $response->assertSee($label);
         }
 
-        foreach (\App\Models\KegiatanDupak::SUB_PENUNJANG as $subs) {
+        foreach (KegiatanDupak::SUB_PENUNJANG as $subs) {
             foreach ($subs as $label) {
                 $response->assertSee($label);
             }
         }
 
         // Tingkat ketiga (mis. Pengurus/Anggota, Ketua/Wakil Ketua) dikirim sebagai opsi rincian kegiatan.
-        foreach (\App\Models\KegiatanDupak::RINCIAN_PENUNJANG as $rincian) {
+        foreach (KegiatanDupak::RINCIAN_PENUNJANG as $rincian) {
             foreach ($rincian as $label) {
                 $response->assertSee($label);
             }
@@ -1129,15 +1616,16 @@ class PengajuanDosenTest extends TestCase
 
         $this->assertDatabaseCount('kegiatan_dupak', 0);
     }
+
     public function test_sub_jenis_keys_are_unique_across_all_bidang(): void
     {
         // rincianMap() pada request hanya melihat sub_jenis, jadi kunci sub_jenis wajib
         // unik lintas bidang agar rincian bidang lain tidak ikut diminta.
         $subJenis = collect([
-            \App\Models\KegiatanDupak::SUB_PELAKSANAAN,
-            \App\Models\KegiatanDupak::SUB_PENELITIAN,
-            \App\Models\KegiatanDupak::SUB_PENGABDIAN,
-            \App\Models\KegiatanDupak::SUB_PENUNJANG,
+            KegiatanDupak::SUB_PELAKSANAAN,
+            KegiatanDupak::SUB_PENELITIAN,
+            KegiatanDupak::SUB_PENGABDIAN,
+            KegiatanDupak::SUB_PENUNJANG,
         ])->flatMap(fn (array $map) => $map)
             ->flatMap(fn (array $subs) => array_keys($subs))
             ->sort()
@@ -1279,5 +1767,163 @@ class PengajuanDosenTest extends TestCase
                 ->assertDontSee(route('panduan.pengajuan'), false)
                 ->assertDontSee('Panduan Pengajuan');
         }
+    }
+
+    public function test_tabel_berkas_menampilkan_satu_baris_per_file(): void
+    {
+        Storage::fake('local');
+
+        $dosen = $this->makeUser('dosen');
+
+        $this->actingAs($dosen)->post('/profil/pengajuan/syarat-khusus', [
+            'tahun' => 2026,
+            'semester' => 'ganjil',
+            'bkd' => UploadedFile::fake()->create('bkd.pdf', 300, 'application/pdf'),
+            'ikd' => UploadedFile::fake()->create('ikd.pdf', 300, 'application/pdf'),
+        ])->assertSessionHasNoErrors();
+
+        $html = $this->actingAs($dosen)
+            ->get('/profil/pengajuan/syarat-khusus?tahun=2026&semester=ganjil')
+            ->assertOk()
+            ->getContent();
+
+        // Dua berkas = dua baris, masing-masing punya tautan sendiri.
+        $tabel = str($html)->after('Ajukan berkas ke admin untuk diverifikasi.')->value();
+
+        foreach (['bkd', 'ikd'] as $jenis) {
+            $this->assertSame(1, substr_count($tabel, e(route('profil.pengajuan.syarat-khusus.berkas', [
+                'jenis' => $jenis,
+                'tahun' => 2026,
+                'semester' => 'ganjil',
+            ]))));
+        }
+
+        // Status & catatan sama untuk kedua baris; tombol ajuan cukup satu di bawah tabel.
+        $this->assertSame(2, substr_count($html, 'badge-status'));
+        $this->assertSame(1, substr_count($html, route('profil.pengajuan.syarat-khusus.ajukan-semua')));
+        $this->assertSame(1, substr_count($html, '>Ajukan</button>'));
+    }
+
+    public function test_dosen_dapat_mengajukan_semua_berkas_sekaligus_dan_admin_melihat_semuanya(): void
+    {
+        Storage::fake('local');
+
+        $dosen = $this->makeUser('dosen');
+
+        foreach ([['2026', 'ganjil'], ['2026', 'genap']] as [$tahun, $semester]) {
+            $this->actingAs($dosen)->post('/profil/pengajuan/syarat-khusus', [
+                'tahun' => $tahun,
+                'semester' => $semester,
+                'bkd' => UploadedFile::fake()->create("bkd-{$semester}.pdf", 300, 'application/pdf'),
+                'ikd' => UploadedFile::fake()->create("ikd-{$semester}.pdf", 300, 'application/pdf'),
+            ])->assertSessionHasNoErrors();
+        }
+
+        // Berkas dosen lain tidak boleh ikut terajukan.
+        $lain = User::create([
+            'nidn' => '1987654322',
+            'name' => 'Dr. Budi Santoso, M.Kom.',
+            'email' => 'lain@example.test',
+            'program_studi' => 'Pendidikan Informatika',
+            'jabatan_fungsional' => 'Lektor',
+            'role' => 'dosen',
+            'is_active' => true,
+            'password' => Hash::make('password'),
+        ]);
+
+        $this->actingAs($lain)->post('/profil/pengajuan/syarat-khusus', [
+            'tahun' => 2026,
+            'semester' => 'ganjil',
+            'bkd' => UploadedFile::fake()->create('lain-bkd.pdf', 300, 'application/pdf'),
+            'ikd' => UploadedFile::fake()->create('lain-ikd.pdf', 300, 'application/pdf'),
+        ])->assertSessionHasNoErrors();
+
+        $this->actingAs($dosen)
+            ->post(route('profil.pengajuan.syarat-khusus.ajukan-semua'), ['tahun' => 2026, 'semester' => 'ganjil'])
+            ->assertRedirect(route('profil.pengajuan.syarat-khusus', ['tahun' => 2026, 'semester' => 'ganjil']))
+            ->assertSessionHas('status');
+
+        $this->assertSame(2, SyaratKhusus::query()->where('user_id', $dosen->id)->where('status', 'diajukan')->count());
+        $this->assertSame('draf', SyaratKhusus::query()->where('user_id', $lain->id)->firstOrFail()->status);
+
+        // Tanpa berkas lengkap, tombol ajuan tidak melakukan apa pun.
+        $this->actingAs($dosen)
+            ->post(route('profil.pengajuan.syarat-khusus.ajukan-semua'), ['tahun' => 2026, 'semester' => 'ganjil'])
+            ->assertSessionHas('error');
+
+        // Admin melihat semua ajuan dosen tersebut (2 ajuan x 2 file).
+        $html = $this->actingAs($this->makeUser('admin'))->get('/verifikasi-berkas')->assertOk()->getContent();
+
+        $this->assertSame(4, substr_count($html, 'name="keputusan"'));
+    }
+
+    public function test_riwayat_ikd_lists_submitted_usulan_only(): void
+    {
+        Storage::fake('local');
+
+        $dosen = $this->makeUser('dosen');
+
+        // Periode yang masih draf tidak dihitung sebagai usulan.
+        $this->actingAs($dosen)->post('/profil/pengajuan/syarat-khusus', [
+            'tahun' => 2025,
+            'semester' => 'genap',
+            'bkd' => UploadedFile::fake()->create('bkd.pdf', 300, 'application/pdf'),
+            'ikd' => UploadedFile::fake()->create('ikd.pdf', 300, 'application/pdf'),
+        ])->assertSessionHasNoErrors();
+
+        $this->actingAs($dosen)->post('/profil/pengajuan/syarat-khusus', [
+            'tahun' => 2026,
+            'semester' => 'ganjil',
+            'bkd' => UploadedFile::fake()->create('bkd.pdf', 300, 'application/pdf'),
+            'ikd' => UploadedFile::fake()->create('ikd.pdf', 300, 'application/pdf'),
+        ])->assertSessionHasNoErrors();
+
+        $diajukan = SyaratKhusus::query()->where('tahun', 2026)->firstOrFail();
+
+        $this->actingAs($dosen)->post(route('profil.pengajuan.syarat-khusus.ajukan', $diajukan));
+
+        $this->actingAs($this->makeUser('admin'))->put(
+            route('verifikasi-berkas.update', ['syaratKhusus' => $diajukan, 'jenis' => 'ikd']),
+            [
+                'keputusan' => 'ditolak',
+                'catatan' => 'IKD kurang lengkap.',
+            ],
+        );
+
+        $this->actingAs($dosen)
+            ->get('/dashboard')
+            ->assertOk()
+            ->assertSee(route('profil.pengajuan.riwayat-ikd'), false);
+
+        $this->actingAs($dosen)
+            ->get(route('profil.pengajuan.riwayat-ikd'))
+            ->assertOk()
+            ->assertSee('Riwayat IKD')
+            ->assertSee('Daftar Usulan IKD')
+            ->assertSee('1 data')
+            ->assertSee('data-table-search', false)
+            ->assertSee('2026/2027 · Ganjil')
+            ->assertSee('Ditolak')
+            ->assertSee('IKD kurang lengkap.')
+            ->assertSee(e(route('profil.pengajuan.syarat-khusus.berkas', [
+                'jenis' => 'ikd',
+                'tahun' => 2026,
+                'semester' => 'ganjil',
+            ])), false)
+            ->assertDontSee('2025/2026 · Genap');
+    }
+
+    public function test_riwayat_ikd_is_only_available_for_dosen(): void
+    {
+        $admin = $this->makeUser('admin');
+
+        $this->actingAs($admin)
+            ->get('/dashboard')
+            ->assertOk()
+            ->assertDontSee(route('profil.pengajuan.riwayat-ikd'), false);
+
+        $this->actingAs($admin)
+            ->get(route('profil.pengajuan.riwayat-ikd'))
+            ->assertForbidden();
     }
 }

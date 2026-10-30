@@ -47,7 +47,7 @@
                     <p class="mt-0.5 text-sm font-bold text-white">{{ now()->format('Y') }}</p>
                 </div>
                 @if (auth()->user()->isDosen())
-                    <a href="{{ route('profil.pengajuan.periode') }}"
+                    <a href="{{ route('profil.pengajuan.mulai') }}"
                        class="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-3 text-sm font-bold text-teal-800 shadow-lg shadow-teal-950/20 transition hover:bg-teal-50 active:scale-[0.99]">
                         <svg class="size-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                             <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm.75-11.25a.75.75 0 0 0-1.5 0v2.5h-2.5a.75.75 0 0 0 0 1.5h2.5v2.5a.75.75 0 0 0 1.5 0v-2.5h2.5a.75.75 0 0 0 0-1.5h-2.5v-2.5Z" clip-rule="evenodd" />

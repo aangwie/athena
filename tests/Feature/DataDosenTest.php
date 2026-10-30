@@ -29,6 +29,7 @@ class DataDosenTest extends TestCase
         return array_merge([
             'name' => 'Dr. Citra Maharani, M.Si.',
             'nidn' => '1985041722',
+            'memiliki_jabatan' => 'ya',
             'pangkat' => 'Lektor Kepala',
             'roles' => ['dosen', 'tim_pak'],
             'password' => 'password',
@@ -50,6 +51,37 @@ class DataDosenTest extends TestCase
         $this->assertTrue($user->hasRole('tim_pak'));
         $this->assertFalse($user->hasRole('admin'));
         $this->assertSame('dosen', $user->activeRole());
+    }
+
+    public function test_pangkat_is_required_when_dosen_has_jabatan_akademik(): void
+    {
+        $this->actingAs($this->makeAdmin())
+            ->post('/data-dosen', $this->payload(['pangkat' => '']))
+            ->assertSessionHasErrors('pangkat');
+
+        $this->assertDatabaseMissing('users', ['nidn' => '1985041722']);
+    }
+
+    public function test_admin_can_create_dosen_without_jabatan_akademik(): void
+    {
+        $this->actingAs($this->makeAdmin())
+            ->post('/data-dosen', $this->payload([
+                'memiliki_jabatan' => 'tidak',
+                'pangkat' => '',
+            ]))
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(route('data-dosen.index'));
+
+        $this->assertNull(User::query()->where('nidn', '1985041722')->firstOrFail()->jabatan_fungsional);
+    }
+
+    public function test_form_shows_jabatan_akademik_choice_before_pangkat(): void
+    {
+        $this->actingAs($this->makeAdmin())
+            ->get('/data-dosen/create')
+            ->assertOk()
+            ->assertSee('Memiliki Jabatan Akademik?')
+            ->assertSee('name="memiliki_jabatan"', false);
     }
 
     public function test_role_is_required_when_saving_user(): void

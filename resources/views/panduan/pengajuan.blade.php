@@ -210,7 +210,7 @@
             </ul>
 
             <div class="mt-5 flex flex-col gap-2 sm:flex-row">
-                <a href="{{ route('profil.pengajuan.periode') }}" class="btn-primary w-auto justify-center px-5">
+                <a href="{{ route('profil.pengajuan.mulai') }}" class="btn-primary w-auto justify-center px-5">
                     <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
                         <path d="M12 5v14M5 12h14" stroke-linecap="round" />
                     </svg>

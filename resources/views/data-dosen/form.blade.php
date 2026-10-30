@@ -7,6 +7,8 @@
 @section('content')
     @php
         $isEdit = $item !== null;
+        // Dosen tanpa jabatan akademik tidak perlu memilih pangkat.
+        $memilikiJabatan = old('memiliki_jabatan', $isEdit ? ($item->jabatan_fungsional ? 'ya' : 'tidak') : 'ya');
     @endphp
 
     <div class="mx-auto max-w-2xl">
@@ -69,8 +71,27 @@
                     </div>
 
                     <div>
+                        <span class="form-label">Memiliki Jabatan Akademik? <span class="text-rose-500">*</span></span>
+                        <div class="grid gap-3 sm:grid-cols-2">
+                            @foreach (['ya' => 'Ya', 'tidak' => 'Tidak'] as $value => $label)
+                                <label class="choice-card items-center">
+                                    <input type="radio" name="memiliki_jabatan" value="{{ $value }}" class="sr-only" required
+                                           data-jabatan-akademik @checked($memilikiJabatan === $value)>
+                                    <span class="choice-indicator">
+                                        <svg class="size-3 opacity-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                            <path fill-rule="evenodd" d="M16.704 5.29a1 1 0 0 1 .006 1.414l-7.25 7.313a1 1 0 0 1-1.42.002L4.29 10.27a1 1 0 1 1 1.42-1.408l3.043 3.067 6.537-6.596a1 1 0 0 1 1.414-.043Z" clip-rule="evenodd" />
+                                        </svg>
+                                    </span>
+                                    <span class="min-w-0 flex-1 text-sm font-bold text-slate-800">{{ $label }}</span>
+                                </label>
+                            @endforeach
+                        </div>
+                        @error('memiliki_jabatan') <p class="form-error">{{ $message }}</p> @enderror
+                    </div>
+
+                    <div data-pangkat-section @class(['hidden' => $memilikiJabatan !== 'ya'])>
                         <label for="pangkat" class="form-label">Pangkat <span class="text-rose-500">*</span></label>
-                        <select id="pangkat" name="pangkat" required
+                        <select id="pangkat" name="pangkat" @required($memilikiJabatan === 'ya') @disabled($memilikiJabatan !== 'ya')
                                 @class(['form-input', 'border-rose-300 bg-rose-50/40' => $errors->has('pangkat')])>
                             <option value="" selected disabled>Pilih Pangkat</option>
                             @foreach ($pangkatOptions as $option)

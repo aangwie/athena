@@ -104,10 +104,13 @@ class DataDosenController extends Controller
             $uniqueNidn->ignore($item->id);
         }
 
+        $memilikiJabatan = $request->input('memiliki_jabatan');
+
         $data = $request->validate([
             'name' => ['required', 'string', 'max:100'],
             'nidn' => ['required', 'string', 'max:20', $uniqueNidn],
-            'pangkat' => ['required', 'string', 'max:100'],
+            'memiliki_jabatan' => ['required', Rule::in(['ya', 'tidak'])],
+            'pangkat' => ['nullable', 'string', 'max:100', Rule::requiredIf($memilikiJabatan === 'ya')],
             'roles' => ['required', 'array', 'min:1'],
             'roles.*' => ['string', Rule::in(array_keys(User::ROLES))],
             'password' => [$item === null ? 'required' : 'nullable', 'string', 'min:8', 'confirmed'],
@@ -115,11 +118,16 @@ class DataDosenController extends Controller
             'name.required' => 'Nama Dosen wajib diisi.',
             'nidn.required' => 'NIDN wajib diisi.',
             'nidn.unique' => 'NIDN tersebut sudah terdaftar.',
-            'pangkat.required' => 'Pangkat wajib diisi.',
+            'memiliki_jabatan.required' => 'Pilih apakah dosen memiliki jabatan akademik.',
+            'memiliki_jabatan.in' => 'Pilihan jabatan akademik tidak valid.',
+            'pangkat.required' => 'Pangkat wajib diisi jika memiliki jabatan akademik.',
             'roles.required' => 'Pilih minimal satu role.',
             'roles.min' => 'Pilih minimal satu role.',
             'password.required' => 'Password wajib diisi.',
         ]);
+
+        // Tanpa jabatan akademik, pangkat dikosongkan.
+        $data['pangkat'] = $memilikiJabatan === 'ya' ? ($data['pangkat'] ?? null) : null;
 
         // Urutkan sesuai urutan role di form agar kolom role lama konsisten.
         $data['roles'] = array_values(array_filter(

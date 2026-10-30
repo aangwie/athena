@@ -9,11 +9,15 @@ use App\Http\Requests\KegiatanPengabdianRequest;
 use App\Http\Requests\KegiatanPenunjangRequest;
 use App\Models\KegiatanDupak;
 use App\Models\PengajuanDupak;
+use App\Models\SyaratKhusus;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class PengajuanDosenController extends Controller
 {
@@ -41,9 +45,272 @@ class PengajuanDosenController extends Controller
         ],
     ];
 
+    /**
+     * Berkas syarat khusus pengajuan pertama beserta batas ukurannya (MB).
+     *
+     * @var array<string, array{label: string, deskripsi: string, max_mb: int}>
+     */
+    public const SYARAT_KHUSUS = [
+        'bkd' => [
+            'label' => 'BKD 2 Semester Terakhir (Status Memenuhi, Tridharma PT terpenuhi)',
+            'deskripsi' => 'Unggah Bukti Kompilasi LKD 2 Semester terakhir dalam satu file pdf',
+            'max_mb' => 3,
+        ],
+        'ikd' => [
+            'label' => 'Bukti Pemenuhan Indikator Kinerja Dosen',
+            'deskripsi' => 'Unggah kompilasi Bukti Klaim Indikator Kinerja Dosen sesuai target JAD (Asisten Ahli) dari laman SISTER Dosen dalam satu file pdf. Indikator Kinerja Dosen terdiri dari 2 komponen yaitu: [a] Pendidikan (Kegiatan pembelajaran, pengajaran, dan pengembangan akademik) dan [b] Penelitian & Pengmas (Kontribusi langsung kepada masyarakat dan penerapan ilmu)',
+            'max_mb' => 5,
+        ],
+    ];
+
+    /**
+     * Halaman status jabatan akademik sebelum dosen memilih periode pengajuan.
+     */
+    public function mulai(Request $request): View
+    {
+        return view('profil.pengajuan.mulai', [
+            'jabatan' => $request->user()->jabatan_fungsional ?: null,
+        ]);
+    }
+
     public function periode(): View
     {
         return view('profil.pengajuan.periode');
+    }
+
+    /**
+     * Pemilihan periode untuk dosen yang belum memiliki jabatan akademik.
+     */
+    public function periodePertama(): View
+    {
+        return view('profil.pengajuan.periode', [
+            'judul' => 'Pilih Periode Pengajuan Pertama',
+            'kicker' => 'Pengajuan Jabatan Akademik Pertama',
+            'deskripsi' => 'Anda belum memiliki jabatan akademik. Tentukan tahun akademik dan semester, lalu lengkapi syarat khusus pengajuan pertama.',
+            'action' => route('profil.pengajuan.syarat-khusus'),
+            'labelTombol' => 'Lanjut ke IKD',
+        ]);
+    }
+
+    /**
+     * Syarat khusus pengajuan pertama dosen tanpa jabatan akademik.
+     */
+    public function syaratKhusus(Request $request): View|RedirectResponse
+    {
+        $periode = $this->periodeQuery($request);
+
+        if ($periode === null) {
+            return redirect()->route('profil.pengajuan.periode-pertama');
+        }
+
+        [$tahun, $semester] = $periode;
+
+        return view('profil.pengajuan.syarat-khusus', [
+            'tahun' => $tahun,
+            'semester' => $semester,
+            'berkas' => self::SYARAT_KHUSUS,
+            'syaratKhusus' => $this->syaratKhususFor($request, $tahun, $semester),
+            'daftar' => SyaratKhusus::query()
+                ->where('user_id', $request->user()->id)
+                ->orderByDesc('tahun')
+                ->orderByDesc('id')
+                ->get(),
+        ]);
+    }
+
+    /**
+     * Unggah / ganti berkas syarat khusus (BKD & IKD) untuk periode terpilih.
+     */
+    public function simpanSyaratKhusus(Request $request): RedirectResponse
+    {
+        $periode = $this->periodeQuery($request);
+
+        if ($periode === null) {
+            return redirect()->route('profil.pengajuan.periode-pertama');
+        }
+
+        [$tahun, $semester] = $periode;
+
+        $syaratKhusus = $this->syaratKhususFor($request, $tahun, $semester) ?? new SyaratKhusus([
+            'user_id' => $request->user()->id,
+            'tahun' => $tahun,
+            'semester' => $semester,
+        ]);
+
+        if ($syaratKhusus->exists && ! $syaratKhusus->bisaDiubah()) {
+            return redirect()
+                ->route('profil.pengajuan.syarat-khusus', ['tahun' => $tahun, 'semester' => $semester])
+                ->with('error', 'Berkas periode ini sudah diajukan dan tidak dapat diubah.');
+        }
+
+        $rules = [];
+        $messages = [];
+
+        foreach (self::SYARAT_KHUSUS as $jenis => $item) {
+            $rules[$jenis] = [
+                filled($syaratKhusus->{$jenis.'_path'}) ? 'nullable' : 'required',
+                'file',
+                'mimes:pdf',
+                'max:'.($item['max_mb'] * 1024),
+            ];
+
+            $messages["{$jenis}.required"] = 'Berkas wajib diunggah.';
+            $messages["{$jenis}.file"] = 'Berkas gagal diunggah.';
+            $messages["{$jenis}.mimes"] = 'Berkas harus berformat PDF.';
+            $messages["{$jenis}.max"] = "Ukuran berkas maksimal {$item['max_mb']} MB.";
+        }
+
+        $request->validate($rules, $messages);
+
+        foreach (array_keys(self::SYARAT_KHUSUS) as $jenis) {
+            if (! $request->hasFile($jenis)) {
+                continue;
+            }
+
+            if ($syaratKhusus->{$jenis.'_path'}) {
+                Storage::disk('local')->delete($syaratKhusus->{$jenis.'_path'});
+            }
+
+            $syaratKhusus->{$jenis.'_path'} = $request->file($jenis)->storeAs(
+                "syarat-khusus/{$request->user()->nidn}",
+                sprintf('%s_%s_%s.pdf', $jenis, $request->user()->nidn, Str::random(16)),
+                'local',
+            );
+
+            // Berkas yang diunggah ulang kembali berstatus draf dan catatan lamanya dibuang.
+            $syaratKhusus->{$jenis.'_status'} = 'draf';
+            $syaratKhusus->{$jenis.'_catatan'} = null;
+        }
+
+        $syaratKhusus->sinkronkanStatus()->save();
+
+        return redirect()
+            ->route('profil.pengajuan.syarat-khusus', ['tahun' => $tahun, 'semester' => $semester])
+            ->with('status', 'Berkas syarat khusus berhasil disimpan.');
+    }
+
+    /**
+     * Kirim berkas syarat khusus periode ini ke admin untuk diverifikasi.
+     */
+    public function ajukanSyaratKhusus(Request $request, SyaratKhusus $syaratKhusus): RedirectResponse
+    {
+        abort_unless($syaratKhusus->user_id === $request->user()->id, 404);
+
+        $kembali = redirect()->route('profil.pengajuan.syarat-khusus', [
+            'tahun' => $syaratKhusus->tahun,
+            'semester' => $syaratKhusus->semester,
+        ]);
+
+        if (! $syaratKhusus->ajukan()) {
+            return $kembali->with('error', 'Berkas periode ini sudah diajukan dan tidak dapat diajukan ulang.');
+        }
+
+        return $kembali->with('status', 'Berkas syarat khusus berhasil diajukan ke admin.');
+    }
+
+    /**
+     * Ajukan semua berkas periode yang sudah lengkap (BKD & IKD) sekaligus.
+     */
+    public function ajukanSemuaSyaratKhusus(Request $request): RedirectResponse
+    {
+        $periode = $this->periodeQuery($request);
+
+        $kembali = redirect()->route(
+            'profil.pengajuan.syarat-khusus',
+            $periode === null ? [] : ['tahun' => $periode[0], 'semester' => $periode[1]],
+        );
+
+        $jumlah = SyaratKhusus::query()
+            ->where('user_id', $request->user()->id)
+            ->whereIn('status', SyaratKhusus::BISA_DIUBAH)
+            ->whereNotNull('bkd_path')
+            ->whereNotNull('ikd_path')
+            ->get()
+            ->filter(fn (SyaratKhusus $item) => $item->ajukan())
+            ->count();
+
+        return $jumlah === 0
+            ? $kembali->with('error', 'Belum ada berkas lengkap (BKD & IKD) yang bisa diajukan.')
+            : $kembali->with('status', $jumlah.' berkas berhasil diajukan ke admin.');
+    }
+
+    /**
+     * Daftar berkas syarat khusus yang masuk untuk diverifikasi admin.
+     */
+    public function verifikasiSyaratKhusus(): View
+    {
+        return view('admin.verifikasi-berkas.index', [
+            'daftar' => SyaratKhusus::query()
+                ->with('user')
+                ->where(fn ($query) => $query
+                    ->where('bkd_status', '!=', 'draf')
+                    ->orWhere('ikd_status', '!=', 'draf'))
+                ->orderByRaw("case when bkd_status = 'diajukan' or ikd_status = 'diajukan' then 0 else 1 end")
+                ->orderByDesc('updated_at')
+                ->get(),
+        ]);
+    }
+
+    /**
+     * Keputusan admin atas satu berkas syarat khusus: diterima atau ditolak beserta catatan.
+     */
+    public function putuskanSyaratKhusus(Request $request, SyaratKhusus $syaratKhusus, string $jenis): RedirectResponse
+    {
+        abort_unless(array_key_exists($jenis, self::SYARAT_KHUSUS), 404);
+
+        $data = $request->validate([
+            'keputusan' => ['required', Rule::in(['diterima', 'ditolak'])],
+            'catatan' => ['nullable', 'string', 'max:1000', 'required_if:keputusan,ditolak'],
+        ], [
+            'catatan.required_if' => 'Catatan wajib diisi saat menolak berkas.',
+        ]);
+
+        if ($syaratKhusus->statusJenis($jenis) !== 'diajukan') {
+            return redirect()
+                ->route('verifikasi-berkas.index')
+                ->with('error', 'Berkas '.strtoupper($jenis).' ini belum diajukan oleh dosen.');
+        }
+
+        $syaratKhusus->putuskan($jenis, $data['keputusan'], $data['catatan'] ?? null);
+
+        return redirect()
+            ->route('verifikasi-berkas.index')
+            ->with('status', 'Berkas '.strtoupper($jenis).' '.$syaratKhusus->user->name.' ditandai "'.$syaratKhusus->statusLabel($jenis).'".');
+    }
+
+    /**
+     * Berkas syarat khusus untuk admin: tanpa batasan pemilik.
+     */
+    public function berkasVerifikasi(SyaratKhusus $syaratKhusus, string $jenis): StreamedResponse
+    {
+        abort_unless(array_key_exists($jenis, self::SYARAT_KHUSUS), 404);
+
+        $path = $syaratKhusus->{$jenis.'_path'};
+
+        abort_unless($path && Storage::disk('local')->exists($path), 404);
+
+        return Storage::disk('local')->response($path, basename($path), [
+            'Content-Type' => 'application/pdf',
+        ]);
+    }
+
+    /**
+     * Tampilkan berkas syarat khusus milik dosen yang sedang login.
+     */
+    public function berkasSyaratKhusus(Request $request, string $jenis): StreamedResponse
+    {
+        $periode = $this->periodeQuery($request);
+
+        abort_if($periode === null, 404);
+        abort_unless(array_key_exists($jenis, self::SYARAT_KHUSUS), 404);
+
+        $path = $this->syaratKhususFor($request, $periode[0], $periode[1])?->{$jenis.'_path'};
+
+        abort_unless($path && Storage::disk('local')->exists($path), 404);
+
+        return Storage::disk('local')->response($path, basename($path), [
+            'Content-Type' => 'application/pdf',
+        ]);
     }
 
     public function create(Request $request): View|RedirectResponse
@@ -153,6 +420,20 @@ class PengajuanDosenController extends Controller
             'pengajuan' => $pengajuan,
             'dupak' => $pengajuan->whereIn('status', PengajuanDupak::STATUS_DUPAK)->values(),
             'nilai' => $nilai,
+        ]);
+    }
+
+    /**
+     * Riwayat usulan IKD dosen: berkas yang sudah diajukan beserta keputusan admin.
+     */
+    public function riwayatIkd(Request $request): View
+    {
+        return view('profil.pengajuan.riwayat-ikd', [
+            'daftar' => SyaratKhusus::query()
+                ->where('user_id', $request->user()->id)
+                ->where('status', '!=', 'draf')
+                ->orderByDesc('updated_at')
+                ->get(),
         ]);
     }
 
@@ -370,6 +651,31 @@ class PengajuanDosenController extends Controller
         ]);
 
         return [(int) $data['tahun'], (string) $data['semester']];
+    }
+
+    /**
+     * Tahun & semester dari query string, null bila tidak valid.
+     *
+     * @return array{0: int, 1: string}|null
+     */
+    private function periodeQuery(Request $request): ?array
+    {
+        $tahun = (int) $request->input('tahun');
+        $semester = $request->input('semester');
+
+        return $tahun >= 2000 && $tahun <= 2100
+            && is_string($semester) && array_key_exists($semester, KegiatanDupak::SEMESTER)
+                ? [$tahun, $semester]
+                : null;
+    }
+
+    private function syaratKhususFor(Request $request, int $tahun, string $semester): ?SyaratKhusus
+    {
+        return SyaratKhusus::query()->firstWhere([
+            'user_id' => $request->user()->id,
+            'tahun' => $tahun,
+            'semester' => $semester,
+        ]);
     }
 
     private function kembaliKeReview(int $tahun, string $semester): RedirectResponse
