@@ -76,24 +76,26 @@
     </section>
 
     {{-- Statistik --}}
-    <section class="mb-6 grid grid-cols-2 gap-3 sm:gap-4 {{ auth()->user()->isDosen() ? 'xl:grid-cols-5' : 'xl:grid-cols-4' }}" aria-label="Ringkasan pengajuan">
+    <section class="mb-6 grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-5" aria-label="Ringkasan pengajuan">
         @php
             $isDosen = auth()->user()->isDosen();
+            $isTimPak = auth()->user()->isTimPak();
 
+            // Semua kartu menghitung ajuan DUPAK (jabatan akademik) dari dosen.
             $cards = [
                 [
                     'label' => $isDosen ? 'Total Ajuan' : 'Total Pengajuan',
                     'value' => $statistics['total'],
-                    'description' => $isDosen ? 'Seluruh ajuan DUPAK Anda' : 'Seluruh pengajuan tercatat',
+                    'description' => $isDosen ? 'Seluruh ajuan DUPAK Anda' : 'Seluruh ajuan DUPAK dosen',
                     'tag' => 'Semua',
                     'icon' => 'document',
                     'iconClass' => 'bg-teal-50 text-teal-600',
                     'accent' => 'bg-teal-500',
                 ],
                 [
-                    'label' => 'Menunggu Verifikasi',
+                    'label' => $isTimPak ? 'Belum Dinilai' : 'Menunggu Verifikasi',
                     'value' => $statistics['menunggu'],
-                    'description' => $isDosen ? 'Menunggu keputusan admin' : 'Sedang diproses admin',
+                    'description' => $isTimPak ? 'Menunggu penilaian TIM PAK' : 'Menunggu keputusan admin',
                     'tag' => 'Proses',
                     'icon' => 'clock',
                     'iconClass' => 'bg-amber-50 text-amber-600',
@@ -102,7 +104,7 @@
                 [
                     'label' => 'Disetujui',
                     'value' => $statistics['disetujui'],
-                    'description' => $isDosen ? 'DUPAK disetujui admin' : 'Pengajuan telah disetujui',
+                    'description' => $isDosen ? 'DUPAK disetujui admin' : 'Ajuan yang telah disetujui',
                     'tag' => 'Final',
                     'icon' => 'check',
                     'iconClass' => 'bg-emerald-50 text-emerald-600',
@@ -111,17 +113,13 @@
                 [
                     'label' => 'Perlu Perbaikan',
                     'value' => $statistics['perbaikan'],
-                    'description' => $isDosen ? 'DUPAK dikembalikan admin' : 'Pengajuan ditolak / revisi',
+                    'description' => $isDosen ? 'DUPAK dikembalikan admin' : 'Dikembalikan ke dosen',
                     'tag' => 'Revisi',
                     'icon' => 'alert',
                     'iconClass' => 'bg-rose-50 text-rose-600',
                     'accent' => 'bg-rose-500',
                 ],
-            ];
-
-            // Dosen: status DUPAK dipisah antara perlu perbaikan dan ditolak.
-            if ($isDosen) {
-                $cards[] = [
+                [
                     'label' => 'Ditolak',
                     'value' => $statistics['ditolak'],
                     'description' => 'DUPAK ditolak admin',
@@ -129,8 +127,8 @@
                     'icon' => 'alert',
                     'iconClass' => 'bg-slate-100 text-slate-600',
                     'accent' => 'bg-slate-400',
-                ];
-            }
+                ],
+            ];
         @endphp
 
         @foreach ($cards as $card)
@@ -169,11 +167,8 @@
         @endforeach
     </section>
 
-    {{-- Tabel riwayat --}}
-    @php
-        // Dosen & TIM PAK memakai tabel DUPAK; role lain memakai tabel pengajuan jabatan.
-        $dupakTable = auth()->user()->isDosen() || auth()->user()->isTimPak();
-    @endphp
+    {{-- Tabel riwayat dosen & TIM PAK. Admin memakai tabel Ajuan DUPAK di bawah. --}}
+    @if (! auth()->user()->isAdmin())
     <section id="riwayat" class="scroll-mt-24" data-table-card>
         <div class="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
             <div class="flex flex-col gap-4 border-b border-slate-100 px-5 py-5 sm:px-6 lg:flex-row lg:items-center lg:justify-between">
@@ -181,18 +176,14 @@
                     <div class="flex flex-wrap items-center gap-2">
                         <h2 class="text-base font-extrabold tracking-tight text-slate-900">{{ auth()->user()->isTimPak() ? 'Pengajuan DUPAK Masuk' : 'Riwayat Pengajuan' }}</h2>
                         <span class="rounded-full bg-teal-50 px-2 py-0.5 text-[10px] font-bold text-teal-700 ring-1 ring-teal-100 ring-inset">
-                            {{ $dupakTable ? $dupak->count() : $pengajuan->count() }} data
+                            {{ $dupak->count() }} data
                         </span>
                     </div>
                     <p class="mt-1 text-xs text-slate-500">
                         @if (auth()->user()->isDosen())
                             Riwayat ajuan DUPAK (jabatan akademik) yang Anda kirim.
-                        @elseif (auth()->user()->isTimPak())
-                            Daftar pengajuan DUPAK yang masuk dari dosen untuk dinilai.
-                        @elseif (auth()->user()->canReview())
-                            Daftar pengajuan jabatan akademik dari seluruh dosen.
                         @else
-                            Daftar pengajuan jabatan akademik yang Anda ajukan.
+                            Daftar pengajuan DUPAK yang masuk dari dosen untuk dinilai.
                         @endif
                     </p>
                 </div>
@@ -206,7 +197,7 @@
                                 <path d="m16 16 4 4" stroke-linecap="round" />
                             </svg>
                         </span>
-                        <input type="search" data-table-search placeholder="{{ $dupakTable ? 'Cari dosen, periode…' : 'Cari nomor, jabatan, prodi…' }}"
+                        <input type="search" data-table-search placeholder="Cari dosen, periode…"
                                class="h-10 w-full rounded-xl border border-slate-200 bg-slate-50/60 pr-9 pl-9 text-xs text-slate-700 transition placeholder:text-slate-400 hover:border-slate-300 focus:border-teal-500 focus:bg-white focus:ring-4 focus:ring-teal-500/10 focus:outline-none sm:w-64">
                         <button type="button" data-table-search-clear class="absolute top-1/2 right-2 hidden size-6 -translate-y-1/2 items-center justify-center rounded-md text-slate-400 transition hover:bg-slate-200/60 hover:text-slate-600" aria-label="Bersihkan pencarian">
                             <svg class="size-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -217,20 +208,12 @@
 
                     <div class="relative">
                         <label for="statusFilter" class="sr-only">Filter status</label>
-                        <select id="statusFilter" data-table-filter data-column="{{ auth()->user()->isDosen() ? 3 : (auth()->user()->isTimPak() ? 2 : (auth()->user()->canReview() ? 6 : 5)) }}"
+                        <select id="statusFilter" data-table-filter data-column="{{ auth()->user()->isDosen() ? 3 : 2 }}"
                                 class="h-10 w-full appearance-none rounded-xl border border-slate-200 bg-slate-50/60 pr-9 pl-3 text-xs font-medium text-slate-600 transition hover:border-slate-300 focus:border-teal-500 focus:bg-white focus:ring-4 focus:ring-teal-500/10 focus:outline-none sm:w-40">
                             <option value="">Semua status</option>
-                            @if ($dupakTable)
-                                @foreach (\App\Models\PengajuanDupak::STATUS_DUPAK as $statusDupak)
-                                    <option value="{{ \App\Models\PengajuanDupak::STATUS[$statusDupak] }}">{{ \App\Models\PengajuanDupak::STATUS[$statusDupak] }}</option>
-                                @endforeach
-                            @else
-                                <option value="Draft">Draft</option>
-                                <option value="Diajukan">Diajukan</option>
-                                <option value="Diverifikasi">Diverifikasi</option>
-                                <option value="Disetujui">Disetujui</option>
-                                <option value="Ditolak">Ditolak</option>
-                            @endif
+                            @foreach (auth()->user()->isDosen() ? \App\Models\PengajuanDupak::STATUS_DUPAK : array_keys(\App\Models\PengajuanDupak::STATUS) as $statusDupak)
+                                <option value="{{ \App\Models\PengajuanDupak::STATUS[$statusDupak] }}">{{ \App\Models\PengajuanDupak::STATUS[$statusDupak] }}</option>
+                            @endforeach
                         </select>
                         <span class="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-slate-400">
                             <svg class="size-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -293,80 +276,9 @@
                             @endforelse
                         </tbody>
                     </table>
-                @elseif (auth()->user()->isTimPak())
-                    {{-- Tabel yang sama dengan menu Pengajuan Masuk. --}}
-                    @include('tim-pak.pengajuan.partials.table')
                 @else
-                <table id="riwayatTable" data-datatable data-page-length="10" class="w-full text-left text-sm">
-                    <thead>
-                        <tr>
-                            <th scope="col">No. Pengajuan</th>
-                            @if (auth()->user()->canReview())
-                                <th scope="col">Dosen</th>
-                            @endif
-                            <th scope="col">Jabatan</th>
-                            <th scope="col">Program Studi</th>
-                            <th scope="col">Periode</th>
-                            <th scope="col">Tanggal</th>
-                            <th scope="col">Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse ($pengajuan as $item)
-                            <tr>
-                                <td class="whitespace-nowrap">
-                                    <span class="font-mono text-xs font-bold text-teal-700">{{ $item->nomor_pengajuan }}</span>
-                                    <span class="mt-0.5 block text-[10px] text-slate-400">Diperbarui {{ $item->updated_at->diffForHumans() }}</span>
-                                </td>
-                                @if (auth()->user()->canReview())
-                                    <td>
-                                        <div class="flex items-center gap-2.5">
-                                            <span class="flex size-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-[10px] font-bold text-slate-600">
-                                                {{ $item->user->initials() }}
-                                            </span>
-                                            <div class="min-w-0">
-                                                <p class="truncate text-xs font-bold text-slate-700">{{ $item->user->name }}</p>
-                                                <p class="font-mono text-[10px] text-slate-400">{{ $item->user->nidn }}</p>
-                                            </div>
-                                        </div>
-                                    </td>
-                                @endif
-                                <td>
-                                    <p class="text-xs font-bold whitespace-nowrap text-slate-700">{{ $item->jabatan_tujuan }}</p>
-                                    <p class="text-[10px] whitespace-nowrap text-slate-400">dari {{ $item->jabatan_asal ?? '—' }}</p>
-                                </td>
-                                <td>
-                                    <span class="text-xs whitespace-nowrap text-slate-600">{{ $item->program_studi }}</span>
-                                </td>
-                                <td>
-                                    <span class="text-xs whitespace-nowrap text-slate-600">{{ $item->periode }}</span>
-                                </td>
-                                <td data-order="{{ $item->tanggal_pengajuan->timestamp }}" class="whitespace-nowrap">
-                                    <span class="text-xs font-medium text-slate-600">{{ $item->tanggal_pengajuan->translatedFormat('d M Y') }}</span>
-                                </td>
-                                <td>
-                                    <span class="badge-status {{ $item->statusClasses() }}">
-                                        <span class="size-1.5 rounded-full {{ $item->statusDotClasses() }}"></span>
-                                        {{ $item->statusLabel() }}
-                                    </span>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="{{ auth()->user()->canReview() ? 7 : 6 }}" class="px-5 py-16 text-center">
-                                    <span class="mx-auto flex size-14 items-center justify-center rounded-2xl bg-slate-50 text-slate-300">
-                                        <svg class="size-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-                                            <path d="M6 3.5h8l4 4V20a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 6 20V5A1.5 1.5 0 0 1 7.5 3.5Z" stroke-linejoin="round" />
-                                            <path d="M14 3.5v4.5h4M9 13h6M9 16.5h4" stroke-linecap="round" />
-                                        </svg>
-                                    </span>
-                                    <p class="mt-3 text-sm font-bold text-slate-700">Belum ada pengajuan</p>
-                                    <p class="mt-1 text-xs text-slate-400">Pengajuan jabatan akademik akan tampil di sini.</p>
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+                    {{-- Tabel yang sama dengan menu Pengajuan Masuk. --}}
+                    @include('tim-pak.pengajuan.partials.table', ['pengajuan' => $dupak])
                 @endif
             </div>
 
@@ -381,10 +293,11 @@
             </div>
         </div>
     </section>
+    @endif
 
     @if (auth()->user()->isAdmin())
         {{-- Ajuan DUPAK dari dosen: admin memutuskan setujui / butuh perbaikan / tolak. --}}
-        <section id="dupak" class="mt-6 scroll-mt-24" data-table-card>
+        <section id="dupak" class="scroll-mt-24" data-table-card>
             <div class="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
                 <div class="flex flex-col gap-4 border-b border-slate-100 px-5 py-5 sm:px-6 lg:flex-row lg:items-center lg:justify-between">
                     <div>

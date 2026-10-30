@@ -77,11 +77,10 @@
                             <span class="sidebar-label">Dashboard</span>
                         </a>
                         @php
-                            // Dosen punya halaman riwayat sendiri; TIM PAK memakai tabel di dashboard;
-                            // role lain tetap memakai rekap di dashboard.
+                            // Dosen punya halaman riwayat sendiri; admin memakai tabel ajuan DUPAK di dashboard.
                             $riwayatUrl = auth()->user()->isDosen()
                                 ? route('profil.pengajuan.riwayat')
-                                : route('dashboard').'#riwayat';
+                                : route('dashboard').'#dupak';
                         @endphp
                         @if (! auth()->user()->isTimPak())
                             <a href="{{ $riwayatUrl }}" title="Riwayat Pengajuan"

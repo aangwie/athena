@@ -15,15 +15,15 @@ Aplikasi berbasis **Laravel 12** untuk mengelola pengajuan jabatan akademik dose
 - Login menggunakan **NIDN** + password
 - Toggle **tampilkan/sembunyikan password** (view mode)
 - Peringatan Caps Lock, opsi "Ingat saya", dan pembatasan percobaan login
-- Dashboard dengan kartu statistik pengajuan
-- Tabel riwayat pengajuan dengan DataTables:
+- Dashboard dengan kartu statistik ajuan DUPAK (total, menunggu, disetujui, perlu perbaikan, ditolak)
+- Tabel ajuan DUPAK dosen dengan DataTables (dosen: riwayat sendiri, admin: yang perlu diputuskan, TIM PAK: semua usulan):
   - pencarian data
   - sorting melalui header kolom
   - filter status
   - pagination
   - tampilan responsif (baris dapat diperluas di layar kecil)
 - Sidebar responsif dengan drawer di perangkat mobile
-- Pembatasan data: dosen hanya melihat pengajuannya sendiri, admin melihat seluruh pengajuan
+- Pembatasan data: dosen hanya melihat ajuan DUPAK-nya sendiri, admin melihat seluruh ajuan DUPAK dosen
 - **Profil Dosen** (khusus role dosen):
   - **Data Pribadi** — nama, tempat/tanggal lahir, alamat, no. HP, dan status pernikahan
   - Data pasangan otomatis tampil jika status **Menikah**: nama, pekerjaan (ASN/Non ASN), NIP (jika ASN), tempat/tanggal lahir, dan tanggal nikah

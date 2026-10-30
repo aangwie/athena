@@ -62,6 +62,28 @@ class VerifikasiDupakTest extends TestCase
             ->assertSee(route('verifikasi-dupak.show', $dupak));
     }
 
+    public function test_dashboard_admin_kartu_dan_tabel_mengikuti_status_dupak_dosen(): void
+    {
+        $ditolak = $this->makeUser('dosen');
+        $this->makeDupak($ditolak, 'ditolak', 'Angka kredit kurang.');
+
+        $menunggu = $this->makeUser('dosen', '2');
+        $this->makeDupak($menunggu);
+
+        $this->actingAs($this->makeUser('admin'))
+            ->get('/dashboard')
+            ->assertOk()
+            // Kartu menghitung ajuan DUPAK dosen, bukan pengajuan jabatan lama.
+            ->assertSee('Total Pengajuan')
+            ->assertSee('Menunggu Verifikasi')
+            ->assertSee('Ditolak')
+            ->assertSee('2 data')
+            // Tabel dashboard menampilkan ajuan DUPAK beserta dosen pengusulnya.
+            ->assertSee($ditolak->name)
+            ->assertSee('Angka kredit kurang.')
+            ->assertDontSee('No. Pengajuan');
+    }
+
     public function test_dashboard_dosen_tidak_menampilkan_ajuan_dupak(): void
     {
         $dosen = $this->makeUser('dosen');

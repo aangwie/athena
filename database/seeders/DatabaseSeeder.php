@@ -6,7 +6,6 @@ use App\Models\Instansi;
 use App\Models\JabatanFungsional;
 use App\Models\JabatanStruktural;
 use App\Models\Kepangkatan;
-use App\Models\PengajuanJabatan;
 use App\Models\ProfilDosen;
 use App\Models\RiwayatPendidikan;
 use App\Models\StrukturInstansi;
@@ -74,20 +73,23 @@ class DatabaseSeeder extends Seeder
             ],
         ));
 
-        $statuses = ['draft', 'diajukan', 'diverifikasi', 'disetujui', 'ditolak'];
+        // Ajuan DUPAK demo: beberapa periode per dosen dengan status berbeda,
+        // supaya kartu dan tabel dashboard admin/TIM PAK langsung terisi.
+        $periodeDemo = [
+            [(int) now()->format('Y'), 'ganjil'],
+            [(int) now()->format('Y'), 'genap'],
+            [(int) now()->format('Y') - 1, 'ganjil'],
+        ];
+        $statusDemo = ['diajukan_dupak', 'disetujui', 'perlu_perbaikan', 'ditolak'];
 
         foreach ($dosen as $index => $user) {
-            foreach (range(1, 3) as $iteration) {
-                PengajuanJabatan::updateOrCreate(
-                    ['nomor_pengajuan' => sprintf('PJA-%s-%03d', now()->format('Y'), ($index * 3) + $iteration)],
+            foreach ($periodeDemo as $urutan => [$tahun, $semester]) {
+                $user->pengajuanDupak()->updateOrCreate(
+                    ['tahun' => $tahun, 'semester' => $semester],
                     [
-                        'user_id' => $user->id,
-                        'jabatan_asal' => $user->jabatan_fungsional,
-                        'jabatan_tujuan' => $iteration === 1 ? 'Lektor Kepala' : 'Lektor',
-                        'program_studi' => $user->program_studi,
-                        'periode' => now()->subMonths($iteration)->translatedFormat('F Y'),
-                        'tanggal_pengajuan' => now()->subDays(($index * 12) + ($iteration * 6)),
-                        'status' => $statuses[($index + $iteration) % count($statuses)],
+                        'status' => $statusDemo[($index + $urutan) % count($statusDemo)],
+                        'diajukan_at' => now()->subDays(($index * 12) + ($urutan * 6) + 5),
+                        'dinilai_at' => now()->subDays(($index * 12) + ($urutan * 6)),
                         'catatan' => 'Data demonstrasi untuk pengembangan awal.',
                     ],
                 );

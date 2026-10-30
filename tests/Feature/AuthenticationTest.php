@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Models\PengajuanJabatan;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -124,7 +123,7 @@ class AuthenticationTest extends TestCase
             ->assertDontSee('2025/2026 · Genap');
     }
 
-    public function test_admin_sees_all_submissions(): void
+    public function test_admin_sees_all_dupak_submissions(): void
     {
         $admin = $this->makeUser([
             'nidn' => '0000000001',
@@ -135,20 +134,20 @@ class AuthenticationTest extends TestCase
 
         $dosen = $this->makeUser();
 
-        PengajuanJabatan::create([
-            'user_id' => $dosen->id,
-            'nomor_pengajuan' => 'PJA-TEST-003',
-            'jabatan_asal' => 'Asisten Ahli',
-            'jabatan_tujuan' => 'Lektor',
-            'program_studi' => 'Pendidikan Informatika',
-            'periode' => 'Oktober 2026',
-            'tanggal_pengajuan' => now(),
-            'status' => 'diajukan',
+        $dosen->pengajuanDupak()->create([
+            'tahun' => 2026,
+            'semester' => 'ganjil',
+            'status' => 'diajukan_dupak',
+            'diajukan_at' => now(),
         ]);
 
         $this->actingAs($admin)
             ->get('/dashboard')
             ->assertOk()
-            ->assertSee('PJA-TEST-003');
+            // Tabel pengajuan jabatan lama sudah tidak dipakai admin.
+            ->assertDontSee('No. Pengajuan')
+            ->assertSee('Ajuan DUPAK Masuk')
+            ->assertSee($dosen->name)
+            ->assertSee('2026/2027 · Ganjil');
     }
 }
