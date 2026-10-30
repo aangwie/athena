@@ -52,6 +52,34 @@ class InstansiTest extends TestCase
         ], $overrides);
     }
 
+    public function test_whatsapp_admin_link_converts_leading_zero_to_62(): void
+    {
+        $this->assertNull(Instansi::whatsappAdmin());
+
+        $instansi = Instansi::create($this->payload(['no_telp' => '0812-3456-7890']));
+        $this->assertSame('https://wa.me/6281234567890', Instansi::whatsappAdmin());
+
+        $instansi->update(['no_telp' => '+62 812 3456 7890']);
+        $this->assertSame('https://wa.me/6281234567890', Instansi::whatsappAdmin());
+
+        $instansi->update(['no_telp' => '(022) 1234567']);
+        $this->assertSame('https://wa.me/62221234567', Instansi::whatsappAdmin());
+    }
+
+    public function test_sidebar_help_link_uses_instansi_whatsapp_number_for_every_role(): void
+    {
+        Instansi::create($this->payload(['no_telp' => '0812-3456-7890']));
+
+        foreach ([$this->makeAdmin(), $this->makeDosen()] as $user) {
+            $this->actingAs($user)
+                ->get('/dashboard')
+                ->assertOk()
+                ->assertSee('https://wa.me/6281234567890', false)
+                ->assertSee('Hubungi Admin via WhatsApp')
+                ->assertDontSee('mailto:admin@athena.test');
+        }
+    }
+
     public function test_admin_can_open_data_instansi_page(): void
     {
         $this->actingAs($this->makeAdmin())

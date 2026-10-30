@@ -35,6 +35,7 @@ Aplikasi berbasis **Laravel 12** untuk mengelola pengajuan jabatan akademik dose
     - berkas disimpan privat dengan pola nama `jenjang_nidn_kode_acak.pdf`
     - daftar riwayat dengan pencarian, sorting, dan tautan unduh berkas
 - **Panduan Pengajuan** (khusus role dosen, menu Bantuan) — tutorial alur pengajuan jabatan akademik: pilih periode & semester, isi empat bidang kegiatan, periksa tab **Review**, ajukan ke **TIM PAK**, ajukan DUPAK, verifikasi admin, sampai tindak lanjut hasil penilaian (perbaikan, ajukan ulang, cetak PDF)
+- Tombol **Hubungi Admin via WhatsApp** di bawah sidebar semua role memakai **No. Telp** pada Data Instansi, dengan tautan `https://wa.me/{nomor}` (awalan `0` dikonversi menjadi `62`); tombol disembunyikan bila nomor belum diisi
 - **Kepegawaian** (khusus role admin) — menu dengan tiga sub menu data master:
   - **Jabatan Fungsional** — daftar jabatan fungsional dosen
   - **Jabatan Struktural** — daftar jabatan struktural

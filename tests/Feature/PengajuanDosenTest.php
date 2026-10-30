@@ -1260,4 +1260,24 @@ class PengajuanDosenTest extends TestCase
             ->get(route('panduan.pengajuan'))
             ->assertForbidden();
     }
+
+    public function test_panduan_pengajuan_menu_hidden_for_admin_and_tim_pak(): void
+    {
+        foreach (['admin' => '0000000001', 'tim_pak' => '0000000002'] as $role => $nidn) {
+            $user = User::create([
+                'nidn' => $nidn,
+                'name' => 'Pengguna '.$role,
+                'email' => $role.'@example.test',
+                'role' => $role,
+                'is_active' => true,
+                'password' => Hash::make('password'),
+            ]);
+
+            $this->actingAs($user)
+                ->get('/dashboard')
+                ->assertOk()
+                ->assertDontSee(route('panduan.pengajuan'), false)
+                ->assertDontSee('Panduan Pengajuan');
+        }
+    }
 }

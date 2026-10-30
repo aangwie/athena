@@ -242,23 +242,21 @@
                     </details>
                 @endif
 
-                <div>
-                    <p class="sidebar-section-title sidebar-collapse-hide mb-2 px-3 text-[10px] font-bold tracking-[0.14em] text-teal-300/50 uppercase">Bantuan</p>
-                    <div class="space-y-1">
-                        @php $panduanAktif = auth()->user()->isDosen(); @endphp
-                        <a @if ($panduanAktif) href="{{ route('panduan.pengajuan') }}" title="Panduan Pengajuan" @class(['sidebar-link', 'sidebar-link-active' => request()->routeIs('panduan.*')]) @else title="Panduan Pengajuan (segera hadir)" class="sidebar-link cursor-not-allowed opacity-45" @endif>
-                            <svg class="size-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                                <circle cx="12" cy="12" r="8.5" />
-                                <path d="M9.8 9.3A2.3 2.3 0 0 1 12 7.5c1.3 0 2.3.9 2.3 2.1 0 1.8-2.3 1.8-2.3 3.6" stroke-linecap="round" />
-                                <circle cx="12" cy="16.5" r=".9" fill="currentColor" stroke="none" />
-                            </svg>
-                            <span class="sidebar-label">Panduan Pengajuan</span>
-                            @unless ($panduanAktif)
-                                <span class="sidebar-badge sidebar-collapse-hide ml-auto rounded-md bg-white/10 px-1.5 py-0.5 text-[9px] font-bold tracking-wide text-teal-200/70 uppercase">Soon</span>
-                            @endunless
-                        </a>
+                @if (auth()->user()->isDosen())
+                    <div>
+                        <p class="sidebar-section-title sidebar-collapse-hide mb-2 px-3 text-[10px] font-bold tracking-[0.14em] text-teal-300/50 uppercase">Bantuan</p>
+                        <div class="space-y-1">
+                            <a href="{{ route('panduan.pengajuan') }}" title="Panduan Pengajuan" @class(['sidebar-link', 'sidebar-link-active' => request()->routeIs('panduan.*')])>
+                                <svg class="size-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                    <circle cx="12" cy="12" r="8.5" />
+                                    <path d="M9.8 9.3A2.3 2.3 0 0 1 12 7.5c1.3 0 2.3.9 2.3 2.1 0 1.8-2.3 1.8-2.3 3.6" stroke-linecap="round" />
+                                    <circle cx="12" cy="16.5" r=".9" fill="currentColor" stroke="none" />
+                                </svg>
+                                <span class="sidebar-label">Panduan Pengajuan</span>
+                            </a>
+                        </div>
                     </div>
-                </div>
+                @endif
                 @if (auth()->user()->isAdmin())
                     <div>
                         <p class="sidebar-section-title sidebar-collapse-hide mb-2 px-3 text-[10px] font-bold tracking-[0.14em] text-teal-300/50 uppercase">Pengaturan</p>
@@ -285,12 +283,14 @@
                 <p class="text-xs leading-relaxed font-medium text-teal-50/80">
                     Butuh bantuan teknis? Hubungi admin kepegawaian kampus.
                 </p>
-                <a href="mailto:admin@athena.test" class="mt-2 inline-flex items-center gap-1 text-[11px] font-bold text-teal-300 transition hover:text-teal-200">
-                    Hubungi Admin
-                    <svg class="size-3" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                        <path fill-rule="evenodd" d="M3 10a.75.75 0 0 1 .75-.75h10.638L10.23 5.29a.75.75 0 1 1 1.04-1.08l5.5 5.25a.75.75 0 0 1 0 1.08l-5.5 5.25a.75.75 0 1 1-1.04-1.08l4.158-3.96H3.75A.75.75 0 0 1 3 10Z" clip-rule="evenodd" />
-                    </svg>
-                </a>
+                @if ($waAdmin)
+                    <a href="{{ $waAdmin }}" target="_blank" rel="noopener" class="mt-2 inline-flex items-center gap-1 text-[11px] font-bold text-teal-300 transition hover:text-teal-200">
+                        Hubungi Admin via WhatsApp
+                        <svg class="size-3" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M3 10a.75.75 0 0 1 .75-.75h10.638L10.23 5.29a.75.75 0 1 1 1.04-1.08l5.5 5.25a.75.75 0 0 1 0 1.08l-5.5 5.25a.75.75 0 1 1-1.04-1.08l4.158-3.96H3.75A.75.75 0 0 1 3 10Z" clip-rule="evenodd" />
+                        </svg>
+                    </a>
+                @endif
             </div>
         </aside>
 
