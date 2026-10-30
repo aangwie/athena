@@ -22,7 +22,8 @@
                 </span>
                 <h2 class="text-xl font-extrabold tracking-tight text-slate-900 sm:text-2xl">Riwayat Pekerjaan</h2>
                 <p class="mt-1.5 max-w-2xl text-sm leading-relaxed text-slate-500">
-                    Kelola identitas kepegawaian, masa kerja SK, riwayat kepangkatan, dan riwayat jabatan struktural.
+                    Kelola identitas kepegawaian, masa kerja SK, masa kerja golongan, riwayat kepangkatan,
+                    riwayat angka kredit, dan riwayat jabatan struktural.
                 </p>
             </div>
 
@@ -139,6 +140,56 @@
                 </div>
             </section>
 
+            {{-- Masa kerja golongan lama & baru --}}
+            <section class="section-card">
+                <div class="section-heading">
+                    <span class="section-number">03</span>
+                    <div>
+                        <h3 class="text-sm font-extrabold text-slate-800">Masa Kerja Golongan</h3>
+                        <p class="mt-0.5 text-xs text-slate-400">Masa kerja golongan lama dan golongan baru, diisi dalam tahun dan bulan.</p>
+                    </div>
+                </div>
+
+                <div class="space-y-4 px-5 py-5 sm:px-6">
+                    @foreach (['lama' => 'Masa Kerja Golongan Lama', 'baru' => 'Masa Kerja Golongan Baru'] as $jenis => $label)
+                        <div class="rounded-xl border border-slate-200 bg-slate-50/50 p-4">
+                            <div class="flex flex-wrap items-center justify-between gap-2">
+                                <p class="text-xs font-bold text-slate-700">{{ $label }}</p>
+                                <p class="text-[11px] text-slate-400">
+                                    Tersimpan:
+                                    <span class="font-semibold text-slate-600">{{ $profil?->masaKerjaGolonganLabel($jenis) ?? '—' }}</span>
+                                </p>
+                            </div>
+
+                            <div class="mt-3 flex flex-wrap items-center gap-2">
+                                <div class="flex items-center gap-1.5">
+                                    <label for="masa_kerja_golongan_{{ $jenis }}_tahun" class="sr-only">Masa kerja golongan {{ $jenis }} (tahun)</label>
+                                    <input type="number" min="0" max="60" id="masa_kerja_golongan_{{ $jenis }}_tahun"
+                                           name="masa_kerja_golongan_{{ $jenis }}_tahun"
+                                           value="{{ old("masa_kerja_golongan_{$jenis}_tahun", $profil?->{"masa_kerja_golongan_{$jenis}_tahun"}) }}"
+                                           placeholder="11" inputmode="numeric"
+                                           @class(['form-input w-20 text-center', 'border-rose-300 bg-rose-50/40' => $errors->has("masa_kerja_golongan_{$jenis}_tahun")])>
+                                    <span class="text-xs font-semibold text-slate-500">tahun</span>
+                                </div>
+
+                                <div class="flex items-center gap-1.5">
+                                    <label for="masa_kerja_golongan_{{ $jenis }}_bulan" class="sr-only">Masa kerja golongan {{ $jenis }} (bulan)</label>
+                                    <input type="number" min="0" max="11" id="masa_kerja_golongan_{{ $jenis }}_bulan"
+                                           name="masa_kerja_golongan_{{ $jenis }}_bulan"
+                                           value="{{ old("masa_kerja_golongan_{$jenis}_bulan", $profil?->{"masa_kerja_golongan_{$jenis}_bulan"}) }}"
+                                           placeholder="2" inputmode="numeric"
+                                           @class(['form-input w-20 text-center', 'border-rose-300 bg-rose-50/40' => $errors->has("masa_kerja_golongan_{$jenis}_bulan")])>
+                                    <span class="text-xs font-semibold text-slate-500">bulan</span>
+                                </div>
+                            </div>
+
+                            @error("masa_kerja_golongan_{$jenis}_tahun") <p class="form-error">{{ $message }}</p> @enderror
+                            @error("masa_kerja_golongan_{$jenis}_bulan") <p class="form-error">{{ $message }}</p> @enderror
+                        </div>
+                    @endforeach
+                </div>
+            </section>
+
             <div class="flex justify-end rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm sm:px-6">
                 <button type="submit" class="btn-primary w-auto px-5 whitespace-nowrap">
                     <svg class="size-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -233,6 +284,91 @@
                             <tr>
                                 <td colspan="3" class="px-5 py-12 text-center text-xs text-slate-400">
                                     Belum ada riwayat kepangkatan.
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        {{-- Riwayat angka kredit --}}
+        <section class="mb-5 rounded-2xl border border-slate-200/80 bg-white shadow-sm" data-table-card>
+            <div class="flex flex-col gap-3 border-b border-slate-100 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+                <div>
+                    <h3 class="text-sm font-extrabold text-slate-800">Riwayat Angka Kredit</h3>
+                    <p class="mt-0.5 text-xs text-slate-400">Angka kredit yang diperoleh beserta tahun pengajuannya.</p>
+                </div>
+                @if ($editAngkaKredit)
+                    <a href="{{ route('profil.pekerjaan.index') }}" class="btn-secondary w-auto shrink-0 px-4">Batal Edit</a>
+                @endif
+            </div>
+
+            <form method="POST"
+                  action="{{ $editAngkaKredit ? route('profil.pekerjaan.angka-kredit.update', $editAngkaKredit) : route('profil.pekerjaan.angka-kredit.store') }}"
+                  class="grid gap-4 border-b border-slate-100 bg-slate-50/50 px-5 py-5 sm:grid-cols-[1fr_12rem_auto] sm:items-end sm:px-6">
+                @csrf
+                @if ($editAngkaKredit)
+                    @method('PUT')
+                @endif
+
+                <div>
+                    <label for="angka_kredit" class="form-label">Angka Kredit <span class="text-rose-500">*</span></label>
+                    <input type="number" step="0.01" min="0" max="9999.99" id="angka_kredit" name="angka_kredit" required
+                           value="{{ old('angka_kredit', $editAngkaKredit?->angka_kredit) }}" placeholder="Contoh: 152.50"
+                           @class(['form-input', 'border-rose-300 bg-rose-50/40' => $errors->has('angka_kredit')])>
+                    @error('angka_kredit') <p class="form-error">{{ $message }}</p> @enderror
+                </div>
+
+                <div>
+                    <label for="angka_kredit_tahun" class="form-label">Tahun Pengajuan <span class="text-rose-500">*</span></label>
+                    <input type="number" min="1980" max="{{ now()->year + 1 }}" id="angka_kredit_tahun" name="tahun" required
+                           value="{{ old('tahun', $editAngkaKredit?->tahun) }}" placeholder="{{ now()->year }}"
+                           @class(['form-input', 'border-rose-300 bg-rose-50/40' => $errors->has('tahun')])>
+                    @error('tahun') <p class="form-error">{{ $message }}</p> @enderror
+                </div>
+
+                <button type="submit" class="btn-primary h-11 w-auto px-5 whitespace-nowrap">
+                    {{ $editAngkaKredit ? 'Simpan Perubahan' : 'Tambah' }}
+                </button>
+            </form>
+
+            <div class="overflow-x-auto px-2 pb-2 sm:px-4">
+                <table data-datatable data-page-length="10" class="w-full text-left text-sm">
+                    <thead>
+                        <tr>
+                            <th scope="col" class="w-44">Tahun Pengajuan</th>
+                            <th scope="col">Angka Kredit</th>
+                            <th scope="col" class="no-sort w-40 text-right">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($riwayatAngkaKreditList as $item)
+                            <tr>
+                                <td data-order="{{ $item->tahun }}" class="font-bold text-slate-700">{{ $item->tahun }}</td>
+                                <td class="text-slate-600">{{ $item->angkaKreditLabel() }}</td>
+                                <td>
+                                    <div class="flex items-center justify-end gap-1">
+                                        <a href="{{ route('profil.pekerjaan.index', ['edit-angka-kredit' => $item->id]) }}"
+                                           class="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-[11px] font-bold text-slate-500 transition hover:bg-teal-50 hover:text-teal-700">
+                                            Edit
+                                        </a>
+                                        <form method="POST" action="{{ route('profil.pekerjaan.angka-kredit.destroy', $item) }}"
+                                              data-confirm="Hapus riwayat angka kredit tahun {{ $item->tahun }}?">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit"
+                                                    class="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-[11px] font-bold text-slate-400 transition hover:bg-rose-50 hover:text-rose-600">
+                                                Hapus
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="3" class="px-5 py-12 text-center text-xs text-slate-400">
+                                    Belum ada riwayat angka kredit.
                                 </td>
                             </tr>
                         @endforelse

@@ -99,6 +99,10 @@ Route::middleware('auth')->group(function () {
         Route::post('/riwayat-pekerjaan/jabatan', [RiwayatPekerjaanController::class, 'storeJabatan'])->name('pekerjaan.jabatan.store');
         Route::put('/riwayat-pekerjaan/jabatan/{riwayatJabatan}', [RiwayatPekerjaanController::class, 'updateJabatan'])->name('pekerjaan.jabatan.update');
         Route::delete('/riwayat-pekerjaan/jabatan/{riwayatJabatan}', [RiwayatPekerjaanController::class, 'destroyJabatan'])->name('pekerjaan.jabatan.destroy');
+
+        Route::post('/riwayat-pekerjaan/angka-kredit', [RiwayatPekerjaanController::class, 'storeAngkaKredit'])->name('pekerjaan.angka-kredit.store');
+        Route::put('/riwayat-pekerjaan/angka-kredit/{riwayatAngkaKredit}', [RiwayatPekerjaanController::class, 'updateAngkaKredit'])->name('pekerjaan.angka-kredit.update');
+        Route::delete('/riwayat-pekerjaan/angka-kredit/{riwayatAngkaKredit}', [RiwayatPekerjaanController::class, 'destroyAngkaKredit'])->name('pekerjaan.angka-kredit.destroy');
     });
 
     Route::middleware('admin')->prefix('verifikasi-dupak')->name('verifikasi-dupak.')->group(function () {

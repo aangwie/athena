@@ -93,6 +93,11 @@ class User extends Authenticatable
         return $this->hasMany(RiwayatJabatanStruktural::class);
     }
 
+    public function riwayatAngkaKredit(): HasMany
+    {
+        return $this->hasMany(RiwayatAngkaKredit::class);
+    }
+
     public function kegiatanDupak(): HasMany
     {
         return $this->hasMany(KegiatanDupak::class);

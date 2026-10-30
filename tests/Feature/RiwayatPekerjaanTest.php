@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\JabatanFungsional;
 use App\Models\JabatanStruktural;
 use App\Models\Kepangkatan;
+use App\Models\RiwayatAngkaKredit;
 use App\Models\RiwayatJabatanStruktural;
 use App\Models\RiwayatKepangkatan;
 use App\Models\User;
@@ -246,6 +247,112 @@ class RiwayatPekerjaanTest extends TestCase
             ->assertNotFound();
 
         $this->assertDatabaseHas('riwayat_kepangkatan', [
+            'id' => $riwayat->id,
+            'user_id' => $pemilik->id,
+        ]);
+    }
+
+    public function test_dosen_can_save_masa_kerja_golongan(): void
+    {
+        $user = $this->makeDosen();
+
+        $this->actingAs($user)
+            ->put(route('profil.pekerjaan.update'), [
+                'masa_kerja_golongan_lama_tahun' => 11,
+                'masa_kerja_golongan_lama_bulan' => 2,
+                'masa_kerja_golongan_baru_tahun' => 12,
+                'masa_kerja_golongan_baru_bulan' => 4,
+            ])
+            ->assertRedirect(route('profil.pekerjaan.index'));
+
+        $this->assertDatabaseHas('profil_dosen', [
+            'user_id' => $user->id,
+            'masa_kerja_golongan_lama_tahun' => 11,
+            'masa_kerja_golongan_lama_bulan' => 2,
+            'masa_kerja_golongan_baru_tahun' => 12,
+            'masa_kerja_golongan_baru_bulan' => 4,
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('profil.pekerjaan.index'))
+            ->assertSee('Masa Kerja Golongan Lama')
+            ->assertSee('Masa Kerja Golongan Baru')
+            ->assertSee('11 Tahun 02 Bulan')
+            ->assertSee('12 Tahun 04 Bulan');
+    }
+
+    public function test_dosen_can_manage_riwayat_angka_kredit(): void
+    {
+        $user = $this->makeDosen();
+
+        $this->actingAs($user)
+            ->post(route('profil.pekerjaan.angka-kredit.store'), [
+                'angka_kredit' => '152.50',
+                'tahun' => 2026,
+            ])
+            ->assertRedirect(route('profil.pekerjaan.index'));
+
+        $this->assertDatabaseHas('riwayat_angka_kredit', [
+            'user_id' => $user->id,
+            'tahun' => 2026,
+            'angka_kredit' => 152.50,
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('profil.pekerjaan.index'))
+            ->assertSee('Riwayat Angka Kredit')
+            ->assertSee('Tahun Pengajuan')
+            ->assertSee('2026')
+            ->assertSee('152,50');
+
+        $riwayat = RiwayatAngkaKredit::query()->firstOrFail();
+
+        $this->actingAs($user)
+            ->put(route('profil.pekerjaan.angka-kredit.update', $riwayat), [
+                'angka_kredit' => '175.25',
+                'tahun' => 2027,
+            ])
+            ->assertRedirect(route('profil.pekerjaan.index'));
+
+        $this->assertDatabaseHas('riwayat_angka_kredit', [
+            'id' => $riwayat->id,
+            'tahun' => 2027,
+            'angka_kredit' => 175.25,
+        ]);
+
+        $this->actingAs($user)
+            ->delete(route('profil.pekerjaan.angka-kredit.destroy', $riwayat))
+            ->assertRedirect(route('profil.pekerjaan.index'));
+
+        $this->assertDatabaseMissing('riwayat_angka_kredit', ['id' => $riwayat->id]);
+    }
+
+    public function test_riwayat_angka_kredit_fields_are_validated(): void
+    {
+        $this->actingAs($this->makeDosen())
+            ->post(route('profil.pekerjaan.angka-kredit.store'), [
+                'angka_kredit' => 'bukan angka',
+                'tahun' => 1900,
+            ])
+            ->assertSessionHasErrors(['angka_kredit', 'tahun']);
+    }
+
+    public function test_dosen_cannot_change_another_dosen_angka_kredit(): void
+    {
+        $pemilik = $this->makeDosen();
+        $lain = $this->makeDosen(['nidn' => '1987654322', 'email' => 'lain@example.test']);
+
+        $riwayat = RiwayatAngkaKredit::create([
+            'user_id' => $pemilik->id,
+            'tahun' => 2026,
+            'angka_kredit' => 152.50,
+        ]);
+
+        $this->actingAs($lain)
+            ->delete(route('profil.pekerjaan.angka-kredit.destroy', $riwayat))
+            ->assertNotFound();
+
+        $this->assertDatabaseHas('riwayat_angka_kredit', [
             'id' => $riwayat->id,
             'user_id' => $pemilik->id,
         ]);

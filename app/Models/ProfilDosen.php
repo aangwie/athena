@@ -52,6 +52,10 @@ class ProfilDosen extends Model
         'sk_impasing_tanggal',
         'sk_impasing_tahun',
         'sk_impasing_bulan',
+        'masa_kerja_golongan_lama_tahun',
+        'masa_kerja_golongan_lama_bulan',
+        'masa_kerja_golongan_baru_tahun',
+        'masa_kerja_golongan_baru_bulan',
     ];
 
     protected function casts(): array
@@ -69,6 +73,10 @@ class ProfilDosen extends Model
             'sk_jafa_bulan' => 'integer',
             'sk_impasing_tahun' => 'integer',
             'sk_impasing_bulan' => 'integer',
+            'masa_kerja_golongan_lama_tahun' => 'integer',
+            'masa_kerja_golongan_lama_bulan' => 'integer',
+            'masa_kerja_golongan_baru_tahun' => 'integer',
+            'masa_kerja_golongan_baru_bulan' => 'integer',
         ];
     }
 
@@ -97,9 +105,22 @@ class ProfilDosen extends Model
      */
     public function masaKerjaLabel(string $sk): string
     {
-        $tahun = $this->{"sk_{$sk}_tahun"};
-        $bulan = $this->{"sk_{$sk}_bulan"};
+        return $this->masaKerjaFormat($this->{"sk_{$sk}_tahun"}, $this->{"sk_{$sk}_bulan"});
+    }
 
+    /**
+     * Masa kerja golongan lama/baru dalam format "11 Tahun 02 Bulan".
+     */
+    public function masaKerjaGolonganLabel(string $jenis): string
+    {
+        return $this->masaKerjaFormat(
+            $this->{"masa_kerja_golongan_{$jenis}_tahun"},
+            $this->{"masa_kerja_golongan_{$jenis}_bulan"},
+        );
+    }
+
+    private function masaKerjaFormat(?int $tahun, ?int $bulan): string
+    {
         if ($tahun === null && $bulan === null) {
             return '—';
         }
