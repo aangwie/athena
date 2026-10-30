@@ -245,15 +245,18 @@
                 <div>
                     <p class="sidebar-section-title sidebar-collapse-hide mb-2 px-3 text-[10px] font-bold tracking-[0.14em] text-teal-300/50 uppercase">Bantuan</p>
                     <div class="space-y-1">
-                        <span class="sidebar-link cursor-not-allowed opacity-45" title="Panduan Pengajuan (segera hadir)">
+                        @php $panduanAktif = auth()->user()->isDosen(); @endphp
+                        <a @if ($panduanAktif) href="{{ route('panduan.pengajuan') }}" title="Panduan Pengajuan" @class(['sidebar-link', 'sidebar-link-active' => request()->routeIs('panduan.*')]) @else title="Panduan Pengajuan (segera hadir)" class="sidebar-link cursor-not-allowed opacity-45" @endif>
                             <svg class="size-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
                                 <circle cx="12" cy="12" r="8.5" />
                                 <path d="M9.8 9.3A2.3 2.3 0 0 1 12 7.5c1.3 0 2.3.9 2.3 2.1 0 1.8-2.3 1.8-2.3 3.6" stroke-linecap="round" />
                                 <circle cx="12" cy="16.5" r=".9" fill="currentColor" stroke="none" />
                             </svg>
                             <span class="sidebar-label">Panduan Pengajuan</span>
-                            <span class="sidebar-badge sidebar-collapse-hide ml-auto rounded-md bg-white/10 px-1.5 py-0.5 text-[9px] font-bold tracking-wide text-teal-200/70 uppercase">Soon</span>
-                        </span>
+                            @unless ($panduanAktif)
+                                <span class="sidebar-badge sidebar-collapse-hide ml-auto rounded-md bg-white/10 px-1.5 py-0.5 text-[9px] font-bold tracking-wide text-teal-200/70 uppercase">Soon</span>
+                            @endunless
+                        </a>
                     </div>
                 </div>
                 @if (auth()->user()->isAdmin())

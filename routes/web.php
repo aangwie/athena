@@ -45,6 +45,10 @@ Route::middleware('auth')->group(function () {
         Route::delete('/{id}', [DataDosenController::class, 'destroy'])->name('destroy');
     });
 
+    Route::view('/panduan-pengajuan', 'panduan.pengajuan')
+        ->middleware('dosen')
+        ->name('panduan.pengajuan');
+
     Route::middleware('dosen')->prefix('profil')->name('profil.')->group(function () {
         Route::get('/', [ProfilDosenController::class, 'show'])->name('show');
         Route::get('/data-pribadi', [ProfilDosenController::class, 'edit'])->name('data-pribadi.edit');

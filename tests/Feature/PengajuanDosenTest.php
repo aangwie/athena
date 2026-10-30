@@ -1232,4 +1232,32 @@ class PengajuanDosenTest extends TestCase
         $this->assertNotContains(false, $posisiNama);
         $this->assertSame($posisiNama, collect($posisiNama)->sort()->values()->all());
     }
+
+    public function test_dosen_can_open_panduan_pengajuan_from_sidebar(): void
+    {
+        $dosen = $this->makeUser('dosen');
+
+        $this->actingAs($dosen)
+            ->get('/dashboard')
+            ->assertOk()
+            ->assertSee(route('panduan.pengajuan'), false);
+
+        $this->actingAs($dosen)
+            ->get(route('panduan.pengajuan'))
+            ->assertOk()
+            ->assertSee('Panduan Pengajuan Jabatan Akademik')
+            ->assertSee('Pilih periode dan semester')
+            ->assertSee('Periksa tab Review')
+            ->assertSee('Ajukan ke TIM PAK')
+            ->assertSee('Ajukan DUPAK')
+            ->assertSee('Verifikasi oleh admin')
+            ->assertDontSee('Panduan Pengajuan (segera hadir)');
+    }
+
+    public function test_panduan_pengajuan_is_only_available_for_dosen(): void
+    {
+        $this->actingAs($this->makeUser('admin'))
+            ->get(route('panduan.pengajuan'))
+            ->assertForbidden();
+    }
 }

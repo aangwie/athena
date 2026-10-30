@@ -34,6 +34,7 @@ Aplikasi berbasis **Laravel 12** untuk mengelola pengajuan jabatan akademik dose
     - unggah **ijazah + transkrip** untuk jenjang perguruan tinggi
     - berkas disimpan privat dengan pola nama `jenjang_nidn_kode_acak.pdf`
     - daftar riwayat dengan pencarian, sorting, dan tautan unduh berkas
+- **Panduan Pengajuan** (khusus role dosen, menu Bantuan) — tutorial alur pengajuan jabatan akademik: pilih periode & semester, isi empat bidang kegiatan, periksa tab **Review**, ajukan ke **TIM PAK**, ajukan DUPAK, verifikasi admin, sampai tindak lanjut hasil penilaian (perbaikan, ajukan ulang, cetak PDF)
 - **Kepegawaian** (khusus role admin) — menu dengan tiga sub menu data master:
   - **Jabatan Fungsional** — daftar jabatan fungsional dosen
   - **Jabatan Struktural** — daftar jabatan struktural
