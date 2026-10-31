@@ -63,8 +63,6 @@ class RiwayatPekerjaanController extends Controller
 
         foreach (self::SK as $sk) {
             $rules["sk_{$sk}_tanggal"] = ['nullable', 'date'];
-            $rules["sk_{$sk}_tahun"] = ['nullable', 'integer', 'min:0', 'max:60'];
-            $rules["sk_{$sk}_bulan"] = ['nullable', 'integer', 'min:0', 'max:11'];
         }
 
         // Masa kerja golongan lama & baru, formatnya sama dengan masa kerja SK.
@@ -90,6 +88,12 @@ class RiwayatPekerjaanController extends Controller
         $profil = $user->profilDosen()->firstOrNew([]);
         $profil->fill($data);
         $profil->user_id = $user->id;
+
+        // Masa kerja tidak diisi manual: dihitung dari Tanggal SK (hari ini − tanggal SK).
+        foreach (self::SK as $sk) {
+            [$profil->{"sk_{$sk}_tahun"}, $profil->{"sk_{$sk}_bulan"}] = $profil->masaKerja($sk);
+        }
+
         $profil->save();
 
         return redirect()

@@ -694,6 +694,45 @@ const boot = () => {
         gambar();
     });
 
+    // Riwayat pekerjaan: masa kerja (tahun & bulan) dihitung dari Tanggal SK,
+    // yaitu selisih hari ini dengan tanggal SK pada grup [data-sk-group].
+    document.querySelectorAll('[data-sk-tanggal]').forEach((input) => {
+        const group = input.closest('[data-sk-group]');
+        const tahun = group?.querySelector('[data-sk-tahun]');
+        const bulan = group?.querySelector('[data-sk-bulan]');
+
+        if (!tahun || !bulan) {
+            return;
+        }
+
+        const sync = () => {
+            const tanggal = input.value ? new Date(`${input.value}T00:00:00`) : null;
+
+            if (!tanggal || Number.isNaN(tanggal.getTime())) {
+                tahun.value = '';
+                bulan.value = '';
+
+                return;
+            }
+
+            const hariIni = new Date();
+            let totalBulan =
+                (hariIni.getFullYear() - tanggal.getFullYear()) * 12 + (hariIni.getMonth() - tanggal.getMonth());
+
+            if (hariIni.getDate() < tanggal.getDate()) {
+                totalBulan -= 1;
+            }
+
+            totalBulan = Math.max(0, totalBulan);
+            tahun.value = Math.floor(totalBulan / 12);
+            bulan.value = totalBulan % 12;
+        };
+
+        input.addEventListener('change', sync);
+        input.addEventListener('input', sync);
+        sync();
+    });
+
     document.querySelectorAll('[data-reveal-select]').forEach((select) => {
         const target = document.querySelector(select.dataset.revealSelect);
 

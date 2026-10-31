@@ -56,7 +56,7 @@
 
                 <div class="grid gap-5 px-5 py-5 sm:grid-cols-2 sm:px-6">
                     <div class="sm:col-span-2">
-                        <label for="nama" class="form-label">Nama Lengkap <span class="text-rose-500">*</span></label>
+                        <label for="nama" class="form-label">Nama Lengkap dan Gelar <span class="text-rose-500">*</span></label>
                         <input type="text" id="nama" name="nama" value="{{ old('nama', $user->name) }}"
                                placeholder="Nama lengkap beserta gelar"
                                @class(['form-input', 'border-rose-300 bg-rose-50/40' => $errors->has('nama')])>

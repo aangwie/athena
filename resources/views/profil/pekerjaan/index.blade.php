@@ -7,7 +7,7 @@
 @section('content')
     @php
         $skList = [
-            'pplp' => 'SK PPLP-PT',
+            'pplp' => 'SK Dosen Tetap',
             'jafa' => 'SK Jafa Terakhir',
             'impasing' => 'SK Impasing Terakhir',
         ];
@@ -108,25 +108,23 @@
                     <span class="section-number">02</span>
                     <div>
                         <h3 class="text-sm font-extrabold text-slate-800">Masa Kerja</h3>
-                        <p class="mt-0.5 text-xs text-slate-400">Tanggal SK dan masa kerja yang tercantum pada SK tersebut.</p>
+                        <p class="mt-0.5 text-xs text-slate-400">Masa kerja dihitung otomatis dari Tanggal SK (hari ini − tanggal SK).</p>
                     </div>
                 </div>
 
                 <div class="space-y-4 px-5 py-5 sm:px-6">
                     @foreach ($skList as $sk => $label)
-                        <div class="rounded-xl border border-slate-200 bg-slate-50/50 p-4">
-                            <div class="flex flex-wrap items-center justify-between gap-2">
-                                <p class="text-xs font-bold text-slate-700">{{ $label }}</p>
-                                <p class="text-[11px] text-slate-400">
-                                    Tersimpan:
-                                    <span class="font-semibold text-slate-600">{{ $profil?->masaKerjaLabel($sk) ?? '—' }}</span>
-                                </p>
-                            </div>
+                        @php
+                            [$tahun, $bulan] = $profil?->masaKerja($sk) ?? [null, null];
+                        @endphp
+                        <div class="rounded-xl border border-slate-200 bg-slate-50/50 p-4" data-sk-group>
+                            <p class="text-xs font-bold text-slate-700">{{ $label }}</p>
 
                             <div class="mt-3 grid gap-4 sm:grid-cols-3">
                                 <div>
                                     <label for="sk_{{ $sk }}_tanggal" class="form-label">Tanggal SK</label>
                                     <input type="date" id="sk_{{ $sk }}_tanggal" name="sk_{{ $sk }}_tanggal"
+                                           data-sk-tanggal
                                            value="{{ old("sk_{$sk}_tanggal", $profil?->{"sk_{$sk}_tanggal"}?->format('Y-m-d')) }}"
                                            @class(['form-input', 'border-rose-300 bg-rose-50/40' => $errors->has("sk_{$sk}_tanggal")])>
                                     @error("sk_{$sk}_tanggal") <p class="form-error">{{ $message }}</p> @enderror
@@ -134,18 +132,14 @@
 
                                 <div>
                                     <label for="sk_{{ $sk }}_tahun" class="form-label">Masa Kerja (Tahun)</label>
-                                    <input type="number" min="0" max="60" id="sk_{{ $sk }}_tahun" name="sk_{{ $sk }}_tahun"
-                                           value="{{ old("sk_{$sk}_tahun", $profil?->{"sk_{$sk}_tahun"}) }}" placeholder="11"
-                                           @class(['form-input', 'border-rose-300 bg-rose-50/40' => $errors->has("sk_{$sk}_tahun")])>
-                                    @error("sk_{$sk}_tahun") <p class="form-error">{{ $message }}</p> @enderror
+                                    <input type="number" id="sk_{{ $sk }}_tahun" value="{{ $tahun }}" readonly tabindex="-1" data-sk-tahun
+                                           class="form-input cursor-not-allowed bg-slate-100 text-slate-500">
                                 </div>
 
                                 <div>
                                     <label for="sk_{{ $sk }}_bulan" class="form-label">Masa Kerja (Bulan)</label>
-                                    <input type="number" min="0" max="11" id="sk_{{ $sk }}_bulan" name="sk_{{ $sk }}_bulan"
-                                           value="{{ old("sk_{$sk}_bulan", $profil?->{"sk_{$sk}_bulan"}) }}" placeholder="02"
-                                           @class(['form-input', 'border-rose-300 bg-rose-50/40' => $errors->has("sk_{$sk}_bulan")])>
-                                    @error("sk_{$sk}_bulan") <p class="form-error">{{ $message }}</p> @enderror
+                                    <input type="number" id="sk_{{ $sk }}_bulan" value="{{ $bulan }}" readonly tabindex="-1" data-sk-bulan
+                                           class="form-input cursor-not-allowed bg-slate-100 text-slate-500">
                                 </div>
                             </div>
                         </div>

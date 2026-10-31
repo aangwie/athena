@@ -80,11 +80,25 @@ class ProfilDosen extends Model
     }
 
     /**
-     * Masa kerja satu SK dalam format "11 Tahun 02 Bulan".
+     * Masa kerja satu SK dihitung dari Tanggal SK sampai hari ini.
+     *
+     * @return array{0: ?int, 1: ?int} [tahun, bulan]
      */
-    public function masaKerjaLabel(string $sk): string
+    public function masaKerja(string $sk): array
     {
-        return $this->masaKerjaFormat($this->{"sk_{$sk}_tahun"}, $this->{"sk_{$sk}_bulan"});
+        $tanggal = $this->{"sk_{$sk}_tanggal"};
+
+        if ($tanggal === null) {
+            return [null, null];
+        }
+
+        if ($tanggal->isFuture()) {
+            return [0, 0];
+        }
+
+        $selisih = $tanggal->diff(now());
+
+        return [$selisih->y, $selisih->m];
     }
 
     /**

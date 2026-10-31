@@ -11,6 +11,7 @@ use App\Models\RiwayatJabatanStruktural;
 use App\Models\RiwayatKepangkatan;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
@@ -81,36 +82,44 @@ class RiwayatPekerjaanTest extends TestCase
         $response = $this->actingAs($user)->put(route('profil.pekerjaan.update'), [
             'nuptk' => '1234567890123456',
             'sk_pplp_tanggal' => '2019-08-02',
-            'sk_pplp_tahun' => 11,
-            'sk_pplp_bulan' => 2,
             'sk_jafa_tanggal' => '2020-01-15',
-            'sk_jafa_tahun' => 8,
-            'sk_jafa_bulan' => 0,
         ]);
 
         $response->assertRedirect(route('profil.pekerjaan.index'));
 
+        // Masa kerja dihitung otomatis dari Tanggal SK (hari ini − tanggal SK).
+        $pplp = Carbon::parse('2019-08-02')->diff(now());
+
         $this->assertDatabaseHas('profil_dosen', [
             'user_id' => $user->id,
             'nuptk' => '1234567890123456',
-            'sk_pplp_tahun' => 11,
-            'sk_pplp_bulan' => 2,
+            'sk_pplp_tahun' => $pplp->y,
+            'sk_pplp_bulan' => $pplp->m,
         ]);
 
         $this->actingAs($user)
             ->get(route('profil.pekerjaan.index'))
-            ->assertSee('11 Tahun 02 Bulan')
-            ->assertSee('8 Tahun 00 Bulan');
+            ->assertSee('SK Dosen Tetap')
+            ->assertSee('Masa Kerja (Tahun)');
     }
 
-    public function test_masa_kerja_tahun_dan_bulan_are_validated(): void
+    public function test_masa_kerja_is_calculated_from_sk_date(): void
     {
-        $response = $this->actingAs($this->makeDosen())->put(route('profil.pekerjaan.update'), [
-            'sk_pplp_tahun' => 99,
-            'sk_pplp_bulan' => 13,
-        ]);
+        $user = $this->makeDosen();
 
-        $response->assertSessionHasErrors(['sk_pplp_tahun', 'sk_pplp_bulan']);
+        // Tahun/bulan yang dikirim manual diabaikan, nilainya selalu hasil hitung.
+        $this->actingAs($user)->put(route('profil.pekerjaan.update'), [
+            'sk_impasing_tanggal' => '2021-03-10',
+            'sk_impasing_tahun' => 99,
+            'sk_impasing_bulan' => 13,
+        ])->assertSessionHasNoErrors();
+
+        $profil = $user->profilDosen()->firstOrFail();
+        $selisih = Carbon::parse('2021-03-10')->diff(now());
+
+        $this->assertSame($selisih->y, $profil->sk_impasing_tahun);
+        $this->assertSame($selisih->m, $profil->sk_impasing_bulan);
+        $this->assertLessThan(12, $profil->sk_impasing_bulan);
     }
 
     public function test_dosen_can_choose_prodi_tempat_mengajar_from_master_data(): void
