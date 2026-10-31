@@ -47,6 +47,7 @@ class InstansiTest extends TestCase
             'nama_instansi' => 'Universitas Athena Nusantara',
             'nomor_sk_operasional' => 'SK-MENDIKBUD/001/2026',
             'alamat' => 'Jl. Pendidikan No. 1, Bandung',
+            'kota' => 'Bandung',
             'no_telp' => '(022) 1234567',
             'website' => 'https://athena.ac.id',
         ], $overrides);

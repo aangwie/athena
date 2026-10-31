@@ -60,11 +60,11 @@
                     <span class="section-number">01</span>
                     <div>
                         <h3 class="text-sm font-extrabold text-slate-800">Identitas Kepegawaian</h3>
-                        <p class="mt-0.5 text-xs text-slate-400">Nomor induk kepegawaian yang tercatat pada instansi.</p>
+                        <p class="mt-0.5 text-xs text-slate-400">Nomor induk kepegawaian dan prodi tempat mengajar saat ini.</p>
                     </div>
                 </div>
 
-                <div class="grid gap-5 px-5 py-5 sm:grid-cols-3 sm:px-6">
+                <div class="grid gap-5 px-5 py-5 sm:grid-cols-2 sm:px-6 lg:grid-cols-4">
                     <div>
                         <label for="niy_npp" class="form-label">NIY / NPP</label>
                         <input type="text" id="niy_npp" name="niy_npp" value="{{ old('niy_npp', $profil->niy_npp ?? '') }}"
@@ -86,6 +86,27 @@
                                placeholder="Contoh: 1234567890123456"
                                @class(['form-input', 'border-rose-300 bg-rose-50/40' => $errors->has('nuptk')])>
                         @error('nuptk') <p class="form-error">{{ $message }}</p> @enderror
+                    </div>
+
+                    <div>
+                        <label for="program_studi" class="form-label">Prodi Tempat Mengajar</label>
+                        <select id="program_studi" name="program_studi"
+                                @class(['form-select', 'border-rose-300 bg-rose-50/40' => $errors->has('program_studi')])>
+                            <option value="">Pilih prodi</option>
+                            @foreach ($prodiList as $prodi)
+                                <option value="{{ $prodi->nama_prodi }}" @selected(old('program_studi', $user->program_studi) === $prodi->nama_prodi)>
+                                    {{ $prodi->nama_prodi }}
+                                </option>
+                            @endforeach
+                            {{-- Nilai lama yang sudah tidak ada di data master tetap dimunculkan agar tidak hilang. --}}
+                            @if ($user->program_studi && ! $prodiList->contains('nama_prodi', $user->program_studi))
+                                <option value="{{ $user->program_studi }}" @selected(! old('program_studi') || old('program_studi') === $user->program_studi)>
+                                    {{ $user->program_studi }} (tidak ada di data master)
+                                </option>
+                            @endif
+                        </select>
+                        @error('program_studi') <p class="form-error">{{ $message }}</p> @enderror
+                        <p class="mt-1.5 text-[11px] text-slate-400">Pilihan diambil dari data master Prodi instansi.</p>
                     </div>
                 </div>
             </section>

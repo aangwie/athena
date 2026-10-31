@@ -21,7 +21,7 @@ class InstansiRequest extends FormRequest
     {
         $data = [];
 
-        foreach (['nama_instansi', 'nomor_sk_operasional', 'alamat', 'no_telp', 'website'] as $field) {
+        foreach (['nama_instansi', 'nomor_sk_operasional', 'alamat', 'kota', 'no_telp', 'website'] as $field) {
             if ($this->has($field) && is_string($this->input($field))) {
                 $value = trim($this->input($field));
                 $data[$field] = $value === '' ? null : $value;
@@ -46,6 +46,7 @@ class InstansiRequest extends FormRequest
             'nama_instansi' => ['required', 'string', 'max:150'],
             'nomor_sk_operasional' => ['required', 'string', 'max:100'],
             'alamat' => ['required', 'string', 'max:1000'],
+            'kota' => ['required', 'string', 'max:100'],
             'no_telp' => ['required', 'string', 'max:30'],
             'website' => ['nullable', 'string', 'max:150', 'url'],
             'logo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:500'],
@@ -63,6 +64,7 @@ class InstansiRequest extends FormRequest
             'nama_instansi' => 'nama instansi',
             'nomor_sk_operasional' => 'nomor SK operasional',
             'alamat' => 'alamat',
+            'kota' => 'kota instansi',
             'no_telp' => 'nomor telepon',
             'website' => 'website',
             'logo' => 'logo instansi',
@@ -80,6 +82,7 @@ class InstansiRequest extends FormRequest
             'nama_instansi.required' => 'Nama instansi wajib diisi.',
             'nomor_sk_operasional.required' => 'Nomor SK operasional wajib diisi.',
             'alamat.required' => 'Alamat instansi wajib diisi.',
+            'kota.required' => 'Kota instansi wajib diisi.',
             'no_telp.required' => 'Nomor telepon wajib diisi.',
             'website.url' => 'Format website tidak valid.',
             'logo.image' => 'Logo harus berupa gambar.',

@@ -76,6 +76,15 @@
                             </svg>
                             <span class="sidebar-label">Dashboard</span>
                         </a>
+                        @if (auth()->user()->isDosen())
+                            <a href="{{ route('profil.show') }}" title="Profil" @class(['sidebar-link', 'sidebar-link-active' => request()->routeIs('profil.show')])>
+                                <svg class="size-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                    <circle cx="12" cy="8" r="3.5" />
+                                    <path d="M4.5 20a7.5 7.5 0 0 1 15 0" stroke-linecap="round" />
+                                </svg>
+                                <span class="sidebar-label">Profil</span>
+                            </a>
+                        @endif
                         @php
                             // Dosen punya halaman riwayat sendiri; admin memakai tabel ajuan DUPAK di dashboard.
                             $riwayatUrl = auth()->user()->isDosen()
@@ -83,14 +92,14 @@
                                 : route('dashboard').'#dupak';
                         @endphp
                         @if (! auth()->user()->isTimPak())
-                            <a href="{{ $riwayatUrl }}" title="Riwayat Pengajuan"
+                            <a href="{{ $riwayatUrl }}" title="Riwayat DUPAK"
                                @class(['sidebar-link', 'sidebar-link-active' => request()->routeIs('profil.pengajuan.riwayat')])>
                                 <svg class="size-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
                                     <path d="M9 5H6.5A1.5 1.5 0 0 0 5 6.5v13A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5v-13A1.5 1.5 0 0 0 17.5 5H15" stroke-linecap="round" />
                                     <rect x="9" y="3" width="6" height="4" rx="1.5" />
                                     <path d="M9 12h6M9 16h4" stroke-linecap="round" />
                                 </svg>
-                                <span class="sidebar-label">Riwayat Pengajuan</span>
+                                <span class="sidebar-label">Riwayat DUPAK</span>
                             </a>
                         @endif
                         @if (auth()->user()->isDosen())
@@ -102,14 +111,14 @@
                                 </svg>
                                 <span class="sidebar-label">Riwayat IKD</span>
                             </a>
-                        @endif
-                        @if (auth()->user()->isDosen())
-                            <a href="{{ route('profil.show') }}" title="Portofolio Saya" @class(['sidebar-link', 'sidebar-link-active' => request()->routeIs('profil.show')])>
+                            <a href="{{ route('profil.karya-tulis.index') }}" title="Riwayat Karya Tulis"
+                               @class(['sidebar-link', 'sidebar-link-active' => request()->routeIs('profil.karya-tulis.*')])>
                                 <svg class="size-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                                    <circle cx="12" cy="8" r="3.5" />
-                                    <path d="M4.5 20a7.5 7.5 0 0 1 15 0" stroke-linecap="round" />
+                                    <path d="M4.5 5.5A1.5 1.5 0 0 1 6 4h5v16H6a1.5 1.5 0 0 1-1.5-1.5v-13Z" stroke-linejoin="round" />
+                                    <path d="M19.5 5.5A1.5 1.5 0 0 0 18 4h-5v16h5a1.5 1.5 0 0 0 1.5-1.5v-13Z" stroke-linejoin="round" />
+                                    <path d="M12 4v16" stroke-linecap="round" />
                                 </svg>
-                                <span class="sidebar-label">Portofolio Saya</span>
+                                <span class="sidebar-label">Riwayat Karya Tulis</span>
                             </a>
                         @endif
                     </div>
@@ -170,6 +179,14 @@
                                 </svg>
                                 <span class="sidebar-label">Verifikasi Berkas</span>
                             </a>
+                            <a href="{{ route('surat.index') }}" title="Surat" @class(['sidebar-link', 'sidebar-link-active' => request()->routeIs('surat.*')])>
+                                <svg class="size-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                    <path d="M6 3.5h8.5L19 8v12.5H6V3.5Z" stroke-linejoin="round" />
+                                    <path d="M14 3.5V8h4.5" stroke-linejoin="round" />
+                                    <path d="M9 12.5h7M9 16h4.5" stroke-linecap="round" />
+                                </svg>
+                                <span class="sidebar-label">Surat</span>
+                            </a>
                             <a href="{{ route('data-dosen.index') }}" title="Data Dosen" @class(['sidebar-link', 'sidebar-link-active' => request()->routeIs('data-dosen.*')])>
                                 <svg class="size-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
                                     <circle cx="9" cy="8" r="3" />
@@ -211,6 +228,14 @@
                                     <path d="M12 8v3.5M6.5 16v-4.5h11V16" stroke-linecap="round" stroke-linejoin="round" />
                                 </svg>
                                 <span class="sidebar-label">Pejabat Struktural</span>
+                            </a>
+                            <a href="{{ route('instansi.senat.index') }}" title="Senat" @class(['sidebar-link', 'sidebar-link-active' => request()->routeIs('instansi.senat.*')])>
+                                <svg class="size-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                    <circle cx="9" cy="8.5" r="3" />
+                                    <path d="M3.5 19c0-2.8 2.5-5 5.5-5s5.5 2.2 5.5 5" stroke-linecap="round" />
+                                    <path d="M16 6.2a3 3 0 0 1 0 5.6M17.5 14.4c1.9.6 3 2.3 3 4.6" stroke-linecap="round" />
+                                </svg>
+                                <span class="sidebar-label">Senat</span>
                             </a>
                         </div>
                     </details>

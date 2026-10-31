@@ -85,6 +85,16 @@
                         @error('no_telp') <p class="form-error">{{ $message }}</p> @enderror
                     </div>
 
+                    <div>
+                        <label for="kota" class="form-label">Kota Instansi <span class="text-rose-500">*</span></label>
+                        <input type="text" id="kota" name="kota" maxlength="100" required
+                               value="{{ old('kota', $instansi->kota) }}"
+                               placeholder="Contoh: Bandung"
+                               @class(['form-input', 'border-rose-300 bg-rose-50/40' => $errors->has('kota')])>
+                        @error('kota') <p class="form-error">{{ $message }}</p> @enderror
+                        <p class="mt-1.5 text-[11px] text-slate-400">Dipakai pada baris tanda tangan surat.</p>
+                    </div>
+
                     <div class="sm:col-span-2">
                         <label for="website" class="form-label">Website <span class="font-normal text-slate-400">(opsional)</span></label>
                         <input type="text" id="website" name="website" maxlength="150" inputmode="url"

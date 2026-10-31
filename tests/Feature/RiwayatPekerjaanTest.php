@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\JabatanFungsional;
 use App\Models\JabatanStruktural;
 use App\Models\Kepangkatan;
+use App\Models\Prodi;
 use App\Models\RiwayatAngkaKredit;
 use App\Models\RiwayatJabatanStruktural;
 use App\Models\RiwayatKepangkatan;
@@ -112,6 +113,37 @@ class RiwayatPekerjaanTest extends TestCase
         ]);
 
         $response->assertSessionHasErrors(['sk_pplp_tahun', 'sk_pplp_bulan']);
+    }
+
+    public function test_dosen_can_choose_prodi_tempat_mengajar_from_master_data(): void
+    {
+        $user = $this->makeDosen(['program_studi' => null]);
+        $prodi = Prodi::create(['nama_prodi' => 'Pendidikan Informatika', 'kode_prodi' => 'PIF']);
+
+        $this->actingAs($user)
+            ->get(route('profil.pekerjaan.index'))
+            ->assertOk()
+            ->assertSee('Prodi Tempat Mengajar')
+            ->assertSee($prodi->nama_prodi);
+
+        $this->actingAs($user)
+            ->put(route('profil.pekerjaan.update'), ['program_studi' => $prodi->nama_prodi])
+            ->assertRedirect(route('profil.pekerjaan.index'))
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame($prodi->nama_prodi, $user->fresh()->program_studi);
+    }
+
+    public function test_prodi_tempat_mengajar_must_exist_on_master_data(): void
+    {
+        $user = $this->makeDosen(['program_studi' => 'Pendidikan Informatika']);
+
+        $response = $this->actingAs($user)->put(route('profil.pekerjaan.update'), [
+            'program_studi' => 'Program Studi Karangan Sendiri',
+        ]);
+
+        $response->assertSessionHasErrors('program_studi');
+        $this->assertSame('Pendidikan Informatika', $user->fresh()->program_studi);
     }
 
     public function test_dosen_can_add_riwayat_kepangkatan(): void

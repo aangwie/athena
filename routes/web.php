@@ -6,7 +6,9 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DataDosenController;
 use App\Http\Controllers\Instansi\InstansiController;
 use App\Http\Controllers\Instansi\ProdiController;
+use App\Http\Controllers\Instansi\SenatController;
 use App\Http\Controllers\Instansi\StrukturInstansiController;
+use App\Http\Controllers\KaryaTulisController;
 use App\Http\Controllers\Kepegawaian\JabatanFungsionalController;
 use App\Http\Controllers\Kepegawaian\JabatanStrukturalController;
 use App\Http\Controllers\Kepegawaian\KepangkatanController;
@@ -16,6 +18,7 @@ use App\Http\Controllers\PengaturanController;
 use App\Http\Controllers\ProfilDosenController;
 use App\Http\Controllers\RiwayatPekerjaanController;
 use App\Http\Controllers\RiwayatPendidikanController;
+use App\Http\Controllers\SuratController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -67,6 +70,11 @@ Route::middleware('auth')->group(function () {
         Route::post('/pengajuan/ajukan-dupak', [PengajuanDosenController::class, 'ajukanDupak'])->name('pengajuan.ajukan-dupak');
         Route::get('/pengajuan/riwayat', [PengajuanDosenController::class, 'riwayat'])->name('pengajuan.riwayat');
         Route::get('/pengajuan/riwayat-ikd', [PengajuanDosenController::class, 'riwayatIkd'])->name('pengajuan.riwayat-ikd');
+
+        Route::get('/riwayat-karya-tulis', [KaryaTulisController::class, 'index'])->name('karya-tulis.index');
+        Route::post('/riwayat-karya-tulis', [KaryaTulisController::class, 'store'])->name('karya-tulis.store');
+        Route::put('/riwayat-karya-tulis/{karyaTulis}', [KaryaTulisController::class, 'update'])->name('karya-tulis.update');
+        Route::delete('/riwayat-karya-tulis/{karyaTulis}', [KaryaTulisController::class, 'destroy'])->name('karya-tulis.destroy');
         Route::post('/pengajuan/ajukan-ulang', [PengajuanDosenController::class, 'ajukanUlang'])->name('pengajuan.ajukan-ulang');
         Route::get('/pengajuan/cetak', [PengajuanDosenController::class, 'cetak'])->name('pengajuan.cetak');
         Route::post('/pengajuan/pendidikan', [PengajuanDosenController::class, 'storePendidikan'])->name('pengajuan.pendidikan.store');
@@ -124,6 +132,19 @@ Route::middleware('auth')->group(function () {
         Route::get('/{syaratKhusus}/berkas/{jenis}', [PengajuanDosenController::class, 'berkasVerifikasi'])->name('berkas');
     });
 
+    Route::middleware('admin')->prefix('surat')->name('surat.')->group(function () {
+        Route::get('/', [SuratController::class, 'index'])->name('index');
+        Route::post('/pernyataan-pimpinan', [SuratController::class, 'storePernyataanPimpinan'])->name('pernyataan-pimpinan.store');
+        Route::put('/pernyataan-pimpinan/{pernyataan}', [SuratController::class, 'updatePernyataanPimpinan'])->name('pernyataan-pimpinan.update');
+        Route::delete('/pernyataan-pimpinan/{pernyataan}', [SuratController::class, 'destroyPernyataanPimpinan'])->name('pernyataan-pimpinan.destroy');
+        Route::get('/pernyataan-pimpinan/{pernyataan}/cetak', [SuratController::class, 'cetakPernyataanPimpinan'])->name('pernyataan-pimpinan.cetak');
+
+        Route::post('/pakta-integritas', [SuratController::class, 'storePaktaIntegritas'])->name('pakta-integritas.store');
+        Route::put('/pakta-integritas/{pakta}', [SuratController::class, 'updatePaktaIntegritas'])->name('pakta-integritas.update');
+        Route::delete('/pakta-integritas/{pakta}', [SuratController::class, 'destroyPaktaIntegritas'])->name('pakta-integritas.destroy');
+        Route::get('/pakta-integritas/{pakta}/cetak', [SuratController::class, 'cetakPaktaIntegritas'])->name('pakta-integritas.cetak');
+    });
+
     Route::middleware('tim_pak')->prefix('tim-pak')->name('tim-pak.')->group(function () {
         Route::get('/pengajuan', [PengajuanDupakController::class, 'index'])->name('pengajuan.index');
         Route::get('/pengajuan/{pengajuan}', [PengajuanDupakController::class, 'show'])->name('pengajuan.show');
@@ -155,6 +176,11 @@ Route::middleware('auth')->group(function () {
         Route::put('/struktur/{struktur}', [StrukturInstansiController::class, 'update'])->name('struktur.update');
         Route::delete('/struktur/{struktur}', [StrukturInstansiController::class, 'destroy'])->name('struktur.destroy');
 
+        Route::get('/senat', [SenatController::class, 'index'])->name('senat.index');
+        Route::post('/senat', [SenatController::class, 'store'])->name('senat.store');
+        Route::put('/senat/{senat}', [SenatController::class, 'update'])->name('senat.update');
+        Route::delete('/senat/{senat}', [SenatController::class, 'destroy'])->name('senat.destroy');
+
         Route::get('/prodi', [ProdiController::class, 'index'])->name('prodi.index');
         Route::get('/prodi/create', [ProdiController::class, 'create'])->name('prodi.create');
         Route::post('/prodi', [ProdiController::class, 'store'])->name('prodi.store');
@@ -171,6 +197,10 @@ Route::middleware('auth')->group(function () {
         Route::post('/clear-cache', [PengaturanController::class, 'clearCache'])->name('clear-cache');
         Route::post('/migrate', [PengaturanController::class, 'migrate'])->name('migrate');
         Route::post('/storage-link', [PengaturanController::class, 'storageLink'])->name('storage-link');
+        Route::post('/database/mulai', [PengaturanController::class, 'dbMulai'])->name('db.mulai');
+        Route::post('/database/langkah', [PengaturanController::class, 'dbLangkah'])->name('db.langkah');
+        Route::get('/database/unduh/{berkas}', [PengaturanController::class, 'dbUnduh'])->name('db.unduh');
+        Route::delete('/database/kosongkan', [PengaturanController::class, 'dbKosongkan'])->name('db.kosongkan');
         Route::delete('/log', [PengaturanController::class, 'hapusLog'])->name('log.hapus');
     });
 });

@@ -42,6 +42,23 @@
                 </div>
             </div>
         @else
+        @php $ditolak = collect($berkas)->keys()->filter(fn ($jenis) => $syaratKhusus?->statusJenis($jenis) === 'ditolak'); @endphp
+
+        @if ($ditolak->isNotEmpty())
+            {{-- Datang dari riwayat IKD: sebutkan berkas mana yang ditolak agar dosen tinggal unggah ulang. --}}
+            <div class="mb-5 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3.5" role="alert">
+                <p class="text-sm font-bold text-rose-700">Berkas ditolak admin — unggah ulang berkas di bawah ini.</p>
+                <ul class="mt-1.5 space-y-1 text-xs leading-relaxed text-rose-600">
+                    @foreach ($ditolak as $jenis)
+                        <li>
+                            <span class="font-bold">{{ strtoupper($jenis) }}:</span>
+                            {{ $syaratKhusus->catatanJenis($jenis) ?: 'tanpa catatan.' }}
+                        </li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
         @if ($errors->any())
             <div class="mb-5 flex items-start gap-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3.5 text-sm text-rose-700" role="alert">
                 <svg class="mt-0.5 size-4 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">

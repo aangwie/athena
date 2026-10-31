@@ -13,8 +13,8 @@
             </span>
             <h2 class="text-xl font-extrabold tracking-tight text-slate-900 sm:text-2xl">Pengaturan</h2>
             <p class="mt-1.5 max-w-2xl text-sm leading-relaxed text-slate-500">
-                Kelola token GitHub untuk pembaruan aplikasi, bersihkan cache, jalankan migrasi tabel, dan buat symlink storage.
-                Setiap tindakan dicatat pada terminal log di bawah.
+                Kelola token GitHub untuk pembaruan aplikasi, bersihkan cache, jalankan migrasi tabel, buat symlink storage,
+                serta backup dan import database. Setiap tindakan dicatat pada terminal log di bawah.
             </p>
         </div>
 
@@ -172,7 +172,119 @@
             </div>
         </section>
 
-        {{-- 04 · Terminal log --}}
+        {{-- 04 · Backup & import database --}}
+        <section class="section-card mb-5">
+            <div class="section-heading">
+                <span class="section-number">04</span>
+                <div>
+                    <h3 class="text-sm font-extrabold text-slate-800">Backup &amp; Import Database</h3>
+                    <p class="mt-0.5 text-xs text-slate-400">Unduh salinan seluruh tabel, atau pulihkan database dari berkas <span class="font-mono">.sql</span>.</p>
+                </div>
+            </div>
+
+            <div class="divide-y divide-slate-100">
+                {{-- Backup --}}
+                <div class="px-5 py-4 sm:px-6" data-db-panel>
+                    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                            <p class="text-xs font-bold text-slate-700">Backup database</p>
+                            <p class="mt-1 text-[11px] leading-relaxed text-slate-500">
+                                Menulis struktur dan isi seluruh tabel, lalu mengunduhnya sebagai berkas
+                                <span class="font-mono text-slate-600">backup-{{ now()->format('Ymd-His') }}.sql</span>.
+                            </p>
+                        </div>
+                        <form method="POST" action="{{ route('pengaturan.db.mulai') }}"
+                              data-db-job data-db-langkah="{{ route('pengaturan.db.langkah') }}"
+                              data-confirm="Buat backup seluruh database sekarang?"
+                              data-confirm-title="Backup database?">
+                            @csrf
+                            <input type="hidden" name="mode" value="backup">
+                            <button type="submit" class="btn-secondary w-full shrink-0 justify-center whitespace-nowrap sm:w-auto">
+                                Backup Database
+                            </button>
+                        </form>
+                    </div>
+
+                    <div class="mt-3 hidden" data-db-progress>
+                        <div class="h-2 w-full overflow-hidden rounded-full bg-slate-100">
+                            <div class="h-full w-0 rounded-full bg-teal-500 transition-[width] duration-300" data-db-bar></div>
+                        </div>
+                        <p class="mt-1.5 text-[11px] text-slate-500" data-db-info></p>
+                        <a href="#" class="mt-1 inline-flex hidden text-[11px] font-semibold text-teal-700 hover:underline" data-db-unduh>
+                            Unduh ulang hasil backup
+                        </a>
+                    </div>
+                </div>
+
+                {{-- Import --}}
+                <div class="px-5 py-4 sm:px-6" data-db-panel>
+                    <form method="POST" action="{{ route('pengaturan.db.mulai') }}" enctype="multipart/form-data"
+                          data-db-job data-db-langkah="{{ route('pengaturan.db.langkah') }}"
+                          data-confirm="Import akan menimpa tabel yang namanya sama. Lanjutkan?"
+                          data-confirm-title="Import database?"
+                          class="space-y-3">
+                        @csrf
+                        <input type="hidden" name="mode" value="import">
+                        <div>
+                            <p class="text-xs font-bold text-slate-700">Import database</p>
+                            <label for="berkas_import" class="form-label mt-2">
+                                Berkas backup <span class="text-rose-500">*</span>
+                            </label>
+                            <input type="file" id="berkas_import" name="berkas" accept=".sql" required
+                                   @class([
+                                       'form-input py-2 text-xs file:mr-3 file:cursor-pointer file:rounded-lg file:border-0 file:bg-teal-50 file:px-3 file:py-1.5 file:text-[11px] file:font-semibold file:text-teal-700',
+                                       'border-rose-300 bg-rose-50/40' => $errors->has('berkas'),
+                                   ])>
+                            @error('berkas') <p class="form-error">{{ $message }}</p> @enderror
+                            <p class="mt-1.5 text-[11px] leading-relaxed text-slate-400">
+                                Format <span class="font-mono text-slate-500">.sql</span>, maksimal 100 MB. Berkas dijalankan bertahap
+                                sehingga tabel yang namanya sama akan ditimpa.
+                            </p>
+                        </div>
+
+                        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                            <p class="text-[11px] text-slate-400">Ambil berkas dari menu Backup di atas.</p>
+                            <button type="submit" class="btn-primary w-auto justify-center px-5 whitespace-nowrap">
+                                Import Database
+                            </button>
+                        </div>
+
+                        <div class="hidden" data-db-progress>
+                            <div class="h-2 w-full overflow-hidden rounded-full bg-slate-100">
+                                <div class="h-full w-0 rounded-full bg-teal-500 transition-[width] duration-300" data-db-bar></div>
+                            </div>
+                            <p class="mt-1.5 text-[11px] text-slate-500" data-db-info></p>
+                        </div>
+                    </form>
+                </div>
+
+                {{-- Kosongkan data --}}
+                <div class="px-5 py-4 sm:px-6">
+                    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                            <p class="text-xs font-bold text-rose-700">Hapus seluruh data</p>
+                            <p class="mt-1 text-[11px] leading-relaxed text-slate-500">
+                                Mengosongkan profil, riwayat, kegiatan, pengajuan, dan berkas syarat khusus seluruh dosen.
+                                Akun pengguna, nama web, serta data master (instansi, prodi, jabatan, kepangkatan) tetap disimpan.
+                                Buat backup lebih dulu — tindakan ini tidak dapat dibatalkan.
+                            </p>
+                        </div>
+                        <form method="POST" action="{{ route('pengaturan.db.kosongkan') }}"
+                              data-confirm="Seluruh data dosen (profil, riwayat, kegiatan, pengajuan, berkas) akan dihapus permanen. Akun pengguna tetap disimpan. Lanjutkan?"
+                              data-confirm-title="Hapus seluruh data?">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit"
+                                    class="btn-secondary w-full shrink-0 justify-center whitespace-nowrap text-rose-600 hover:bg-rose-50 hover:text-rose-600 sm:w-auto">
+                                Hapus Semua Data
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        {{-- 05 · Terminal log --}}
         <section class="overflow-hidden rounded-2xl border border-slate-800 bg-slate-950 shadow-lg">
             <div class="flex items-center gap-2 border-b border-slate-800 bg-slate-900/80 px-4 py-3">
                 <span class="size-2.5 rounded-full bg-rose-500/80"></span>

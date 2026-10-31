@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\JabatanFungsional;
 use App\Models\JabatanStruktural;
 use App\Models\Kepangkatan;
+use App\Models\Prodi;
 use App\Models\RiwayatAngkaKredit;
 use App\Models\RiwayatJabatanStruktural;
 use App\Models\RiwayatKepangkatan;
@@ -38,6 +39,7 @@ class RiwayatPekerjaanController extends Controller
         return view('profil.pekerjaan.index', [
             'user' => $user,
             'profil' => $user->profilDosen,
+            'prodiList' => Prodi::query()->orderBy('nama_prodi')->get(),
             'kepangkatanList' => Kepangkatan::query()->orderBy('nama')->get(),
             'jabatanStrukturalList' => JabatanStruktural::query()->orderBy('nama')->get(),
             'jabatanFungsionalList' => JabatanFungsional::query()->orderBy('nama')->get(),
@@ -57,6 +59,7 @@ class RiwayatPekerjaanController extends Controller
         $rules = [
             'niy_npp' => ['nullable', 'string', 'max:30'],
             'nuptk' => ['nullable', 'string', 'max:30'],
+            'program_studi' => ['nullable', 'string', Rule::exists('prodi', 'nama_prodi')],
         ];
 
         foreach (self::SK as $sk) {
@@ -71,10 +74,20 @@ class RiwayatPekerjaanController extends Controller
             $rules["masa_kerja_golongan_{$jenis}_bulan"] = ['nullable', 'integer', 'min:0', 'max:11'];
         }
 
-        $data = $request->validate($rules, [], [
+        $data = $request->validate($rules, [
+            'program_studi.exists' => 'Prodi tidak ditemukan pada data master prodi.',
+        ], [
             'niy_npp' => 'NIY/NPP',
             'nuptk' => 'NUPTK',
+            'program_studi' => 'Prodi',
         ]);
+
+        // Prodi tempat mengajar disimpan pada akun (users.program_studi),
+        // kolom yang sudah dipakai profil & surat pernyataan pimpinan.
+        if (array_key_exists('program_studi', $data)) {
+            $user->update(['program_studi' => $data['program_studi']]);
+            unset($data['program_studi']);
+        }
 
         $profil = $user->profilDosen()->firstOrNew([]);
         $profil->fill($data);
@@ -83,7 +96,7 @@ class RiwayatPekerjaanController extends Controller
 
         return redirect()
             ->route('profil.pekerjaan.index')
-            ->with('status', 'Data kepegawaian dan masa kerja berhasil disimpan.');
+            ->with('status', 'Data kepegawaian, prodi, dan masa kerja berhasil disimpan.');
     }
 
     public function storeKepangkatan(Request $request): RedirectResponse

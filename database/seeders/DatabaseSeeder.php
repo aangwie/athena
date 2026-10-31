@@ -222,6 +222,7 @@ class DatabaseSeeder extends Seeder
                 'nama_instansi' => 'Universitas Athena Nusantara',
                 'nomor_sk_operasional' => 'SK-MENDIKBUD/001/ATHENA/2026',
                 'alamat' => 'Jl. Pendidikan No. 1, Bandung, Jawa Barat 40123',
+                'kota' => 'Bandung',
                 'no_telp' => '(022) 1234567',
                 'website' => 'https://athena.ac.id',
             ]);

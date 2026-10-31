@@ -1899,18 +1899,110 @@ class PengajuanDosenTest extends TestCase
             ->get(route('profil.pengajuan.riwayat-ikd'))
             ->assertOk()
             ->assertSee('Riwayat IKD')
-            ->assertSee('Daftar Usulan IKD')
+            ->assertSee('Daftar Usulan BKD & IKD')
             ->assertSee('1 data')
             ->assertSee('data-table-search', false)
             ->assertSee('2026/2027 · Ganjil')
             ->assertSee('Ditolak')
             ->assertSee('IKD kurang lengkap.')
+            ->assertSee('BKD')
+            ->assertSee('Menunggu verifikasi')
+            ->assertSee('Aksi')
+            ->assertSee('Edit')
+            ->assertSee(e(route('profil.pengajuan.syarat-khusus', [
+                'tahun' => 2026,
+                'semester' => 'ganjil',
+            ]).'#form-berkas'), false)
             ->assertSee(e(route('profil.pengajuan.syarat-khusus.berkas', [
                 'jenis' => 'ikd',
                 'tahun' => 2026,
                 'semester' => 'ganjil',
             ])), false)
             ->assertDontSee('2025/2026 · Genap');
+    }
+
+    public function test_riwayat_ikd_lists_accepted_and_rejected_usulan(): void
+    {
+        Storage::fake('local');
+
+        $dosen = $this->makeUser('dosen');
+        $admin = $this->makeUser('admin');
+
+        foreach ([[2025, 'genap'], [2026, 'ganjil']] as [$tahun, $semester]) {
+            $this->actingAs($dosen)->post('/profil/pengajuan/syarat-khusus', [
+                'tahun' => $tahun,
+                'semester' => $semester,
+                'bkd' => UploadedFile::fake()->create('bkd.pdf', 200, 'application/pdf'),
+                'ikd' => UploadedFile::fake()->create('ikd.pdf', 200, 'application/pdf'),
+            ])->assertSessionHasNoErrors();
+
+            $this->actingAs($dosen)->post(route('profil.pengajuan.syarat-khusus.ajukan', SyaratKhusus::query()
+                ->where('tahun', $tahun)
+                ->firstOrFail()));
+        }
+
+        // 2025: IKD diterima, BKD ditolak. 2026: IKD ditolak, BKD diterima.
+        foreach ([
+            [2025, 'ikd', 'diterima', null],
+            [2025, 'bkd', 'ditolak', 'BKD belum ditandatangani.'],
+            [2026, 'ikd', 'ditolak', 'Halaman tanda tangan belum legalisir.'],
+            [2026, 'bkd', 'diterima', null],
+        ] as [$tahun, $jenis, $keputusan, $catatan]) {
+            $this->actingAs($admin)->put(
+                route('verifikasi-berkas.update', [
+                    'syaratKhusus' => SyaratKhusus::query()->where('tahun', $tahun)->firstOrFail(),
+                    'jenis' => $jenis,
+                ]),
+                ['keputusan' => $keputusan, 'catatan' => $catatan],
+            );
+        }
+
+        // Status gabungan "draf" tidak boleh menyembunyikan usulan yang sudah diputuskan.
+        SyaratKhusus::query()->update(['status' => 'draf']);
+
+        $this->actingAs($dosen)
+            ->get(route('profil.pengajuan.riwayat-ikd'))
+            ->assertOk()
+            ->assertSee('2 data')
+            ->assertSee('Diterima')
+            ->assertSee('Ditolak')
+            ->assertSee('BKD belum ditandatangani.')
+            ->assertSee('Halaman tanda tangan belum legalisir.')
+            // Kedua berkas tiap usulan tampil sebagai baris sendiri.
+            ->assertSee(e(route('profil.pengajuan.syarat-khusus.berkas', [
+                'jenis' => 'bkd',
+                'tahun' => 2025,
+                'semester' => 'genap',
+            ])), false)
+            ->assertSee(e(route('profil.pengajuan.syarat-khusus.berkas', [
+                'jenis' => 'ikd',
+                'tahun' => 2025,
+                'semester' => 'genap',
+            ])), false)
+            ->assertSee(e(route('profil.pengajuan.syarat-khusus.berkas', [
+                'jenis' => 'ikd',
+                'tahun' => 2026,
+                'semester' => 'ganjil',
+            ])), false)
+            // Edit hanya untuk berkas yang ditolak.
+            ->assertSee(e(route('profil.pengajuan.syarat-khusus', [
+                'tahun' => 2025,
+                'semester' => 'genap',
+            ]).'#form-berkas'), false)
+            ->assertSee(e(route('profil.pengajuan.syarat-khusus', [
+                'tahun' => 2026,
+                'semester' => 'ganjil',
+            ]).'#form-berkas'), false);
+
+        // Pintasan Edit membuka formulir unggah ulang beserta alasan penolakannya.
+        $this->actingAs($dosen)
+            ->get(route('profil.pengajuan.syarat-khusus', ['tahun' => 2026, 'semester' => 'ganjil']))
+            ->assertOk()
+            ->assertSee('Berkas ditolak admin')
+            ->assertSee('IKD:')
+            ->assertSee('Halaman tanda tangan belum legalisir.')
+            ->assertSee('Simpan Berkas')
+            ->assertDontSee('Berkas periode ini sudah diajukan');
     }
 
     public function test_riwayat_ikd_is_only_available_for_dosen(): void

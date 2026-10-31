@@ -33,6 +33,21 @@ const boot = () => {
                     searchable: false,
                 },
             ],
+            // Nomor baris mengikuti halaman aktif: tambahkan atribut data-row-numbers pada tabel.
+            drawCallback() {
+                if (!table.hasAttribute('data-row-numbers')) {
+                    return;
+                }
+
+                const api = this.api();
+                const start = api.page.info().start;
+
+                api.column(0, { page: 'current' })
+                    .nodes()
+                    .each((cell, index) => {
+                        cell.textContent = start + index + 1;
+                    });
+            },
             language: {
                 emptyTable: 'Belum ada data yang tersedia.',
                 info: 'Menampilkan _START_–_END_ dari _TOTAL_ data',
@@ -390,6 +405,93 @@ const boot = () => {
         });
     });
 
+    // Pengaturan: backup & import database dikerjakan bertahap, bilah progres mengikuti
+    // jumlah tabel (backup) atau byte berkas (import) yang sudah diproses server.
+    document.querySelectorAll('form[data-db-job]').forEach((form) => {
+        const panel = form.closest('[data-db-panel]');
+        const progres = panel?.querySelector('[data-db-progress]');
+        const bar = panel?.querySelector('[data-db-bar]');
+        const info = panel?.querySelector('[data-db-info]');
+        const unduh = panel?.querySelector('[data-db-unduh]');
+        const tombol = form.querySelector('button[type="submit"]');
+        const token = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+
+        const tampilProgres = (persen, pesan) => {
+            progres?.classList.remove('hidden');
+
+            if (bar) {
+                bar.style.width = `${Math.min(100, Math.max(0, Number(persen) || 0))}%`;
+            }
+
+            if (info) {
+                info.textContent = pesan ?? '';
+            }
+        };
+
+        const kirim = (url, data) => window.axios.post(url, data, {
+            headers: { 'X-CSRF-TOKEN': token },
+        });
+
+        // data-db-langkah → dataset.dbLangkah (camelCase), bukan dataset.langkah.
+        const langkahUrl = form.dataset.dbLangkah;
+
+        form.addEventListener('submit', async (event) => {
+            // Konfirmasi global SweetAlert2 (form[data-confirm]) dijalankan lebih dulu.
+            if (form.dataset.confirm && form.dataset.confirmed !== 'true') {
+                return;
+            }
+
+            event.preventDefault();
+            unduh?.classList.add('hidden');
+
+            if (tombol) {
+                tombol.disabled = true;
+            }
+
+            tampilProgres(0, 'Menyiapkan proses…');
+
+            try {
+                if (!langkahUrl) {
+                    throw new Error('Atribut data-db-langkah tidak ada pada form.');
+                }
+
+                const mulai = await kirim(form.action, new FormData(form));
+                let hasil = mulai.data;
+
+                tampilProgres(hasil.persen, hasil.pesan);
+
+                while (!hasil.selesai) {
+                    const langkah = await kirim(langkahUrl, new FormData());
+                    hasil = langkah.data;
+
+                    tampilProgres(hasil.persen, hasil.pesan);
+                }
+
+                if (hasil.unduh) {
+                    if (unduh) {
+                        unduh.href = hasil.unduh;
+                        unduh.classList.remove('hidden');
+                    }
+
+                    window.location.href = hasil.unduh;
+                }
+            } catch (error) {
+                const data = error.response?.data ?? {};
+                const pesan = data.pesan
+                    || Object.values(data.errors ?? {}).flat().join(' ')
+                    || error.message;
+
+                tampilProgres(0, pesan);
+            } finally {
+                if (tombol) {
+                    tombol.disabled = false;
+                }
+
+                form.dataset.confirmed = 'false';
+            }
+        });
+    });
+
     // Konfirmasi global: setiap <form data-confirm="..."> dicek lewat SweetAlert2.
     // Delegasi ke document supaya form di dalam tabel (yang bisa di-render ulang
     // DataTables) tetap ikut terkonfirmasi.
@@ -558,6 +660,124 @@ const boot = () => {
         activate(location.hash.slice(1) || tabs[0]?.dataset.tabTarget, false);
     });
 
+    // Select dengan kotak pencarian: opsi disaring tiap ketikan, opsi terpilih selalu dipertahankan.
+    document.querySelectorAll('select[data-select-search]').forEach((select) => {
+        const opsi = Array.from(select.options).map((option) => ({
+            value: option.value,
+            label: option.textContent.trim(),
+        }));
+
+        const cari = document.createElement('input');
+        cari.type = 'search';
+        cari.className = 'form-input mb-2';
+        cari.placeholder = select.dataset.selectSearch || 'Cari…';
+        cari.setAttribute('aria-label', cari.placeholder);
+        select.before(cari);
+
+        cari.addEventListener('input', () => {
+            const kata = cari.value.toLowerCase();
+            const terpilih = select.value;
+
+            select.replaceChildren(
+                ...opsi
+                    .filter((option) => option.value === '' || option.value === terpilih || option.label.toLowerCase().includes(kata))
+                    .map((option) => new Option(option.label, option.value, false, option.value === terpilih)),
+            );
+
+            select.value = terpilih;
+        });
+    });
+
+    // Masker tanggal DD-MM-YYYY: hanya angka, tanda hubung ditambahkan otomatis.
+    document.querySelectorAll('[data-date-mask]').forEach((input) => {
+        input.addEventListener('input', () => {
+            const digit = input.value.replace(/\D/g, '').slice(0, 8);
+
+            input.value = [digit.slice(0, 2), digit.slice(2, 4), digit.slice(4, 8)].filter(Boolean).join('-');
+        });
+    });
+
+    // Pakta integritas: centang karya ilmiah milik dosen yang dipilih (data dari <script data-karya-data>).
+    document.querySelectorAll('[data-karya-picker]').forEach((picker) => {
+        const dosen = document.querySelector(picker.dataset.dosenTarget);
+        const list = picker.querySelector('[data-karya-list]');
+        const info = picker.querySelector('[data-karya-info]');
+        const kosong = picker.querySelector('[data-karya-empty]');
+        const semua = picker.querySelector('[data-karya-all]');
+        const data = JSON.parse(picker.querySelector('[data-karya-data]')?.textContent || '{}');
+        const terpilih = new Set((picker.dataset.selected || '').split(',').filter(Boolean));
+
+        const kotak = () => [...(list?.querySelectorAll('input[type="checkbox"]') ?? [])];
+
+        const sinkron = () => {
+            const jumlah = kotak().length;
+            const dicentang = kotak().filter((item) => item.checked).length;
+
+            if (semua) {
+                semua.checked = jumlah > 0 && dicentang === jumlah;
+                semua.disabled = jumlah === 0;
+            }
+
+            // Jumlah karya dosen yang dipilih ditampilkan di samping judul bagian.
+            if (info) {
+                info.textContent = dosen?.value
+                    ? `${jumlah} karya ilmiah terdaftar · ${dicentang} dicetak`
+                    : 'Pilih dosen terlebih dahulu.';
+            }
+        };
+
+        const gambar = () => {
+            if (!list) return;
+
+            const items = data[dosen?.value] ?? [];
+
+            list.replaceChildren(...items.map((karya) => {
+                const label = document.createElement('label');
+                label.className = 'flex items-start gap-2 rounded-lg border border-slate-200 bg-white p-2.5 text-xs text-slate-600 transition hover:border-teal-300';
+
+                const input = document.createElement('input');
+                input.type = 'checkbox';
+                input.name = 'karya_tulis_ids[]';
+                input.value = karya.id;
+                input.checked = terpilih.has(String(karya.id));
+                input.className = 'mt-0.5 size-4 shrink-0 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30';
+                input.addEventListener('change', sinkron);
+
+                const jenis = document.createElement('span');
+                jenis.className = 'block font-bold text-slate-700';
+                jenis.textContent = karya.jenis;
+
+                const judul = document.createElement('span');
+                judul.className = 'mt-0.5 block text-[11px] leading-snug text-slate-500';
+                judul.textContent = karya.judul;
+
+                const teks = document.createElement('span');
+                teks.append(jenis, judul);
+                label.append(input, teks);
+
+                return label;
+            }));
+
+            kosong?.classList.toggle('hidden', items.length > 0);
+            sinkron();
+        };
+
+        // Ganti dosen = mulai dari tanpa centang (semua karya dosen baru ikut tercetak).
+        dosen?.addEventListener('change', () => {
+            terpilih.clear();
+            gambar();
+        });
+
+        semua?.addEventListener('change', () => {
+            kotak().forEach((item) => {
+                item.checked = semua.checked;
+            });
+            sinkron();
+        });
+
+        gambar();
+    });
+
     document.querySelectorAll('[data-reveal-select]').forEach((select) => {
         const target = document.querySelector(select.dataset.revealSelect);
 
@@ -569,6 +789,32 @@ const boot = () => {
 
         select.addEventListener('change', sync);
         sync();
+    });
+
+    // Select dengan pencarian: input [data-select-filter="#id-select"] menyaring opsi select tujuannya.
+    document.querySelectorAll('[data-select-filter]').forEach((input) => {
+        const select = document.querySelector(input.dataset.selectFilter);
+
+        if (!select) {
+            return;
+        }
+
+        const options = [...select.options];
+
+        input.addEventListener('input', () => {
+            const keyword = input.value.trim().toLowerCase();
+            const selected = select.value;
+
+            select.replaceChildren(
+                ...options.filter((option) => {
+                    return option.value === ''
+                        || option.value === selected
+                        || option.text.toLowerCase().includes(keyword);
+                }),
+            );
+
+            select.value = selected;
+        });
     });
 
     document.querySelectorAll('[data-dependent-select]').forEach((select) => {

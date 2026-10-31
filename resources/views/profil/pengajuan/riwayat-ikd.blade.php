@@ -14,7 +14,7 @@
                 </span>
                 <h2 class="text-xl font-extrabold tracking-tight text-slate-900 sm:text-2xl">Riwayat IKD</h2>
                 <p class="mt-1.5 max-w-xl text-sm leading-relaxed text-slate-500">
-                    Berkas Indikator Kinerja Dosen yang sudah diajukan beserta keputusan admin.
+                    Berkas BKD &amp; IKD yang sudah diajukan beserta keputusan admin per berkas.
                 </p>
             </div>
 
@@ -35,10 +35,10 @@
                     </span>
                     <div>
                         <div class="flex flex-wrap items-center gap-2">
-                            <h3 class="text-base font-extrabold tracking-tight text-slate-900">Daftar Usulan IKD</h3>
+                            <h3 class="text-base font-extrabold tracking-tight text-slate-900">Daftar Usulan BKD &amp; IKD</h3>
                             <span class="rounded-full bg-teal-50 px-2 py-0.5 text-[10px] font-bold text-teal-700 ring-1 ring-teal-100 ring-inset">{{ $daftar->count() }} data</span>
                         </div>
-                        <p class="mt-1 text-xs leading-relaxed text-slate-500">Klik nama file untuk membuka berkas IKD yang sudah diajukan.</p>
+                        <p class="mt-1 text-xs leading-relaxed text-slate-500">Klik berkas untuk membuka, atau Edit untuk memperbaiki berkas yang ditolak admin.</p>
                     </div>
                 </div>
 
@@ -65,44 +65,52 @@
                     <thead>
                         <tr>
                             <th scope="col">Periode</th>
-                            <th scope="col">File IKD</th>
+                            <th scope="col">File</th>
                             <th scope="col">Status</th>
                             <th scope="col">Catatan</th>
-                            <th scope="col">Diperbarui</th>
+                            <th scope="col" class="no-sort text-right">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse ($daftar as $item)
+                            {{-- Satu usulan berisi 2 berkas (BKD & IKD): tiap berkas tampil sebagai baris
+                                 sendiri agar yang ditolak admin tetap terlihat. --}}
+                            @foreach (\App\Models\SyaratKhusus::JENIS as $jenis)
                             <tr>
                                 <td class="whitespace-nowrap">
                                     <span class="text-xs font-bold text-slate-700">{{ $item->periodeLabel() }}</span>
                                 </td>
                                 <td class="whitespace-nowrap">
-                                    @if ($item->ikd_path)
-                                        <a href="{{ route('profil.pengajuan.syarat-khusus.berkas', ['jenis' => 'ikd', 'tahun' => $item->tahun, 'semester' => $item->semester]) }}"
+                                    @if ($item->{$jenis.'_path'})
+                                        <a href="{{ route('profil.pengajuan.syarat-khusus.berkas', ['jenis' => $jenis, 'tahun' => $item->tahun, 'semester' => $item->semester]) }}"
                                            target="_blank" rel="noopener"
                                            class="text-[11px] font-bold text-teal-700 underline decoration-teal-300 underline-offset-2 hover:text-teal-800">
-                                            Lihat IKD
+                                            {{ strtoupper($jenis) }}
                                         </a>
                                     @else
-                                        <span class="text-[11px] text-slate-300">—</span>
+                                        <span class="text-[11px] text-slate-300">{{ strtoupper($jenis) }}</span>
                                     @endif
                                 </td>
                                 <td>
-                                    <span class="badge-status {{ $item->statusClasses() }}">{{ $item->statusLabel() }}</span>
+                                    <span class="badge-status {{ $item->statusClasses($jenis) }}">{{ $item->statusLabel($jenis) }}</span>
                                 </td>
                                 <td class="max-w-xs">
-                                    <span class="text-xs leading-relaxed text-slate-600">{{ $item->catatan ?: '—' }}</span>
+                                    <span class="text-xs leading-relaxed text-slate-600">{{ $item->catatanJenis($jenis) ?: '—' }}</span>
                                 </td>
-                                <td data-order="{{ $item->updated_at?->timestamp ?? 0 }}" class="whitespace-nowrap">
-                                    <span class="text-xs text-slate-600">{{ $item->updated_at?->translatedFormat('d M Y') ?? '—' }}</span>
+                                <td class="text-right">
+                                    {{-- Sama seperti tabel berkas IKD: pintasan perbaiki berkas yang ditolak admin. --}}
+                                    @if ($item->statusJenis($jenis) === 'ditolak')
+                                        <a href="{{ route('profil.pengajuan.syarat-khusus', ['tahun' => $item->tahun, 'semester' => $item->semester]) }}#form-berkas"
+                                           class="btn-secondary px-3 py-1.5 text-xs">Edit</a>
+                                    @endif
                                 </td>
                             </tr>
+                            @endforeach
                         @empty
                             <tr>
                                 <td colspan="5" class="px-5 py-16 text-center">
-                                    <p class="text-sm font-bold text-slate-700">Belum ada usulan IKD</p>
-                                    <p class="mt-1 text-xs text-slate-400">Usulan IKD muncul di sini setelah berkas diajukan ke admin.</p>
+                                    <p class="text-sm font-bold text-slate-700">Belum ada usulan</p>
+                                    <p class="mt-1 text-xs text-slate-400">Usulan BKD &amp; IKD muncul di sini setelah berkas diajukan ke admin.</p>
                                 </td>
                             </tr>
                         @endforelse

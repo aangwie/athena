@@ -12,6 +12,7 @@ class Instansi extends Model
         'nama_instansi',
         'nomor_sk_operasional',
         'alamat',
+        'kota',
         'no_telp',
         'website',
         'logo_base64',

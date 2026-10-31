@@ -424,14 +424,20 @@ class PengajuanDosenController extends Controller
     }
 
     /**
-     * Riwayat usulan IKD dosen: berkas yang sudah diajukan beserta keputusan admin.
+     * Riwayat usulan syarat khusus dosen (BKD & IKD): semua berkas yang sudah
+     * diajukan, baik yang diterima maupun ditolak admin. Difilter per-berkas
+     * (bukan status gabungan) supaya usulan yang sudah diputuskan tetap tampil.
      */
     public function riwayatIkd(Request $request): View
     {
         return view('profil.pengajuan.riwayat-ikd', [
             'daftar' => SyaratKhusus::query()
                 ->where('user_id', $request->user()->id)
-                ->where('status', '!=', 'draf')
+                ->where(function ($query) {
+                    foreach (SyaratKhusus::JENIS as $jenis) {
+                        $query->orWhere($jenis.'_status', '!=', 'draf');
+                    }
+                })
                 ->orderByDesc('updated_at')
                 ->get(),
         ]);
