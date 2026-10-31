@@ -103,29 +103,6 @@ class DatabaseSeeder extends Seeder
                     'tanggal_lahir' => '1987-05-14',
                     'alamat' => 'Jl. Cihampelas No. 112, Bandung, Jawa Barat',
                     'no_hp' => '0812-3456-7890',
-                    'status_pernikahan' => 'menikah',
-                    'nama_pasangan' => 'Rizky Pratama, S.T.',
-                    'pekerjaan_pasangan' => 'asn',
-                    'nip_pasangan' => '198503122010011002',
-                    'tempat_lahir_pasangan' => 'Jakarta',
-                    'tanggal_lahir_pasangan' => '1985-03-12',
-                    'tanggal_nikah' => '2012-06-30',
-                ],
-                'anak' => [
-                    [
-                        'nama' => 'Nadia Lestari',
-                        'tempat_lahir' => 'Bandung',
-                        'tanggal_lahir' => '2014-02-11',
-                        'jenis_kelamin' => 'P',
-                        'pekerjaan' => 'Pelajar',
-                    ],
-                    [
-                        'nama' => 'Fajar Pratama',
-                        'tempat_lahir' => 'Bandung',
-                        'tanggal_lahir' => '2018-09-05',
-                        'jenis_kelamin' => 'L',
-                        'pekerjaan' => 'Pelajar',
-                    ],
                 ],
                 'pendidikan' => [
                     ['jenjang' => 'sd', 'nama_institusi' => 'SD Negeri 1 Bandung', 'jurusan' => null, 'tahun_masuk' => 1993, 'tahun_lulus' => 1999],
@@ -141,22 +118,6 @@ class DatabaseSeeder extends Seeder
                     'tanggal_lahir' => '1990-01-12',
                     'alamat' => 'Perum Griya Asri Blok C-7, Sleman, DI Yogyakarta',
                     'no_hp' => '0857-1122-3344',
-                    'status_pernikahan' => 'menikah',
-                    'nama_pasangan' => 'Sinta Dewi, S.E.',
-                    'pekerjaan_pasangan' => 'non_asn',
-                    'nip_pasangan' => null,
-                    'tempat_lahir_pasangan' => 'Sleman',
-                    'tanggal_lahir_pasangan' => '1992-07-19',
-                    'tanggal_nikah' => '2016-11-12',
-                ],
-                'anak' => [
-                    [
-                        'nama' => 'Aditya Santoso',
-                        'tempat_lahir' => 'Sleman',
-                        'tanggal_lahir' => '2019-04-23',
-                        'jenis_kelamin' => 'L',
-                        'pekerjaan' => 'Pelajar',
-                    ],
                 ],
                 'pendidikan' => [
                     ['jenjang' => 'sd', 'nama_institusi' => 'SD Negeri 1 Sleman', 'jurusan' => null, 'tahun_masuk' => 1996, 'tahun_lulus' => 2002],
@@ -172,9 +133,7 @@ class DatabaseSeeder extends Seeder
                     'tanggal_lahir' => '1985-04-17',
                     'alamat' => 'Jl. Diponegoro No. 88, Surabaya, Jawa Timur',
                     'no_hp' => '0813-9988-7766',
-                    'status_pernikahan' => 'lajang',
                 ],
-                'anak' => [],
                 'pendidikan' => [
                     ['jenjang' => 'sd', 'nama_institusi' => 'SD Negeri 1 Surabaya', 'jurusan' => null, 'tahun_masuk' => 1991, 'tahun_lulus' => 1997],
                     ['jenjang' => 'smp', 'nama_institusi' => 'SMP Negeri 1 Surabaya', 'jurusan' => null, 'tahun_masuk' => 1997, 'tahun_lulus' => 2000],
@@ -191,16 +150,10 @@ class DatabaseSeeder extends Seeder
                 continue;
             }
 
-            $profil = ProfilDosen::updateOrCreate(
+            ProfilDosen::updateOrCreate(
                 ['user_id' => $user->id],
                 $profilData[$user->nidn]['profil'],
             );
-
-            $profil->anak()->delete();
-
-            foreach ($profilData[$user->nidn]['anak'] as $anak) {
-                $profil->anak()->create($anak);
-            }
 
             $this->seedPendidikan($user, $profilData[$user->nidn]['pendidikan']);
         }

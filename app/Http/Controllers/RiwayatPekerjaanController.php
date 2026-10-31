@@ -57,7 +57,6 @@ class RiwayatPekerjaanController extends Controller
         $user = $request->user();
 
         $rules = [
-            'niy_npp' => ['nullable', 'string', 'max:30'],
             'nuptk' => ['nullable', 'string', 'max:30'],
             'program_studi' => ['nullable', 'string', Rule::exists('prodi', 'nama_prodi')],
         ];
@@ -77,7 +76,6 @@ class RiwayatPekerjaanController extends Controller
         $data = $request->validate($rules, [
             'program_studi.exists' => 'Prodi tidak ditemukan pada data master prodi.',
         ], [
-            'niy_npp' => 'NIY/NPP',
             'nuptk' => 'NUPTK',
             'program_studi' => 'Prodi',
         ]);

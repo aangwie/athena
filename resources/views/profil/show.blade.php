@@ -6,9 +6,6 @@
 
 @section('content')
     @php
-        $anak = $profil?->anak ?? collect();
-        $isMenikah = $profil?->status_pernikahan === 'menikah';
-        $isLajang = $profil?->status_pernikahan === 'lajang';
         $riwayatList = $riwayatPendidikan ?? collect();
 
         $steps = [
@@ -16,16 +13,6 @@
                 'label' => 'Data pribadi',
                 'status' => $profil ? 'Lengkap' : 'Belum lengkap',
                 'state' => $profil ? 'done' : 'missing',
-            ],
-            [
-                'label' => 'Data pasangan',
-                'status' => ! $profil ? 'Belum lengkap' : ($isLajang ? 'Tidak berlaku' : ($profil->nama_pasangan ? 'Lengkap' : 'Belum lengkap')),
-                'state' => ! $profil ? 'missing' : ($isLajang ? 'neutral' : ($profil->nama_pasangan ? 'done' : 'missing')),
-            ],
-            [
-                'label' => 'Data anak',
-                'status' => ! $profil ? 'Belum lengkap' : ($isLajang ? 'Tidak berlaku' : ($anak->isNotEmpty() ? $anak->count().' data' : 'Belum ditambahkan')),
-                'state' => ! $profil ? 'missing' : ($isLajang ? 'neutral' : ($anak->isNotEmpty() ? 'done' : 'neutral')),
             ],
             [
                 'label' => 'Riwayat pendidikan',
@@ -103,7 +90,7 @@
                         <div>
                             <p class="text-sm font-extrabold text-amber-900">Portofolio Anda belum lengkap</p>
                             <p class="mt-1 max-w-xl text-xs leading-relaxed text-amber-700/80">
-                                Lengkapi data pribadi terlebih dahulu agar informasi profil dan keluarga tampil pada portofolio ini.
+                                Lengkapi data pribadi terlebih dahulu agar informasi profil tampil pada portofolio ini.
                             </p>
                         </div>
                     </div>
@@ -168,19 +155,6 @@
                                 <dd class="mt-1 text-sm leading-relaxed font-medium text-slate-700">{{ $profil->alamat ?? '—' }}</dd>
                             </div>
                             <div>
-                                <dt class="text-[10px] font-bold tracking-[0.12em] text-slate-400 uppercase">Status Pernikahan</dt>
-                                <dd class="mt-1.5">
-                                    <span @class([
-                                        'badge-status',
-                                        'bg-teal-50 text-teal-700 ring-teal-200' => $isMenikah,
-                                        'bg-slate-100 text-slate-600 ring-slate-200' => $isLajang,
-                                    ])>
-                                        <span @class(['size-1.5 rounded-full', 'bg-teal-500' => $isMenikah, 'bg-slate-400' => $isLajang])></span>
-                                        {{ $profil->statusPernikahanLabel() }}
-                                    </span>
-                                </dd>
-                            </div>
-                            <div>
                                 <dt class="text-[10px] font-bold tracking-[0.12em] text-slate-400 uppercase">Program Studi</dt>
                                 <dd class="mt-1 text-sm font-semibold text-slate-800">{{ $user->program_studi ?? '—' }}</dd>
                             </div>
@@ -194,136 +168,6 @@
                         </div>
                     @endif
                 </section>
-
-                {{-- Data keluarga --}}
-                @if ($profil)
-                    <section class="section-card">
-                        <div class="section-heading items-center justify-between">
-                            <div class="flex items-center gap-3">
-                                <span class="flex size-9 items-center justify-center rounded-xl bg-rose-50 text-rose-500">
-                                    <svg class="size-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                                        <path d="M12 20.5s-7.5-4.6-7.5-10A4.5 4.5 0 0 1 12 7.6a4.5 4.5 0 0 1 7.5 2.9c0 5.4-7.5 10-7.5 10Z" stroke-linejoin="round" />
-                                    </svg>
-                                </span>
-                                <div>
-                                    <h3 class="text-sm font-extrabold text-slate-800">Data Keluarga</h3>
-                                    <p class="mt-0.5 text-xs text-slate-400">Informasi pasangan dan anak.</p>
-                                </div>
-                            </div>
-                            <a href="{{ route('profil.data-pribadi.edit') }}" class="text-[11px] font-bold text-teal-700 transition hover:text-teal-800 hover:underline">
-                                Ubah
-                            </a>
-                        </div>
-
-                        @if ($isLajang)
-                            <div class="px-5 py-10 text-center sm:px-6">
-                                <span class="mx-auto flex size-12 items-center justify-center rounded-2xl bg-slate-50 text-slate-300 ring-1 ring-slate-100">
-                                    <svg class="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
-                                        <circle cx="12" cy="8" r="3.5" />
-                                        <path d="M4.5 20a7.5 7.5 0 0 1 15 0" stroke-linecap="round" />
-                                    </svg>
-                                </span>
-                                <p class="mt-3 text-sm font-bold text-slate-600">Belum menikah</p>
-                                <p class="mt-1 text-xs text-slate-400">Data pasangan dan anak tidak perlu diisi.</p>
-                            </div>
-                        @else
-                            <div class="space-y-5 px-5 py-5 sm:px-6">
-                                <div class="rounded-xl border border-teal-100 bg-teal-50/40 p-4">
-                                    <div class="mb-4 flex items-center gap-2">
-                                        <span class="flex size-7 items-center justify-center rounded-lg bg-teal-600 text-white">
-                                            <svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                                                <path d="M12 20.5s-7.5-4.6-7.5-10A4.5 4.5 0 0 1 12 7.6a4.5 4.5 0 0 1 7.5 2.9c0 5.4-7.5 10-7.5 10Z" stroke-linejoin="round" />
-                                            </svg>
-                                        </span>
-                                        <p class="text-xs font-extrabold tracking-wide text-teal-800 uppercase">Pasangan</p>
-                                    </div>
-                                    <dl class="grid gap-x-6 gap-y-4 sm:grid-cols-2">
-                                        <div>
-                                            <dt class="text-[10px] font-bold tracking-[0.12em] text-teal-700/60 uppercase">Nama</dt>
-                                            <dd class="mt-0.5 text-sm font-bold text-slate-800">{{ $profil->nama_pasangan }}</dd>
-                                        </div>
-                                        <div>
-                                            <dt class="text-[10px] font-bold tracking-[0.12em] text-teal-700/60 uppercase">Pekerjaan</dt>
-                                            <dd class="mt-0.5 text-sm font-semibold text-slate-700">
-                                                {{ $profil->pekerjaanPasanganLabel() }}
-                                                @if ($profil->pekerjaan_pasangan === 'asn' && $profil->nip_pasangan)
-                                                    <span class="mt-1 block font-mono text-[11px] text-slate-400">NIP {{ $profil->nip_pasangan }}</span>
-                                                @endif
-                                            </dd>
-                                        </div>
-                                        <div>
-                                            <dt class="text-[10px] font-bold tracking-[0.12em] text-teal-700/60 uppercase">Tempat, Tanggal Lahir</dt>
-                                            <dd class="mt-0.5 text-sm font-semibold text-slate-700">
-                                                {{ $profil->tempat_lahir_pasangan ?? '—' }}
-                                                @if ($profil->tanggal_lahir_pasangan)
-                                                    <span class="text-slate-400">·</span> {{ $profil->tanggal_lahir_pasangan->translatedFormat('d F Y') }}
-                                                @endif
-                                            </dd>
-                                        </div>
-                                        <div>
-                                            <dt class="text-[10px] font-bold tracking-[0.12em] text-teal-700/60 uppercase">Tanggal Nikah</dt>
-                                            <dd class="mt-0.5 text-sm font-semibold text-slate-700">
-                                                {{ $profil->tanggal_nikah?->translatedFormat('d F Y') ?? '—' }}
-                                            </dd>
-                                        </div>
-                                    </dl>
-                                </div>
-
-                                <div>
-                                    <div class="mb-3 flex items-center justify-between gap-3">
-                                        <p class="text-xs font-extrabold tracking-wide text-slate-600 uppercase">Data Anak</p>
-                                        <span class="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-500">{{ $anak->count() }} anak</span>
-                                    </div>
-
-                                    @if ($anak->isNotEmpty())
-                                        <div class="space-y-2.5">
-                                            @foreach ($anak as $dataAnak)
-                                                <div class="flex flex-col gap-3 rounded-xl border border-slate-100 bg-slate-50/50 p-3.5 sm:flex-row sm:items-center sm:justify-between">
-                                                    <div class="flex min-w-0 items-center gap-3">
-                                                        <span @class([
-                                                            'flex size-9 shrink-0 items-center justify-center rounded-lg text-white',
-                                                            'bg-sky-500' => $dataAnak->jenis_kelamin === 'L',
-                                                            'bg-rose-400' => $dataAnak->jenis_kelamin === 'P',
-                                                        ])>
-                                                            <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                                                                <circle cx="12" cy="8" r="3.2" />
-                                                                <path d="M5 20a7 7 0 0 1 14 0" stroke-linecap="round" />
-                                                            </svg>
-                                                        </span>
-                                                        <div class="min-w-0">
-                                                            <p class="truncate text-sm font-bold text-slate-800">{{ $dataAnak->nama }}</p>
-                                                            <p class="text-[11px] text-slate-400">
-                                                                {{ $dataAnak->jenisKelaminLabel() }}
-                                                                @if ($dataAnak->pekerjaan)
-                                                                    <span class="mx-1">·</span> {{ $dataAnak->pekerjaan }}
-                                                                @endif
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                    <div class="pl-12 text-left sm:pl-0 sm:text-right">
-                                                        <p class="text-xs font-semibold text-slate-600">
-                                                            {{ $dataAnak->tempat_lahir ?? '—' }}
-                                                        </p>
-                                                        <p class="text-[11px] text-slate-400">
-                                                            {{ $dataAnak->tanggal_lahir?->translatedFormat('d F Y') ?? '—' }}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            @endforeach
-                                        </div>
-                                    @else
-                                        <div class="rounded-xl border border-dashed border-slate-200 bg-slate-50/40 px-4 py-6 text-center">
-                                            <p class="text-xs font-semibold text-slate-500">Belum ada data anak.</p>
-                                            <a href="{{ route('profil.data-pribadi.edit') }}" class="mt-1.5 inline-block text-[11px] font-bold text-teal-700 hover:underline">
-                                                Tambahkan data anak
-                                            </a>
-                                        </div>
-                                    @endif
-                                </div>
-                            </div>
-                        @endif
-                    </section>
-                @endif
 
                 {{-- Riwayat pendidikan --}}
                 <section class="section-card">

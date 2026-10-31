@@ -27,24 +27,10 @@ class ProfilDosenController extends Controller
     public function edit(Request $request): View
     {
         $user = $this->userWithProfile($request);
-        $profil = $user->profilDosen;
-
-        $anakList = old('children');
-
-        if ($anakList === null) {
-            $anakList = $profil?->anak->map(fn ($anak) => [
-                'nama' => $anak->nama,
-                'tempat_lahir' => $anak->tempat_lahir,
-                'tanggal_lahir' => $anak->tanggal_lahir?->format('Y-m-d'),
-                'jenis_kelamin' => $anak->jenis_kelamin,
-                'pekerjaan' => $anak->pekerjaan,
-            ])->all() ?? [];
-        }
 
         return view('profil.data-pribadi', [
             'user' => $user,
-            'profil' => $profil,
-            'anakList' => $anakList,
+            'profil' => $user->profilDosen,
         ]);
     }
 
@@ -57,21 +43,9 @@ class ProfilDosenController extends Controller
             $user->update(['name' => $data['nama']]);
 
             $profil = $user->profilDosen()->firstOrNew([]);
-            $profil->fill(collect($data)->except(['nama', 'children'])->all());
+            $profil->fill(collect($data)->except('nama')->all());
             $profil->user_id = $user->id;
             $profil->save();
-
-            $profil->anak()->delete();
-
-            foreach ($data['children'] ?? [] as $anak) {
-                $profil->anak()->create([
-                    'nama' => $anak['nama'],
-                    'tempat_lahir' => $anak['tempat_lahir'],
-                    'tanggal_lahir' => $anak['tanggal_lahir'],
-                    'jenis_kelamin' => $anak['jenis_kelamin'],
-                    'pekerjaan' => $anak['pekerjaan'] ?? null,
-                ]);
-            }
         });
 
         return redirect()
@@ -86,6 +60,6 @@ class ProfilDosenController extends Controller
 
     private function userWithProfile(Request $request): User
     {
-        return $request->user()->load('profilDosen.anak', 'riwayatPendidikan');
+        return $request->user()->load('profilDosen', 'riwayatPendidikan');
     }
 }

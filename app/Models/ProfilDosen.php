@@ -5,7 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ProfilDosen extends Model
 {
@@ -34,14 +33,6 @@ class ProfilDosen extends Model
         'alamat',
         'agama',
         'no_hp',
-        'status_pernikahan',
-        'nama_pasangan',
-        'pekerjaan_pasangan',
-        'nip_pasangan',
-        'tempat_lahir_pasangan',
-        'tanggal_lahir_pasangan',
-        'tanggal_nikah',
-        'niy_npp',
         'nuptk',
         'sk_pplp_tanggal',
         'sk_pplp_tahun',
@@ -62,8 +53,6 @@ class ProfilDosen extends Model
     {
         return [
             'tanggal_lahir' => 'date',
-            'tanggal_lahir_pasangan' => 'date',
-            'tanggal_nikah' => 'date',
             'sk_pplp_tanggal' => 'date',
             'sk_jafa_tanggal' => 'date',
             'sk_impasing_tanggal' => 'date',
@@ -83,16 +72,6 @@ class ProfilDosen extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
-    }
-
-    public function anak(): HasMany
-    {
-        return $this->hasMany(AnakDosen::class);
-    }
-
-    public function statusPernikahanLabel(): string
-    {
-        return $this->status_pernikahan === 'menikah' ? 'Menikah' : 'Lajang';
     }
 
     public function agamaLabel(): string
@@ -134,14 +113,5 @@ class ProfilDosen extends Model
     public function tanggalSkLabel(string $sk): string
     {
         return $this->{"sk_{$sk}_tanggal"}?->locale('id')->translatedFormat('d F Y') ?? '—';
-    }
-
-    public function pekerjaanPasanganLabel(): string
-    {
-        return match ($this->pekerjaan_pasangan) {
-            'asn' => 'ASN',
-            'non_asn' => 'Non ASN',
-            default => '—',
-        };
     }
 }

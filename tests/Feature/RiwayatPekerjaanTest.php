@@ -79,7 +79,6 @@ class RiwayatPekerjaanTest extends TestCase
         $user = $this->makeDosen();
 
         $response = $this->actingAs($user)->put(route('profil.pekerjaan.update'), [
-            'niy_npp' => '046/1234/NPP',
             'nuptk' => '1234567890123456',
             'sk_pplp_tanggal' => '2019-08-02',
             'sk_pplp_tahun' => 11,
@@ -93,7 +92,6 @@ class RiwayatPekerjaanTest extends TestCase
 
         $this->assertDatabaseHas('profil_dosen', [
             'user_id' => $user->id,
-            'niy_npp' => '046/1234/NPP',
             'nuptk' => '1234567890123456',
             'sk_pplp_tahun' => 11,
             'sk_pplp_bulan' => 2,

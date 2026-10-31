@@ -25,10 +25,8 @@ Aplikasi berbasis **Laravel 12** untuk mengelola pengajuan jabatan akademik dose
 - Sidebar responsif dengan drawer di perangkat mobile
 - Pembatasan data: dosen hanya melihat ajuan DUPAK-nya sendiri, admin melihat seluruh ajuan DUPAK dosen
 - **Profil Dosen** (khusus role dosen):
-  - **Data Pribadi** — nama, tempat/tanggal lahir, alamat, no. HP, dan status pernikahan
-  - Data pasangan otomatis tampil jika status **Menikah**: nama, pekerjaan (ASN/Non ASN), NIP (jika ASN), tempat/tanggal lahir, dan tanggal nikah
-  - Data anak dinamis (bisa lebih dari satu): nama, tempat/tanggal lahir, jenis kelamin, dan pekerjaan
-  - **Portofolio Saya** — menampilkan data pribadi, pasangan, anak, dan riwayat pendidikan yang telah diisi
+  - **Data Pribadi** — nama, tempat/tanggal lahir, alamat, agama, dan no. HP
+  - **Portofolio Saya** — menampilkan data pribadi dan riwayat pendidikan yang telah diisi
   - **Riwayat Pendidikan** — CRUD jenjang SD, SMP, SMA/SMK, D3, D4, dan S1–S3:
     - unggah bukti **ijazah** PDF untuk seluruh jenjang (maks. 500 KB)
     - unggah **ijazah + transkrip** untuk jenjang perguruan tinggi
@@ -129,8 +127,7 @@ app/Http/Requests/UpdateDataPribadiRequest.php                 # validasi data p
 app/Http/Requests/RiwayatPendidikanRequest.php                 # validasi data pendidikan & berkas PDF
 app/Models/User.php                                           # user + NIDN + peran
 app/Models/PengajuanJabatan.php                               # pengajuan jabatan akademik
-app/Models/ProfilDosen.php                                    # profil dosen + data pasangan
-app/Models/AnakDosen.php                                      # data anak dosen
+app/Models/ProfilDosen.php                                    # profil dosen + data kepegawaian
 app/Models/RiwayatPendidikan.php                              # jenjang, institusi, dan berkas pendidikan
 app/Models/JabatanFungsional.php                              # master jabatan fungsional
 app/Models/JabatanStruktural.php                              # master jabatan struktural

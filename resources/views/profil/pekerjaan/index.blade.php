@@ -64,15 +64,7 @@
                     </div>
                 </div>
 
-                <div class="grid gap-5 px-5 py-5 sm:grid-cols-2 sm:px-6 lg:grid-cols-4">
-                    <div>
-                        <label for="niy_npp" class="form-label">NIY / NPP</label>
-                        <input type="text" id="niy_npp" name="niy_npp" value="{{ old('niy_npp', $profil->niy_npp ?? '') }}"
-                               placeholder="Contoh: 046/1234/NPP"
-                               @class(['form-input', 'border-rose-300 bg-rose-50/40' => $errors->has('niy_npp')])>
-                        @error('niy_npp') <p class="form-error">{{ $message }}</p> @enderror
-                    </div>
-
+                <div class="grid gap-5 px-5 py-5 sm:grid-cols-2 sm:px-6 lg:grid-cols-3">
                     <div>
                         <label for="nidn" class="form-label">NIDN</label>
                         <input type="text" id="nidn" value="{{ $user->nidn }}" readonly
