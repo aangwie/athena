@@ -17,7 +17,7 @@ class SenatController extends Controller
         $items = Senat::query()
             ->with('user')
             ->get()
-            ->sortBy(fn (Senat $item) => [$item->jabatan === 'ketua' ? 0 : 1, $item->user?->name ?? ''])
+            ->sortBy(fn (Senat $item) => [array_search($item->jabatan, array_keys(Senat::JABATAN)), $item->user?->name ?? ''])
             ->values();
 
         // Parameter ?edit= memakai ulang formulir yang sama di halaman ini.

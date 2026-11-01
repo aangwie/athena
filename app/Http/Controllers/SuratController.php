@@ -2,15 +2,23 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\SuratBakiRequest;
+use App\Http\Requests\SuratBapSenatRequest;
 use App\Http\Requests\SuratPaktaIntegritasRequest;
 use App\Http\Requests\SuratPernyataanPimpinanRequest;
 use App\Models\Instansi;
 use App\Models\KaryaTulis;
 use App\Models\RiwayatPendidikan;
+use App\Models\Senat;
 use App\Models\StrukturInstansi;
+use App\Models\SuratBaki;
+use App\Models\SuratBapSenat;
 use App\Models\SuratPaktaIntegritas;
 use App\Models\SuratPernyataanPimpinan;
+use App\Models\TimKomite;
 use App\Models\User;
+use App\Support\SuratBakiPdf;
+use App\Support\SuratBapSenatPdf;
 use App\Support\SuratPaktaIntegritasPdf;
 use App\Support\SuratPernyataanPimpinanPdf;
 use Illuminate\Http\RedirectResponse;
@@ -51,6 +59,40 @@ class SuratController extends Controller
             'paktaEdit' => $request->filled('edit_pakta')
                 ? SuratPaktaIntegritas::query()->find($request->integer('edit_pakta'))
                 : null,
+            'bapList' => SuratBapSenat::query()
+                ->with('dosen')
+                ->orderByDesc('tanggal_bap')
+                ->orderByDesc('id')
+                ->get(),
+            'bapEdit' => $request->filled('edit_bap')
+                ? SuratBapSenat::query()->find($request->integer('edit_bap'))
+                : null,
+            'bakiList' => SuratBaki::query()
+                ->with('bapSenat.dosen')
+                ->orderByDesc('tanggal_surat')
+                ->orderByDesc('id')
+                ->get(),
+            'bakiEdit' => $request->filled('edit_baki')
+                ? SuratBaki::query()->find($request->integer('edit_baki'))
+                : null,
+            // Pilihan usulan senat (BAP) yang ditindaklanjuti BAKI.
+            'usulanSenatList' => SuratBapSenat::query()
+                ->with('dosen')
+                ->orderByDesc('tanggal_bap')
+                ->orderByDesc('id')
+                ->get(),
+            // Susunan tim komite untuk hitungan kuorum & daftar hadir BAKI.
+            'timKomiteList' => TimKomite::query()
+                ->with('user')
+                ->get()
+                ->sortBy(fn (TimKomite $item) => [array_search($item->jabatan, array_keys(TimKomite::JABATAN)), $item->user?->name ?? ''])
+                ->values(),
+            // Pilihan anggota senat pada formulir BAP (multi select).
+            'senatList' => Senat::query()
+                ->with('user')
+                ->get()
+                ->sortBy(fn (Senat $item) => [array_search($item->jabatan, array_keys(Senat::JABATAN)), $item->user?->name ?? ''])
+                ->values(),
             // Tempat pada pakta integritas mengikuti kota instansi.
             'kota' => Instansi::query()->value('kota'),
             // Pilihan karya ilmiah per dosen (dipakai picker pada form pakta integritas).
@@ -139,18 +181,126 @@ class SuratController extends Controller
             'karyaTulis',
         ]]);
 
-        $identitas = $this->identitas($pakta->dosen);
-
-        // Pada surat ini "Jabatan / TMT" adalah jabatan fungsional (akademik), bukan struktural.
-        $fungsional = $pakta->dosen?->riwayatJabatanStruktural->sortByDesc('tmt')->first();
-        $identitas['jabatan'] = $fungsional?->fungsionalLabel() ?? $identitas['jabatan'];
-        $identitas['jabatan_tmt'] = $fungsional?->tmtLabel() ?? $identitas['jabatan_tmt'];
+        $identitas = $this->identitasDosen($pakta->dosen);
 
         $pdf = new SuratPaktaIntegritasPdf(
             Instansi::query()->first(),
             $pakta,
             $identitas,
             $pakta->karyaTerpilih(),
+        );
+        $pdf->buat();
+
+        return response($pdf->isi(), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="'.$pdf->namaBerkas().'"',
+        ]);
+    }
+
+    public function storeBapSenat(SuratBapSenatRequest $request): RedirectResponse
+    {
+        SuratBapSenat::query()->create($this->dataBap($request));
+
+        return redirect()
+            ->route('surat.index')
+            ->withFragment('bap-senat')
+            ->with('status', 'BAP senat berhasil disimpan.');
+    }
+
+    public function updateBapSenat(SuratBapSenatRequest $request, SuratBapSenat $bap): RedirectResponse
+    {
+        $bap->update($this->dataBap($request));
+
+        return redirect()
+            ->route('surat.index')
+            ->withFragment('bap-senat')
+            ->with('status', 'BAP senat berhasil diperbarui.');
+    }
+
+    public function destroyBapSenat(SuratBapSenat $bap): RedirectResponse
+    {
+        $bap->delete();
+
+        return redirect()
+            ->route('surat.index')
+            ->withFragment('bap-senat')
+            ->with('status', 'BAP senat berhasil dihapus.');
+    }
+
+    /**
+     * BAP senat siap cetak: PDF A4 (FPDF) berisi berita acara + daftar hadir rapat.
+     */
+    public function cetakBapSenat(SuratBapSenat $bap): Response
+    {
+        $bap->load('dosen');
+
+        $senat = Senat::query()->with('user')->get();
+
+        $pdf = new SuratBapSenatPdf(
+            Instansi::query()->first(),
+            $bap,
+            $this->identitasDosen($bap->dosen),
+            $bap->anggotaSenat(),
+            $senat->firstWhere('jabatan', 'ketua'),
+            $senat->firstWhere('jabatan', 'sekretaris'),
+        );
+        $pdf->buat();
+
+        return response($pdf->isi(), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="'.$pdf->namaBerkas().'"',
+        ]);
+    }
+
+    public function storeBaki(SuratBakiRequest $request): RedirectResponse
+    {
+        SuratBaki::query()->create($this->dataBaki($request));
+
+        return redirect()
+            ->route('surat.index')
+            ->withFragment('baki')
+            ->with('status', 'BAKI berhasil disimpan.');
+    }
+
+    public function updateBaki(SuratBakiRequest $request, SuratBaki $baki): RedirectResponse
+    {
+        $baki->update($this->dataBaki($request));
+
+        return redirect()
+            ->route('surat.index')
+            ->withFragment('baki')
+            ->with('status', 'BAKI berhasil diperbarui.');
+    }
+
+    public function destroyBaki(SuratBaki $baki): RedirectResponse
+    {
+        $baki->delete();
+
+        return redirect()
+            ->route('surat.index')
+            ->withFragment('baki')
+            ->with('status', 'BAKI berhasil dihapus.');
+    }
+
+    /**
+     * BAKI siap cetak: berita acara tim komite + daftar hadir (PDF A4, FPDF).
+     */
+    public function cetakBaki(SuratBaki $baki): Response
+    {
+        $baki->load('bapSenat.dosen');
+
+        $timKomite = TimKomite::query()
+            ->with('user')
+            ->get()
+            ->sortBy(fn (TimKomite $item) => [array_search($item->jabatan, array_keys(TimKomite::JABATAN)), $item->user?->name ?? ''])
+            ->values();
+
+        $pdf = new SuratBakiPdf(
+            Instansi::query()->first(),
+            $baki,
+            $this->identitasDosen($baki->bapSenat?->dosen),
+            $timKomite,
+            $timKomite->firstWhere('jabatan', 'ketua'),
         );
         $pdf->buat();
 
@@ -207,6 +357,55 @@ class SuratController extends Controller
     }
 
     /**
+     * Identitas dosen untuk badan surat, dengan jabatan fungsional sebagai "Jabatan".
+     *
+     * @return array<string, string>
+     */
+    private function identitasDosen(?User $dosen): array
+    {
+        $identitas = $this->identitas($dosen);
+
+        // Pada surat, "Jabatan / TMT" adalah jabatan fungsional (akademik), bukan struktural.
+        $fungsional = $dosen?->riwayatJabatanStruktural->sortByDesc('tmt')->first();
+
+        $identitas['jabatan'] = $fungsional?->fungsionalLabel() ?? $identitas['jabatan'];
+        $identitas['jabatan_tmt'] = $fungsional?->tmtLabel() ?? $identitas['jabatan_tmt'];
+
+        return $identitas;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function dataBaki(SuratBakiRequest $request): array
+    {
+        $data = $request->validated();
+
+        return [
+            'nomor_surat' => $data['nomor_surat'],
+            'surat_bap_senat_id' => $data['surat_bap_senat_id'],
+            'tanggal_surat' => Carbon::createFromFormat('d-m-Y', $data['tanggal_surat'])->toDateString(),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function dataBap(SuratBapSenatRequest $request): array
+    {
+        $data = $request->validated();
+
+        return [
+            'nomor_bap' => $data['nomor_bap'],
+            'tanggal_bap' => Carbon::createFromFormat('d-m-Y', $data['tanggal_bap'])->toDateString(),
+            'user_id' => $data['dosen_id'],
+            'bidang_keilmuan' => $data['bidang_keilmuan'],
+            'prosentase_penelitian' => (int) $data['prosentase_penelitian'],
+            'anggota_senat_ids' => array_map('intval', $data['anggota_senat_ids']),
+        ];
+    }
+
+    /**
      * Identitas pimpinan/dosen yang tampil pada badan surat.
      *
      * ponytail: belum ada kolom NIP & status dosen tetap — NIP memakai NIY/NPP,
@@ -245,6 +444,7 @@ class SuratController extends Controller
             'jabatan' => $jabatan ?: ($jabatanTerakhir?->strukturalLabel() ?? ($user?->jabatan_fungsional ?: '—')),
             'jabatan_tmt' => $jabatanTerakhir?->tmtLabel() ?? '—',
             'pendidikan' => $pendidikan?->jenjangLabel() ?? '—',
+            'fakultas' => '—',
             'prodi' => $user?->program_studi ?: '—',
         ];
     }

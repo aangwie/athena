@@ -60,6 +60,33 @@ class SuratTest extends TestCase
         }
     }
 
+    public function test_tab_panels_are_not_nested_inside_each_other(): void
+    {
+        // @continue di dalam loop tab pernah membuat </div> panel tidak dirender,
+        // sehingga tab berikutnya bersarang dan ikut tersembunyi.
+        $html = $this->actingAs($this->makeUser('admin'))
+            ->get(route('surat.index'))
+            ->assertOk()
+            ->getContent();
+
+        libxml_use_internal_errors(true);
+
+        $dom = new \DOMDocument;
+        $dom->loadHTML($html);
+
+        $panels = (new \DOMXPath($dom))->query('//*[@data-tab-panel]');
+
+        $this->assertCount(4, $panels);
+
+        foreach ($panels as $panel) {
+            $this->assertSame(
+                'section',
+                $panel->parentNode->nodeName,
+                'Panel '.$panel->getAttribute('data-tab-panel').' bersarang di dalam panel lain.',
+            );
+        }
+    }
+
     public function test_pernyataan_pimpinan_tab_has_two_searchable_selects_and_date_field(): void
     {
         $this->actingAs($this->makeUser('admin'))
@@ -241,6 +268,17 @@ class SuratTest extends TestCase
         // A4 portrait (595.28 x 841.89 pt) sesuai dokumentasi FPDF.
         $this->assertStringContainsString('/MediaBox [0 0 595.28 841.89]', $isi);
         $this->assertStringContainsString('inline; filename="surat-pernyataan-pimpinan-dr-ayu-lestari-mkom.pdf"', (string) $response->headers->get('Content-Disposition'));
+
+        // Nama badan penyelenggara tampil di atas nama institusi pada kop.
+        $teks = $this->teksPdf($isi);
+
+        $this->assertStringContainsString('PERKUMPULAN PENYELENGGARA LEMBAGA PENDIDIKAN', $teks);
+        $this->assertStringContainsString('PERGURUAN TINGGI PGRI PACITAN', $teks);
+        // Tanggal penanda tangan: "Kota, DD Bulan YYYY".
+        $this->assertStringContainsString('31 Oktober 2026', $teks);
+        // Nama pimpinan dicetak apa adanya sesuai database (tidak dipaksa kapital).
+        $this->assertStringContainsString('Dr. Ayu Lestari, M.Kom.', $teks);
+        $this->assertStringNotContainsString('DR. AYU LESTARI', $teks);
     }
 
     public function test_dosen_cannot_print_update_or_delete_pernyataan_pimpinan(): void
@@ -358,6 +396,9 @@ class SuratTest extends TestCase
         // A4 portrait (595.28 x 841.89 pt) sesuai dokumentasi FPDF.
         $this->assertStringContainsString('/MediaBox [0 0 595.28 841.89]', $isi);
         $this->assertStringContainsString('inline; filename="surat-pakta-integritas-dr-ayu-lestari-mkom.pdf"', (string) $response->headers->get('Content-Disposition'));
+
+        // Tanggal penanda tangan: "Kota, DD Bulan YYYY".
+        $this->assertStringContainsString('Bandung, 31 Oktober 2026', $this->teksPdf($isi));
     }
 
     private function makeKarya(User $dosen, string $judul, string $jenis = 'Buku'): KaryaTulis
@@ -444,11 +485,7 @@ class SuratTest extends TestCase
             ->getContent();
 
         // FPDF menekan stream dengan zlib; buka dulu agar teks surat bisa diperiksa.
-        preg_match_all('/stream\r?\n(.*?)\r?\nendstream/s', $isi, $stream);
-
-        $teks = collect($stream[1])
-            ->map(fn ($data) => function_exists('gzuncompress') ? (@gzuncompress($data) ?: $data) : $data)
-            ->implode("\n");
+        $teks = $this->teksPdf($isi);
 
         $this->assertStringContainsString('Karya Dipilih', $teks);
         $this->assertStringNotContainsString('Karya Dilewati', $teks);

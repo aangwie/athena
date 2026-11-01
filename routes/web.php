@@ -8,6 +8,7 @@ use App\Http\Controllers\Instansi\InstansiController;
 use App\Http\Controllers\Instansi\ProdiController;
 use App\Http\Controllers\Instansi\SenatController;
 use App\Http\Controllers\Instansi\StrukturInstansiController;
+use App\Http\Controllers\Instansi\TimKomiteController;
 use App\Http\Controllers\KaryaTulisController;
 use App\Http\Controllers\Kepegawaian\JabatanFungsionalController;
 use App\Http\Controllers\Kepegawaian\JabatanStrukturalController;
@@ -143,6 +144,16 @@ Route::middleware('auth')->group(function () {
         Route::put('/pakta-integritas/{pakta}', [SuratController::class, 'updatePaktaIntegritas'])->name('pakta-integritas.update');
         Route::delete('/pakta-integritas/{pakta}', [SuratController::class, 'destroyPaktaIntegritas'])->name('pakta-integritas.destroy');
         Route::get('/pakta-integritas/{pakta}/cetak', [SuratController::class, 'cetakPaktaIntegritas'])->name('pakta-integritas.cetak');
+
+        Route::post('/bap-senat', [SuratController::class, 'storeBapSenat'])->name('bap-senat.store');
+        Route::put('/bap-senat/{bap}', [SuratController::class, 'updateBapSenat'])->name('bap-senat.update');
+        Route::delete('/bap-senat/{bap}', [SuratController::class, 'destroyBapSenat'])->name('bap-senat.destroy');
+        Route::get('/bap-senat/{bap}/cetak', [SuratController::class, 'cetakBapSenat'])->name('bap-senat.cetak');
+
+        Route::post('/baki', [SuratController::class, 'storeBaki'])->name('baki.store');
+        Route::put('/baki/{baki}', [SuratController::class, 'updateBaki'])->name('baki.update');
+        Route::delete('/baki/{baki}', [SuratController::class, 'destroyBaki'])->name('baki.destroy');
+        Route::get('/baki/{baki}/cetak', [SuratController::class, 'cetakBaki'])->name('baki.cetak');
     });
 
     Route::middleware('tim_pak')->prefix('tim-pak')->name('tim-pak.')->group(function () {
@@ -180,6 +191,11 @@ Route::middleware('auth')->group(function () {
         Route::post('/senat', [SenatController::class, 'store'])->name('senat.store');
         Route::put('/senat/{senat}', [SenatController::class, 'update'])->name('senat.update');
         Route::delete('/senat/{senat}', [SenatController::class, 'destroy'])->name('senat.destroy');
+
+        Route::get('/tim-komite', [TimKomiteController::class, 'index'])->name('tim-komite.index');
+        Route::post('/tim-komite', [TimKomiteController::class, 'store'])->name('tim-komite.store');
+        Route::put('/tim-komite/{timKomite}', [TimKomiteController::class, 'update'])->name('tim-komite.update');
+        Route::delete('/tim-komite/{timKomite}', [TimKomiteController::class, 'destroy'])->name('tim-komite.destroy');
 
         Route::get('/prodi', [ProdiController::class, 'index'])->name('prodi.index');
         Route::get('/prodi/create', [ProdiController::class, 'create'])->name('prodi.create');

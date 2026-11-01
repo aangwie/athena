@@ -592,15 +592,14 @@ const boot = () => {
 
         cari.addEventListener('input', () => {
             const kata = cari.value.toLowerCase();
-            const terpilih = select.value;
+            // Multi select bisa punya banyak opsi terpilih, jadi pilihan disimpan sebagai himpunan.
+            const terpilih = new Set(Array.from(select.selectedOptions, (option) => option.value));
 
             select.replaceChildren(
                 ...opsi
-                    .filter((option) => option.value === '' || option.value === terpilih || option.label.toLowerCase().includes(kata))
-                    .map((option) => new Option(option.label, option.value, false, option.value === terpilih)),
+                    .filter((option) => option.value === '' || terpilih.has(option.value) || option.label.toLowerCase().includes(kata))
+                    .map((option) => new Option(option.label, option.value, false, terpilih.has(option.value))),
             );
-
-            select.value = terpilih;
         });
     });
 

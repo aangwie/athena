@@ -86,12 +86,15 @@
                             </a>
                         @endif
                         @php
+                            $user = auth()->user();
                             // Dosen punya halaman riwayat sendiri; admin memakai tabel ajuan DUPAK di dashboard.
-                            $riwayatUrl = auth()->user()->isDosen()
+                            $riwayatUrl = $user->isDosen()
                                 ? route('profil.pengajuan.riwayat')
                                 : route('dashboard').'#dupak';
+                            // Sudah punya jabatan akademik: lanjut DUPAK. Belum punya: masih di tahap IKD.
+                            $punyaJabatanAkademik = filled($user->jabatan_fungsional);
                         @endphp
-                        @if (! auth()->user()->isTimPak())
+                        @if ($user->isDosen() ? $punyaJabatanAkademik : ! $user->isTimPak())
                             <a href="{{ $riwayatUrl }}" title="Riwayat DUPAK"
                                @class(['sidebar-link', 'sidebar-link-active' => request()->routeIs('profil.pengajuan.riwayat')])>
                                 <svg class="size-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
@@ -102,7 +105,7 @@
                                 <span class="sidebar-label">Riwayat DUPAK</span>
                             </a>
                         @endif
-                        @if (auth()->user()->isDosen())
+                        @if ($user->isDosen() && ! $punyaJabatanAkademik)
                             <a href="{{ route('profil.pengajuan.riwayat-ikd') }}" title="Riwayat IKD"
                                @class(['sidebar-link', 'sidebar-link-active' => request()->routeIs('profil.pengajuan.riwayat-ikd')])>
                                 <svg class="size-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
@@ -111,6 +114,8 @@
                                 </svg>
                                 <span class="sidebar-label">Riwayat IKD</span>
                             </a>
+                        @endif
+                        @if ($user->isDosen())
                             <a href="{{ route('profil.karya-tulis.index') }}" title="Riwayat Karya Tulis"
                                @class(['sidebar-link', 'sidebar-link-active' => request()->routeIs('profil.karya-tulis.*')])>
                                 <svg class="size-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
@@ -236,6 +241,15 @@
                                     <path d="M16 6.2a3 3 0 0 1 0 5.6M17.5 14.4c1.9.6 3 2.3 3 4.6" stroke-linecap="round" />
                                 </svg>
                                 <span class="sidebar-label">Senat</span>
+                            </a>
+                            <a href="{{ route('instansi.tim-komite.index') }}" title="Tim Komite" @class(['sidebar-link', 'sidebar-link-active' => request()->routeIs('instansi.tim-komite.*')])>
+                                <svg class="size-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                    <circle cx="9" cy="8.5" r="3" />
+                                    <path d="M3.5 19c0-2.8 2.5-5 5.5-5s5.5 2.2 5.5 5" stroke-linecap="round" />
+                                    <path d="M16 6.2a3 3 0 0 1 0 5.6M17.5 14.4c1.9.6 3 2.3 3 4.6" stroke-linecap="round" />
+                                    <path d="m9.5 16.5 1.4 1.4 2.6-2.9" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                                <span class="sidebar-label">Tim Komite</span>
                             </a>
                         </div>
                     </details>

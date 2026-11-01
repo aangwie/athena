@@ -26,7 +26,7 @@ class SuratPernyataanPimpinanPdf extends Fpdf
 
     private const MARGIN_KIRI = 2.0;
 
-    private const MARGIN_ATAS = 2.0;
+    private const MARGIN_ATAS = 1.5;
 
     private const MARGIN_KANAN = 2.0;
 
@@ -88,6 +88,10 @@ class SuratPernyataanPimpinanPdf extends Fpdf
 
         $this->SetY(self::MARGIN_ATAS);
         $this->SetLeftMargin(self::MARGIN_KIRI + ($this->adaLogo ? self::UKURAN_LOGO + 0.4 : 0));
+        $this->SetFont(self::FONT, 'B', 11);
+        $this->MultiCell(0, 0.55, $this->teks('PERKUMPULAN PENYELENGGARA LEMBAGA PENDIDIKAN'), 0, 'C');
+        $this->MultiCell(0, 0.55, $this->teks('PERGURUAN TINGGI PGRI PACITAN'), 0, 'C');
+
         $this->SetFont(self::FONT, 'B', 14);
         $this->MultiCell(0, 0.7, $this->teks(mb_strtoupper($this->instansi?->nama_instansi ?: 'Nama Instansi Belum Diisi')), 0, 'C');
 
@@ -180,10 +184,11 @@ class SuratPernyataanPimpinanPdf extends Fpdf
     {
         $this->Ln(0.4);
 
-        $this->barisTandaTangan($this->teks(($this->instansi?->kota ?: '…').', '.$this->pernyataan->tanggal_surat?->format('d-m-Y')));
-        $this->barisTandaTangan('Pimpinan,');
+        $this->barisTandaTangan($this->teks(($this->instansi?->kota ?: '…').', '.$this->pernyataan->tanggal_surat?->locale('id')->translatedFormat('j F Y')));
+        $this->barisTandaTangan('Pimpinan');
         $this->barisTandaTangan('', '', 2.2);
-        $this->barisTandaTangan($this->teks(mb_strtoupper($this->pimpinan['nama'])), 'BU');
+        // Nama dicetak apa adanya seperti di database (bukan dipaksa kapital).
+        $this->barisTandaTangan($this->teks($this->pimpinan['nama']), 'BU');
         $this->barisTandaTangan($this->teks('NIDN: '.$this->pimpinan['nidn']));
     }
 

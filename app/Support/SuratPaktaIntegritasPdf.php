@@ -26,21 +26,17 @@ class SuratPaktaIntegritasPdf extends Fpdf
 
     private const MARGIN_KIRI = 2.0;
 
-    private const MARGIN_ATAS = 1.0;
+    private const MARGIN_ATAS = 2.0;
 
     private const MARGIN_KANAN = 2.0;
 
     private const MARGIN_BAWAH = 1.0;
-
-    private const UKURAN_LOGO = 2.4;
 
     private const FONT = 'Times';
 
     private const UKURAN_FONT = 10.5;
 
     private const TINGGI_BARIS = 0.5;
-
-    private bool $adaLogo = false;
 
     /**
      * @param  array<string, string>  $dosen
@@ -62,7 +58,6 @@ class SuratPaktaIntegritasPdf extends Fpdf
     public function buat(): static
     {
         $this->AddPage();
-        $this->kop();
         $this->judul();
         $this->badan();
 
@@ -80,31 +75,6 @@ class SuratPaktaIntegritasPdf extends Fpdf
     public function namaBerkas(): string
     {
         return 'surat-pakta-integritas-'.Str::slug($this->dosen['nama']).'.pdf';
-    }
-
-    private function kop(): void
-    {
-        $this->logo();
-
-        $this->SetY(self::MARGIN_ATAS);
-        $this->SetLeftMargin(self::MARGIN_KIRI + ($this->adaLogo ? self::UKURAN_LOGO + 0.4 : 0));
-        $this->SetFont(self::FONT, 'B', 14);
-        $this->MultiCell(0, 0.7, $this->teks(mb_strtoupper($this->instansi?->nama_instansi ?: 'Nama Instansi Belum Diisi')), 0, 'C');
-
-        $this->SetFont(self::FONT, '', 9);
-        $this->MultiCell(0, 0.45, $this->teks($this->kontak()), 0, 'C');
-
-        $this->SetLeftMargin(self::MARGIN_KIRI);
-
-        $y = ($this->adaLogo ? max($this->GetY(), self::MARGIN_ATAS + self::UKURAN_LOGO) : $this->GetY()) + 0.15;
-        $kanan = $this->GetPageWidth() - self::MARGIN_KANAN;
-
-        $this->SetLineWidth(0.07);
-        $this->Line(self::MARGIN_KIRI, $y, $kanan, $y);
-        $this->SetLineWidth(0.02);
-        $this->Line(self::MARGIN_KIRI, $y + 0.12, $kanan, $y + 0.12);
-
-        $this->SetY($y + 0.5);
     }
 
     private function judul(): void
@@ -272,12 +242,12 @@ class SuratPaktaIntegritasPdf extends Fpdf
     {
         $this->Ln(0.4);
 
-        $this->barisTandaTangan($this->teks(($this->instansi?->kota ?: '…').', '.$this->pakta->tanggal_pakta?->format('d-m-Y')));
+        $this->barisTandaTangan($this->teks(($this->instansi?->kota ?: '…').', '.$this->pakta->tanggal_pakta?->locale('id')->translatedFormat('j F Y')));
         $this->barisTandaTangan('Yang membuat pernyataan');
-        $this->barisTandaTangan('', '', 1.4);
-        $this->barisTandaTangan('Ttd dan materai');
         $this->barisTandaTangan('', '', 1.8);
-        $this->barisTandaTangan($this->teks($this->dosen['nama']));
+        // $this->barisTandaTangan('Ttd dan materai');
+        // $this->barisTandaTangan('', '', 1.8);
+        $this->barisTandaTangan($this->teks($this->dosen['nama']),'B');
         $this->barisTandaTangan($this->teks('NIDN: '.$this->dosen['nidn']));
     }
 
@@ -286,33 +256,6 @@ class SuratPaktaIntegritasPdf extends Fpdf
         $this->SetFont(self::FONT, $gaya, self::UKURAN_FONT);
         $this->SetX($this->GetPageWidth() - self::MARGIN_KANAN - 8);
         $this->Cell(8, $tinggi, $teks, 0, 1, 'L');
-    }
-
-    private function kontak(): string
-    {
-        return collect([$this->instansi?->alamat, $this->instansi?->website, $this->instansi?->no_telp])
-            ->filter()
-            ->implode(' · ');
-    }
-
-    private function logo(): void
-    {
-        // ponytail: FPDF hanya mengenal JPG/PNG; logo WebP diabaikan. Tambah konversi bila perlu.
-        if (! preg_match('#^data:image/(png|jpe?g);base64,(.+)$#s', (string) $this->instansi?->logo_base64, $cocok)) {
-            return;
-        }
-
-        $berkas = tempnam(sys_get_temp_dir(), 'athena-logo');
-        file_put_contents($berkas, base64_decode($cocok[2]));
-
-        try {
-            $this->Image($berkas, self::MARGIN_KIRI, self::MARGIN_ATAS, self::UKURAN_LOGO, self::UKURAN_LOGO, $cocok[1]);
-            $this->adaLogo = true;
-        } catch (\Throwable) {
-            $this->adaLogo = false;
-        } finally {
-            @unlink($berkas);
-        }
     }
 
     /**

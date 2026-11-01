@@ -140,7 +140,8 @@ class KaryaTulisTest extends TestCase
         $this->actingAs($this->makeDosen())
             ->get('/profil/riwayat-karya-tulis')
             ->assertOk()
-            ->assertSeeInOrder(['Profil', 'Riwayat DUPAK', 'Riwayat IKD', 'Riwayat Karya Tulis'])
+            ->assertSeeInOrder(['Profil', 'Riwayat DUPAK', 'Riwayat Karya Tulis'])
+            ->assertDontSee('Riwayat IKD')
             ->assertSee(route('profil.karya-tulis.index'), false);
     }
 

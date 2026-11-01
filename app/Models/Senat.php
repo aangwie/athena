@@ -16,6 +16,7 @@ class Senat extends Model
      */
     public const JABATAN = [
         'ketua' => 'Ketua',
+        'sekretaris' => 'Sekretaris',
         'anggota' => 'Anggota',
     ];
 

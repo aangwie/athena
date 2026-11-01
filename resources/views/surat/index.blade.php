@@ -48,12 +48,14 @@
                      data-tab-panel="{{ $key }}" tabindex="0"
                      @class(['p-5 sm:p-6', 'hidden' => ! $loop->first])>
                     <h3 class="text-base font-extrabold tracking-tight text-slate-900">{{ $label }}</h3>
+                    {{-- Rantai @if/@elseif (bukan @continue): penutup </div> panel tetap dirender. --}}
                     @if ($key === 'pakta-integritas')
                         @include('surat.partials.pakta-integritas')
-                        @continue
-                    @endif
-
-                    @if ($key !== 'pernyataan-pimpinan')
+                    @elseif ($key === 'bap-senat')
+                        @include('surat.partials.bap-senat')
+                    @elseif ($key === 'baki')
+                        @include('surat.partials.baki')
+                    @elseif ($key !== 'pernyataan-pimpinan')
                         <p class="mt-1 max-w-2xl text-sm leading-relaxed text-slate-500">
                             Dokumen {{ $label }} untuk kelengkapan usulan jabatan akademik dosen.
                         </p>
@@ -65,9 +67,7 @@
                             </p>
                         </div>
 
-                        @continue
-                    @endif
-
+                    @else
                     <p class="mt-1 max-w-2xl text-sm leading-relaxed text-slate-500">
                         @if ($pernyataanEdit)
                             Ubah pernyataan pimpinan untuk <span class="font-semibold text-slate-700">{{ $pernyataanEdit->dosen?->name }}</span>.
@@ -279,6 +279,7 @@
                             </table>
                         </div>
                     </div>
+                    @endif
                 </div>
             @endforeach
         </section>

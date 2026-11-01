@@ -78,6 +78,29 @@ class PengajuanDosenTest extends TestCase
             ->assertDontSee(route('profil.pengajuan.periode').'"', false);
     }
 
+    public function test_sidebar_shows_riwayat_menu_according_to_jabatan_akademik(): void
+    {
+        $dosen = $this->makeUser('dosen');
+        $dupak = route('profil.pengajuan.riwayat').'"';
+        $ikd = route('profil.pengajuan.riwayat-ikd').'"';
+
+        // Sudah punya jabatan akademik: lanjut DUPAK, menu IKD disembunyikan.
+        $this->actingAs($dosen)
+            ->get('/dashboard')
+            ->assertOk()
+            ->assertSee($dupak, false)
+            ->assertDontSee($ikd, false);
+
+        $dosen->update(['jabatan_fungsional' => null]);
+
+        // Belum punya jabatan akademik: masih tahap IKD, menu DUPAK disembunyikan.
+        $this->actingAs($dosen)
+            ->get('/dashboard')
+            ->assertOk()
+            ->assertSee($ikd, false)
+            ->assertDontSee($dupak, false);
+    }
+
     public function test_dosen_without_jabatan_akademik_gets_special_periode_then_syarat_khusus(): void
     {
         $dosen = $this->makeUser('dosen');
@@ -1889,11 +1912,6 @@ class PengajuanDosenTest extends TestCase
                 'catatan' => 'IKD kurang lengkap.',
             ],
         );
-
-        $this->actingAs($dosen)
-            ->get('/dashboard')
-            ->assertOk()
-            ->assertSee(route('profil.pengajuan.riwayat-ikd'), false);
 
         $this->actingAs($dosen)
             ->get(route('profil.pengajuan.riwayat-ikd'))

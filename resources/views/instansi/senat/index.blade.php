@@ -140,7 +140,7 @@
                                 <h3 class="text-base font-extrabold tracking-tight text-slate-900">Daftar Anggota Senat</h3>
                                 <span class="rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-bold text-indigo-600">{{ $items->count() }} orang</span>
                             </div>
-                            <p class="mt-0.5 text-xs text-slate-400">Ketua ditampilkan lebih dulu, lalu anggota sesuai abjad.</p>
+                            <p class="mt-0.5 text-xs text-slate-400">Ketua &amp; sekretaris ditampilkan lebih dulu, lalu anggota sesuai abjad.</p>
                         </div>
                     </div>
 

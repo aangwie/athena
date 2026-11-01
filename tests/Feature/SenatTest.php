@@ -57,7 +57,36 @@ class SenatTest extends TestCase
             ->assertSee('Dr. Ayu Lestari, M.Kom.')
             ->assertSee('Budi Santoso, M.Pd.')
             ->assertSee('Ketua')
+            ->assertSee('Sekretaris')
             ->assertSee('Anggota');
+    }
+
+    public function test_sekretaris_is_a_valid_jabatan_and_sorted_after_ketua(): void
+    {
+        $admin = $this->makeAdmin();
+        $ketua = $this->makeDosen('1987654321', 'Dr. Ayu Lestari, M.Kom.');
+        $sekretaris = $this->makeDosen('1990011220', 'Budi Santoso, M.Pd.');
+        $anggota = $this->makeDosen('1995050520', 'Ahmad Fauzi, M.T.');
+
+        Senat::create(['user_id' => $anggota->id, 'jabatan' => 'anggota']);
+
+        $this->actingAs($admin)
+            ->post('/instansi/senat', ['user_id' => $sekretaris->id, 'jabatan' => 'sekretaris'])
+            ->assertRedirect(route('instansi.senat.index'))
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame('sekretaris', Senat::where('user_id', $sekretaris->id)->value('jabatan'));
+
+        Senat::create(['user_id' => $ketua->id, 'jabatan' => 'ketua']);
+
+        $urutan = $this->actingAs($admin)
+            ->get('/instansi/senat')
+            ->assertOk()
+            ->viewData('items')
+            ->pluck('jabatan')
+            ->all();
+
+        $this->assertSame(['ketua', 'sekretaris', 'anggota'], $urutan);
     }
 
     public function test_senat_menu_is_listed_on_admin_sidebar(): void
@@ -113,7 +142,7 @@ class SenatTest extends TestCase
 
         $this->actingAs($admin)
             ->from('/instansi/senat')
-            ->post('/instansi/senat', ['user_id' => $dosen->id, 'jabatan' => 'sekretaris'])
+            ->post('/instansi/senat', ['user_id' => $dosen->id, 'jabatan' => 'bendahara'])
             ->assertSessionHasErrors('jabatan');
 
         $this->assertDatabaseCount('senat', 0);
