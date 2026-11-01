@@ -22,6 +22,10 @@
                 <div class="rounded-xl border border-teal-100 bg-teal-50/70 px-4 py-2.5">
                     <p class="text-[10px] font-bold tracking-wide text-teal-700 uppercase">Periode pengajuan</p>
                     <p class="text-sm font-extrabold text-teal-900">{{ \App\Models\KegiatanDupak::labelPeriode($tahun, $semester) }}</p>
+                    @if ($masaPenilaian)
+                        <p class="mt-1 text-[10px] font-bold tracking-wide text-teal-700 uppercase">Masa penilaian</p>
+                        <p class="text-sm font-extrabold text-teal-900">{{ $masaPenilaian->label() }}</p>
+                    @endif
                 </div>
                 <a href="{{ route('profil.pengajuan.periode') }}" class="btn-secondary justify-center">
                     <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">

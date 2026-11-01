@@ -4,7 +4,7 @@
     $judul = $judul ?? 'Pilih Periode Pengajuan';
     $kicker = $kicker ?? 'Pengajuan Jabatan Akademik';
     $deskripsi = $deskripsi ?? 'Tentukan tahun akademik dan semester pengajuan. Periode ini dipakai untuk seluruh komponen kegiatan yang Anda isi.';
-    $action = $action ?? route('profil.pengajuan.create');
+    $action = $action ?? route('profil.pengajuan.masa-penilaian');
     $labelTombol = $labelTombol ?? 'Lanjut Isi Komponen';
 @endphp
 

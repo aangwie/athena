@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Http\Controllers\PengajuanDosenController;
 use App\Models\KegiatanDupak;
+use App\Models\MasaPenilaian;
 use App\Models\SyaratKhusus;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -149,6 +150,95 @@ class PengajuanDosenTest extends TestCase
             ->assertSee('Tahun Akademik')
             ->assertSee('name="tahun"', false)
             ->assertSee('name="semester"', false);
+    }
+
+    public function test_masa_penilaian_step_between_periode_and_pengajuan_baru(): void
+    {
+        $dosen = $this->makeUser('dosen');
+
+        // Periode mengarah ke halaman masa penilaian, bukan langsung ke pengajuan.
+        $this->actingAs($dosen)
+            ->get('/profil/pengajuan/periode')
+            ->assertOk()
+            ->assertSee(route('profil.pengajuan.masa-penilaian'), false);
+
+        $this->actingAs($dosen)
+            ->get('/profil/pengajuan/masa-penilaian?tahun=2026&semester=ganjil')
+            ->assertOk()
+            ->assertSee('Masa Penilaian')
+            ->assertSee('name="mulai_bulan"', false)
+            ->assertSee('name="mulai_tahun"', false)
+            ->assertSee('name="akhir_bulan"', false)
+            ->assertSee('name="akhir_tahun"', false)
+            ->assertSee('Januari')
+            ->assertSee('Desember')
+            ->assertSee('value="'.now()->year.'"', false)
+            ->assertSee('value="'.(now()->year - 10).'"', false)
+            ->assertDontSee('value="'.(now()->year - 11).'"', false)
+            ->assertDontSee('value="'.(now()->year + 1).'"', false);
+
+        $this->actingAs($dosen)
+            ->get('/profil/pengajuan/masa-penilaian')
+            ->assertRedirect(route('profil.pengajuan.periode'));
+
+        // Halaman ini hanya untuk dosen yang sudah punya jabatan akademik.
+        $dosen->update(['jabatan_fungsional' => null]);
+
+        $this->actingAs($dosen)
+            ->get('/profil/pengajuan/masa-penilaian?tahun=2026&semester=ganjil')
+            ->assertRedirect(route('profil.pengajuan.periode-pertama'));
+    }
+
+    public function test_dosen_fills_masa_penilaian_then_continues_to_pengajuan(): void
+    {
+        $dosen = $this->makeUser('dosen');
+
+        $this->actingAs($dosen)
+            ->post('/profil/pengajuan/masa-penilaian', [
+                'tahun' => 2026,
+                'semester' => 'ganjil',
+                'mulai_bulan' => 1,
+                'mulai_tahun' => 2025,
+                'akhir_bulan' => 12,
+                'akhir_tahun' => 2025,
+            ])
+            ->assertRedirect(route('profil.pengajuan.create', ['tahun' => 2026, 'semester' => 'ganjil']))
+            ->assertSessionHas('status', 'Masa penilaian berhasil disimpan.');
+
+        $masaPenilaian = MasaPenilaian::query()->firstWhere([
+            'user_id' => $dosen->id,
+            'tahun' => 2026,
+            'semester' => 'ganjil',
+        ]);
+
+        $this->assertNotNull($masaPenilaian);
+        $this->assertSame('2025-01-01', $masaPenilaian->mulai->toDateString());
+        $this->assertSame('2025-12-01', $masaPenilaian->akhir->toDateString());
+
+        $this->actingAs($dosen)
+            ->get('/profil/pengajuan/create?tahun=2026&semester=ganjil')
+            ->assertOk()
+            ->assertSee('Januari 2025 s.d. Desember 2025');
+    }
+
+    public function test_masa_penilaian_akhir_cannot_be_before_mulai(): void
+    {
+        $dosen = $this->makeUser('dosen');
+
+        $this->actingAs($dosen)
+            ->from('/profil/pengajuan/masa-penilaian?tahun=2026&semester=ganjil')
+            ->post('/profil/pengajuan/masa-penilaian', [
+                'tahun' => 2026,
+                'semester' => 'ganjil',
+                'mulai_bulan' => 6,
+                'mulai_tahun' => 2026,
+                'akhir_bulan' => 1,
+                'akhir_tahun' => 2026,
+            ])
+            ->assertRedirect('/profil/pengajuan/masa-penilaian?tahun=2026&semester=ganjil')
+            ->assertSessionHasErrors('akhir_bulan');
+
+        $this->assertDatabaseMissing('masa_penilaian', ['user_id' => $dosen->id]);
     }
 
     public function test_syarat_khusus_page_shows_two_pdf_upload_fields(): void

@@ -156,6 +156,11 @@ class User extends Authenticatable
         return $this->hasMany(PengajuanDupak::class);
     }
 
+    public function masaPenilaian(): HasMany
+    {
+        return $this->hasMany(MasaPenilaian::class);
+    }
+
     /**
      * Entri DUPAK pada satu periode, dikelompokkan per komponen kegiatan.
      *

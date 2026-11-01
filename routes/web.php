@@ -61,6 +61,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/pengajuan', [PengajuanDosenController::class, 'mulai'])->name('pengajuan.mulai');
         Route::get('/pengajuan/periode', [PengajuanDosenController::class, 'periode'])->name('pengajuan.periode');
         Route::get('/pengajuan/periode-pertama', [PengajuanDosenController::class, 'periodePertama'])->name('pengajuan.periode-pertama');
+        Route::get('/pengajuan/masa-penilaian', [PengajuanDosenController::class, 'masaPenilaian'])->name('pengajuan.masa-penilaian');
+        Route::post('/pengajuan/masa-penilaian', [PengajuanDosenController::class, 'simpanMasaPenilaian'])->name('pengajuan.masa-penilaian.store');
         Route::get('/pengajuan/syarat-khusus', [PengajuanDosenController::class, 'syaratKhusus'])->name('pengajuan.syarat-khusus');
         Route::post('/pengajuan/syarat-khusus', [PengajuanDosenController::class, 'simpanSyaratKhusus'])->name('pengajuan.syarat-khusus.store');
         Route::get('/pengajuan/syarat-khusus/berkas/{jenis}', [PengajuanDosenController::class, 'berkasSyaratKhusus'])->name('pengajuan.syarat-khusus.berkas');

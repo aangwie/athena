@@ -8,6 +8,7 @@ use App\Http\Requests\KegiatanPenelitianRequest;
 use App\Http\Requests\KegiatanPengabdianRequest;
 use App\Http\Requests\KegiatanPenunjangRequest;
 use App\Models\KegiatanDupak;
+use App\Models\MasaPenilaian;
 use App\Models\PengajuanDupak;
 use App\Models\SyaratKhusus;
 use App\Models\User;
@@ -90,6 +91,72 @@ class PengajuanDosenController extends Controller
             'action' => route('profil.pengajuan.syarat-khusus'),
             'labelTombol' => 'Lanjut ke IKD',
         ]);
+    }
+
+    /**
+     * Halaman masa penilaian: hanya untuk dosen yang sudah memiliki jabatan
+     * akademik, dan wajib diisi sebelum masuk ke Pengajuan Jabatan Akademik.
+     */
+    public function masaPenilaian(Request $request): View|RedirectResponse
+    {
+        $periode = $this->periodeQuery($request);
+
+        if ($periode === null) {
+            return redirect()->route('profil.pengajuan.periode');
+        }
+
+        // Dosen tanpa jabatan akademik memakai alur pengajuan pertama (IKD).
+        if (! $request->user()->jabatan_fungsional) {
+            return redirect()->route('profil.pengajuan.periode-pertama');
+        }
+
+        [$tahun, $semester] = $periode;
+
+        return view('profil.pengajuan.masa-penilaian', [
+            'tahun' => $tahun,
+            'semester' => $semester,
+            'masaPenilaian' => $this->masaPenilaianFor($request, $tahun, $semester),
+        ]);
+    }
+
+    public function simpanMasaPenilaian(Request $request): RedirectResponse
+    {
+        [$tahun, $semester] = $this->periodeInput($request);
+
+        $data = $request->validate([
+            'mulai_bulan' => ['required', 'integer', 'between:1,12'],
+            'mulai_tahun' => ['required', 'integer', 'between:2000,2100'],
+            'akhir_bulan' => ['required', 'integer', 'between:1,12'],
+            'akhir_tahun' => ['required', 'integer', 'between:2000,2100'],
+        ], [
+            'mulai_bulan.required' => 'Bulan awal masa penilaian wajib dipilih.',
+            'mulai_tahun.required' => 'Tahun awal masa penilaian wajib dipilih.',
+            'akhir_bulan.required' => 'Bulan akhir masa penilaian wajib dipilih.',
+            'akhir_tahun.required' => 'Tahun akhir masa penilaian wajib dipilih.',
+        ]);
+
+        // Disimpan sebagai tanggal pertama bulan; tampilannya bulan + tahun.
+        $mulai = sprintf('%04d-%02d-01', $data['mulai_tahun'], $data['mulai_bulan']);
+        $akhir = sprintf('%04d-%02d-01', $data['akhir_tahun'], $data['akhir_bulan']);
+
+        if ($akhir < $mulai) {
+            return back()
+                ->withInput()
+                ->withErrors(['akhir_bulan' => 'Batas akhir masa penilaian tidak boleh sebelum batas awal.']);
+        }
+
+        MasaPenilaian::updateOrCreate(
+            [
+                'user_id' => $request->user()->id,
+                'tahun' => $tahun,
+                'semester' => $semester,
+            ],
+            ['mulai' => $mulai, 'akhir' => $akhir],
+        );
+
+        return redirect()
+            ->route('profil.pengajuan.create', ['tahun' => $tahun, 'semester' => $semester])
+            ->with('status', 'Masa penilaian berhasil disimpan.');
     }
 
     /**
@@ -333,6 +400,7 @@ class PengajuanDosenController extends Controller
             'komponen' => self::KOMPONEN,
             'tahun' => $tahun,
             'semester' => $semester,
+            'masaPenilaian' => $this->masaPenilaianFor($request, $tahun, $semester),
             'pengajuan' => $request->user()->pengajuanDupak()
                 ->where('tahun', $tahun)
                 ->where('semester', $semester)
@@ -673,6 +741,15 @@ class PengajuanDosenController extends Controller
             && is_string($semester) && array_key_exists($semester, KegiatanDupak::SEMESTER)
                 ? [$tahun, $semester]
                 : null;
+    }
+
+    private function masaPenilaianFor(Request $request, int $tahun, string $semester): ?MasaPenilaian
+    {
+        return MasaPenilaian::query()->firstWhere([
+            'user_id' => $request->user()->id,
+            'tahun' => $tahun,
+            'semester' => $semester,
+        ]);
     }
 
     private function syaratKhususFor(Request $request, int $tahun, string $semester): ?SyaratKhusus

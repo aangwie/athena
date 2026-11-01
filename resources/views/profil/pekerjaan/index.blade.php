@@ -81,7 +81,7 @@
                     </div>
 
                     <div>
-                        <label for="program_studi" class="form-label">Prodi</label>
+                        <label for="program_studi" class="form-label">Prodi Tempat Mengajar</label>
                         <select id="program_studi" name="program_studi"
                                 @class(['form-select', 'border-rose-300 bg-rose-50/40' => $errors->has('program_studi')])>
                             <option value="">Pilih prodi</option>
