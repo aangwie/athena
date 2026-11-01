@@ -34,6 +34,7 @@ class ProfilDosen extends Model
         'agama',
         'no_hp',
         'nuptk',
+        'bidang_ilmu',
         'sk_pplp_tanggal',
         'sk_pplp_tahun',
         'sk_pplp_bulan',

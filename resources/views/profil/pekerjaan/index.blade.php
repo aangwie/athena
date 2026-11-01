@@ -81,7 +81,7 @@
                     </div>
 
                     <div>
-                        <label for="program_studi" class="form-label">Prodi Tempat Mengajar</label>
+                        <label for="program_studi" class="form-label">Prodi</label>
                         <select id="program_studi" name="program_studi"
                                 @class(['form-select', 'border-rose-300 bg-rose-50/40' => $errors->has('program_studi')])>
                             <option value="">Pilih prodi</option>
@@ -99,6 +99,16 @@
                         </select>
                         @error('program_studi') <p class="form-error">{{ $message }}</p> @enderror
                         <p class="mt-1.5 text-[11px] text-slate-400">Pilihan diambil dari data master Prodi instansi.</p>
+                    </div>
+
+                    <div>
+                        <label for="bidang_ilmu" class="form-label">Bidang Ilmu</label>
+                        <input type="text" id="bidang_ilmu" name="bidang_ilmu"
+                               value="{{ old('bidang_ilmu', $profil->bidang_ilmu ?? '') }}"
+                               placeholder="Contoh: Rekayasa Perangkat Lunak"
+                               @class(['form-input', 'border-rose-300 bg-rose-50/40' => $errors->has('bidang_ilmu')])>
+                        @error('bidang_ilmu') <p class="form-error">{{ $message }}</p> @enderror
+                        <p class="mt-1.5 text-[11px] text-slate-400">Diisi manual sesuai bidang keahlian dosen.</p>
                     </div>
                 </div>
             </section>

@@ -65,7 +65,7 @@ class TimKomiteController extends Controller
      */
     private function validated(Request $request, ?TimKomite $timKomite = null): array
     {
-        return $request->validate([
+        $rules = [
             'user_id' => [
                 'required',
                 'integer',
@@ -75,12 +75,20 @@ class TimKomiteController extends Controller
                 Rule::unique('tim_komite', 'user_id')->ignore($timKomite?->id),
             ],
             'jabatan' => ['required', Rule::in(array_keys(TimKomite::JABATAN))],
-        ], [
+        ];
+
+        // Tim komite hanya boleh punya satu ketua.
+        if ($request->input('jabatan') === 'ketua') {
+            $rules['jabatan'][] = Rule::unique('tim_komite', 'jabatan')->ignore($timKomite?->id);
+        }
+
+        return $request->validate($rules, [
             'user_id.required' => 'Nama dosen wajib dipilih.',
             'user_id.exists' => 'Dosen tidak ditemukan atau sudah tidak aktif.',
             'user_id.unique' => 'Dosen tersebut sudah terdaftar pada tim komite.',
             'jabatan.required' => 'Jabatan wajib dipilih.',
             'jabatan.in' => 'Jabatan tim komite tidak valid.',
+            'jabatan.unique' => 'Ketua tim komite sudah ada. Hapus atau ubah jabatan ketua sebelumnya terlebih dahulu.',
         ], [
             'user_id' => 'nama dosen',
             'jabatan' => 'jabatan',

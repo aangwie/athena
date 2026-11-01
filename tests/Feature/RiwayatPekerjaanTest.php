@@ -81,6 +81,7 @@ class RiwayatPekerjaanTest extends TestCase
 
         $response = $this->actingAs($user)->put(route('profil.pekerjaan.update'), [
             'nuptk' => '1234567890123456',
+            'bidang_ilmu' => 'Rekayasa Perangkat Lunak',
             'sk_pplp_tanggal' => '2019-08-02',
             'sk_jafa_tanggal' => '2020-01-15',
         ]);
@@ -93,6 +94,7 @@ class RiwayatPekerjaanTest extends TestCase
         $this->assertDatabaseHas('profil_dosen', [
             'user_id' => $user->id,
             'nuptk' => '1234567890123456',
+            'bidang_ilmu' => 'Rekayasa Perangkat Lunak',
             'sk_pplp_tahun' => $pplp->y,
             'sk_pplp_bulan' => $pplp->m,
         ]);
@@ -100,7 +102,9 @@ class RiwayatPekerjaanTest extends TestCase
         $this->actingAs($user)
             ->get(route('profil.pekerjaan.index'))
             ->assertSee('SK Dosen Tetap')
-            ->assertSee('Masa Kerja (Tahun)');
+            ->assertSee('Masa Kerja (Tahun)')
+            ->assertSee('Bidang Ilmu')
+            ->assertSee('Rekayasa Perangkat Lunak');
     }
 
     public function test_masa_kerja_is_calculated_from_sk_date(): void

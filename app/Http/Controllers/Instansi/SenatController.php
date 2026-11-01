@@ -65,7 +65,7 @@ class SenatController extends Controller
      */
     private function validated(Request $request, ?Senat $senat = null): array
     {
-        return $request->validate([
+        $rules = [
             'user_id' => [
                 'required',
                 'integer',
@@ -75,12 +75,20 @@ class SenatController extends Controller
                 Rule::unique('senat', 'user_id')->ignore($senat?->id),
             ],
             'jabatan' => ['required', Rule::in(array_keys(Senat::JABATAN))],
-        ], [
+        ];
+
+        // Senat hanya boleh punya satu ketua.
+        if ($request->input('jabatan') === 'ketua') {
+            $rules['jabatan'][] = Rule::unique('senat', 'jabatan')->ignore($senat?->id);
+        }
+
+        return $request->validate($rules, [
             'user_id.required' => 'Nama dosen wajib dipilih.',
             'user_id.exists' => 'Dosen tidak ditemukan atau sudah tidak aktif.',
             'user_id.unique' => 'Dosen tersebut sudah terdaftar pada senat.',
             'jabatan.required' => 'Jabatan wajib dipilih.',
             'jabatan.in' => 'Jabatan senat tidak valid.',
+            'jabatan.unique' => 'Ketua senat sudah ada. Hapus atau ubah jabatan ketua sebelumnya terlebih dahulu.',
         ], [
             'user_id' => 'nama dosen',
             'jabatan' => 'jabatan',

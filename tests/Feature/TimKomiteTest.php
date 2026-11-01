@@ -163,6 +163,49 @@ class TimKomiteTest extends TestCase
             ->assertSee(route('instansi.tim-komite.update', $timKomite), false);
     }
 
+    public function test_ketua_only_one_and_cannot_be_saved_twice(): void
+    {
+        $admin = $this->makeAdmin();
+        $ketua = $this->makeDosen('1987654321', 'Dr. Ayu Lestari, M.Kom.');
+        $lain = $this->makeDosen('1990011220', 'Budi Santoso, M.Pd.');
+
+        TimKomite::create(['user_id' => $ketua->id, 'jabatan' => 'ketua']);
+
+        $this->actingAs($admin)
+            ->from('/instansi/tim-komite')
+            ->post('/instansi/tim-komite', ['user_id' => $lain->id, 'jabatan' => 'ketua'])
+            ->assertRedirect('/instansi/tim-komite')
+            ->assertSessionHasErrors([
+                'jabatan' => 'Ketua tim komite sudah ada. Hapus atau ubah jabatan ketua sebelumnya terlebih dahulu.',
+            ]);
+
+        $this->assertDatabaseCount('tim_komite', 1);
+
+        // Opsi ketua dikunci di formulir dan statusnya dijelaskan.
+        $this->actingAs($admin)
+            ->get('/instansi/tim-komite')
+            ->assertOk()
+            ->assertSee('sudah terisi')
+            ->assertSee('ubah atau hapus dulu ketua atas nama Dr. Ayu Lestari, M.Kom.');
+
+        // Baris ketua yang sama tetap boleh disimpan ulang.
+        $this->actingAs($admin)
+            ->put(route('instansi.tim-komite.update', TimKomite::firstOrFail()), [
+                'user_id' => $ketua->id,
+                'jabatan' => 'ketua',
+            ])
+            ->assertSessionHasNoErrors();
+
+        // Setelah ketua dihapus, jabatan ketua bisa dipakai lagi.
+        $this->actingAs($admin)->delete(route('instansi.tim-komite.destroy', TimKomite::firstOrFail()));
+
+        $this->actingAs($admin)
+            ->post('/instansi/tim-komite', ['user_id' => $lain->id, 'jabatan' => 'ketua'])
+            ->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas('tim_komite', ['user_id' => $lain->id, 'jabatan' => 'ketua']);
+    }
+
     public function test_non_admin_cannot_manage_tim_komite(): void
     {
         $dosen = $this->makeDosen();

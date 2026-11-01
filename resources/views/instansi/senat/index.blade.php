@@ -7,6 +7,9 @@
 @section('content')
     @php
         $isEdit = $editSenat !== null;
+        // Ketua senat hanya satu; opsi "Ketua" dikunci bila sudah terisi baris lain.
+        $ketua = $items->firstWhere('jabatan', 'ketua');
+        $ketuaBolehDipilih = $ketua === null || $ketua->id === $editSenat?->id;
     @endphp
 
     <div class="mx-auto max-w-5xl">
@@ -101,11 +104,18 @@
                                 @class(['form-select', 'border-rose-300 bg-rose-50/40' => $errors->has('jabatan')])>
                             <option value="">Pilih jabatan</option>
                             @foreach ($jabatanList as $nilai => $label)
-                                <option value="{{ $nilai }}" @selected(old('jabatan', $editSenat?->jabatan) === $nilai)>{{ $label }}</option>
+                                <option value="{{ $nilai }}" @selected(old('jabatan', $editSenat?->jabatan) === $nilai) @disabled($nilai === 'ketua' && ! $ketuaBolehDipilih)>{{ $label }}@if ($nilai === 'ketua' && ! $ketuaBolehDipilih) — sudah terisi @endif</option>
                             @endforeach
                         </select>
                         @error('jabatan') <p class="form-error">{{ $message }}</p> @enderror
-                        <p class="mt-1.5 text-[11px] text-slate-400">Satu dosen hanya dapat terdaftar sekali pada senat.</p>
+                        <p class="mt-1.5 text-[11px] text-slate-400">
+                            Satu dosen hanya dapat terdaftar sekali pada senat. Ketua hanya boleh satu orang;
+                            @if ($ketuaBolehDipilih)
+                                jabatan ketua belum terisi.
+                            @else
+                                ubah atau hapus dulu ketua atas nama {{ $ketua->user?->name }}.
+                            @endif
+                        </p>
                     </div>
                 </div>
 

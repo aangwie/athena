@@ -172,6 +172,49 @@ class SenatTest extends TestCase
             ->assertSee(route('instansi.senat.update', $senat), false);
     }
 
+    public function test_ketua_only_one_and_cannot_be_saved_twice(): void
+    {
+        $admin = $this->makeAdmin();
+        $ketua = $this->makeDosen('1987654321', 'Dr. Ayu Lestari, M.Kom.');
+        $lain = $this->makeDosen('1990011220', 'Budi Santoso, M.Pd.');
+
+        Senat::create(['user_id' => $ketua->id, 'jabatan' => 'ketua']);
+
+        $this->actingAs($admin)
+            ->from('/instansi/senat')
+            ->post('/instansi/senat', ['user_id' => $lain->id, 'jabatan' => 'ketua'])
+            ->assertRedirect('/instansi/senat')
+            ->assertSessionHasErrors([
+                'jabatan' => 'Ketua senat sudah ada. Hapus atau ubah jabatan ketua sebelumnya terlebih dahulu.',
+            ]);
+
+        $this->assertDatabaseCount('senat', 1);
+
+        // Opsi ketua dikunci di formulir dan statusnya dijelaskan.
+        $this->actingAs($admin)
+            ->get('/instansi/senat')
+            ->assertOk()
+            ->assertSee('sudah terisi')
+            ->assertSee('ubah atau hapus dulu ketua atas nama Dr. Ayu Lestari, M.Kom.');
+
+        // Baris ketua yang sama tetap boleh disimpan ulang.
+        $this->actingAs($admin)
+            ->put(route('instansi.senat.update', Senat::firstOrFail()), [
+                'user_id' => $ketua->id,
+                'jabatan' => 'ketua',
+            ])
+            ->assertSessionHasNoErrors();
+
+        // Setelah ketua dihapus, jabatan ketua bisa dipakai lagi.
+        $this->actingAs($admin)->delete(route('instansi.senat.destroy', Senat::firstOrFail()));
+
+        $this->actingAs($admin)
+            ->post('/instansi/senat', ['user_id' => $lain->id, 'jabatan' => 'ketua'])
+            ->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas('senat', ['user_id' => $lain->id, 'jabatan' => 'ketua']);
+    }
+
     public function test_non_admin_cannot_manage_senat(): void
     {
         $dosen = $this->makeDosen();

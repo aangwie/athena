@@ -58,6 +58,7 @@ class RiwayatPekerjaanController extends Controller
 
         $rules = [
             'nuptk' => ['nullable', 'string', 'max:30'],
+            'bidang_ilmu' => ['nullable', 'string', 'max:100'],
             'program_studi' => ['nullable', 'string', Rule::exists('prodi', 'nama_prodi')],
         ];
 
@@ -75,6 +76,7 @@ class RiwayatPekerjaanController extends Controller
             'program_studi.exists' => 'Prodi tidak ditemukan pada data master prodi.',
         ], [
             'nuptk' => 'NUPTK',
+            'bidang_ilmu' => 'Bidang Ilmu',
             'program_studi' => 'Prodi',
         ]);
 
