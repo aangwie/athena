@@ -2,9 +2,16 @@
 
 namespace Tests\Feature;
 
+use App\Models\Senat;
+use App\Models\SuratBaki;
+use App\Models\SuratBapSenat;
+use App\Models\SyaratKhusus;
+use App\Models\TimKomite;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class DataDosenTest extends TestCase
@@ -123,7 +130,10 @@ class DataDosenTest extends TestCase
             ->get('/data-dosen')
             ->assertOk()
             ->assertSee('TIM PAK')
-            ->assertSee('Dosen');
+            ->assertSee('Dosen')
+            // Konfirmasi hapus menjelaskan dampaknya ke seluruh data terkait.
+            ->assertSee('Hapus data dosen dan semua datanya?', false)
+            ->assertSee('riwayat pendidikan dengan berkas ijazah &amp; transkrip', false);
     }
 
     public function test_user_with_tim_pak_role_can_login(): void
@@ -182,5 +192,131 @@ class DataDosenTest extends TestCase
             ->assertForbidden();
 
         $this->assertDatabaseHas('users', ['id' => $admin->id]);
+    }
+
+    public function test_deleting_dosen_removes_all_related_data_and_uploaded_files(): void
+    {
+        Storage::fake('local');
+
+        $admin = $this->makeAdmin();
+
+        $korban = User::create([
+            'nidn' => '1985041722',
+            'name' => 'Dr. Citra Maharani, M.Si.',
+            'email' => 'citra@example.test',
+            'role' => 'dosen',
+            'roles' => ['dosen'],
+            'is_active' => true,
+            'password' => Hash::make('password'),
+        ]);
+
+        $dosen = User::create([
+            'nidn' => '1985041733',
+            'name' => 'Dr. Budi Santoso, M.Kom.',
+            'email' => 'budi@example.test',
+            'role' => 'dosen',
+            'roles' => ['dosen'],
+            'is_active' => true,
+            'password' => Hash::make('password'),
+        ]);
+
+        $ijazah = "riwayat-pendidikan/{$dosen->nidn}/s1_{$dosen->nidn}_a.pdf";
+        $transkrip = "riwayat-pendidikan/{$dosen->nidn}/s1_{$dosen->nidn}_b.pdf";
+        $bkd = "syarat-khusus/{$dosen->nidn}/bkd_{$dosen->nidn}_a.pdf";
+        $ikd = "syarat-khusus/{$dosen->nidn}/ikd_{$dosen->nidn}_b.pdf";
+
+        foreach ([$ijazah, $transkrip, $bkd, $ikd] as $berkas) {
+            Storage::disk('local')->put($berkas, '%PDF-1.4');
+        }
+
+        $dosen->profilDosen()->create(['tempat_lahir' => 'Bandung']);
+        $dosen->riwayatPendidikan()->create([
+            'jenjang' => 's1',
+            'nama_institusi' => 'UPI',
+            'tahun_masuk' => 2005,
+            'ijazah_path' => $ijazah,
+            'transkrip_path' => $transkrip,
+        ]);
+        $dosen->kegiatanDupak()->create([
+            'komponen' => 'pendidikan',
+            'tahun' => 2026,
+            'semester' => 'genap',
+            'jenis' => 'pendidikan_formal',
+            'nama_kegiatan' => 'Seminar',
+            'link_bukti' => 'https://example.test/bukti',
+        ]);
+        $dosen->pengajuanDupak()->create(['tahun' => 2026, 'semester' => 'genap']);
+        $dosen->karyaTulis()->create([
+            'karya_ilmiah' => 'Jurnal Nasional Terakreditasi Kemendiktisaintek (1,2,3,4,5,6)',
+            'judul' => 'Machine Learning untuk Pemula',
+            'link_bukti' => 'https://example.test/karya',
+        ]);
+        SyaratKhusus::create([
+            'user_id' => $dosen->id,
+            'tahun' => 2026,
+            'semester' => 'genap',
+            'bkd_path' => $bkd,
+            'ikd_path' => $ikd,
+        ]);
+        Senat::create(['user_id' => $dosen->id, 'jabatan' => 'anggota']);
+        TimKomite::create(['user_id' => $dosen->id, 'jabatan' => 'anggota']);
+
+        // BAP milik dosen lain yang mencantumkan dosen terhapus sebagai peserta rapat.
+        $bapKorban = SuratBapSenat::create([
+            'nomor_bap' => '01/BAP/2026',
+            'tanggal_bap' => '2026-10-01',
+            'user_id' => $korban->id,
+            'bidang_keilmuan' => 'Informatika',
+            'prosentase_penelitian' => 60,
+            'anggota_senat_ids' => [$korban->id, $dosen->id],
+        ]);
+
+        $bap = SuratBapSenat::create([
+            'nomor_bap' => '02/BAP/2026',
+            'tanggal_bap' => '2026-10-02',
+            'user_id' => $dosen->id,
+            'bidang_keilmuan' => 'Informatika',
+            'prosentase_penelitian' => 60,
+            'anggota_senat_ids' => [$dosen->id],
+        ]);
+
+        $baki = SuratBaki::create([
+            'nomor_surat' => '01/BAKI/2026',
+            'surat_bap_senat_id' => $bap->id,
+            'tanggal_surat' => '2026-10-03',
+        ]);
+
+        DB::table('sessions')->insert([
+            'id' => 'sesi-dosen',
+            'user_id' => $dosen->id,
+            'payload' => '',
+            'last_activity' => 1,
+        ]);
+        DB::table('password_reset_tokens')->insert([
+            'email' => $dosen->email,
+            'token' => 'rahasia',
+            'created_at' => now(),
+        ]);
+
+        $this->actingAs($admin)
+            ->delete("/data-dosen/{$dosen->id}")
+            ->assertRedirect('/data-dosen');
+
+        $this->assertDatabaseMissing('users', ['id' => $dosen->id]);
+
+        foreach (['profil_dosen', 'riwayat_pendidikan', 'kegiatan_dupak', 'pengajuan_dupak',
+            'karya_tulis', 'syarat_khusus', 'senat', 'tim_komite', 'surat_bap_senat', 'sessions'] as $tabel) {
+            $this->assertDatabaseMissing($tabel, ['user_id' => $dosen->id]);
+        }
+
+        $this->assertDatabaseMissing('surat_baki', ['id' => $baki->id]);
+        $this->assertDatabaseMissing('password_reset_tokens', ['email' => $dosen->email]);
+
+        // Data dosen lain tidak ikut terhapus, hanya rujukannya yang dibersihkan.
+        $this->assertDatabaseHas('users', ['id' => $korban->id]);
+        $this->assertEquals([$korban->id], $bapKorban->fresh()->anggota_senat_ids);
+
+        Storage::disk('local')->assertDirectoryEmpty("riwayat-pendidikan/{$dosen->nidn}");
+        Storage::disk('local')->assertDirectoryEmpty("syarat-khusus/{$dosen->nidn}");
     }
 }

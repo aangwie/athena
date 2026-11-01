@@ -89,7 +89,7 @@ class DataDosenController extends Controller
 
         return redirect()
             ->route('data-dosen.index')
-            ->with('status', 'Data Dosen berhasil dihapus.');
+            ->with('status', 'Data Dosen beserta seluruh data terkait dan berkas unggahannya berhasil dihapus.');
     }
 
     private function find(string $id): User

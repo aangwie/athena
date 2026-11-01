@@ -61,7 +61,8 @@
                                         <a href="{{ route('data-dosen.edit', $item->id) }}" class="btn-secondary px-3 py-1.5 text-xs">Edit</a>
                                         @if ($item->id !== auth()->id())
                                             <form method="POST" action="{{ route('data-dosen.destroy', $item->id) }}"
-                                                  data-confirm="Hapus data dosen {{ $item->name }}? Tindakan ini tidak dapat dibatalkan.">
+                                                  data-confirm-title="Hapus data dosen dan semua datanya?"
+                                                  data-confirm="Data dosen {{ $item->name }} (NIDN {{ $item->nidn }}) akan dihapus permanen beserta seluruh data terkait: profil dan biodata, riwayat pendidikan dengan berkas ijazah &amp; transkrip, riwayat kepangkatan, jabatan struktural, angka kredit, kegiatan dan pengajuan DUPAK, karya tulis, berkas syarat khusus (BKD/IKD), surat pernyataan pimpinan, pakta integritas, BAP senat beserta BAKI, keanggotaan senat/tim komite/struktur instansi, akun login, serta semua berkas yang pernah diunggah. Tindakan ini tidak dapat dibatalkan.">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="btn-secondary px-3 py-1.5 text-xs text-rose-600">Hapus</button>

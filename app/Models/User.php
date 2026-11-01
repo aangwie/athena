@@ -8,6 +8,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class User extends Authenticatable
@@ -68,6 +71,46 @@ class User extends Authenticatable
         ];
     }
 
+    /**
+     * Hapus seluruh turunan user saat akunnya dihapus.
+     *
+     * Baris tabel lain sudah memakai cascadeOnDelete pada foreign key user_id,
+     * jadi yang dibereskan di sini hanya yang tidak dijangkau database:
+     * rujukan id di kolom JSON, sesi login, token reset password, dan berkas
+     * unggahan pada disk privat.
+     */
+    protected static function booted(): void
+    {
+        static::deleting(function (User $user): void {
+            // Id dosen ini pada daftar hadir rapat senat (kolom JSON tanpa FK).
+            SuratBapSenat::query()
+                ->whereJsonContains('anggota_senat_ids', $user->id)
+                ->get()
+                ->each(fn (SuratBapSenat $bap) => $bap->update([
+                    'anggota_senat_ids' => array_values(array_diff($bap->anggota_senat_ids ?? [], [$user->id])),
+                ]));
+
+            DB::table('sessions')->where('user_id', $user->id)->delete();
+
+            if (filled($user->email)) {
+                DB::table('password_reset_tokens')->where('email', $user->email)->delete();
+            }
+        });
+
+        // Berkas dihapus setelah baris user benar-benar hilang, supaya kegagalan
+        // penghapusan data tidak ikut melenyapkan berkas yang masih dipakai.
+        static::deleted(function (User $user): void {
+            // ponytail: folder dikunci per NIDN; NIDN yang pernah diubah meninggalkan folder yatim.
+            if (! filled($user->nidn)) {
+                return;
+            }
+
+            $disk = Storage::disk('local');
+            $disk->deleteDirectory("syarat-khusus/{$user->nidn}");
+            $disk->deleteDirectory("riwayat-pendidikan/{$user->nidn}");
+        });
+    }
+
     public function pengajuanJabatan()
     {
         return $this->hasMany(PengajuanJabatan::class);
@@ -116,7 +159,7 @@ class User extends Authenticatable
     /**
      * Entri DUPAK pada satu periode, dikelompokkan per komponen kegiatan.
      *
-     * @return array<string, \Illuminate\Support\Collection<int, KegiatanDupak>>
+     * @return array<string, Collection<int, KegiatanDupak>>
      */
     public function kegiatanPeriode(int $tahun, string $semester): array
     {
