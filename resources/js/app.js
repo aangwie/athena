@@ -881,6 +881,70 @@ const boot = () => {
         syncJumlahBidang();
     }
 
+    // Lonceng notifikasi: buka panel, lalu tandai semua notifikasi sudah dibaca.
+    document.querySelectorAll('[data-notif-button]').forEach((button) => {
+        const menu = button.parentElement?.querySelector('[data-notif-menu]');
+
+        if (!menu) {
+            return;
+        }
+
+        const badge = button.querySelector('[data-notif-badge]');
+        const summary = menu.querySelector('[data-notif-summary]');
+        let sudahDibaca = badge?.classList.contains('hidden') ?? true;
+
+        const closeMenu = () => {
+            menu.classList.add('hidden');
+            button.setAttribute('aria-expanded', 'false');
+        };
+
+        const tandaiDibaca = () => {
+            if (sudahDibaca) {
+                return;
+            }
+
+            sudahDibaca = true;
+            badge?.classList.add('hidden');
+
+            if (summary) {
+                summary.textContent = '0 baru';
+            }
+
+            fetch(button.dataset.notifUrl, {
+                method: 'POST',
+                headers: {
+                    Accept: 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ?? '',
+                },
+            });
+        };
+
+        button.addEventListener('click', (event) => {
+            event.stopPropagation();
+            const isHidden = menu.classList.contains('hidden');
+
+            menu.classList.toggle('hidden', !isHidden);
+            button.setAttribute('aria-expanded', String(isHidden));
+
+            if (isHidden) {
+                tandaiDibaca();
+            }
+        });
+
+        document.addEventListener('click', (event) => {
+            if (!menu.contains(event.target) && !button.contains(event.target)) {
+                closeMenu();
+            }
+        });
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                closeMenu();
+            }
+        });
+    });
+
     document.querySelectorAll('[data-user-menu-button]').forEach((button) => {
         const menu = button.parentElement?.querySelector('[data-user-menu]');
 

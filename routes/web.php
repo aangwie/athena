@@ -11,6 +11,7 @@ use App\Http\Controllers\Instansi\SenatController;
 use App\Http\Controllers\Instansi\StrukturInstansiController;
 use App\Http\Controllers\Instansi\TimKomiteController;
 use App\Http\Controllers\KaryaTulisController;
+use App\Http\Controllers\NotifikasiController;
 use App\Http\Controllers\Kepegawaian\JabatanFungsionalController;
 use App\Http\Controllers\Kepegawaian\JabatanStrukturalController;
 use App\Http\Controllers\Kepegawaian\KepangkatanController;
@@ -37,6 +38,7 @@ Route::middleware('guest')->group(function () {
 
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
+    Route::post('/notifikasi/baca', [NotifikasiController::class, 'baca'])->name('notifikasi.baca');
     Route::get('/pilih-role', [RoleSelectionController::class, 'create'])->name('role.select');
     Route::post('/pilih-role', [RoleSelectionController::class, 'store'])->name('role.select.store');
     Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');

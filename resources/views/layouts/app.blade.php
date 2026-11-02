@@ -374,13 +374,7 @@
                             {{ now()->translatedFormat('d F Y') }}
                         </span>
 
-                        <button type="button" class="relative flex size-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:border-teal-300 hover:text-teal-700" aria-label="Notifikasi">
-                            <svg class="size-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                                <path d="M18 8.5a6 6 0 1 0-12 0c0 6-2 7-2 7h16s-2-1-2-7Z" stroke-linecap="round" stroke-linejoin="round" />
-                                <path d="M10 19a2.2 2.2 0 0 0 4 0" stroke-linecap="round" />
-                            </svg>
-                            <span class="absolute top-2.5 right-2.5 size-1.5 rounded-full bg-rose-500 ring-2 ring-white"></span>
-                        </button>
+                        @include('layouts.partials.notifikasi')
 
                         <div class="relative">
                             <button type="button" data-user-menu-button aria-expanded="false" aria-haspopup="true"
