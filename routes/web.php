@@ -4,6 +4,7 @@ use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\RoleSelectionController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DataDosenController;
+use App\Http\Controllers\DataDosenImportController;
 use App\Http\Controllers\Instansi\InstansiController;
 use App\Http\Controllers\Instansi\ProdiController;
 use App\Http\Controllers\Instansi\SenatController;
@@ -43,6 +44,10 @@ Route::middleware('auth')->group(function () {
     Route::middleware('admin')->prefix('data-dosen')->name('data-dosen.')->group(function () {
         Route::get('/', [DataDosenController::class, 'index'])->name('index');
         Route::get('/create', [DataDosenController::class, 'create'])->name('create');
+        Route::get('/import', [DataDosenImportController::class, 'create'])->name('import.create');
+        Route::get('/import/template', [DataDosenImportController::class, 'template'])->name('import.template');
+        Route::post('/import/mulai', [DataDosenImportController::class, 'mulai'])->name('import.mulai');
+        Route::post('/import/langkah', [DataDosenImportController::class, 'langkah'])->name('import.langkah');
         Route::post('/', [DataDosenController::class, 'store'])->name('store');
         Route::get('/{id}/edit', [DataDosenController::class, 'edit'])->name('edit');
         Route::put('/{id}', [DataDosenController::class, 'update'])->name('update');

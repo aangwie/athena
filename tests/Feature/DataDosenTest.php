@@ -8,7 +8,9 @@ use App\Models\SuratBapSenat;
 use App\Models\SyaratKhusus;
 use App\Models\TimKomite;
 use App\Models\User;
+use App\Support\Excel;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
@@ -37,7 +39,8 @@ class DataDosenTest extends TestCase
             'name' => 'Dr. Citra Maharani, M.Si.',
             'nidn' => '1985041722',
             'memiliki_jabatan' => 'ya',
-            'pangkat' => 'Lektor Kepala',
+            'jabatan_fungsional' => 'Lektor Kepala',
+            'pangkat' => 'Penata Tingkat I',
             'roles' => ['dosen', 'tim_pak'],
             'password' => 'password',
             'password_confirmation' => 'password',
@@ -74,6 +77,7 @@ class DataDosenTest extends TestCase
         $this->actingAs($this->makeAdmin())
             ->post('/data-dosen', $this->payload([
                 'memiliki_jabatan' => 'tidak',
+                'jabatan_fungsional' => '',
                 'pangkat' => '',
             ]))
             ->assertSessionHasNoErrors()
@@ -89,6 +93,92 @@ class DataDosenTest extends TestCase
             ->assertOk()
             ->assertSee('Memiliki Jabatan Akademik?')
             ->assertSee('name="memiliki_jabatan"', false);
+    }
+
+    public function test_form_shows_jabatan_fungsional_select_above_pangkat(): void
+    {
+        $this->actingAs($this->makeAdmin())
+            ->get('/data-dosen/create')
+            ->assertOk()
+            ->assertSeeInOrder(['name="jabatan_fungsional"', 'name="pangkat"'], false);
+    }
+
+    public function test_admin_can_import_dosen_from_excel_and_uploaded_file_is_deleted(): void
+    {
+        $jalur = sys_get_temp_dir().DIRECTORY_SEPARATOR.'import-data-dosen-uji-'.uniqid().'.xlsx';
+
+        Excel::tulis($jalur, [
+            ['Nama Dosen', 'NIDN', 'Memiliki Jabatan Akademik', 'Jabatan Akademik', 'Pangkat', 'Role', 'Password'],
+            ['Dr. Citra Maharani, M.Si.', '1985041722', 'Ya', 'Lektor Kepala', 'Penata Tingkat I', 'dosen,tim_pak', 'rahasia123'],
+            ['Budi Santoso, M.Pd.', '1990011220', 'Tidak', '', '', 'dosen', 'rahasia123'],
+        ]);
+
+        $admin = $this->makeAdmin();
+
+        $this->actingAs($admin)
+            ->post(route('data-dosen.import.mulai'),
+                ['berkas' => new UploadedFile($jalur, 'data-dosen.xlsx', null, null, true)],
+                ['Accept' => 'application/json'])
+            ->assertOk()
+            ->assertJsonPath('persen', 0);
+
+        $this->actingAs($admin)
+            ->post(route('data-dosen.import.langkah'), [], ['Accept' => 'application/json'])
+            ->assertOk()
+            ->assertJsonPath('persen', 100)
+            ->assertJsonPath('redirect', route('data-dosen.index'));
+
+        $citra = User::query()->where('nidn', '1985041722')->firstOrFail();
+        $this->assertSame('Lektor Kepala', $citra->jabatan_fungsional);
+        $this->assertSame('Penata Tingkat I', $citra->pangkat);
+        $this->assertSame(['dosen', 'tim_pak'], $citra->roleList());
+        $this->assertTrue(Hash::check('rahasia123', $citra->password));
+
+        // "Tidak" mengosongkan jabatan akademik & pangkat.
+        $budi = User::query()->where('nidn', '1990011220')->firstOrFail();
+        $this->assertNull($budi->jabatan_fungsional);
+        $this->assertNull($budi->pangkat);
+
+        // Berkas Excel & salinan baris sementara dihapus setelah import selesai.
+        $this->assertSame([], Storage::disk('local')->allFiles('import-data-dosen'));
+
+        if (file_exists($jalur)) {
+            unlink($jalur);
+        }
+    }
+
+    public function test_import_page_can_be_opened(): void
+    {
+        $this->actingAs($this->makeAdmin())
+            ->get(route('data-dosen.import.create'))
+            ->assertOk()
+            ->assertSee('Unduh Template')
+            ->assertSee('name="berkas"', false);
+    }
+
+    public function test_import_template_can_be_downloaded(): void
+    {
+        $this->actingAs($this->makeAdmin())
+            ->get(route('data-dosen.import.template'))
+            ->assertOk()
+            ->assertDownload('template-import-data-dosen.xlsx');
+    }
+
+    public function test_import_rejects_file_that_is_not_xlsx(): void
+    {
+        $jalur = sys_get_temp_dir().DIRECTORY_SEPARATOR.'import-data-dosen-uji-'.uniqid().'.txt';
+        file_put_contents($jalur, 'bukan excel');
+
+        $this->actingAs($this->makeAdmin())
+            ->post(route('data-dosen.import.mulai'),
+                ['berkas' => new UploadedFile($jalur, 'data.txt', 'text/plain', null, true)],
+                ['Accept' => 'application/json'])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('berkas');
+
+        if (file_exists($jalur)) {
+            unlink($jalur);
+        }
     }
 
     public function test_role_is_required_when_saving_user(): void

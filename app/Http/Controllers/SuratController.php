@@ -357,7 +357,7 @@ class SuratController extends Controller
     }
 
     /**
-     * Identitas dosen untuk badan surat, dengan jabatan fungsional sebagai "Jabatan".
+     * Identitas dosen untuk badan surat, dengan jabatan akademik sebagai "Jabatan".
      *
      * @return array<string, string>
      */
@@ -365,7 +365,7 @@ class SuratController extends Controller
     {
         $identitas = $this->identitas($dosen);
 
-        // Pada surat, "Jabatan / TMT" adalah jabatan fungsional (akademik), bukan struktural.
+        // Pada surat, "Jabatan / TMT" adalah jabatan akademik, bukan struktural.
         $fungsional = $dosen?->riwayatJabatanStruktural->sortByDesc('tmt')->first();
 
         $identitas['jabatan'] = $fungsional?->fungsionalLabel() ?? $identitas['jabatan'];

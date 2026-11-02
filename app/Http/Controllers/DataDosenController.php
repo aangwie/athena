@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\JabatanFungsional;
 use App\Models\Kepangkatan;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -24,6 +25,7 @@ class DataDosenController extends Controller
     {
         return view('data-dosen.form', [
             'item' => null,
+            'jabatanOptions' => JabatanFungsional::query()->orderBy('nama')->get(),
             'pangkatOptions' => Kepangkatan::query()->orderBy('nama')->get(),
         ]);
     }
@@ -38,7 +40,8 @@ class DataDosenController extends Controller
             'is_active' => true,
             'name' => $data['name'],
             'nidn' => $data['nidn'],
-            'jabatan_fungsional' => $data['pangkat'],
+            'jabatan_fungsional' => $data['jabatan_fungsional'],
+            'pangkat' => $data['pangkat'],
             'password' => $data['password'],
         ]);
 
@@ -51,6 +54,7 @@ class DataDosenController extends Controller
     {
         return view('data-dosen.form', [
             'item' => $this->find($id),
+            'jabatanOptions' => JabatanFungsional::query()->orderBy('nama')->get(),
             'pangkatOptions' => Kepangkatan::query()->orderBy('nama')->get(),
         ]);
     }
@@ -65,7 +69,8 @@ class DataDosenController extends Controller
             'roles' => $data['roles'],
             'name' => $data['name'],
             'nidn' => $data['nidn'],
-            'jabatan_fungsional' => $data['pangkat'],
+            'jabatan_fungsional' => $data['jabatan_fungsional'],
+            'pangkat' => $data['pangkat'],
         ];
 
         if (! empty($data['password'])) {
@@ -110,6 +115,7 @@ class DataDosenController extends Controller
             'name' => ['required', 'string', 'max:100'],
             'nidn' => ['required', 'string', 'max:20', $uniqueNidn],
             'memiliki_jabatan' => ['required', Rule::in(['ya', 'tidak'])],
+            'jabatan_fungsional' => ['nullable', 'string', 'max:100', Rule::requiredIf($memilikiJabatan === 'ya')],
             'pangkat' => ['nullable', 'string', 'max:100', Rule::requiredIf($memilikiJabatan === 'ya')],
             'roles' => ['required', 'array', 'min:1'],
             'roles.*' => ['string', Rule::in(array_keys(User::ROLES))],
@@ -120,13 +126,15 @@ class DataDosenController extends Controller
             'nidn.unique' => 'NIDN tersebut sudah terdaftar.',
             'memiliki_jabatan.required' => 'Pilih apakah dosen memiliki jabatan akademik.',
             'memiliki_jabatan.in' => 'Pilihan jabatan akademik tidak valid.',
+            'jabatan_fungsional.required' => 'Jabatan Akademik wajib dipilih jika dosen memiliki jabatan akademik.',
             'pangkat.required' => 'Pangkat wajib diisi jika memiliki jabatan akademik.',
             'roles.required' => 'Pilih minimal satu role.',
             'roles.min' => 'Pilih minimal satu role.',
             'password.required' => 'Password wajib diisi.',
         ]);
 
-        // Tanpa jabatan akademik, pangkat dikosongkan.
+        // Tanpa jabatan akademik, jabatan akademik & pangkat dikosongkan.
+        $data['jabatan_fungsional'] = $memilikiJabatan === 'ya' ? ($data['jabatan_fungsional'] ?? null) : null;
         $data['pangkat'] = $memilikiJabatan === 'ya' ? ($data['pangkat'] ?? null) : null;
 
         // Urutkan sesuai urutan role di form agar kolom role lama konsisten.

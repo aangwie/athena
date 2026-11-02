@@ -55,7 +55,7 @@
                     <dd class="font-semibold text-slate-700">{{ $dosen->program_studi ?? '—' }}</dd>
                 </div>
                 <div class="flex gap-2">
-                    <dt class="w-28 shrink-0 text-slate-500">Jabatan Fungsional</dt>
+                    <dt class="w-28 shrink-0 text-slate-500">Jabatan Akademik</dt>
                     <dd class="font-semibold text-slate-700">{{ $dosen->jabatan_fungsional ?? '—' }}</dd>
                 </div>
                 <div class="flex gap-2">

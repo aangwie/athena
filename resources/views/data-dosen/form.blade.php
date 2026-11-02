@@ -89,18 +89,35 @@
                         @error('memiliki_jabatan') <p class="form-error">{{ $message }}</p> @enderror
                     </div>
 
-                    <div data-pangkat-section @class(['hidden' => $memilikiJabatan !== 'ya'])>
-                        <label for="pangkat" class="form-label">Pangkat <span class="text-rose-500">*</span></label>
-                        <select id="pangkat" name="pangkat" @required($memilikiJabatan === 'ya') @disabled($memilikiJabatan !== 'ya')
-                                @class(['form-input', 'border-rose-300 bg-rose-50/40' => $errors->has('pangkat')])>
-                            <option value="" selected disabled>Pilih Pangkat</option>
-                            @foreach ($pangkatOptions as $option)
-                                <option value="{{ $option->nama }}" @selected(old('pangkat', $item->jabatan_fungsional ?? '') === $option->nama)>
-                                    {{ $option->nama }}
-                                </option>
-                            @endforeach
-                        </select>
-                        @error('pangkat') <p class="form-error">{{ $message }}</p> @enderror
+                    <div data-jabatan-section @class(['grid gap-5', 'hidden' => $memilikiJabatan !== 'ya'])>
+                        <div>
+                            <label for="jabatan_fungsional" class="form-label">Jabatan Akademik <span class="text-rose-500">*</span></label>
+                            <select id="jabatan_fungsional" name="jabatan_fungsional"
+                                    @required($memilikiJabatan === 'ya') @disabled($memilikiJabatan !== 'ya')
+                                    @class(['form-input', 'border-rose-300 bg-rose-50/40' => $errors->has('jabatan_fungsional')])>
+                                <option value="" selected disabled>Pilih Jabatan Akademik</option>
+                                @foreach ($jabatanOptions as $option)
+                                    <option value="{{ $option->nama }}" @selected(old('jabatan_fungsional', $item->jabatan_fungsional ?? '') === $option->nama)>
+                                        {{ $option->nama }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('jabatan_fungsional') <p class="form-error">{{ $message }}</p> @enderror
+                        </div>
+
+                        <div>
+                            <label for="pangkat" class="form-label">Pangkat <span class="text-rose-500">*</span></label>
+                            <select id="pangkat" name="pangkat" @required($memilikiJabatan === 'ya') @disabled($memilikiJabatan !== 'ya')
+                                    @class(['form-input', 'border-rose-300 bg-rose-50/40' => $errors->has('pangkat')])>
+                                <option value="" selected disabled>Pilih Pangkat</option>
+                                @foreach ($pangkatOptions as $option)
+                                    <option value="{{ $option->nama }}" @selected(old('pangkat', $item->pangkat ?? '') === $option->nama)>
+                                        {{ $option->nama }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('pangkat') <p class="form-error">{{ $message }}</p> @enderror
+                        </div>
                     </div>
 
                     <div>

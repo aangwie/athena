@@ -15,7 +15,10 @@
                 <h2 class="text-xl font-extrabold tracking-tight text-slate-900 sm:text-2xl">Data Dosen</h2>
                 <p class="mt-1.5 text-sm leading-relaxed text-slate-500">Kelola data dosen: nama, NIDN, password, pangkat, dan role akses.</p>
             </div>
-            <a href="{{ route('data-dosen.create') }}" class="btn-primary w-auto px-5 whitespace-nowrap">Tambah Data</a>
+            <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+                <a href="{{ route('data-dosen.import.create') }}" class="btn-secondary w-auto px-5 whitespace-nowrap">Import Excel</a>
+                <a href="{{ route('data-dosen.create') }}" class="btn-primary w-auto px-5 whitespace-nowrap">Tambah Data</a>
+            </div>
         </div>
 
         @if (session('status'))
@@ -43,7 +46,7 @@
                                 <td class="px-5 py-3 font-mono text-slate-500">#{{ $item->id }}</td>
                                 <td class="px-5 py-3 font-semibold text-slate-800">{{ $item->name }}</td>
                                 <td class="px-5 py-3 text-slate-600">{{ $item->nidn }}</td>
-                                <td class="px-5 py-3 text-slate-600">{{ $item->jabatan_fungsional }}</td>
+                                <td class="px-5 py-3 text-slate-600">{{ $item->pangkat }}</td>
                                 <td class="px-5 py-3">
                                     <div class="flex flex-wrap items-center gap-1.5">
                                         @foreach ($item->roleList() as $role)

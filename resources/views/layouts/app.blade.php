@@ -262,12 +262,12 @@
                             </svg>
                         </summary>
                         <div class="space-y-1">
-                            <a href="{{ route('kepegawaian.jabatan-fungsional.index') }}" title="Jabatan Fungsional" @class(['sidebar-link', 'sidebar-link-active' => request()->routeIs('kepegawaian.jabatan-fungsional.*')])>
+                            <a href="{{ route('kepegawaian.jabatan-fungsional.index') }}" title="Jabatan Akademik" @class(['sidebar-link', 'sidebar-link-active' => request()->routeIs('kepegawaian.jabatan-fungsional.*')])>
                                 <svg class="size-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
                                     <path d="M3 9.4 12 5l9 4.4-9 4.4L3 9.4Z" stroke-linejoin="round" />
                                     <path d="M6.4 11.3v4.2c0 .5.3 1 .8 1.2 1.5.7 3 1 4.8 1s3.3-.3 4.8-1c.5-.2.8-.7.8-1.2v-4.2" stroke-linecap="round" />
                                 </svg>
-                                <span class="sidebar-label">Jabatan Fungsional</span>
+                                <span class="sidebar-label">Jabatan Akademik</span>
                             </a>
                             <a href="{{ route('kepegawaian.jabatan-struktural.index') }}" title="Jabatan Struktural" @class(['sidebar-link', 'sidebar-link-active' => request()->routeIs('kepegawaian.jabatan-struktural.*')])>
                                 <svg class="size-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">

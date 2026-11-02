@@ -15,8 +15,8 @@ class JabatanFungsionalController extends KepegawaianController
     {
         return [
             'kunci' => 'jabatan-fungsional',
-            'label' => 'Jabatan Fungsional',
-            'deskripsi' => 'Kelola daftar jabatan fungsional dosen yang digunakan pada pengajuan jabatan akademik.',
+            'label' => 'Jabatan Akademik',
+            'deskripsi' => 'Kelola daftar jabatan akademik dosen (mis. Asisten Ahli, Lektor, Lektor Kepala).',
             'route' => 'kepegawaian.jabatan-fungsional',
             'ikon' => 'fungsional',
             'contoh' => 'Contoh: Lektor Kepala',

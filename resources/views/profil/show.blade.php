@@ -59,7 +59,7 @@
                             <span class="size-1 rounded-full bg-teal-300/40"></span>
                             <span>{{ $user->program_studi ?? 'Program studi belum diatur' }}</span>
                             <span class="size-1 rounded-full bg-teal-300/40"></span>
-                            <span>{{ $user->jabatan_fungsional ?? 'Jabatan fungsional belum diatur' }}</span>
+                            <span>{{ $user->jabatan_fungsional ?? 'Jabatan akademik belum diatur' }}</span>
                         </p>
                     </div>
                 </div>

@@ -45,7 +45,7 @@ class KepegawaianTest extends TestCase
         $admin = $this->makeAdmin();
 
         $pages = [
-            '/kepegawaian/jabatan-fungsional' => 'Jabatan Fungsional',
+            '/kepegawaian/jabatan-fungsional' => 'Jabatan Akademik',
             '/kepegawaian/jabatan-struktural' => 'Jabatan Struktural',
             '/kepegawaian/kepangkatan' => 'Kepangkatan',
         ];
@@ -68,7 +68,7 @@ class KepegawaianTest extends TestCase
             ->get('/dashboard')
             ->assertOk()
             ->assertSee('Kepegawaian')
-            ->assertSee('Jabatan Fungsional')
+            ->assertSee('Jabatan Akademik')
             ->assertSee('Jabatan Struktural')
             ->assertSee('Kepangkatan');
 

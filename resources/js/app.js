@@ -185,19 +185,24 @@ const boot = () => {
     }
 
     const jabatanInputs = document.querySelectorAll('[data-jabatan-akademik]');
-    const pangkatSection = document.querySelector('[data-pangkat-section]');
-    const pangkatSelect = document.querySelector('#pangkat');
+    const jabatanSection = document.querySelector('[data-jabatan-section]');
+    const jabatanSelects = [document.querySelector('#jabatan_fungsional'), document.querySelector('#pangkat')];
 
     const syncPangkatSection = () => {
-        if (!pangkatSection || !pangkatSelect) {
+        if (!jabatanSection) {
             return;
         }
 
         const punyaJabatan = document.querySelector('[data-jabatan-akademik]:checked')?.value === 'ya';
 
-        pangkatSection.classList.toggle('hidden', !punyaJabatan);
-        pangkatSelect.required = punyaJabatan;
-        pangkatSelect.disabled = !punyaJabatan;
+        jabatanSection.classList.toggle('hidden', !punyaJabatan);
+
+        jabatanSelects.forEach((select) => {
+            if (select) {
+                select.required = punyaJabatan;
+                select.disabled = !punyaJabatan;
+            }
+        });
     };
 
     if (jabatanInputs.length > 0) {

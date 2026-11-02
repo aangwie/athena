@@ -40,6 +40,7 @@ class User extends Authenticatable
         'email',
         'program_studi',
         'jabatan_fungsional',
+        'pangkat',
         'role',
         'roles',
         'is_active',

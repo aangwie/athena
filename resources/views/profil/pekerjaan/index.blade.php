@@ -399,7 +399,7 @@
             <div class="flex flex-col gap-3 border-b border-slate-100 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
                 <div>
                     <h3 class="text-sm font-extrabold text-slate-800">Riwayat Jabatan Struktural</h3>
-                    <p class="mt-0.5 text-xs text-slate-400">Jabatan struktural dan fungsional diambil dari data kepegawaian instansi.</p>
+                    <p class="mt-0.5 text-xs text-slate-400">Jabatan struktural dan akademik diambil dari data kepegawaian instansi.</p>
                 </div>
                 @if ($editJabatan)
                     <a href="{{ route('profil.pekerjaan.index') }}" class="btn-secondary w-auto shrink-0 px-4">Batal Edit</a>
@@ -429,10 +429,10 @@
                 </div>
 
                 <div>
-                    <label for="jabatan_fungsional_id" class="form-label">Jabatan Fungsional <span class="text-rose-500">*</span></label>
+                    <label for="jabatan_fungsional_id" class="form-label">Jabatan Akademik <span class="text-rose-500">*</span></label>
                     <select id="jabatan_fungsional_id" name="jabatan_fungsional_id" required
                             @class(['form-select', 'border-rose-300 bg-rose-50/40' => $errors->has('jabatan_fungsional_id')])>
-                        <option value="">Pilih jabatan fungsional</option>
+                        <option value="">Pilih jabatan akademik</option>
                         @foreach ($jabatanFungsionalList as $jabatan)
                             <option value="{{ $jabatan->id }}" @selected((int) old('jabatan_fungsional_id', $editJabatan?->jabatan_fungsional_id) === $jabatan->id)>
                                 {{ $jabatan->nama }}
@@ -460,7 +460,7 @@
                     <thead>
                         <tr>
                             <th scope="col">Jabatan Struktural</th>
-                            <th scope="col">Jabatan Fungsional</th>
+                            <th scope="col">Jabatan Akademik</th>
                             <th scope="col" class="w-44">TMT</th>
                             <th scope="col" class="no-sort w-40 text-right">Aksi</th>
                         </tr>

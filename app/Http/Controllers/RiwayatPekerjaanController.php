@@ -224,8 +224,8 @@ class RiwayatPekerjaanController extends Controller
         ], [
             'jabatan_struktural_id.required' => 'Jabatan struktural wajib dipilih.',
             'jabatan_struktural_id.exists' => 'Jabatan struktural tidak ditemukan.',
-            'jabatan_fungsional_id.required' => 'Jabatan fungsional wajib dipilih.',
-            'jabatan_fungsional_id.exists' => 'Jabatan fungsional tidak ditemukan.',
+            'jabatan_fungsional_id.required' => 'Jabatan akademik wajib dipilih.',
+            'jabatan_fungsional_id.exists' => 'Jabatan akademik tidak ditemukan.',
             'tmt.required' => 'TMT wajib diisi.',
             'tmt.date' => 'Format TMT tidak valid.',
         ]);
