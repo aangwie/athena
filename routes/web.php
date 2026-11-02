@@ -53,6 +53,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/', [DataDosenController::class, 'store'])->name('store');
         Route::get('/{id}/edit', [DataDosenController::class, 'edit'])->name('edit');
         Route::put('/{id}', [DataDosenController::class, 'update'])->name('update');
+        Route::delete('/hapus-terpilih', [DataDosenController::class, 'bulkDestroy'])->name('bulk-destroy');
         Route::delete('/{id}', [DataDosenController::class, 'destroy'])->name('destroy');
     });
 

@@ -33,6 +33,19 @@ class DataDosenTest extends TestCase
         ]);
     }
 
+    private function makeDosen(string $nidn, string $name): User
+    {
+        return User::create([
+            'nidn' => $nidn,
+            'name' => $name,
+            'email' => "{$nidn}@example.test",
+            'role' => 'dosen',
+            'roles' => ['dosen'],
+            'is_active' => true,
+            'password' => Hash::make('password'),
+        ]);
+    }
+
     private function payload(array $overrides = []): array
     {
         return array_merge([
@@ -282,6 +295,38 @@ class DataDosenTest extends TestCase
             ->assertForbidden();
 
         $this->assertDatabaseHas('users', ['id' => $admin->id]);
+    }
+
+    public function test_admin_can_bulk_delete_selected_dosen_except_own_account(): void
+    {
+        $admin = $this->makeAdmin();
+        $satu = $this->makeDosen('1985041722', 'Dr. Citra Maharani, M.Si.');
+        $dua = $this->makeDosen('1985041733', 'Dr. Budi Santoso, M.Kom.');
+        $tetap = $this->makeDosen('1985041744', 'Dr. Dewi Lestari, M.Pd.');
+
+        $this->actingAs($admin)
+            ->delete('/data-dosen/hapus-terpilih', ['ids' => [$satu->id, $dua->id, $admin->id]])
+            ->assertRedirect('/data-dosen')
+            ->assertSessionHas('status');
+
+        $this->assertDatabaseMissing('users', ['id' => $satu->id]);
+        $this->assertDatabaseMissing('users', ['id' => $dua->id]);
+        $this->assertDatabaseHas('users', ['id' => $tetap->id]);
+        $this->assertDatabaseHas('users', ['id' => $admin->id]);
+
+        // Kolom ID kini berisi checkbox yang menempel ke form bulk delete.
+        $this->actingAs($admin)
+            ->get('/data-dosen')
+            ->assertSee('form="bulk-form"', false)
+            ->assertSee('name="ids[]"', false)
+            ->assertSee('data-bulk-item', false);
+    }
+
+    public function test_bulk_delete_requires_selected_dosen(): void
+    {
+        $this->actingAs($this->makeAdmin())
+            ->delete('/data-dosen/hapus-terpilih', ['ids' => []])
+            ->assertSessionHasErrors('ids');
     }
 
     public function test_deleting_dosen_removes_all_related_data_and_uploaded_files(): void

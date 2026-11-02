@@ -46,6 +46,14 @@
             @endif
 
             <section class="section-card">
+                <div class="section-heading">
+                    <span class="section-number">01</span>
+                    <div>
+                        <h3 class="text-sm font-extrabold text-slate-800">Identitas &amp; Akses</h3>
+                        <p class="mt-0.5 text-xs leading-relaxed text-slate-400">Lengkapi data dosen, jabatan akademik, dan role akses.</p>
+                    </div>
+                </div>
+
                 <div class="grid gap-5 px-5 py-5 sm:px-6">
                     @if ($isEdit)
                         <div class="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50/60 px-4 py-3">
@@ -188,7 +196,7 @@
                 </div>
             </section>
 
-            <div class="flex flex-col-reverse gap-3 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:px-6">
+            <div class="flex flex-col-reverse gap-3 rounded-2xl border border-slate-200/80 bg-white px-5 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:px-6">
                 <a href="{{ route('data-dosen.index') }}" class="btn-secondary flex-1 whitespace-nowrap sm:flex-none">Batal</a>
                 <button type="submit" class="btn-primary w-auto flex-1 px-5 whitespace-nowrap sm:flex-none">
                     {{ $isEdit ? 'Simpan Perubahan' : 'Simpan Data' }}

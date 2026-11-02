@@ -97,6 +97,36 @@ class DataDosenController extends Controller
             ->with('status', 'Data Dosen beserta seluruh data terkait dan berkas unggahannya berhasil dihapus.');
     }
 
+    public function bulkDestroy(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'ids' => ['required', 'array', 'min:1'],
+            'ids.*' => ['integer', Rule::exists('users', 'id')],
+        ], [
+            'ids.required' => 'Pilih minimal satu data dosen yang akan dihapus.',
+            'ids.min' => 'Pilih minimal satu data dosen yang akan dihapus.',
+        ]);
+
+        // Akun yang sedang login tidak boleh ikut terhapus.
+        $ids = collect($data['ids'])
+            ->map(fn ($id) => (int) $id)
+            ->reject(fn (int $id) => $id === $request->user()->id)
+            ->unique();
+
+        $jumlah = 0;
+
+        foreach (User::query()->whereIn('id', $ids)->get() as $item) {
+            $item->delete();
+            $jumlah++;
+        }
+
+        return redirect()
+            ->route('data-dosen.index')
+            ->with('status', $jumlah === 0
+                ? 'Tidak ada data dosen yang dihapus.'
+                : "{$jumlah} data dosen beserta seluruh data terkait dan berkas unggahannya berhasil dihapus.");
+    }
+
     private function find(string $id): User
     {
         return User::query()->findOrFail($id);
