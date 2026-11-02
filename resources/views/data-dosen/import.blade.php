@@ -5,7 +5,7 @@
 @section('page-title', 'Import Data Dosen')
 
 @section('content')
-    <div class="mx-auto max-w-2xl" data-import>
+    <div class="mx-auto max-w-4xl" data-import>
         <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
                 <span class="mb-2 inline-flex items-center gap-2 text-[11px] font-bold tracking-[0.14em] text-teal-700 uppercase">
@@ -21,74 +21,88 @@
         </div>
 
         <section class="section-card mb-5">
-            <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                    <h3 class="text-sm font-bold text-slate-800">1. Unduh template</h3>
-                    <p class="mt-1 text-xs leading-relaxed text-slate-500">
+            <div class="section-heading flex-wrap">
+                <span class="section-number">01</span>
+                <div class="flex-1">
+                    <h3 class="text-sm font-extrabold text-slate-800">Unduh template</h3>
+                    <p class="mt-0.5 text-xs leading-relaxed text-slate-500">
                         Template berisi judul kolom dan satu baris contoh. Jangan ubah urutan kolom.
                     </p>
                 </div>
-                <a href="{{ route('data-dosen.import.template') }}" class="btn-secondary w-auto shrink-0 px-5 whitespace-nowrap">
+                <a href="{{ route('data-dosen.import.template') }}" class="btn-secondary ml-auto w-auto shrink-0 px-5 whitespace-nowrap">
                     Unduh Template
                 </a>
             </div>
 
-            <div class="mt-5 overflow-x-auto rounded-xl border border-slate-200">
-                <table class="w-full text-left text-xs">
-                    <thead class="bg-slate-50 text-[11px] font-bold tracking-wide text-slate-500 uppercase">
-                        <tr>
-                            @foreach ($kolom as $judul)
-                                <th class="px-3 py-2 whitespace-nowrap">{{ $judul }}</th>
-                            @endforeach
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100 text-slate-600">
-                        @foreach ($contoh as $baris)
+            <div class="px-5 py-5 sm:px-6">
+                <div class="overflow-x-auto rounded-xl border border-slate-200">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-slate-50 text-[11px] font-bold tracking-wide text-slate-500 uppercase">
                             <tr>
-                                @foreach ($baris as $sel)
-                                    <td class="px-3 py-2 whitespace-nowrap">{{ $sel !== '' ? $sel : '—' }}</td>
+                                @foreach ($kolom as $judul)
+                                    <th class="px-3 py-2.5 align-bottom">{{ $judul }}</th>
                                 @endforeach
                             </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 text-slate-600">
+                            @foreach ($contoh as $baris)
+                                <tr>
+                                    @foreach ($baris as $sel)
+                                        <td class="px-3 py-2.5 align-top">{{ $sel !== '' ? $sel : '—' }}</td>
+                                    @endforeach
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
 
-            <ul class="mt-4 space-y-1.5 text-xs leading-relaxed text-slate-500">
-                <li>• <strong class="font-semibold text-slate-700">Memiliki Jabatan Akademik</strong> diisi <em>Ya</em> atau <em>Tidak</em>; jika kosong, disimpulkan dari terisi/tidaknya Jabatan Akademik &amp; Pangkat.</li>
-                <li>• <strong class="font-semibold text-slate-700">Role</strong> dipisah koma, misalnya <code class="rounded bg-slate-100 px-1 py-0.5">dosen,tim_pak</code>. Kosong berarti <em>dosen</em>.</li>
-                <li>• <strong class="font-semibold text-slate-700">Password</strong> minimal 8 karakter; kosong berarti <em>{{ $passwordBawaan }}</em>.</li>
-                <li>• NIDN yang sudah terdaftar dilewati, bukan ditimpa.</li>
-            </ul>
+                <ul class="mt-4 space-y-1.5 text-xs leading-relaxed text-slate-500">
+                    <li>• <strong class="font-semibold text-slate-700">Memiliki Jabatan Akademik</strong> diisi <em>Ya</em> atau <em>Tidak</em>; jika kosong, disimpulkan dari terisi/tidaknya Jabatan Akademik &amp; Pangkat.</li>
+                    <li>• <strong class="font-semibold text-slate-700">Role</strong> dipisah koma, misalnya <code class="rounded bg-slate-100 px-1 py-0.5">dosen,tim_pak</code>. Kosong berarti <em>dosen</em>.</li>
+                    <li>• <strong class="font-semibold text-slate-700">Password</strong> minimal 8 karakter; kosong berarti <em>{{ $passwordBawaan }}</em>.</li>
+                    <li>• NIDN yang sudah terdaftar dilewati, bukan ditimpa.</li>
+                </ul>
+            </div>
         </section>
 
         <form method="POST" action="{{ route('data-dosen.import.mulai') }}" enctype="multipart/form-data" data-import-form class="section-card">
             @csrf
-            <h3 class="text-sm font-bold text-slate-800">2. Unggah berkas</h3>
-
-            <div class="mt-3">
-                <input type="file" name="berkas" accept=".xlsx" required
-                       class="form-input file:mr-3 file:rounded-lg file:border-0 file:bg-teal-600 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white hover:file:bg-teal-700">
-                <p class="mt-2 text-[11px] text-slate-400">Format .xlsx, maksimal 10 MB.</p>
-            </div>
-
-            <div data-progress-wrapper class="mt-5 hidden">
-                <div class="mb-2 flex items-center justify-between text-xs font-semibold text-slate-600">
-                    <span data-progress-label>Mengunggah…</span>
-                    <span data-progress-value>0%</span>
-                </div>
-                <div class="h-2 w-full overflow-hidden rounded-full bg-slate-200">
-                    <div data-progress-bar class="h-full w-0 rounded-full bg-teal-600 transition-[width] duration-300"></div>
+            <div class="section-heading">
+                <span class="section-number">02</span>
+                <div>
+                    <h3 class="text-sm font-extrabold text-slate-800">Unggah berkas</h3>
+                    <p class="mt-0.5 text-xs leading-relaxed text-slate-500">
+                        Pilih berkas, lalu jalankan import. Progres tersimpan per batch baris.
+                    </p>
                 </div>
             </div>
 
-            <p data-progress-note class="mt-3 hidden text-xs leading-relaxed text-slate-500" role="status" aria-live="polite"></p>
+            <div class="px-5 py-5 sm:px-6">
+                <div>
+                    <label for="berkas" class="form-label">Berkas Excel</label>
+                    <input type="file" id="berkas" name="berkas" accept=".xlsx" required
+                           class="form-input file:mr-3 file:rounded-lg file:border-0 file:bg-teal-600 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white hover:file:bg-teal-700">
+                    <p class="mt-2 text-[11px] text-slate-400">Format .xlsx, maksimal 10 MB.</p>
+                </div>
 
-            <div class="mt-5 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-end">
-                <a href="{{ route('data-dosen.index') }}" class="btn-secondary flex-1 whitespace-nowrap sm:flex-none">Batal</a>
-                <button type="submit" data-import-submit class="btn-primary w-auto flex-1 px-5 whitespace-nowrap sm:flex-none">
-                    Import Sekarang
-                </button>
+                <div data-progress-wrapper class="mt-5 hidden">
+                    <div class="mb-2 flex items-center justify-between text-xs font-semibold text-slate-600">
+                        <span data-progress-label>Mengunggah…</span>
+                        <span data-progress-value>0%</span>
+                    </div>
+                    <div class="h-2 w-full overflow-hidden rounded-full bg-slate-200">
+                        <div data-progress-bar class="h-full w-0 rounded-full bg-teal-600 transition-[width] duration-300"></div>
+                    </div>
+                </div>
+
+                <p data-progress-note class="mt-3 hidden text-xs leading-relaxed text-slate-500" role="status" aria-live="polite"></p>
+
+                <div class="mt-5 flex flex-col-reverse gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:items-center sm:justify-end">
+                    <a href="{{ route('data-dosen.index') }}" class="btn-secondary flex-1 whitespace-nowrap sm:flex-none">Batal</a>
+                    <button type="submit" data-import-submit class="btn-primary w-auto flex-1 px-5 whitespace-nowrap sm:flex-none">
+                        Import Sekarang
+                    </button>
+                </div>
             </div>
         </form>
     </div>
