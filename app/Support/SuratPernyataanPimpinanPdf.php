@@ -114,7 +114,7 @@ class SuratPernyataanPimpinanPdf extends Fpdf
     private function judul(): void
     {
         $this->SetFont(self::FONT, 'BU', 12);
-        $this->Cell(0, 0.7, $this->teks('SURAT PERNYATAAN PEMIMPIN PERGURUAN TINGGI'), 0, 1, 'C');
+        $this->Cell(0, 0.7, $this->teks('SURAT PERNYATAAN PIMPINAN PERGURUAN TINGGI'), 0, 1, 'C');
 
         $this->SetFont(self::FONT, '', self::UKURAN_FONT);
         $this->Cell(0, 0.6, $this->teks('Nomor: '.($this->pernyataan->nomor_surat ?: '…')), 0, 1, 'C');
