@@ -50,6 +50,8 @@ class SuratBapSenatRequest extends FormRequest
             ],
             'bidang_keilmuan' => ['required', 'string', 'max:255'],
             'prosentase_penelitian' => ['required', 'integer', 'between:0,100'],
+            'tempat_pelaksanaan' => ['required', 'string', 'max:150'],
+            'materi_rapat' => ['required', 'string', 'max:255'],
             'anggota_senat_ids' => ['required', 'array', 'min:1'],
             // Anggota rapat hanya boleh diambil dari daftar senat instansi.
             'anggota_senat_ids.*' => ['integer', 'distinct', Rule::exists('senat', 'user_id')],
@@ -69,6 +71,8 @@ class SuratBapSenatRequest extends FormRequest
             'dosen_id' => 'nama dosen',
             'bidang_keilmuan' => 'bidang keilmuan',
             'prosentase_penelitian' => 'prosentase proporsi penelitian',
+            'tempat_pelaksanaan' => 'tempat pelaksanaan',
+            'materi_rapat' => 'materi rapat',
             'anggota_senat_ids' => 'anggota senat',
         ];
     }
@@ -89,6 +93,8 @@ class SuratBapSenatRequest extends FormRequest
             'bidang_keilmuan.required' => 'Bidang keilmuan wajib diisi.',
             'prosentase_penelitian.required' => 'Prosentase proporsi penelitian wajib diisi.',
             'prosentase_penelitian.between' => 'Prosentase proporsi penelitian harus 0 sampai 100.',
+            'tempat_pelaksanaan.required' => 'Tempat pelaksanaan wajib diisi.',
+            'materi_rapat.required' => 'Materi rapat wajib diisi.',
             'anggota_senat_ids.required' => 'Anggota senat wajib dipilih.',
             'anggota_senat_ids.min' => 'Pilih minimal satu anggota senat.',
             'anggota_senat_ids.*.exists' => 'Anggota senat yang dipilih tidak terdaftar pada senat instansi.',

@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('title', $riwayat ? 'Edit Riwayat Pendidikan' : 'Tambah Riwayat Pendidikan')
-@section('breadcrumb', 'Profil Dosen')
+@section('breadcrumb', auth()->user()->isTendik() ? 'Profil Tendik' : 'Profil Dosen')
 @section('page-title', $riwayat ? 'Edit Riwayat Pendidikan' : 'Tambah Riwayat Pendidikan')
 
 @section('content')
@@ -16,7 +16,7 @@
             <div>
                 <span class="mb-2 inline-flex items-center gap-2 text-[11px] font-bold tracking-[0.14em] text-teal-700 uppercase">
                     <span class="h-px w-6 bg-teal-500"></span>
-                    Profil Dosen
+                    {{ auth()->user()->isTendik() ? 'Profil Tendik' : 'Profil Dosen' }}
                 </span>
                 <h2 class="text-xl font-extrabold tracking-tight text-slate-900 sm:text-2xl">
                     {{ $isEdit ? 'Edit Riwayat Pendidikan' : 'Tambah Riwayat Pendidikan' }}

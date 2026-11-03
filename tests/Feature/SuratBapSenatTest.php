@@ -59,6 +59,10 @@ class SuratBapSenatTest extends TestCase
             ->assertSee('Nama Dosen')
             ->assertSee('Bidang Keilmuan')
             ->assertSee('Prosentase Proporsi Penelitian')
+            ->assertSee('Tempat Pelaksanaan')
+            ->assertSee('name="tempat_pelaksanaan"', false)
+            ->assertSee('Materi Rapat')
+            ->assertSee('name="materi_rapat"', false)
             ->assertSee('Anggota Senat')
             ->assertSee('data-select-search="Cari nama dosen…"', false)
             ->assertSee('data-select-search="Cari nama anggota senat…"', false)
@@ -81,6 +85,8 @@ class SuratBapSenatTest extends TestCase
                 'dosen_id' => $dosen->id,
                 'bidang_keilmuan' => 'Sistem Informasi',
                 'prosentase_penelitian' => 25,
+                'tempat_pelaksanaan' => 'Ruang Rapat Senat Lt. 2',
+                'materi_rapat' => 'Pemberian pertimbangan kenaikan jabatan akademik dosen',
                 'anggota_senat_ids' => [$ketua->user_id, $anggota->user_id],
             ])
             ->assertRedirect(route('surat.index').'#bap-senat')
@@ -92,6 +98,8 @@ class SuratBapSenatTest extends TestCase
         $this->assertSame('2026-10-31', $bap->tanggal_bap->toDateString());
         $this->assertSame($dosen->id, $bap->user_id);
         $this->assertSame(25, $bap->prosentase_penelitian);
+        $this->assertSame('Ruang Rapat Senat Lt. 2', $bap->tempat_pelaksanaan);
+        $this->assertSame('Pemberian pertimbangan kenaikan jabatan akademik dosen', $bap->materi_rapat);
         $this->assertSame([$ketua->user_id, $anggota->user_id], $bap->anggota_senat_ids);
 
         $this->actingAs($admin)
@@ -101,6 +109,8 @@ class SuratBapSenatTest extends TestCase
                 'dosen_id' => $dosen->id,
                 'bidang_keilmuan' => 'Rekayasa Perangkat Lunak',
                 'prosentase_penelitian' => 40,
+                'tempat_pelaksanaan' => 'Aula Kampus',
+                'materi_rapat' => 'Pembahasan usulan jabatan akademik',
                 'anggota_senat_ids' => [$ketua->user_id],
             ])
             ->assertRedirect(route('surat.index').'#bap-senat')
@@ -111,6 +121,8 @@ class SuratBapSenatTest extends TestCase
         $this->assertSame('002/BAP-SENAT/XI/2026', $bap->nomor_bap);
         $this->assertSame('2026-11-01', $bap->tanggal_bap->toDateString());
         $this->assertSame(40, $bap->prosentase_penelitian);
+        $this->assertSame('Aula Kampus', $bap->tempat_pelaksanaan);
+        $this->assertSame('Pembahasan usulan jabatan akademik', $bap->materi_rapat);
         $this->assertSame([$ketua->user_id], $bap->anggota_senat_ids);
     }
 
@@ -150,6 +162,8 @@ class SuratBapSenatTest extends TestCase
             'user_id' => $dosen->id,
             'bidang_keilmuan' => 'Sistem Informasi',
             'prosentase_penelitian' => 30,
+            'tempat_pelaksanaan' => 'Ruang Rapat Senat Lt. 2',
+            'materi_rapat' => 'Pemberian pertimbangan kenaikan jabatan akademik',
             'anggota_senat_ids' => [$ketua->user_id],
         ]);
 
@@ -159,7 +173,9 @@ class SuratBapSenatTest extends TestCase
             ->assertSee('Perbarui')
             ->assertSee(route('surat.bap-senat.update', $bap), false)
             ->assertSee('value="009/BAP-SENAT/X/2026"', false)
-            ->assertSee('value="31-10-2026"', false);
+            ->assertSee('value="31-10-2026"', false)
+            ->assertSee('value="Ruang Rapat Senat Lt. 2"', false)
+            ->assertSee('value="Pemberian pertimbangan kenaikan jabatan akademik"', false);
     }
 
     public function test_bap_senat_rejects_invalid_input(): void
@@ -175,9 +191,11 @@ class SuratBapSenatTest extends TestCase
                 'dosen_id' => $dosen->id,
                 'bidang_keilmuan' => '',
                 'prosentase_penelitian' => 120,
+                'tempat_pelaksanaan' => '',
+                'materi_rapat' => '',
                 'anggota_senat_ids' => [$bukanSenat->id],
             ])
-            ->assertSessionHasErrors(['nomor_bap', 'tanggal_bap', 'bidang_keilmuan', 'prosentase_penelitian', 'anggota_senat_ids.0']);
+            ->assertSessionHasErrors(['nomor_bap', 'tanggal_bap', 'bidang_keilmuan', 'prosentase_penelitian', 'tempat_pelaksanaan', 'materi_rapat', 'anggota_senat_ids.0']);
 
         $this->actingAs($admin)
             ->post(route('surat.bap-senat.store'), [
@@ -186,6 +204,8 @@ class SuratBapSenatTest extends TestCase
                 'dosen_id' => $dosen->id,
                 'bidang_keilmuan' => 'Sistem Informasi',
                 'prosentase_penelitian' => 20,
+                'tempat_pelaksanaan' => 'Ruang Rapat Senat',
+                'materi_rapat' => 'Pemberian pertimbangan kenaikan jabatan akademik',
                 'anggota_senat_ids' => [],
             ])
             ->assertSessionHasErrors('anggota_senat_ids');
@@ -230,6 +250,8 @@ class SuratBapSenatTest extends TestCase
             'user_id' => $dosen->id,
             'bidang_keilmuan' => 'Sistem Informasi',
             'prosentase_penelitian' => 35,
+            'tempat_pelaksanaan' => 'Ruang Rapat Senat Lt. 2',
+            'materi_rapat' => 'Pemberian pertimbangan kenaikan jabatan akademik dosen',
             'anggota_senat_ids' => [$ketua->user_id, $anggota->user_id],
         ]);
 
@@ -260,6 +282,27 @@ class SuratBapSenatTest extends TestCase
         $this->assertLessThan(
             mb_strpos($teks, 'UNIVERSITAS ATHENA'),
             mb_strpos($teks, 'PERGURUAN TINGGI PGRI PACITAN'),
+        );
+
+        // Tanda tangan hanya untuk Ketua Senat: kolom sekretaris & daftar anggota
+        // senat tidak lagi dicetak di halaman 1.
+        $this->assertStringContainsString('Ketua Senat', $teks);
+        $this->assertStringNotContainsString('Sekretaris', $teks);
+        $this->assertStringNotContainsString('Anggota Senat', $teks);
+
+        // Halaman 2 (daftar hadir) memakai kop yang sama dengan halaman 1.
+        $this->assertSame(2, substr_count($teks, 'PERGURUAN TINGGI PGRI PACITAN'));
+        $this->assertGreaterThan(
+            mb_strrpos($teks, 'PERGURUAN TINGGI PGRI PACITAN'),
+            mb_strpos($teks, 'DAFTAR HADIR RAPAT'),
+        );
+
+        // Tempat pelaksanaan & materi rapat tercetak pada halaman 2.
+        $this->assertStringContainsString('Ruang Rapat Senat Lt. 2', $teks);
+        $this->assertStringContainsString('Pemberian pertimbangan kenaikan jabatan akademik dosen', $teks);
+        $this->assertGreaterThan(
+            mb_strpos($teks, 'DAFTAR HADIR RAPAT'),
+            mb_strpos($teks, 'Ruang Rapat Senat Lt. 2'),
         );
     }
 

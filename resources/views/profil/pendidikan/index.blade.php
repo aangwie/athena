@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'Riwayat Pendidikan')
-@section('breadcrumb', 'Profil Dosen')
+@section('breadcrumb', auth()->user()->isTendik() ? 'Profil Tendik' : 'Profil Dosen')
 @section('page-title', 'Riwayat Pendidikan')
 
 @section('content')
@@ -16,7 +16,7 @@
             <div>
                 <span class="mb-2 inline-flex items-center gap-2 text-[11px] font-bold tracking-[0.14em] text-teal-700 uppercase">
                     <span class="h-px w-6 bg-teal-500"></span>
-                    Profil Dosen
+                    {{ auth()->user()->isTendik() ? 'Profil Tendik' : 'Profil Dosen' }}
                 </span>
                 <h2 class="text-xl font-extrabold tracking-tight text-slate-900 sm:text-2xl">Riwayat Pendidikan</h2>
                 <p class="mt-1.5 max-w-2xl text-sm leading-relaxed text-slate-500">
@@ -25,13 +25,15 @@
             </div>
 
             <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
-                <a href="{{ route('profil.show') }}" class="btn-secondary justify-center">
-                    <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                        <path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z" stroke-linejoin="round" />
-                        <circle cx="12" cy="12" r="3" />
-                    </svg>
-                    Portofolio
-                </a>
+                @if (auth()->user()->isDosen())
+                    <a href="{{ route('profil.show') }}" class="btn-secondary justify-center">
+                        <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                            <path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z" stroke-linejoin="round" />
+                            <circle cx="12" cy="12" r="3" />
+                        </svg>
+                        Portofolio
+                    </a>
+                @endif
                 <a href="{{ route('profil.pendidikan.create') }}" class="btn-primary w-auto px-5">
                     <svg class="size-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                         <path fill-rule="evenodd" d="M10 3a.75.75 0 0 1 .75.75v5.5h5.5a.75.75 0 0 1 0 1.5h-5.5v5.5a.75.75 0 0 1-1.5 0v-5.5h-5.5a.75.75 0 0 1 0-1.5h5.5v-5.5A.75.75 0 0 1 10 3Z" clip-rule="evenodd" />

@@ -61,10 +61,29 @@ Route::middleware('auth')->group(function () {
         ->middleware('dosen')
         ->name('panduan.pengajuan');
 
-    Route::middleware('dosen')->prefix('profil')->name('profil.')->group(function () {
-        Route::get('/', [ProfilDosenController::class, 'show'])->name('show');
+    // Data pribadi & riwayat pendidikan dipakai bersama oleh dosen dan tendik.
+    Route::middleware('dosen_tendik')->prefix('profil')->name('profil.')->group(function () {
         Route::get('/data-pribadi', [ProfilDosenController::class, 'edit'])->name('data-pribadi.edit');
         Route::put('/data-pribadi', [ProfilDosenController::class, 'update'])->name('data-pribadi.update');
+
+        Route::get('/riwayat-pendidikan', [RiwayatPendidikanController::class, 'index'])->name('pendidikan.index');
+        Route::get('/riwayat-pendidikan/create', [RiwayatPendidikanController::class, 'create'])->name('pendidikan.create');
+        Route::post('/riwayat-pendidikan', [RiwayatPendidikanController::class, 'store'])->name('pendidikan.store');
+        Route::get('/riwayat-pendidikan/{riwayatPendidikan}/edit', [RiwayatPendidikanController::class, 'edit'])->name('pendidikan.edit');
+        Route::put('/riwayat-pendidikan/{riwayatPendidikan}', [RiwayatPendidikanController::class, 'update'])->name('pendidikan.update');
+        Route::delete('/riwayat-pendidikan/{riwayatPendidikan}', [RiwayatPendidikanController::class, 'destroy'])->name('pendidikan.destroy');
+        Route::get('/riwayat-pendidikan/{riwayatPendidikan}/berkas/{jenis}', [RiwayatPendidikanController::class, 'berkas'])
+            ->whereIn('jenis', ['ijazah', 'transkrip'])
+            ->name('pendidikan.berkas');
+
+        // ponytail: isi riwayat tendik menyusul; sekarang masih halaman kosong.
+        Route::view('/riwayat-tendik', 'profil.tendik.index')
+            ->middleware('tendik')
+            ->name('tendik.index');
+    });
+
+    Route::middleware('dosen')->prefix('profil')->name('profil.')->group(function () {
+        Route::get('/', [ProfilDosenController::class, 'show'])->name('show');
 
         Route::get('/pengajuan', [PengajuanDosenController::class, 'mulai'])->name('pengajuan.mulai');
         Route::get('/pengajuan/periode', [PengajuanDosenController::class, 'periode'])->name('pengajuan.periode');
@@ -105,16 +124,6 @@ Route::middleware('auth')->group(function () {
         Route::post('/pengajuan/penunjang', [PengajuanDosenController::class, 'storePenunjang'])->name('pengajuan.penunjang.store');
         Route::put('/pengajuan/penunjang/{kegiatan}', [PengajuanDosenController::class, 'updatePenunjang'])->name('pengajuan.penunjang.update');
         Route::delete('/pengajuan/penunjang/{kegiatan}', [PengajuanDosenController::class, 'destroyPenunjang'])->name('pengajuan.penunjang.destroy');
-
-        Route::get('/riwayat-pendidikan', [RiwayatPendidikanController::class, 'index'])->name('pendidikan.index');
-        Route::get('/riwayat-pendidikan/create', [RiwayatPendidikanController::class, 'create'])->name('pendidikan.create');
-        Route::post('/riwayat-pendidikan', [RiwayatPendidikanController::class, 'store'])->name('pendidikan.store');
-        Route::get('/riwayat-pendidikan/{riwayatPendidikan}/edit', [RiwayatPendidikanController::class, 'edit'])->name('pendidikan.edit');
-        Route::put('/riwayat-pendidikan/{riwayatPendidikan}', [RiwayatPendidikanController::class, 'update'])->name('pendidikan.update');
-        Route::delete('/riwayat-pendidikan/{riwayatPendidikan}', [RiwayatPendidikanController::class, 'destroy'])->name('pendidikan.destroy');
-        Route::get('/riwayat-pendidikan/{riwayatPendidikan}/berkas/{jenis}', [RiwayatPendidikanController::class, 'berkas'])
-            ->whereIn('jenis', ['ijazah', 'transkrip'])
-            ->name('pendidikan.berkas');
 
         Route::get('/riwayat-pekerjaan', [RiwayatPekerjaanController::class, 'index'])->name('pekerjaan.index');
         Route::put('/riwayat-pekerjaan', [RiwayatPekerjaanController::class, 'updateIdentitas'])->name('pekerjaan.update');

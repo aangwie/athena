@@ -48,8 +48,9 @@ class ProfilDosenController extends Controller
             $profil->save();
         });
 
+        // Tendik tidak punya halaman portofolio dosen; kembali ke formulir data pribadi.
         return redirect()
-            ->route('profil.show')
+            ->route($user->isTendik() ? 'profil.data-pribadi.edit' : 'profil.show')
             ->with('status', 'Data pribadi berhasil disimpan dan ditampilkan pada portofolio Anda.');
     }
 

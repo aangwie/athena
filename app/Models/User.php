@@ -25,6 +25,7 @@ class User extends Authenticatable
      */
     public const ROLES = [
         'dosen' => 'Dosen',
+        'tendik' => 'TENDIK',
         'tim_pak' => 'TIM PAK',
         'admin' => 'Admin',
     ];
@@ -247,6 +248,11 @@ class User extends Authenticatable
     public function isDosen(): bool
     {
         return $this->activeRole() === 'dosen';
+    }
+
+    public function isTendik(): bool
+    {
+        return $this->activeRole() === 'tendik';
     }
 
     public function isTimPak(): bool

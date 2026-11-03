@@ -232,7 +232,7 @@ class DataDosenImportController extends Controller
             'nidn.required' => 'NIDN wajib diisi.',
             'jabatan_fungsional.required' => 'Jabatan Akademik wajib dipilih jika dosen memiliki jabatan akademik.',
             'pangkat.required' => 'Pangkat wajib diisi jika memiliki jabatan akademik.',
-            'roles.min' => 'Role tidak dikenali. Gunakan dosen, tim_pak, atau admin.',
+            'roles.min' => 'Role tidak dikenali. Gunakan dosen, tendik, tim_pak, atau admin.',
             'password.min' => 'Password minimal 8 karakter.',
         ]);
 

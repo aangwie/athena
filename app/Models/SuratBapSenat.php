@@ -16,6 +16,8 @@ class SuratBapSenat extends Model
         'user_id',
         'bidang_keilmuan',
         'prosentase_penelitian',
+        'tempat_pelaksanaan',
+        'materi_rapat',
         'anggota_senat_ids',
     ];
 

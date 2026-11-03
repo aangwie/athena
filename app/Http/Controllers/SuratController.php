@@ -242,7 +242,6 @@ class SuratController extends Controller
             $this->identitasDosen($bap->dosen),
             $bap->anggotaSenat(),
             $senat->firstWhere('jabatan', 'ketua'),
-            $senat->firstWhere('jabatan', 'sekretaris'),
         );
         $pdf->buat();
 
@@ -401,6 +400,8 @@ class SuratController extends Controller
             'user_id' => $data['dosen_id'],
             'bidang_keilmuan' => $data['bidang_keilmuan'],
             'prosentase_penelitian' => (int) $data['prosentase_penelitian'],
+            'tempat_pelaksanaan' => $data['tempat_pelaksanaan'],
+            'materi_rapat' => $data['materi_rapat'],
             'anggota_senat_ids' => array_map('intval', $data['anggota_senat_ids']),
         ];
     }

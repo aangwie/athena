@@ -1,29 +1,37 @@
 @extends('layouts.app')
 
 @section('title', 'Data Pribadi')
-@section('breadcrumb', 'Profil Dosen')
+@section('breadcrumb', auth()->user()->isTendik() ? 'Profil Tendik' : 'Profil Dosen')
 @section('page-title', 'Data Pribadi')
 
 @section('content')
+    @php
+        $isTendik = auth()->user()->isTendik();
+        // Tendik tidak punya halaman portofolio; tombol kembali ke riwayat pendidikan.
+        $kembali = $isTendik ? route('profil.pendidikan.index') : route('profil.show');
+    @endphp
+
     <div class="mx-auto max-w-5xl">
         <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
                 <span class="mb-2 inline-flex items-center gap-2 text-[11px] font-bold tracking-[0.14em] text-teal-700 uppercase">
                     <span class="h-px w-6 bg-teal-500"></span>
-                    Profil Dosen
+                    {{ $isTendik ? 'Profil Tendik' : 'Profil Dosen' }}
                 </span>
                 <h2 class="text-xl font-extrabold tracking-tight text-slate-900 sm:text-2xl">Data Pribadi</h2>
                 <p class="mt-1.5 max-w-2xl text-sm leading-relaxed text-slate-500">
                     Lengkapi data pribadi Anda. Informasi ini akan ditampilkan pada portofolio dosen.
                 </p>
             </div>
-            <a href="{{ route('profil.show') }}" class="btn-secondary shrink-0">
-                <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                    <path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z" stroke-linejoin="round" />
-                    <circle cx="12" cy="12" r="3" />
-                </svg>
-                Lihat Portofolio
-            </a>
+            @unless ($isTendik)
+                <a href="{{ $kembali }}" class="btn-secondary shrink-0">
+                    <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                        <path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z" stroke-linejoin="round" />
+                        <circle cx="12" cy="12" r="3" />
+                    </svg>
+                    Lihat Portofolio
+                </a>
+            @endunless
         </div>
 
         @if ($errors->any())
@@ -123,7 +131,7 @@
                     Data akan langsung tampil pada portofolio setelah disimpan.
                 </p>
                 <div class="flex items-center gap-2">
-                    <a href="{{ route('profil.show') }}" class="btn-secondary flex-1 sm:flex-none">Batal</a>
+                    <a href="{{ $kembali }}" class="btn-secondary flex-1 sm:flex-none">Batal</a>
                     <button type="submit" class="btn-primary w-auto flex-1 px-5 sm:flex-none">
                         <svg class="size-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                             <path d="M4 2.75A1.75 1.75 0 0 0 2.25 4.5v11A1.75 1.75 0 0 0 4 17.25h12a1.75 1.75 0 0 0 1.75-1.75V6.56a1.75 1.75 0 0 0-.513-1.237l-2.31-2.31A1.75 1.75 0 0 0 13.69 2.5H4Z" />

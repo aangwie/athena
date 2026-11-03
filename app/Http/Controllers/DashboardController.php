@@ -17,6 +17,8 @@ class DashboardController extends Controller
         $dupak = PengajuanDupak::with('user')
             ->when($user->isDosen(), fn ($query) => $query->where('user_id', $user->id)->diajukanDupak())
             ->when($user->isAdmin(), fn ($query) => $query->diajukanDupak())
+            // Tendik tidak berhak melihat usulan dosen: cukup miliknya sendiri.
+            ->when($user->isTendik(), fn ($query) => $query->where('user_id', $user->id))
             ->latest('diajukan_at')
             ->latest('id')
             ->get();

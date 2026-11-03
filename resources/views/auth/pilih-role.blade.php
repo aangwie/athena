@@ -6,12 +6,14 @@
     @php
         $descriptions = [
             'dosen' => 'Kelola profil, portofolio, dan ajukan jabatan akademik Anda.',
+            'tendik' => 'Kelola data pribadi dan riwayat pendidikan Anda.',
             'tim_pak' => 'Tinjau dan nilai usulan angka kredit dosen.',
             'admin' => 'Kelola data dosen, instansi, dan kepegawaian.',
         ];
 
         $icons = [
             'dosen' => '<circle cx="12" cy="8" r="3.5" /><path d="M4.5 20a7.5 7.5 0 0 1 15 0" stroke-linecap="round" />',
+            'tendik' => '<rect x="3.5" y="4.5" width="17" height="15" rx="2.5" /><circle cx="9" cy="10" r="2.2" /><path d="M5.8 16.5a3.7 3.7 0 0 1 6.4 0M14.5 9h3.2M14.5 12.5h3.2" stroke-linecap="round" />',
             'tim_pak' => '<path d="M9 4.5h6M7.5 7h9A1.5 1.5 0 0 1 18 8.5v11a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 6 19.5v-11A1.5 1.5 0 0 1 7.5 7Z" stroke-linejoin="round" /><path d="m9.5 14 2 2 3.5-4" stroke-linecap="round" stroke-linejoin="round" />',
             'admin' => '<path d="M12 3.5 5.5 6v5.2c0 4.2 2.8 7.9 6.5 9.3 3.7-1.4 6.5-5.1 6.5-9.3V6L12 3.5Z" stroke-linejoin="round" /><path d="m9 12 2 2 4-4" stroke-linecap="round" stroke-linejoin="round" />',
         ];

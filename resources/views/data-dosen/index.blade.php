@@ -104,6 +104,7 @@
                                                 <span @class([
                                                     'badge-status',
                                                     'bg-teal-50 text-teal-700 ring-teal-200' => $role === 'dosen',
+                                                    'bg-sky-50 text-sky-700 ring-sky-200' => $role === 'tendik',
                                                     'bg-amber-50 text-amber-700 ring-amber-200' => $role === 'tim_pak',
                                                     'bg-indigo-50 text-indigo-700 ring-indigo-200' => $role === 'admin',
                                                 ])>{{ \App\Models\User::ROLES[$role] }}</span>

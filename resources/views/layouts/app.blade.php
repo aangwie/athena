@@ -94,7 +94,7 @@
                             // Sudah punya jabatan akademik: lanjut DUPAK. Belum punya: masih di tahap IKD.
                             $punyaJabatanAkademik = filled($user->jabatan_fungsional);
                         @endphp
-                        @if ($user->isDosen() ? $punyaJabatanAkademik : ! $user->isTimPak())
+                        @if ($user->isDosen() ? $punyaJabatanAkademik : $user->isAdmin())
                             <a href="{{ $riwayatUrl }}" title="Riwayat DUPAK"
                                @class(['sidebar-link', 'sidebar-link-active' => request()->routeIs('profil.pengajuan.riwayat')])>
                                 <svg class="size-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
@@ -144,9 +144,9 @@
                     </div>
                 @endif
 
-                @if (auth()->user()->isDosen())
+                @if (auth()->user()->isDosen() || auth()->user()->isTendik())
                     <div>
-                        <p class="sidebar-section-title sidebar-collapse-hide mb-2 px-3 text-[10px] font-bold tracking-[0.14em] text-teal-300/50 uppercase">Profil Dosen</p>
+                        <p class="sidebar-section-title sidebar-collapse-hide mb-2 px-3 text-[10px] font-bold tracking-[0.14em] text-teal-300/50 uppercase">{{ auth()->user()->isTendik() ? 'Profil Tendik' : 'Profil Dosen' }}</p>
                         <div class="space-y-1">
                             <a href="{{ route('profil.data-pribadi.edit') }}" title="Data Pribadi" @class(['sidebar-link', 'sidebar-link-active' => request()->routeIs('profil.data-pribadi.*')])>
                                 <svg class="size-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
@@ -163,13 +163,24 @@
                                 </svg>
                                 <span class="sidebar-label">Riwayat Pendidikan</span>
                             </a>
-                            <a href="{{ route('profil.pekerjaan.index') }}" title="Riwayat Pekerjaan" @class(['sidebar-link', 'sidebar-link-active' => request()->routeIs('profil.pekerjaan.*')])>
-                                <svg class="size-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                                    <rect x="3.5" y="7.5" width="17" height="12" rx="2.5" />
-                                    <path d="M9 7.5V6a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 6v1.5M3.5 12h17" stroke-linecap="round" />
-                                </svg>
-                                <span class="sidebar-label">Riwayat Pekerjaan</span>
-                            </a>
+                            @if (auth()->user()->isDosen())
+                                <a href="{{ route('profil.pekerjaan.index') }}" title="Riwayat Pekerjaan" @class(['sidebar-link', 'sidebar-link-active' => request()->routeIs('profil.pekerjaan.*')])>
+                                    <svg class="size-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                        <rect x="3.5" y="7.5" width="17" height="12" rx="2.5" />
+                                        <path d="M9 7.5V6a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 6v1.5M3.5 12h17" stroke-linecap="round" />
+                                    </svg>
+                                    <span class="sidebar-label">Riwayat Pekerjaan</span>
+                                </a>
+                            @endif
+                            @if (auth()->user()->isTendik())
+                                <a href="{{ route('profil.tendik.index') }}" title="Riwayat Tendik" @class(['sidebar-link', 'sidebar-link-active' => request()->routeIs('profil.tendik.*')])>
+                                    <svg class="size-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                        <rect x="3.5" y="7.5" width="17" height="12" rx="2.5" />
+                                        <path d="M9 7.5V6a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 6v1.5M3.5 12h17" stroke-linecap="round" />
+                                    </svg>
+                                    <span class="sidebar-label">Riwayat Tendik</span>
+                                </a>
+                            @endif
                         </div>
                     </div>
                 @endif

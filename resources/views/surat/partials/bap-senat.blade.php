@@ -99,6 +99,32 @@
             @error('prosentase_penelitian') <p class="form-error">{{ $message }}</p> @enderror
         </div>
 
+        <div>
+            <label for="tempat_pelaksanaan" class="form-label">
+                Tempat Pelaksanaan <span class="text-rose-500">*</span>
+            </label>
+            <input type="text" id="tempat_pelaksanaan" name="tempat_pelaksanaan" required maxlength="150"
+                   value="{{ old('tempat_pelaksanaan', $bapEdit?->tempat_pelaksanaan) }}"
+                   placeholder="Contoh: Ruang Rapat Senat Lt. 2"
+                   autocomplete="off"
+                   @class(['form-input', 'border-rose-300 bg-rose-50/40' => $errors->has('tempat_pelaksanaan')])>
+            @error('tempat_pelaksanaan') <p class="form-error">{{ $message }}</p> @enderror
+            <p class="mt-1.5 text-[11px] text-slate-400">Dicetak pada daftar hadir rapat (halaman 2).</p>
+        </div>
+
+        <div class="sm:col-span-2 lg:col-span-3">
+            <label for="materi_rapat" class="form-label">
+                Materi Rapat <span class="text-rose-500">*</span>
+            </label>
+            <input type="text" id="materi_rapat" name="materi_rapat" required maxlength="255"
+                   value="{{ old('materi_rapat', $bapEdit?->materi_rapat) }}"
+                   placeholder="Contoh: Pemberian pertimbangan/persetujuan kenaikan jabatan akademik dosen"
+                   autocomplete="off"
+                   @class(['form-input', 'border-rose-300 bg-rose-50/40' => $errors->has('materi_rapat')])>
+            @error('materi_rapat') <p class="form-error">{{ $message }}</p> @enderror
+            <p class="mt-1.5 text-[11px] text-slate-400">Dicetak pada daftar hadir rapat (halaman 2).</p>
+        </div>
+
         <div class="sm:col-span-2 lg:col-span-3">
             <label for="bap_anggota_senat" class="form-label">
                 Anggota Senat <span class="text-rose-500">*</span>

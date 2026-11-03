@@ -11,13 +11,12 @@ use Illuminate\Support\Str;
 
 /**
  * Berita Acara Persetujuan Senat (halaman 1) beserta Daftar Hadir Rapat Senat
- * (halaman 2) dalam format PDF (FPDF).
+ * (halaman 2) dalam format PDF (FPDF). Kedua halaman memakai kop yang sama.
  *
  * Kertas A4 portrait, margin atas/bawah/kiri/kanan 2 cm.
  *
- * ponytail: sekretaris senat & tempat pelaksanaan rapat belum punya kolom di
- * form, jadi sekretaris diambil dari tabel senat bila ada dan tempat dibiarkan
- * bergaris titik untuk diisi tangan. Tambah input bila memang dibutuhkan.
+ * Hari/tanggal, tempat pelaksanaan, dan materi rapat pada daftar hadir diambil
+ * dari isian form BAP Senat.
  */
 class SuratBapSenatPdf extends Fpdf
 {
@@ -44,7 +43,7 @@ class SuratBapSenatPdf extends Fpdf
 
     private const TINGGI_BARIS = 0.48;
 
-    /** Lebar kolom tanda tangan (kiri: sekretaris, kanan: ketua senat). */
+    /** Lebar kolom tanda tangan Ketua Senat. */
     private const LEBAR_KOLOM_TTD = 8.0;
 
     private bool $adaLogo = false;
@@ -59,7 +58,6 @@ class SuratBapSenatPdf extends Fpdf
         private readonly array $dosen,
         private readonly Collection $anggota,
         private readonly ?Senat $ketua,
-        private readonly ?Senat $sekretaris,
     ) {
         parent::__construct(self::ORIENTASI, self::SATUAN, self::UKURAN);
 
@@ -77,9 +75,10 @@ class SuratBapSenatPdf extends Fpdf
         $this->identitas();
         $this->penutup();
         $this->tandaTangan();
-        $this->daftarAnggota();
 
+        // Daftar hadir memakai kop yang sama dengan halaman 1.
         $this->AddPage();
+        $this->kop();
         $this->daftarHadir();
 
         return $this;
@@ -130,7 +129,8 @@ class SuratBapSenatPdf extends Fpdf
     private function judul(): void
     {
         $this->SetFont(self::FONT, 'BU', 12);
-        $this->Cell(0, 0.6, $this->teks('BERITA ACARA PERSETUJUAN SENAT'), 0, 1, 'C');
+        $this->Cell(0, 0.6, $this->teks('BERITA ACARA'), 0, 1, 'C');
+        $this->Cell(0, 0.6, $this->teks('PERSETUJUAN SENAT AKADEMIK '.mb_strtoupper($this->instansi?->nama_instansi ?: 'Nama Instansi Belum Diisi')), 0, 1, 'C');
 
         $this->SetFont(self::FONT, '', self::UKURAN_FONT);
         $this->Cell(0, 0.55, $this->teks('NOMOR: '.$this->bap->nomor_bap), 0, 1, 'C');
@@ -188,26 +188,23 @@ class SuratBapSenatPdf extends Fpdf
 
     private function tandaTangan(): void
     {
-        $this->SetFont(self::FONT, '', self::UKURAN_FONT);
-
+        // Hanya Ketua Senat yang menandatangani berita acara.
         $baris = [
-            ['', $this->kotaTanggal()],
-            ['Sekretaris', 'Ketua Senat'],
-            ['', ''],
-            [$this->namaSenat($this->sekretaris), $this->namaSenat($this->ketua)],
-            [$this->nidnSenat($this->sekretaris), $this->nidnSenat($this->ketua)],
+            [$this->kotaTanggal(), self::TINGGI_BARIS, ''],
+            ['Ketua Senat', self::TINGGI_BARIS, ''],
+            ['', 1.5, ''],
+            // Nama ketua dicetak tebal.
+            [$this->namaSenat($this->ketua), self::TINGGI_BARIS, 'B'],
+            [$this->nidnSenat($this->ketua), self::TINGGI_BARIS, ''],
         ];
 
+        $x = $this->GetPageWidth() - self::MARGIN_KANAN - self::LEBAR_KOLOM_TTD;
         $y = $this->GetY() + 0.3;
 
-        foreach ($baris as $index => $isi) {
-            $tinggi = $index === 2 ? 1.5 : self::TINGGI_BARIS;
-
-            // Baris nama (index 3) dicetak tebal.
-            $this->SetFont(self::FONT, $index === 3 ? 'B' : '', self::UKURAN_FONT);
-            $this->SetXY(self::MARGIN_KIRI, $y);
-            $this->Cell(self::LEBAR_KOLOM_TTD, $tinggi, $this->teks($isi[0]), 0, 0, 'L');
-            $this->Cell(self::LEBAR_KOLOM_TTD, $tinggi, $this->teks($isi[1]), 0, 0, 'L');
+        foreach ($baris as [$teks, $tinggi, $gaya]) {
+            $this->SetFont(self::FONT, $gaya, self::UKURAN_FONT);
+            $this->SetXY($x, $y);
+            $this->Cell(self::LEBAR_KOLOM_TTD, $tinggi, $this->teks($teks), 0, 0, 'L');
 
             $y += $tinggi;
         }
@@ -215,51 +212,17 @@ class SuratBapSenatPdf extends Fpdf
         $this->SetY($y);
     }
 
-    private function daftarAnggota(): void
-    {
-        $anggota = $this->anggota->values();
-
-        $this->SetFont(self::FONT, '', self::UKURAN_FONT);
-        $this->Cell(0, 1.55, $this->teks('Anggota Senat'), 0, 1, 'C');
-
-        if ($anggota->isEmpty()) {
-            $this->SetFont(self::FONT, 'I', self::UKURAN_FONT);
-            $this->Cell(0, self::TINGGI_BARIS, $this->teks('Belum ada anggota senat yang dipilih.'), 0, 1, 'C');
-
-            return;
-        }
-
-        $this->SetFont(self::FONT, '', 9.5);
-
-        $perKolom = (int) ceil($anggota->count() / 2);
-        $y = $this->GetY();
-        $kolom = [self::MARGIN_KIRI, self::MARGIN_KIRI + 8.5];
-        $terbanyak = 0;
-
-        foreach ($anggota->chunk($perKolom) as $indexKolom => $isiKolom) {
-            $terbanyak = max($terbanyak, $isiKolom->count());
-
-            foreach ($isiKolom->values() as $index => $senat) {
-                $this->SetXY($kolom[$indexKolom], $y + $index * 0.5);
-                $this->Cell(0.7, 0.5, $this->teks(($indexKolom * $perKolom + $index + 1).'.'), 0, 0);
-                $this->Cell(4.3, 0.5, $this->teks($senat->user?->name ?? ''), 0, 0);
-                $this->Cell(2.5, 0.5, str_repeat('_', 14), 0, 0, 'L');
-            }
-        }
-
-        $this->SetY($y + $terbanyak * 0.5);
-    }
-
     private function daftarHadir(): void
     {
         $this->SetFont(self::FONT, 'B', 12);
-        $this->MultiCell(0, 0.7, $this->teks('DAFTAR HADIR RAPAT SENAT '.mb_strtoupper($this->instansi?->nama_instansi ?: '')), 0, 'C');
+        $this->MultiCell(0, 0.7, $this->teks('DAFTAR HADIR RAPAT'), 0, 'C');
+        $this->MultiCell(0, 0.7, $this->teks('PERSETUJUAN SENAT AKADEMIK '.mb_strtoupper($this->instansi?->nama_instansi ?: '')), 0, 'C');
         $this->Ln(0.4);
 
         $this->SetFont(self::FONT, '', self::UKURAN_FONT);
         $this->barisTitik('Hari, tanggal', (string) $this->bap->tanggal_bap?->locale('id')->translatedFormat('l, d-m-Y'));
-        $this->barisTitik('Tempat pelaksanaan', '');
-        $this->barisTitik('Materi rapat', 'Pemberian pertimbangan/persetujuan kenaikan jabatan akademik dosen');
+        $this->barisTitik('Tempat pelaksanaan', (string) $this->bap->tempat_pelaksanaan);
+        $this->barisTitik('Materi rapat', (string) $this->bap->materi_rapat);
         $this->Ln(0.3);
 
         $this->tabelHadir();
@@ -270,7 +233,9 @@ class SuratBapSenatPdf extends Fpdf
     {
         $this->Cell(4.2, 0.55, $this->teks($label), 0, 0);
         $this->Cell(0.3, 0.55, ':', 0, 0);
-        $this->Cell(0, 0.55, $this->teks($nilai !== '' ? $nilai : str_repeat('.', 55)), 0, 1);
+
+        // MultiCell agar materi rapat yang panjang tetap terbungkus dalam margin.
+        $this->MultiCell(0, 0.55, $this->teks($nilai !== '' ? $nilai : str_repeat('.', 55)), 0, 'L');
     }
 
     private function tabelHadir(): void

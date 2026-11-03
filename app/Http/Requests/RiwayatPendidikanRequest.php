@@ -13,7 +13,7 @@ class RiwayatPendidikanRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return $this->user()?->isDosen() ?? false;
+        return $this->user()?->isDosen() || $this->user()?->isTendik() || false;
     }
 
     /**

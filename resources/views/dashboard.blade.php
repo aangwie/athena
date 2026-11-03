@@ -36,6 +36,7 @@
                     {{ match (auth()->user()->activeRole()) {
                         'admin' => 'Pantau dan verifikasi pengajuan jabatan akademik dosen dalam satu tempat.',
                         'tim_pak' => 'Tinjau dan nilai usulan angka kredit dosen yang masuk.',
+                        'tendik' => 'Lengkapi data pribadi dan riwayat pendidikan Anda pada menu Profil Tendik.',
                         default => 'Pantau status pengajuan jabatan akademik Anda dan lengkapi berkas dengan mudah.',
                     } }}
                 </p>
@@ -62,7 +63,7 @@
                         </svg>
                         Pengajuan Masuk
                     </a>
-                @else
+                @elseif (auth()->user()->isAdmin())
                     <span class="inline-flex cursor-not-allowed items-center gap-2 rounded-xl bg-white px-4 py-3 text-sm font-bold text-teal-800 opacity-90 shadow-lg shadow-teal-950/20" title="Modul pengajuan segera hadir">
                         <svg class="size-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                             <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm.75-11.25a.75.75 0 0 0-1.5 0v2.5h-2.5a.75.75 0 0 0 0 1.5h2.5v2.5a.75.75 0 0 0 1.5 0v-2.5h2.5a.75.75 0 0 0 0-1.5h-2.5v-2.5Z" clip-rule="evenodd" />
@@ -75,6 +76,38 @@
         </div>
     </section>
 
+    @if (auth()->user()->isTendik())
+        {{-- Tendik hanya mengelola data pribadi & riwayat pendidikan. --}}
+        <section class="mb-6 grid gap-3 sm:grid-cols-2" aria-label="Menu profil tendik">
+            <a href="{{ route('profil.data-pribadi.edit') }}"
+               class="group flex items-center gap-4 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-teal-200 hover:shadow-card sm:p-5">
+                <span class="flex size-11 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-600">
+                    <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                        <rect x="3.5" y="4.5" width="17" height="15" rx="2.5" />
+                        <circle cx="9" cy="10" r="2.2" />
+                        <path d="M5.8 16.5a3.7 3.7 0 0 1 6.4 0M14.5 9h3.2M14.5 12.5h3.2" stroke-linecap="round" />
+                    </svg>
+                </span>
+                <span class="min-w-0">
+                    <span class="block text-sm font-bold text-slate-800">Data Pribadi</span>
+                    <span class="mt-0.5 block text-[11px] text-slate-500">Lengkapi identitas dan kontak Anda.</span>
+                </span>
+            </a>
+            <a href="{{ route('profil.pendidikan.index') }}"
+               class="group flex items-center gap-4 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-teal-200 hover:shadow-card sm:p-5">
+                <span class="flex size-11 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-600">
+                    <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                        <path d="M3 9.4 12 5l9 4.4-9 4.4L3 9.4Z" stroke-linejoin="round" />
+                        <path d="M6.4 11.3v4.2c0 .5.3 1 .8 1.2 1.5.7 3 1 4.8 1s3.3-.3 4.8-1c.5-.2.8-.7.8-1.2v-4.2" stroke-linecap="round" />
+                    </svg>
+                </span>
+                <span class="min-w-0">
+                    <span class="block text-sm font-bold text-slate-800">Riwayat Pendidikan</span>
+                    <span class="mt-0.5 block text-[11px] text-slate-500">Tambahkan riwayat pendidikan dan berkasnya.</span>
+                </span>
+            </a>
+        </section>
+    @else
     {{-- Statistik --}}
     <section class="mb-6 grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-5" aria-label="Ringkasan pengajuan">
         @php
@@ -166,9 +199,10 @@
             </article>
         @endforeach
     </section>
+    @endif
 
     {{-- Tabel riwayat dosen & TIM PAK. Admin memakai tabel Ajuan DUPAK di bawah. --}}
-    @if (! auth()->user()->isAdmin())
+    @if (! auth()->user()->isAdmin() && ! auth()->user()->isTendik())
     <section id="riwayat" class="scroll-mt-24" data-table-card>
         <div class="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
             <div class="flex flex-col gap-4 border-b border-slate-100 px-5 py-5 sm:px-6 lg:flex-row lg:items-center lg:justify-between">
