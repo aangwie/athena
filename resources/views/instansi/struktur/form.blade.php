@@ -70,6 +70,7 @@
                             Jabatan Struktural <span class="text-rose-500">*</span>
                         </label>
                         <select id="jabatan_struktural_id" name="jabatan_struktural_id" required
+                                data-select-search="Cari jabatan struktural…"
                                 @class(['form-select', 'border-rose-300 bg-rose-50/40' => $errors->has('jabatan_struktural_id')])>
                             <option value="">Pilih jabatan struktural</option>
                             @foreach ($jabatanList as $jabatan)
@@ -94,6 +95,7 @@
                             Nama Pejabat <span class="text-rose-500">*</span>
                         </label>
                         <select id="user_id" name="user_id" required
+                                data-select-search="Cari nama dosen…"
                                 @class(['form-select', 'border-rose-300 bg-rose-50/40' => $errors->has('user_id')])>
                             <option value="">Pilih dosen</option>
                             @foreach ($dosenList as $dosen)

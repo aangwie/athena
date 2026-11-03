@@ -619,32 +619,8 @@ const boot = () => {
         activate(location.hash.slice(1) || tabs[0]?.dataset.tabTarget, false);
     });
 
-    // Select dengan kotak pencarian: opsi disaring tiap ketikan, opsi terpilih selalu dipertahankan.
-    document.querySelectorAll('select[data-select-search]').forEach((select) => {
-        const opsi = Array.from(select.options).map((option) => ({
-            value: option.value,
-            label: option.textContent.trim(),
-        }));
-
-        const cari = document.createElement('input');
-        cari.type = 'search';
-        cari.className = 'form-input mb-2';
-        cari.placeholder = select.dataset.selectSearch || 'Cari…';
-        cari.setAttribute('aria-label', cari.placeholder);
-        select.before(cari);
-
-        cari.addEventListener('input', () => {
-            const kata = cari.value.toLowerCase();
-            // Multi select bisa punya banyak opsi terpilih, jadi pilihan disimpan sebagai himpunan.
-            const terpilih = new Set(Array.from(select.selectedOptions, (option) => option.value));
-
-            select.replaceChildren(
-                ...opsi
-                    .filter((option) => option.value === '' || terpilih.has(option.value) || option.label.toLowerCase().includes(kata))
-                    .map((option) => new Option(option.label, option.value, false, terpilih.has(option.value))),
-            );
-        });
-    });
+    // Dropdown pencarian (vanilla JS): lihat siapkanDropdownCari() di akhir berkas.
+    document.querySelectorAll('select[data-select-search]').forEach((select, indeks) => siapkanDropdownCari(select, indeks));
 
     // Masker tanggal DD-MM-YYYY: hanya angka, tanda hubung ditambahkan otomatis.
     document.querySelectorAll('[data-date-mask]').forEach((input) => {
@@ -1021,4 +997,299 @@ if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', boot);
 } else {
     boot();
+}
+
+/**
+ * Komponen dropdown pencarian (vanilla JS, tanpa dependensi).
+ *
+ * <select> asli disembunyikan (sr-only) lalu diganti tampilan tombol + panel daftar + kotak cari.
+ * Nilai tetap disimpan pada <select> asli sehingga name/id/required/disabled dan validasi server
+ * tetap berjalan, sekaligus skrip lain yang mencari element lewat id tidak terganggu.
+ *
+ * @param {HTMLSelectElement} select
+ * @param {number} indeks
+ */
+function siapkanDropdownCari(select, indeks) {
+    const multi = select.multiple;
+    const teksCari = select.dataset.selectSearch || 'Cari…';
+    const opsiKosong = select.querySelector('option[value=""]');
+    const teksPlaceholder = (opsiKosong?.textContent || 'Pilih…').trim();
+    const idPanel = `sd-panel-${indeks}-${Math.random().toString(36).slice(2, 8)}`;
+
+    // Select asli dipertahankan (sr-only) agar tetap tersubmit & tervalidasi; id tidak diubah
+    // karena skrip lain (mis. data-dependent-select) mencarinya lewat id.
+    const wrap = document.createElement('div');
+    wrap.className = 'sd';
+    select.before(wrap);
+    wrap.append(select);
+    select.classList.add('sr-only');
+    select.setAttribute('tabindex', '-1');
+
+    const trigger = document.createElement('div');
+    trigger.className = 'sd-trigger';
+    trigger.setAttribute('role', 'button');
+    trigger.setAttribute('tabindex', '0');
+    trigger.setAttribute('aria-haspopup', 'listbox');
+    trigger.setAttribute('aria-expanded', 'false');
+    trigger.setAttribute('aria-controls', idPanel);
+    trigger.innerHTML = '<span class="sd-value"></span>'
+        + '<svg class="sd-caret" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">'
+        + '<path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" /></svg>';
+
+    const nilai = trigger.querySelector('.sd-value');
+
+    const chips = document.createElement('div');
+    chips.className = 'sd-chips';
+    chips.hidden = true;
+
+    wrap.append(trigger, chips);
+
+    const panel = document.createElement('div');
+    panel.className = 'sd-panel';
+    panel.id = idPanel;
+    panel.hidden = true;
+    panel.setAttribute('role', 'listbox');
+
+    if (multi) {
+        panel.setAttribute('aria-multiselectable', 'true');
+    }
+
+    const cari = document.createElement('input');
+    cari.type = 'search';
+    cari.className = 'sd-search';
+    cari.placeholder = teksCari;
+    cari.setAttribute('aria-label', teksCari);
+    cari.autocomplete = 'off';
+
+    const list = document.createElement('div');
+    list.className = 'sd-list';
+
+    const kosong = document.createElement('p');
+    kosong.className = 'sd-empty';
+    kosong.textContent = select.dataset.selectEmpty || 'Tidak ada pilihan yang cocok.';
+    kosong.hidden = true;
+
+    panel.append(cari, list, kosong);
+
+    // Panel ditempel di <body> memakai posisi fixed agar tidak terpotong overflow induk.
+    document.body.append(panel);
+
+    const terpilih = () => Array.from(select.options).filter((option) => option.selected && option.value !== '');
+
+    const gambarNilai = () => {
+        const dipilih = terpilih();
+
+        nilai.classList.toggle('sd-placeholder', dipilih.length === 0);
+        nilai.textContent = dipilih.length === 0
+            ? teksPlaceholder
+            : (multi ? `${dipilih.length} dipilih` : dipilih[0].textContent.trim());
+    };
+
+    const gambarChips = () => {
+        if (!multi) {
+            chips.hidden = true;
+
+            return;
+        }
+
+        const dipilih = terpilih();
+        chips.hidden = dipilih.length === 0;
+
+        chips.replaceChildren(...dipilih.map((option) => {
+            const chip = document.createElement('span');
+            chip.className = 'sd-chip';
+
+            const teks = document.createElement('span');
+            teks.className = 'truncate';
+            teks.textContent = option.textContent.trim();
+
+            const hapus = document.createElement('button');
+            hapus.type = 'button';
+            hapus.className = 'sd-chip-remove';
+            hapus.setAttribute('aria-label', `Hapus ${option.textContent.trim()}`);
+            hapus.innerHTML = '&times;';
+            hapus.addEventListener('click', (event) => {
+                event.stopPropagation();
+                option.selected = false;
+                ubah();
+            });
+
+            chip.append(teks, hapus);
+
+            return chip;
+        }));
+    };
+
+    const gambarList = () => {
+        const kata = cari.value.trim().toLowerCase();
+        // Opsi kosong & opsi dinonaktifkan (mis. kuota jabatan sudah terisi) tidak ikut ditampilkan.
+        const tampil = Array.from(select.options)
+            .filter((option) => option.value !== '' && !option.disabled && option.textContent.toLowerCase().includes(kata));
+
+        list.replaceChildren(...tampil.map((option) => {
+            const baris = document.createElement('div');
+            baris.className = 'sd-option' + (option.selected ? ' sd-option-active' : '');
+            baris.setAttribute('role', 'option');
+            baris.setAttribute('aria-selected', String(option.selected));
+
+            const label = document.createElement('span');
+            label.className = 'sd-option-label';
+            label.textContent = option.textContent.trim();
+
+            const tick = document.createElement('svg');
+            tick.className = 'sd-option-tick' + (option.selected ? '' : ' sd-option-tick-off');
+            tick.setAttribute('viewBox', '0 0 20 20');
+            tick.setAttribute('fill', 'currentColor');
+            tick.setAttribute('aria-hidden', 'true');
+            tick.innerHTML = '<path fill-rule="evenodd" d="M16.7 5.3a1 1 0 0 1 0 1.4l-7.2 7.3a1 1 0 0 1-1.4 0L4.3 10.3a1 1 0 0 1 1.4-1.4l3.1 3 6.5-6.6a1 1 0 0 1 1.4 0Z" clip-rule="evenodd" />';
+
+            baris.append(label, tick);
+            baris.addEventListener('click', () => pilih(option));
+
+            return baris;
+        }));
+
+        kosong.hidden = tampil.length > 0;
+    };
+
+    // pilih(): single -> set nilai & tutup panel; multi -> toggle & biarkan panel terbuka.
+    const pilih = (option) => {
+        if (select.disabled) {
+            return;
+        }
+
+        if (multi) {
+            option.selected = !option.selected;
+            ubah();
+        } else {
+            select.value = option.value;
+            ubah();
+            tutup();
+        }
+    };
+
+    // ubah(): beri tahu skrip lain via event change, lalu gambar ulang tampilan.
+    const ubah = () => {
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+        gambarNilai();
+        gambarChips();
+        gambarList();
+    };
+
+    // Panel fixed: posisinya dihitung dari tombol; bila ruang bawah sempit dibuka ke atas.
+    const posisi = () => {
+        if (panel.hidden) {
+            return;
+        }
+
+        const kotak = trigger.getBoundingClientRect();
+        const lebar = kotak.width;
+        const ruangBawah = window.innerHeight - kotak.bottom;
+        const tinggiMaks = Math.max(160, Math.min(300, window.innerHeight - 24));
+
+        panel.style.width = `${lebar}px`;
+        panel.style.left = `${Math.max(8, Math.min(kotak.left, window.innerWidth - lebar - 8))}px`;
+
+        if (ruangBawah < 240 && kotak.top > ruangBawah) {
+            panel.style.maxHeight = `${Math.min(tinggiMaks, Math.max(160, kotak.top - 12))}px`;
+            panel.style.top = `${Math.max(8, kotak.top - panel.offsetHeight - 4)}px`;
+        } else {
+            panel.style.maxHeight = `${Math.min(tinggiMaks, Math.max(160, ruangBawah - 12))}px`;
+            panel.style.top = `${kotak.bottom + 4}px`;
+        }
+    };
+
+    const buka = () => {
+        if (select.disabled || !panel.hidden) {
+            return;
+        }
+
+        panel.hidden = false;
+        trigger.setAttribute('aria-expanded', 'true');
+        cari.value = '';
+        gambarList();
+        posisi();
+        cari.focus();
+        window.addEventListener('scroll', posisi, true);
+        window.addEventListener('resize', posisi);
+    };
+
+    const tutup = () => {
+        if (panel.hidden) {
+            return;
+        }
+
+        panel.hidden = true;
+        trigger.setAttribute('aria-expanded', 'false');
+        window.removeEventListener('scroll', posisi, true);
+        window.removeEventListener('resize', posisi);
+    };
+
+    const syncDisabled = () => {
+        const mati = select.disabled;
+
+        trigger.classList.toggle('sd-disabled', mati);
+        trigger.setAttribute('aria-disabled', String(mati));
+        trigger.tabIndex = mati ? -1 : 0;
+
+        if (mati) {
+            tutup();
+        }
+    };
+
+    trigger.addEventListener('click', () => (panel.hidden ? buka() : tutup()));
+    trigger.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' || event.key === ' ' || event.key === 'ArrowDown') {
+            event.preventDefault();
+            buka();
+        } else if (event.key === 'Escape') {
+            tutup();
+        }
+    });
+
+    cari.addEventListener('input', gambarList);
+    cari.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+            tutup();
+            trigger.focus();
+        }
+    });
+
+    // Klik di luar komponen menutup panel. composedPath() dipakai karena opsi bisa
+    // sudah terlepas dari DOM (daftar digambar ulang) saat event sampai ke document.
+    document.addEventListener('click', (event) => {
+        const jalur = typeof event.composedPath === 'function' ? event.composedPath() : [];
+
+        if (jalur.includes(panel) || jalur.includes(wrap) || wrap.contains(event.target) || panel.contains(event.target)) {
+            return;
+        }
+
+        tutup();
+    });
+
+    // Perubahan opsi/status oleh skrip lain (mis. data-dependent-select) ikut disinkronkan.
+    new MutationObserver(() => {
+        syncDisabled();
+        gambarNilai();
+        gambarChips();
+        gambarList();
+    }).observe(select, { attributes: true, attributeFilter: ['disabled', 'required'], childList: true, subtree: true });
+
+    // Isian wajib yang kosong: buka panel sebagai umpan balik, karena kontrol asli tersembunyi
+    // sehingga pesan validasi bawaan browser tidak terlihat pengguna.
+    const form = select.closest('form');
+
+    if (form) {
+        form.addEventListener('submit', (event) => {
+            if (select.required && !select.disabled && select.value === '' && !event.defaultPrevented) {
+                event.preventDefault();
+                buka();
+            }
+        });
+    }
+
+    syncDisabled();
+    gambarNilai();
+    gambarChips();
+    gambarList();
 }

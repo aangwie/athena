@@ -101,6 +101,7 @@
                         <div>
                             <label for="jabatan_fungsional" class="form-label">Jabatan Akademik <span class="text-rose-500">*</span></label>
                             <select id="jabatan_fungsional" name="jabatan_fungsional"
+                                    data-select-search="Cari jabatan akademik…"
                                     @required($memilikiJabatan === 'ya') @disabled($memilikiJabatan !== 'ya')
                                     @class(['form-input', 'border-rose-300 bg-rose-50/40' => $errors->has('jabatan_fungsional')])>
                                 <option value="" selected disabled>Pilih Jabatan Akademik</option>
@@ -116,6 +117,7 @@
                         <div>
                             <label for="pangkat" class="form-label">Pangkat <span class="text-rose-500">*</span></label>
                             <select id="pangkat" name="pangkat" @required($memilikiJabatan === 'ya') @disabled($memilikiJabatan !== 'ya')
+                                    data-select-search="Cari pangkat…"
                                     @class(['form-input', 'border-rose-300 bg-rose-50/40' => $errors->has('pangkat')])>
                                 <option value="" selected disabled>Pilih Pangkat</option>
                                 @foreach ($pangkatOptions as $option)

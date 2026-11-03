@@ -76,6 +76,7 @@
                         <div>
                             <label for="karya_ilmiah" class="form-label">Karya Ilmiah <span class="text-rose-500">*</span></label>
                             <select id="karya_ilmiah" name="karya_ilmiah" required
+                                    data-select-search="Cari jenis karya ilmiah…"
                                     @class(['form-select', 'border-rose-300 bg-rose-50/40' => $errors->has('karya_ilmiah')])>
                                 <option value="">Pilih jenis karya ilmiah</option>
                                 @foreach ($jenisList as $jenis)

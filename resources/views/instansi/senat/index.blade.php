@@ -79,10 +79,8 @@
                 <div class="grid gap-5 px-5 py-5 sm:px-6 lg:grid-cols-2">
                     <div>
                         <label for="user_id" class="form-label">Nama Dosen <span class="text-rose-500">*</span></label>
-                        <input type="search" id="dosen-search" data-select-filter="#user_id"
-                               autocomplete="off" placeholder="Cari nama dosen…" aria-label="Cari nama dosen"
-                               class="form-input mb-2">
                         <select id="user_id" name="user_id" required
+                                data-select-search="Cari nama dosen…"
                                 @class(['form-select', 'border-rose-300 bg-rose-50/40' => $errors->has('user_id')])>
                             <option value="">Pilih dosen</option>
                             @foreach ($dosenList as $dosen)

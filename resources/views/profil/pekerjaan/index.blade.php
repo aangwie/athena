@@ -83,6 +83,7 @@
                     <div>
                         <label for="program_studi" class="form-label">Prodi</label>
                         <select id="program_studi" name="program_studi"
+                                data-select-search="Cari prodi…"
                                 @class(['form-select', 'border-rose-300 bg-rose-50/40' => $errors->has('program_studi')])>
                             <option value="">Pilih prodi</option>
                             @foreach ($prodiList as $prodi)
@@ -241,6 +242,7 @@
                 <div>
                     <label for="kepangkatan_id" class="form-label">Pangkat & Golongan <span class="text-rose-500">*</span></label>
                     <select id="kepangkatan_id" name="kepangkatan_id" required
+                            data-select-search="Cari pangkat & golongan…"
                             @class(['form-select', 'border-rose-300 bg-rose-50/40' => $errors->has('kepangkatan_id')])>
                         <option value="">Pilih pangkat & golongan</option>
                         @foreach ($kepangkatanList as $pangkat)
@@ -417,6 +419,7 @@
                 <div>
                     <label for="jabatan_struktural_id" class="form-label">Jabatan Struktural <span class="text-rose-500">*</span></label>
                     <select id="jabatan_struktural_id" name="jabatan_struktural_id" required
+                            data-select-search="Cari jabatan struktural…"
                             @class(['form-select', 'border-rose-300 bg-rose-50/40' => $errors->has('jabatan_struktural_id')])>
                         <option value="">Pilih jabatan struktural</option>
                         @foreach ($jabatanStrukturalList as $jabatan)
@@ -431,6 +434,7 @@
                 <div>
                     <label for="jabatan_fungsional_id" class="form-label">Jabatan Akademik <span class="text-rose-500">*</span></label>
                     <select id="jabatan_fungsional_id" name="jabatan_fungsional_id" required
+                            data-select-search="Cari jabatan akademik…"
                             @class(['form-select', 'border-rose-300 bg-rose-50/40' => $errors->has('jabatan_fungsional_id')])>
                         <option value="">Pilih jabatan akademik</option>
                         @foreach ($jabatanFungsionalList as $jabatan)
