@@ -279,6 +279,8 @@ class SuratTest extends TestCase
         // Nama pimpinan dicetak apa adanya sesuai database (tidak dipaksa kapital).
         $this->assertStringContainsString('Dr. Ayu Lestari, M.Kom.', $teks);
         $this->assertStringNotContainsString('DR. AYU LESTARI', $teks);
+        // Status dosen tetap pimpinan selalu tercetak "Dosen Tetap".
+        $this->assertStringContainsString('Dosen Tetap', $teks);
     }
 
     public function test_dosen_cannot_print_update_or_delete_pernyataan_pimpinan(): void

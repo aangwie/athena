@@ -129,7 +129,7 @@ class SuratPernyataanPimpinanPdf extends Fpdf
             'Nama' => $this->pimpinan['nama'],
             'NIDN' => $this->pimpinan['nidn'],
             'NUPTK' => $this->pimpinan['nuptk'],
-            'Status dosen tetap' => $this->pimpinan['status'],
+            'Status dosen tetap' => 'Dosen Tetap',
             'Tempat, tanggal lahir' => $this->pimpinan['ttl'],
             'Pangkat golongan ruang / TMT' => $this->pimpinan['pangkat'].' / '.$this->pimpinan['pangkat_tmt'],
             'Jabatan / TMT' => $this->pimpinan['jabatan'].' / '.$this->pimpinan['jabatan_tmt'],

@@ -93,7 +93,7 @@ class SuratPaktaIntegritasPdf extends Fpdf
             'Nama' => $this->dosen['nama'],
             'NIDN' => $this->dosen['nidn'],
             'NUPTK' => $this->dosen['nuptk'] ?: '—',
-            'Status dosen tetap' => $this->dosen['status'],
+            'Status dosen tetap' => 'Dosen Tetap',
             'Tempat tanggal lahir' => $this->dosen['ttl'],
             'Pangkat golongan ruang / TMT' => $this->dosen['pangkat'].' / '.$this->dosen['pangkat_tmt'],
             'Jabatan / TMT' => $this->dosen['jabatan'].' / '.$this->dosen['jabatan_tmt'],
