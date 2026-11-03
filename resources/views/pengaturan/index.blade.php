@@ -119,7 +119,7 @@
                 <span class="section-number">03</span>
                 <div>
                     <h3 class="text-sm font-extrabold text-slate-800">Pemeliharaan Sistem</h3>
-                    <p class="mt-0.5 text-xs text-slate-400">Tindakan cepat untuk cache, skema database, dan tautan penyimpanan.</p>
+                    <p class="mt-0.5 text-xs text-slate-400">Tindakan cepat untuk cache, skema database, aset frontend, dan tautan penyimpanan.</p>
                 </div>
             </div>
 
@@ -167,6 +167,21 @@
                     <form method="POST" action="{{ route('pengaturan.storage-link') }}">
                         @csrf
                         <button type="submit" class="btn-secondary w-full shrink-0 justify-center whitespace-nowrap sm:w-auto">Buat Symlink</button>
+                    </form>
+                </div>
+
+                <div class="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+                    <div>
+                        <p class="text-xs font-bold text-slate-700">Build aset (CSS &amp; JS)</p>
+                        <p class="mt-1 text-[11px] leading-relaxed text-slate-500">
+                            Menjalankan <span class="font-mono text-slate-600">npm run build</span> untuk menyusun ulang aset
+                            frontend. Lakukan setelah menarik pembaruan aplikasi.
+                        </p>
+                    </div>
+                    <form method="POST" action="{{ route('pengaturan.build') }}"
+                          data-confirm="Jalankan 'npm run build' untuk menyusun ulang aset frontend sekarang?">
+                        @csrf
+                        <button type="submit" class="btn-secondary w-full shrink-0 justify-center whitespace-nowrap sm:w-auto">Build Aset</button>
                     </form>
                 </div>
             </div>

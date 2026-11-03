@@ -152,7 +152,7 @@ class SuratPengantarPdf extends Fpdf
         $kepada = trim((string) $this->pengantar->tujuan);
         $kota = trim((string) $this->pengantar->kota_tujuan);
         $this->SetFont(self::FONT, 'B', 11);
-        $this->MultiCell(0, self::TINGGI_BARIS, $this->teks('Yth. '.($kepada !== '' ? $kepada : str_repeat('.', 50))), 0, 'L');
+        $this->MultiCell(0, self::TINGGI_BARIS, $this->teks('Kepada. Yth. '.($kepada !== '' ? $kepada : str_repeat('.', 50))), 0, 'L');
         $this->SetFont(self::FONT, '', self::UKURAN_FONT);
         $this->Cell(0, self::TINGGI_BARIS, $this->teks('di'), 0, 1);
         $this->Cell(0, self::TINGGI_BARIS, $this->teks($kota !== '' ? $kota : str_repeat('.', 30)), 0, 1);

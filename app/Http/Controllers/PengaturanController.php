@@ -140,6 +140,15 @@ class PengaturanController extends Controller
     }
 
     /**
+     * Susun ulang aset frontend (CSS & JS) memakai Vite — menjalankan `npm run build`.
+     * Berguna di hosting tanpa akses terminal: cukup klik tombol di halaman Pengaturan.
+     */
+    public function build(): RedirectResponse
+    {
+        return $this->catat('Build aset (npm run build)', $this->jalankan($this->npm('run', 'build')));
+    }
+
+    /**
      * Mulai proses backup atau import database.
      *
      * Pekerjaan dipecah menjadi beberapa langkah (dbLangkah) supaya bilah progres di halaman
@@ -352,6 +361,16 @@ class PengaturanController extends Controller
     private function artisan(string ...$argumen): array
     {
         return [PHP_BINARY, base_path('artisan'), ...$argumen];
+    }
+
+    /**
+     * Perintah npm — Windows memakai `npm.cmd`, server hosting (Linux) memakai `npm`.
+     *
+     * @return array<int, string>
+     */
+    private function npm(string ...$argumen): array
+    {
+        return [PHP_OS_FAMILY === 'Windows' ? 'npm.cmd' : 'npm', ...$argumen];
     }
 
     /**

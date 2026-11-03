@@ -237,6 +237,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/clear-cache', [PengaturanController::class, 'clearCache'])->name('clear-cache');
         Route::post('/migrate', [PengaturanController::class, 'migrate'])->name('migrate');
         Route::post('/storage-link', [PengaturanController::class, 'storageLink'])->name('storage-link');
+        Route::post('/build', [PengaturanController::class, 'build'])->name('build');
         Route::post('/database/mulai', [PengaturanController::class, 'dbMulai'])->name('db.mulai');
         Route::post('/database/langkah', [PengaturanController::class, 'dbLangkah'])->name('db.langkah');
         Route::get('/database/unduh/{berkas}', [PengaturanController::class, 'dbUnduh'])->name('db.unduh');

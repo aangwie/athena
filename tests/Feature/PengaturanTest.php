@@ -37,6 +37,9 @@ class PengaturanTest extends TestCase
             ->assertSee('Bersihkan Cache')
             ->assertSee('Migrasi Tabel')
             ->assertSee('Buat Symlink')
+            // Tombol build aset (npm run build) untuk hosting tanpa akses terminal.
+            ->assertSee('Build Aset')
+            ->assertSee(route('pengaturan.build'), false)
             // URL progres langkah harus ikut ter-render; JS membacanya dari form.
             ->assertSee(route('pengaturan.db.langkah'), false)
             ->assertSee('data-db-langkah', false)
