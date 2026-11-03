@@ -284,6 +284,56 @@ class InstansiTest extends TestCase
         $this->assertDatabaseMissing('struktur_instansi', ['id' => $struktur->id]);
     }
 
+    public function test_dosen_cannot_hold_more_than_one_jabatan_struktural(): void
+    {
+        $admin = $this->makeAdmin();
+        $dosen = $this->makeDosen();
+        $dekan = JabatanStruktural::create(['nama' => 'Dekan']);
+        $rektor = JabatanStruktural::create(['nama' => 'Rektor']);
+
+        $this->actingAs($admin)
+            ->post('/instansi/struktur', [
+                'jabatan_struktural_id' => $dekan->id,
+                'user_id' => $dosen->id,
+            ])
+            ->assertSessionHasNoErrors();
+
+        // Dosen yang sama tidak boleh ditambahkan pada jabatan lain.
+        $this->actingAs($admin)
+            ->from('/instansi/struktur/create')
+            ->post('/instansi/struktur', [
+                'jabatan_struktural_id' => $rektor->id,
+                'user_id' => $dosen->id,
+            ])
+            ->assertSessionHasErrors('user_id');
+
+        $this->assertDatabaseCount('struktur_instansi', 1);
+
+        // Dosen yang sudah menjabat tidak muncul pada pilihan pejabat baru.
+        $this->actingAs($admin)
+            ->get('/instansi/struktur/create')
+            ->assertOk()
+            ->assertSee('Satu dosen hanya boleh menjabat satu jabatan struktural.')
+            ->assertDontSee($dosen->nidn);
+
+        // Saat mengubah jabatannya sendiri, dosen tersebut tetap muncul dan boleh disimpan.
+        $struktur = StrukturInstansi::firstOrFail();
+
+        $this->actingAs($admin)
+            ->get(route('instansi.struktur.edit', $struktur))
+            ->assertOk()
+            ->assertSee($dosen->nidn);
+
+        $this->actingAs($admin)
+            ->put(route('instansi.struktur.update', $struktur), [
+                'jabatan_struktural_id' => $rektor->id,
+                'user_id' => $dosen->id,
+            ])
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame($rektor->id, $struktur->fresh()->jabatan_struktural_id);
+    }
+
     public function test_struktur_requires_valid_jabatan_and_active_dosen(): void
     {
         $admin = $this->makeAdmin();
@@ -325,6 +375,57 @@ class InstansiTest extends TestCase
             ->from('/instansi/struktur/create')
             ->post('/instansi/struktur', $payload)
             ->assertSessionHasErrors('user_id');
+    }
+
+    public function test_jabatan_struktural_cannot_be_filled_by_two_pejabat(): void
+    {
+        $admin = $this->makeAdmin();
+        $dosen = $this->makeDosen();
+        $lain = $this->makeDosen('1990011220', 'Budi Santoso, M.Pd.');
+        $ketua = JabatanStruktural::create(['nama' => 'Ketua']);
+        $rektor = JabatanStruktural::create(['nama' => 'Rektor']);
+
+        $this->actingAs($admin)
+            ->post('/instansi/struktur', [
+                'jabatan_struktural_id' => $ketua->id,
+                'user_id' => $dosen->id,
+            ])
+            ->assertSessionHasNoErrors();
+
+        // Jabatan yang sudah terisi tidak boleh dipakai pejabat lain.
+        $this->actingAs($admin)
+            ->from('/instansi/struktur/create')
+            ->post('/instansi/struktur', [
+                'jabatan_struktural_id' => $ketua->id,
+                'user_id' => $lain->id,
+            ])
+            ->assertSessionHasErrors('jabatan_struktural_id');
+
+        $this->assertDatabaseCount('struktur_instansi', 1);
+
+        // Dropdown jabatan hanya menampilkan jabatan yang belum terisi.
+        $this->actingAs($admin)
+            ->get('/instansi/struktur/create')
+            ->assertOk()
+            ->assertDontSee('Ketua')
+            ->assertSee('Rektor');
+
+        // Saat mengubah pejabat, jabatan miliknya sendiri tetap tersedia.
+        $struktur = StrukturInstansi::firstOrFail();
+
+        $this->actingAs($admin)
+            ->get(route('instansi.struktur.edit', $struktur))
+            ->assertOk()
+            ->assertSee('Ketua');
+
+        $this->actingAs($admin)
+            ->put(route('instansi.struktur.update', $struktur), [
+                'jabatan_struktural_id' => $rektor->id,
+                'user_id' => $dosen->id,
+            ])
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame($rektor->id, $struktur->fresh()->jabatan_struktural_id);
     }
 
     public function test_admin_can_open_struktur_form_with_dosen_options(): void

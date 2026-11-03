@@ -82,8 +82,9 @@
 
                         @if ($jabatanList->isEmpty())
                             <p class="mt-1.5 text-[11px] text-amber-600">
-                                Belum ada data jabatan struktural.
-                                <a href="{{ route('kepegawaian.jabatan-struktural.index') }}" class="font-bold underline">Tambahkan terlebih dahulu</a>.
+                                Tidak ada jabatan struktural yang bisa dipilih — semua sudah terisi atau datanya
+                                belum dibuat.
+                                <a href="{{ route('kepegawaian.jabatan-struktural.index') }}" class="font-bold underline">Kelola jabatan struktural</a>.
                             </p>
                         @endif
                     </div>
@@ -103,9 +104,15 @@
                         </select>
                         @error('user_id') <p class="form-error">{{ $message }}</p> @enderror
 
+                        <p class="mt-1.5 text-[11px] text-slate-400">
+                            Satu dosen hanya boleh menjabat satu jabatan struktural. Dosen yang sudah menjabat
+                            tidak ditawarkan lagi pada daftar ini.
+                        </p>
+
                         @if ($dosenList->isEmpty())
                             <p class="mt-1.5 text-[11px] text-amber-600">
-                                Belum ada dosen aktif yang dapat dipilih.
+                                Tidak ada dosen aktif yang belum menjabat. Hapus jabatan lama terlebih dahulu
+                                bila dosen tersebut perlu dipindahkan.
                             </p>
                         @endif
                     </div>

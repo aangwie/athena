@@ -64,12 +64,26 @@ class StrukturInstansiController extends Controller
 
     private function form(?StrukturInstansi $struktur): View
     {
+        // Dosen yang sudah menjabat tidak ditawarkan lagi (kecuali pejabat yang sedang diubah).
+        $sudahMenjabat = StrukturInstansi::query()
+            ->when($struktur, fn ($query) => $query->whereKeyNot($struktur->getKey()))
+            ->pluck('user_id');
+
+        // Jabatan yang sudah terisi juga tidak ditawarkan lagi.
+        $jabatanTerisi = StrukturInstansi::query()
+            ->when($struktur, fn ($query) => $query->whereKeyNot($struktur->getKey()))
+            ->pluck('jabatan_struktural_id');
+
         return view('instansi.struktur.form', [
             'struktur' => $struktur,
-            'jabatanList' => JabatanStruktural::query()->orderBy('nama')->get(),
+            'jabatanList' => JabatanStruktural::query()
+                ->whereNotIn('id', $jabatanTerisi)
+                ->orderBy('nama')
+                ->get(),
             'dosenList' => User::query()
                 ->where('role', 'dosen')
                 ->where('is_active', true)
+                ->whereNotIn('id', $sudahMenjabat)
                 ->orderBy('name')
                 ->get(),
         ]);

@@ -12,6 +12,7 @@
             'pakta-integritas' => 'Pakta Integritas',
             'bap-senat' => 'BAP Senat',
             'baki' => 'BAKI',
+            'surat-pengantar' => 'Surat Pengantar',
         ];
     @endphp
 
@@ -55,6 +56,8 @@
                         @include('surat.partials.bap-senat')
                     @elseif ($key === 'baki')
                         @include('surat.partials.baki')
+                    @elseif ($key === 'surat-pengantar')
+                        @include('surat.partials.pengantar')
                     @elseif ($key !== 'pernyataan-pimpinan')
                         <p class="mt-1 max-w-2xl text-sm leading-relaxed text-slate-500">
                             Dokumen {{ $label }} untuk kelengkapan usulan jabatan akademik dosen.

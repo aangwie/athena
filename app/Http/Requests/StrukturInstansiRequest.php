@@ -31,6 +31,8 @@ class StrukturInstansiRequest extends FormRequest
                 'required',
                 'integer',
                 Rule::exists('jabatan_struktural', 'id'),
+                // Satu jabatan struktural hanya untuk satu pejabat.
+                Rule::unique('struktur_instansi', 'jabatan_struktural_id')->ignore($ignoreId),
             ],
             'user_id' => [
                 'required',
@@ -38,9 +40,8 @@ class StrukturInstansiRequest extends FormRequest
                 Rule::exists('users', 'id')->where(
                     fn ($query) => $query->where('role', 'dosen')->where('is_active', true),
                 ),
-                Rule::unique('struktur_instansi', 'user_id')
-                    ->where('jabatan_struktural_id', $this->input('jabatan_struktural_id'))
-                    ->ignore($ignoreId),
+                // Satu dosen hanya boleh merangkap satu jabatan struktural.
+                Rule::unique('struktur_instansi', 'user_id')->ignore($ignoreId),
             ],
         ];
     }
@@ -68,9 +69,10 @@ class StrukturInstansiRequest extends FormRequest
         return [
             'jabatan_struktural_id.required' => 'Jabatan struktural wajib dipilih.',
             'jabatan_struktural_id.exists' => 'Jabatan struktural tidak valid.',
+            'jabatan_struktural_id.unique' => 'Jabatan struktural tersebut sudah terisi. Kosongkan atau ubah pejabat lama terlebih dahulu.',
             'user_id.required' => 'Nama pejabat wajib dipilih.',
             'user_id.exists' => 'Pejabat harus merupakan dosen aktif.',
-            'user_id.unique' => 'Pejabat tersebut sudah terdaftar pada jabatan ini.',
+            'user_id.unique' => 'Pejabat tersebut sudah menjabat pada jabatan struktural lain. Satu dosen hanya boleh merangkap satu jabatan.',
         ];
     }
 }

@@ -173,6 +173,11 @@ Route::middleware('auth')->group(function () {
         Route::put('/baki/{baki}', [SuratController::class, 'updateBaki'])->name('baki.update');
         Route::delete('/baki/{baki}', [SuratController::class, 'destroyBaki'])->name('baki.destroy');
         Route::get('/baki/{baki}/cetak', [SuratController::class, 'cetakBaki'])->name('baki.cetak');
+
+        Route::post('/pengantar', [SuratController::class, 'storePengantar'])->name('pengantar.store');
+        Route::put('/pengantar/{pengantar}', [SuratController::class, 'updatePengantar'])->name('pengantar.update');
+        Route::delete('/pengantar/{pengantar}', [SuratController::class, 'destroyPengantar'])->name('pengantar.destroy');
+        Route::get('/pengantar/{pengantar}/cetak', [SuratController::class, 'cetakPengantar'])->name('pengantar.cetak');
     });
 
     Route::middleware('tim_pak')->prefix('tim-pak')->name('tim-pak.')->group(function () {

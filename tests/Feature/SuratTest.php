@@ -41,7 +41,7 @@ class SuratTest extends TestCase
         ]);
     }
 
-    public function test_admin_can_open_surat_page_with_four_tabs(): void
+    public function test_admin_can_open_surat_page_with_five_tabs(): void
     {
         $response = $this->actingAs($this->makeUser('admin'))
             ->get(route('surat.index'))
@@ -53,6 +53,7 @@ class SuratTest extends TestCase
             'pakta-integritas' => 'Pakta Integritas',
             'bap-senat' => 'BAP Senat',
             'baki' => 'BAKI',
+            'surat-pengantar' => 'Surat Pengantar',
         ] as $key => $label) {
             $response->assertSee('data-tab-target="'.$key.'"', false)
                 ->assertSee('data-tab-panel="'.$key.'"', false)
@@ -76,7 +77,7 @@ class SuratTest extends TestCase
 
         $panels = (new \DOMXPath($dom))->query('//*[@data-tab-panel]');
 
-        $this->assertCount(4, $panels);
+        $this->assertCount(5, $panels);
 
         foreach ($panels as $panel) {
             $this->assertSame(

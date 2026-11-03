@@ -134,7 +134,7 @@ class RiwayatPekerjaanTest extends TestCase
         $this->actingAs($user)
             ->get(route('profil.pekerjaan.index'))
             ->assertOk()
-            ->assertSee('Prodi Tempat Mengajar')
+            ->assertSee('name="program_studi"', false)
             ->assertSee($prodi->nama_prodi);
 
         $this->actingAs($user)

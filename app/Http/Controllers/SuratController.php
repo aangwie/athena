@@ -6,6 +6,7 @@ use App\Http\Requests\SuratBakiRequest;
 use App\Http\Requests\SuratBapSenatRequest;
 use App\Http\Requests\SuratPaktaIntegritasRequest;
 use App\Http\Requests\SuratPernyataanPimpinanRequest;
+use App\Http\Requests\SuratPengantarRequest;
 use App\Models\Instansi;
 use App\Models\KaryaTulis;
 use App\Models\RiwayatPendidikan;
@@ -14,17 +15,20 @@ use App\Models\StrukturInstansi;
 use App\Models\SuratBaki;
 use App\Models\SuratBapSenat;
 use App\Models\SuratPaktaIntegritas;
+use App\Models\SuratPengantar;
 use App\Models\SuratPernyataanPimpinan;
 use App\Models\TimKomite;
 use App\Models\User;
 use App\Support\SuratBakiPdf;
 use App\Support\SuratBapSenatPdf;
 use App\Support\SuratPaktaIntegritasPdf;
+use App\Support\SuratPengantarPdf;
 use App\Support\SuratPernyataanPimpinanPdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class SuratController extends Controller
@@ -95,6 +99,13 @@ class SuratController extends Controller
                 ->values(),
             // Tempat pada pakta integritas mengikuti kota instansi.
             'kota' => Instansi::query()->value('kota'),
+            'pengantarList' => SuratPengantar::query()
+                ->orderByDesc('tanggal_surat')
+                ->orderByDesc('id')
+                ->get(),
+            'pengantarEdit' => $request->filled('edit_pengantar')
+                ? SuratPengantar::query()->find($request->integer('edit_pengantar'))
+                : null,
             // Pilihan karya ilmiah per dosen (dipakai picker pada form pakta integritas).
             'karyaPerDosen' => KaryaTulis::query()
                 ->orderBy('id')
@@ -242,6 +253,66 @@ class SuratController extends Controller
             $this->identitasDosen($bap->dosen),
             $bap->anggotaSenat(),
             $senat->firstWhere('jabatan', 'ketua'),
+        );
+        $pdf->buat();
+
+        return response($pdf->isi(), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="'.$pdf->namaBerkas().'"',
+        ]);
+    }
+
+    public function storePengantar(SuratPengantarRequest $request): RedirectResponse
+    {
+        SuratPengantar::query()->create($this->dataPengantar($request));
+
+        return redirect()
+            ->route('surat.index')
+            ->withFragment('surat-pengantar')
+            ->with('status', 'Surat pengantar berhasil disimpan.');
+    }
+
+    public function updatePengantar(SuratPengantarRequest $request, SuratPengantar $pengantar): RedirectResponse
+    {
+        $pengantar->update($this->dataPengantar($request));
+
+        return redirect()
+            ->route('surat.index')
+            ->withFragment('surat-pengantar')
+            ->with('status', 'Surat pengantar berhasil diperbarui.');
+    }
+
+    public function destroyPengantar(SuratPengantar $pengantar): RedirectResponse
+    {
+        $pengantar->delete();
+
+        return redirect()
+            ->route('surat.index')
+            ->withFragment('surat-pengantar')
+            ->with('status', 'Surat pengantar berhasil dihapus.');
+    }
+
+    /**
+     * Surat pengantar siap cetak: pribadi (blok identitas) atau kolektif (tabel dosen).
+     */
+    public function cetakPengantar(SuratPengantar $pengantar): Response
+    {
+        $pdf = new SuratPengantarPdf(
+            Instansi::query()->first(),
+            $pengantar,
+            $pengantar->dosenList()
+                ->map(function (User $dosen): array {
+                    $identitas = $this->identitasDosen($dosen);
+
+                    return [
+                        'nama' => $identitas['nama'],
+                        'nidn' => $identitas['nidn'],
+                        'nuptk' => $identitas['nuptk'],
+                        'jabatan' => $identitas['jabatan'],
+                    ];
+                })
+                ->all(),
+            $this->identitas($this->ketua()),
         );
         $pdf->buat();
 
@@ -404,6 +475,43 @@ class SuratController extends Controller
             'materi_rapat' => $data['materi_rapat'],
             'anggota_senat_ids' => array_map('intval', $data['anggota_senat_ids']),
         ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function dataPengantar(SuratPengantarRequest $request): array
+    {
+        $data = $request->validated();
+
+        return [
+            'nomor_surat' => $data['nomor_surat'],
+            'lampiran' => $data['lampiran'] ?? null,
+            'perihal' => $data['perihal'],
+            'tujuan' => $data['tujuan'] ?? null,
+            'tanggal_surat' => Carbon::createFromFormat('d-m-Y', $data['tanggal_surat'])->toDateString(),
+            'kolektif' => $request->boolean('kolektif'),
+            'dosen_ids' => array_map('intval', $data['dosen_ids']),
+        ];
+    }
+
+    /**
+     * Penanda tangan surat pengantar: pimpinan berjabatan Ketua/Rektor.
+     *
+     * ponytail: belum ada penanda tangan per surat; bila instansi tidak punya
+     * jabatan Ketua/Rektor, dipakai pimpinan pertama pada struktur instansi.
+     */
+    private function ketua(): ?User
+    {
+        $pimpinan = StrukturInstansi::query()->with(['jabatanStruktural', 'user'])->get();
+
+        $ketua = $pimpinan->first(fn (StrukturInstansi $item) => in_array(
+            Str::lower($item->jabatanStruktural?->nama ?? ''),
+            ['ketua', 'rektor'],
+            true,
+        ));
+
+        return ($ketua ?? $pimpinan->first())?->user;
     }
 
     /**
