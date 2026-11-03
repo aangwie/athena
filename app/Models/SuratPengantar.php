@@ -14,6 +14,8 @@ class SuratPengantar extends Model
         'lampiran',
         'perihal',
         'tujuan',
+        'kota_tujuan',
+        'jabatan_diusulkan',
         'tanggal_surat',
         'kolektif',
         'dosen_ids',

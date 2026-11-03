@@ -11,7 +11,7 @@ use Illuminate\Support\Str;
  * Surat Pengantar usulan jabatan akademik dosen dalam format PDF (FPDF).
  *
  * Dua bentuk isi mengikuti template instansi:
- * - pribadi  : satu dosen dengan blok identitas (Nama, NIDN/NUPTK, Jabatan Fungsional)
+ * - pribadi  : satu dosen dengan blok identitas (Nama, NIDN/NUPTK, Jabatan Akademik, Diusulkan)
  * - kolektif : banyak dosen dalam tabel (No, NUPTK, NIDN, Nama, Jabatan Fungsional)
  *
  * Kertas A4 portrait, margin atas 1.5 cm, kiri/kanan/bawah 2 cm.
@@ -27,7 +27,7 @@ class SuratPengantarPdf extends Fpdf
 
     private const MARGIN_KIRI = 2.0;
 
-    private const MARGIN_ATAS = 1.5;
+    private const MARGIN_ATAS = 2.0;
 
     private const MARGIN_KANAN = 2.0;
 
@@ -141,13 +141,21 @@ class SuratPengantarPdf extends Fpdf
         $this->Ln(0.5);
     }
 
+    /**
+     * Blok tujuan: "Kepada. Yth. <nama>" / "di" / "<kota tujuan>".
+     */
     private function tujuan(): void
     {
         $this->SetFont(self::FONT, '', self::UKURAN_FONT);
 
-        // Tujuan surat opsional; dibiarkan bergaris titik untuk diisi tangan bila kosong.
-        $tujuan = trim((string) $this->pengantar->tujuan);
-        $this->MultiCell(0, self::TINGGI_BARIS, $this->teks('Yth. '.($tujuan !== '' ? $tujuan : str_repeat('.', 55))), 0, 'L');
+        // Tujuan & kota opsional; dibiarkan bergaris titik untuk diisi tangan bila kosong.
+        $kepada = trim((string) $this->pengantar->tujuan);
+        $kota = trim((string) $this->pengantar->kota_tujuan);
+        $this->SetFont(self::FONT, 'B', 11);
+        $this->MultiCell(0, self::TINGGI_BARIS, $this->teks('Yth. '.($kepada !== '' ? $kepada : str_repeat('.', 50))), 0, 'L');
+        $this->SetFont(self::FONT, '', self::UKURAN_FONT);
+        $this->Cell(0, self::TINGGI_BARIS, $this->teks('di'), 0, 1);
+        $this->Cell(0, self::TINGGI_BARIS, $this->teks($kota !== '' ? $kota : str_repeat('.', 30)), 0, 1);
 
         $this->Ln(0.45);
         $this->Cell(0, self::TINGGI_BARIS, $this->teks('Dengan hormat,'), 0, 1);
@@ -173,11 +181,20 @@ class SuratPengantarPdf extends Fpdf
 
         $this->SetFont(self::FONT, '', self::UKURAN_FONT);
 
-        foreach ([
+        $baris = [
             'Nama' => $dosen['nama'],
             'NIDN / NUPTK' => $this->nidnNuptk($dosen),
-            'Jabatan Fungsional' => $dosen['jabatan'],
-        ] as $label => $nilai) {
+            'Jabatan Akademik' => $dosen['jabatan'],
+        ];
+
+        // Baris usulan hanya muncul bila jabatan yang diusulkan diisi.
+        $diusulkan = trim((string) $this->pengantar->jabatan_diusulkan);
+
+        if ($diusulkan !== '') {
+            $baris['Diusulkan'] = $diusulkan;
+        }
+
+        foreach ($baris as $label => $nilai) {
             $this->Cell(4.6, self::TINGGI_BARIS, $this->teks($label), 0, 0);
             $this->Cell(0.4, self::TINGGI_BARIS, ':', 0, 0);
             $this->MultiCell(0, self::TINGGI_BARIS, $this->teks($nilai !== '' ? $nilai : '—'), 0, 'L');
@@ -189,7 +206,7 @@ class SuratPengantarPdf extends Fpdf
 
     private function badanKolektif(): void
     {
-        $this->paragraf('Bersama ini kami kirimkan data dosen '.$this->namaInstansi().', sebagai berikut:');
+        $this->paragraf('Bersama ini kami kirimkan data dosen '.$this->namaInstansi().'yang belum masuk dalam aplikasi SIAP Jafa, sebagai berikut:');
 
         $this->tabelDosen();
 

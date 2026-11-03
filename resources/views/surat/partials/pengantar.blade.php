@@ -2,7 +2,7 @@
     @if ($pengantarEdit)
         Ubah surat pengantar nomor <span class="font-semibold text-slate-700">{{ $pengantarEdit->nomor_surat }}</span>.
     @else
-        Surat pengantar usulan jabatan akademik dosen — satu dosen (pribadi) atau beberapa dosen (kolektif).
+        Surat pengantar usulan jabatan akademik dosen — perorangan (satu dosen) atau kolektif (beberapa dosen).
     @endif
 </p>
 
@@ -27,6 +27,11 @@
     @if ($pengantarEdit)
         @method('PUT')
     @endif
+
+    @php
+        // Bentuk surat: perorangan (dropdown satu dosen) atau kolektif (multi select) — lihat data-pengantar-jenis di app.js.
+        $kolektif = (bool) old('kolektif', $pengantarEdit?->kolektif);
+    @endphp
 
     <h4 class="text-sm font-extrabold tracking-tight text-slate-800">Data Surat Pengantar</h4>
 
@@ -81,38 +86,99 @@
                    autocomplete="off"
                    @class(['form-input', 'border-rose-300 bg-rose-50/40' => $errors->has('tujuan')])>
             @error('tujuan') <p class="form-error">{{ $message }}</p> @enderror
+            <p class="mt-1.5 text-[11px] text-slate-400">Dicetak pada baris pertama: "Kepada. Yth. …".</p>
+        </div>
+
+        <div>
+            <label for="kota_tujuan" class="form-label">Kota Tujuan Surat</label>
+            <input type="text" id="kota_tujuan" name="kota_tujuan" maxlength="100"
+                   value="{{ old('kota_tujuan', $pengantarEdit?->kota_tujuan) }}" placeholder="Contoh: Surabaya"
+                   autocomplete="off"
+                   @class(['form-input', 'border-rose-300 bg-rose-50/40' => $errors->has('kota_tujuan')])>
+            @error('kota_tujuan') <p class="form-error">{{ $message }}</p> @enderror
+            <p class="mt-1.5 text-[11px] text-slate-400">Dicetak pada baris ketiga, di bawah "di".</p>
         </div>
 
         <div class="sm:col-span-2 lg:col-span-3">
-            <label class="choice-card items-center">
-                <input type="checkbox" name="kolektif" value="1" class="sr-only"
-                       @checked(old('kolektif', $pengantarEdit?->kolektif))>
-                <span class="choice-indicator">
-                    <svg class="size-3 opacity-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                        <path fill-rule="evenodd" d="M16.704 5.29a1 1 0 0 1 .006 1.414l-7.25 7.313a1 1 0 0 1-1.42.002L4.29 10.27a1 1 0 1 1 1.42-1.408l3.043 3.067 6.537-6.596a1 1 0 0 1 1.414-.043Z" clip-rule="evenodd" />
-                    </svg>
-                </span>
-                <span class="min-w-0 flex-1">
-                    <span class="block text-sm font-bold text-slate-800">Kolektif</span>
-                    <span class="mt-0.5 block text-[11px] text-slate-500">
-                        Centang bila surat memuat lebih dari satu dosen (dicetak sebagai tabel).
-                        Tanpa centang, surat berisi satu dosen.
-                    </span>
-                </span>
-            </label>
+            <span class="form-label">Bentuk Surat <span class="text-rose-500">*</span></span>
+            <div class="grid gap-3 sm:grid-cols-2">
+                @foreach (['0' => 'Perorangan', '1' => 'Kolektif'] as $nilai => $label)
+                    <label class="choice-card items-center">
+                        <input type="radio" name="kolektif" value="{{ $nilai }}" class="sr-only" required
+                               data-pengantar-jenis @checked((string) ($kolektif ? '1' : '0') === $nilai)>
+                        <span class="choice-indicator">
+                            <svg class="size-3 opacity-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M16.704 5.29a1 1 0 0 1 .006 1.414l-7.25 7.313a1 1 0 0 1-1.42.002L4.29 10.27a1 1 0 1 1 1.42-1.408l3.043 3.067 6.537-6.596a1 1 0 0 1 1.414-.043Z" clip-rule="evenodd" />
+                            </svg>
+                        </span>
+                        <span class="min-w-0 flex-1">
+                            <span class="block text-sm font-bold text-slate-800">{{ $label }}</span>
+                            <span class="mt-0.5 block text-[11px] text-slate-500">
+                                {{ $nilai === '1'
+                                    ? 'Surat memuat lebih dari satu dosen (dipilih dari beberapa nama, dicetak sebagai tabel).'
+                                    : 'Surat memuat satu dosen (dipilih dari daftar nama).' }}
+                            </span>
+                        </span>
+                    </label>
+                @endforeach
+            </div>
             @error('kolektif') <p class="form-error">{{ $message }}</p> @enderror
         </div>
 
-        <div class="sm:col-span-2 lg:col-span-3">
+        <div class="sm:col-span-2 lg:col-span-3" data-pengantar-perorangan @class(['hidden' => $kolektif])>
+            <label for="pengantar_dosen_perorangan" class="form-label">
+                Nama Dosen <span class="text-rose-500">*</span>
+            </label>
+            {{-- Perorangan: satu dosen dipilih dari dropdown (nilai tunggal tetap dikirim sebagai dosen_ids[]). --}}
+            <select id="pengantar_dosen_perorangan" name="dosen_ids[]" data-select-search="Cari nama dosen…"
+                    @required(! $kolektif) @disabled($kolektif)
+                    @class(['form-select', 'border-rose-300 bg-rose-50/40' => $errors->has('dosen_ids')])>
+                <option value="">Pilih dosen</option>
+                @foreach ($dosenList as $dosen)
+                    <option value="{{ $dosen->id }}"
+                            @selected((string) $dosen->id === (string) old('dosen_ids.0', $kolektif ? '' : ($pengantarEdit?->dosen_ids[0] ?? '')))>
+                        {{ $dosen->name }} — {{ $dosen->nidn }}
+                    </option>
+                @endforeach
+            </select>
+            @error('dosen_ids') <p class="form-error">{{ $message }}</p> @enderror
+            @error('dosen_ids.*') <p class="form-error">{{ $message }}</p> @enderror
+
+            @if ($dosenList->isEmpty())
+                <p class="mt-1.5 text-[11px] text-slate-400">Belum ada dosen aktif yang dapat dipilih.</p>
+            @endif
+        </div>
+
+        {{-- Perorangan: jabatan akademik yang diusulkan, dicetak sebagai baris "Diusulkan" pada PDF. --}}
+        <div class="sm:col-span-2 lg:col-span-3" data-pengantar-perorangan @class(['hidden' => $kolektif])>
+            <label for="pengantar_jabatan_diusulkan" class="form-label">Diusulkan ke</label>
+            <select id="pengantar_jabatan_diusulkan" name="jabatan_diusulkan" data-select-search="Cari jabatan akademik…"
+                    @disabled($kolektif)
+                    @class(['form-select', 'border-rose-300 bg-rose-50/40' => $errors->has('jabatan_diusulkan')])>
+                <option value="">Pilih jabatan akademik</option>
+                @foreach ($jabatanList as $jabatan)
+                    <option value="{{ $jabatan->nama }}"
+                            @selected(old('jabatan_diusulkan', $pengantarEdit?->jabatan_diusulkan) === $jabatan->nama)>
+                        {{ $jabatan->nama }}
+                    </option>
+                @endforeach
+            </select>
+            @error('jabatan_diusulkan') <p class="form-error">{{ $message }}</p> @enderror
+            <p class="mt-1.5 text-[11px] text-slate-400">Jabatan akademik yang akan diusulkan (baris "Diusulkan" pada surat).</p>
+        </div>
+
+        <div class="sm:col-span-2 lg:col-span-3" data-pengantar-kolektif @class(['hidden' => ! $kolektif])>
             <label for="pengantar_dosen" class="form-label">
                 Nama Dosen <span class="text-rose-500">*</span>
             </label>
-            <select id="pengantar_dosen" name="dosen_ids[]" multiple required size="6"
+            {{-- Kolektif: beberapa dosen sekaligus (multi select) — dicetak sebagai tabel. --}}
+            <select id="pengantar_dosen" name="dosen_ids[]" multiple size="6"
                     data-select-search="Cari nama dosen…"
+                    @required($kolektif) @disabled(! $kolektif)
                     @class(['form-select', 'border-rose-300 bg-rose-50/40' => $errors->has('dosen_ids')])>
                 @foreach ($dosenList as $dosen)
                     <option value="{{ $dosen->id }}"
-                            @selected(in_array((string) $dosen->id, array_map('strval', old('dosen_ids', $pengantarEdit?->dosen_ids ?? [])), true))>
+                            @selected(in_array((string) $dosen->id, array_map('strval', old('dosen_ids', $kolektif ? ($pengantarEdit?->dosen_ids ?? []) : [])), true))>
                         {{ $dosen->name }} — {{ $dosen->nidn }}
                     </option>
                 @endforeach

@@ -47,6 +47,8 @@ class SuratPengantarRequest extends FormRequest
             'lampiran' => ['nullable', 'string', 'max:100'],
             'perihal' => ['required', 'string', 'max:255'],
             'tujuan' => ['nullable', 'string', 'max:150'],
+            'kota_tujuan' => ['nullable', 'string', 'max:100'],
+            'jabatan_diusulkan' => ['nullable', 'string', 'max:100'],
             'kolektif' => ['nullable', 'boolean'],
             'dosen_ids' => ['required', 'array', $kolektif ? 'min:1' : 'size:1'],
             'dosen_ids.*' => [
@@ -72,6 +74,8 @@ class SuratPengantarRequest extends FormRequest
             'lampiran' => 'lampiran',
             'perihal' => 'perihal',
             'tujuan' => 'tujuan surat',
+            'kota_tujuan' => 'kota tujuan surat',
+            'jabatan_diusulkan' => 'jabatan akademik yang diusulkan',
             'dosen_ids' => 'nama dosen',
         ];
     }

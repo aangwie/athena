@@ -212,6 +212,44 @@ const boot = () => {
         syncPangkatSection();
     }
 
+    // Surat pengantar: pilih bentuk Perorangan (dropdown satu dosen) atau Kolektif (multi select).
+    const pengantarJenisInputs = document.querySelectorAll('[data-pengantar-jenis]');
+    const pengantarPerorangan = document.querySelectorAll('[data-pengantar-perorangan]');
+    const pengantarKolektif = document.querySelectorAll('[data-pengantar-kolektif]');
+    const pengantarSelectPerorangan = document.querySelector('#pengantar_dosen_perorangan');
+    const pengantarSelectKolektif = document.querySelector('#pengantar_dosen');
+    const pengantarSelectDiusulkan = document.querySelector('#pengantar_jabatan_diusulkan');
+
+    const syncPengantarJenis = () => {
+        const kolektif = document.querySelector('[data-pengantar-jenis]:checked')?.value === '1';
+
+        pengantarPerorangan.forEach((el) => el.classList.toggle('hidden', kolektif));
+        pengantarKolektif.forEach((el) => el.classList.toggle('hidden', !kolektif));
+
+        // Disabled agar isian bentuk yang tidak dipakai tidak ikut dikirim / divalidasi browser.
+        if (pengantarSelectPerorangan) {
+            pengantarSelectPerorangan.required = !kolektif;
+            pengantarSelectPerorangan.disabled = kolektif;
+        }
+
+        if (pengantarSelectKolektif) {
+            pengantarSelectKolektif.required = kolektif;
+            pengantarSelectKolektif.disabled = !kolektif;
+        }
+
+        // Jabatan yang diusulkan hanya untuk bentuk perorangan.
+        if (pengantarSelectDiusulkan) {
+            pengantarSelectDiusulkan.disabled = kolektif;
+        }
+    };
+
+    if (pengantarJenisInputs.length > 0) {
+        pengantarJenisInputs.forEach((input) => {
+            input.addEventListener('change', syncPengantarJenis);
+        });
+        syncPengantarJenis();
+    }
+
     const jenjangSelect = document.querySelector('[data-jenjang-select]');
     const transkripField = document.querySelector('[data-transkrip-field]');
     const transkripInput = transkripField?.querySelector('input[type="file"]');

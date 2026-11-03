@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Instansi;
+use App\Models\JabatanFungsional;
 use App\Models\JabatanStruktural;
 use App\Models\StrukturInstansi;
 use App\Models\SuratPengantar;
@@ -53,12 +54,15 @@ class SuratPengantarTest extends TestCase
             'lampiran' => '1 berkas',
             'perihal' => 'Usulan Jabatan Akademik',
             'tujuan' => 'Kepala LLDIKTI Wilayah VII Jawa Timur',
+            'kota_tujuan' => 'Surabaya',
+            'jabatan_diusulkan' => 'Lektor Kepala',
         ], $overrides);
     }
 
     public function test_surat_pengantar_tab_shows_form_and_table_columns(): void
     {
         $dosen = $this->makeUser('dosen', '0722059901', 'Esti Nur Qorimah, M.Pd.', 'Tenaga Pengajar');
+        JabatanFungsional::create(['nama' => 'Lektor Kepala']);
 
         $this->actingAs($this->makeAdmin())
             ->get(route('surat.index'))
@@ -69,8 +73,21 @@ class SuratPengantarTest extends TestCase
             ->assertSee('Lampiran')
             ->assertSee('Perihal')
             ->assertSee('Tanggal Surat')
+            // Kota tujuan surat: baris ketiga blok tujuan.
+            ->assertSee('Kota Tujuan Surat')
+            ->assertSee('name="kota_tujuan"', false)
+            // Bentuk surat: radio Perorangan/Kolektif.
+            ->assertSee('Perorangan')
             ->assertSee('Kolektif')
-            ->assertSee('name="kolektif"', false)
+            ->assertSee('data-pengantar-jenis', false)
+            ->assertSee('name="kolektif" value="0"', false)
+            ->assertSee('name="kolektif" value="1"', false)
+            // Perorangan: dropdown satu dosen + jabatan akademik yang diusulkan.
+            ->assertSee('id="pengantar_dosen_perorangan" name="dosen_ids[]"', false)
+            ->assertSee('Diusulkan ke')
+            ->assertSee('name="jabatan_diusulkan"', false)
+            ->assertSee('Lektor Kepala')
+            // Kolektif: multi select.
             ->assertSee('name="dosen_ids[]" multiple', false)
             ->assertSee('Daftar Surat Pengantar')
             ->assertSee('No Surat')
@@ -94,6 +111,9 @@ class SuratPengantarTest extends TestCase
         $this->assertSame('2026-03-10', $pengantar->tanggal_surat->toDateString());
         $this->assertSame('1 berkas', $pengantar->lampiran);
         $this->assertSame('Usulan Jabatan Akademik', $pengantar->perihal);
+        $this->assertSame('Kepala LLDIKTI Wilayah VII Jawa Timur', $pengantar->tujuan);
+        $this->assertSame('Surabaya', $pengantar->kota_tujuan);
+        $this->assertSame('Lektor Kepala', $pengantar->jabatan_diusulkan);
         $this->assertFalse($pengantar->kolektif);
         $this->assertSame([$dosen->id], $pengantar->dosen_ids);
 
@@ -142,6 +162,7 @@ class SuratPengantarTest extends TestCase
         $pengantar = SuratPengantar::query()->firstOrFail();
 
         $this->assertTrue($pengantar->kolektif);
+        $this->assertNull($pengantar->jabatan_diusulkan);
         $this->assertSame([$satu->id, $dua->id], $pengantar->dosen_ids);
         $this->assertSame(2, $pengantar->dosenList()->count());
 
@@ -197,6 +218,8 @@ class SuratPengantarTest extends TestCase
             'lampiran' => '1 berkas',
             'perihal' => 'Usulan Jabatan Akademik',
             'tujuan' => 'Kepala LLDIKTI Wilayah VII Jawa Timur',
+            'kota_tujuan' => 'Surabaya',
+            'jabatan_diusulkan' => 'Lektor Kepala',
             'tanggal_surat' => '2026-03-10',
             'kolektif' => false,
             'dosen_ids' => [$dosen->id],
@@ -221,13 +244,19 @@ class SuratPengantarTest extends TestCase
         $this->assertStringContainsString('613/STKIP PGRI/KP/III/2026', $teks);
         $this->assertStringContainsString('1 berkas', $teks);
         $this->assertStringContainsString('Usulan Jabatan Akademik', $teks);
-        $this->assertStringContainsString('Kepala LLDIKTI Wilayah VII Jawa Timur', $teks);
+        // Blok tujuan: "Kepada. Yth. <nama>" / "di" / "<kota tujuan>".
+        $this->assertStringContainsString('Kepada. Yth. Kepala LLDIKTI Wilayah VII Jawa Timur', $teks);
+        $this->assertStringContainsString('Surabaya', $teks);
         // Badan surat pribadi: blok identitas, bukan tabel.
         $this->assertStringContainsString('Bersama ini kami kirimkan berkas usulan Jabatan Akademik Dosen', $teks);
         $this->assertStringContainsString('NIDN / NUPTK', $teks);
+        $this->assertStringContainsString('Jabatan Akademik', $teks);
         $this->assertStringContainsString('Esti Nur Qorimah, M.Pd.', $teks);
         $this->assertStringContainsString('0722059901', $teks);
         $this->assertStringContainsString('Tenaga Pengajar', $teks);
+        // Baris jabatan yang diusulkan: di bawah Jabatan Akademik.
+        $this->assertStringContainsString('Diusulkan', $teks);
+        $this->assertStringContainsString('Lektor Kepala', $teks);
         $this->assertStringNotContainsString('Adapun kelengkapan data dosen di atas', $teks);
         // Tanda tangan ketua instansi.
         $this->assertStringContainsString('Pacitan, 10 Maret 2026', $teks);

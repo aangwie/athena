@@ -8,6 +8,7 @@ use App\Http\Requests\SuratPaktaIntegritasRequest;
 use App\Http\Requests\SuratPernyataanPimpinanRequest;
 use App\Http\Requests\SuratPengantarRequest;
 use App\Models\Instansi;
+use App\Models\JabatanFungsional;
 use App\Models\KaryaTulis;
 use App\Models\RiwayatPendidikan;
 use App\Models\Senat;
@@ -99,6 +100,8 @@ class SuratController extends Controller
                 ->values(),
             // Tempat pada pakta integritas mengikuti kota instansi.
             'kota' => Instansi::query()->value('kota'),
+            // Pilihan jabatan akademik yang diusulkan (surat pengantar perorangan).
+            'jabatanList' => JabatanFungsional::query()->orderBy('nama')->get(),
             'pengantarList' => SuratPengantar::query()
                 ->orderByDesc('tanggal_surat')
                 ->orderByDesc('id')
@@ -489,6 +492,8 @@ class SuratController extends Controller
             'lampiran' => $data['lampiran'] ?? null,
             'perihal' => $data['perihal'],
             'tujuan' => $data['tujuan'] ?? null,
+            'kota_tujuan' => $data['kota_tujuan'] ?? null,
+            'jabatan_diusulkan' => $request->boolean('kolektif') ? null : ($data['jabatan_diusulkan'] ?? null),
             'tanggal_surat' => Carbon::createFromFormat('d-m-Y', $data['tanggal_surat'])->toDateString(),
             'kolektif' => $request->boolean('kolektif'),
             'dosen_ids' => array_map('intval', $data['dosen_ids']),
