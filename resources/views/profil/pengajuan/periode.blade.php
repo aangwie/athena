@@ -36,7 +36,7 @@
             <div class="grid gap-4 sm:grid-cols-2">
                 <div>
                     <label for="tahun" class="form-label">Tahun Akademik <span class="text-rose-500">*</span></label>
-                    <select id="tahun" name="tahun" class="form-select" required>
+                    <select id="tahun" name="tahun" class="form-select" required data-select-search="Cari tahun…">
                         @for ($tahun = $tahunSekarang; $tahun >= $tahunSekarang - 4; $tahun--)
                             <option value="{{ $tahun }}" @selected($tahun === $tahunSekarang)>{{ $tahun }}/{{ $tahun + 1 }}</option>
                         @endfor
@@ -45,7 +45,7 @@
 
                 <div>
                     <label for="semester" class="form-label">Semester <span class="text-rose-500">*</span></label>
-                    <select id="semester" name="semester" class="form-select" required>
+                    <select id="semester" name="semester" class="form-select" required data-select-search="Cari semester…">
                         @foreach (\App\Models\KegiatanDupak::SEMESTER as $value => $label)
                             <option value="{{ $value }}" @selected($value === $semesterSekarang)>{{ $label }}</option>
                         @endforeach

@@ -101,7 +101,7 @@
                                                 @method('PUT')
 
                                                 <label for="keputusan-{{ $kunci }}" class="form-label">Keputusan</label>
-                                                <select id="keputusan-{{ $kunci }}" name="keputusan" class="form-select">
+                                                <select id="keputusan-{{ $kunci }}" name="keputusan" class="form-select" data-select-search="Cari keputusan…">
                                                     <option value="diterima">Diterima</option>
                                                     <option value="ditolak">Ditolak</option>
                                                 </select>

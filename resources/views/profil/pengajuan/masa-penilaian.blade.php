@@ -55,7 +55,7 @@
                     <div class="grid gap-3 sm:grid-cols-2">
                         <div>
                             <label for="mulai_bulan" class="sr-only">Bulan awal</label>
-                            <select id="mulai_bulan" name="mulai_bulan" class="form-select" required>
+                            <select id="mulai_bulan" name="mulai_bulan" class="form-select" required data-select-search="Cari bulan…">
                                 @foreach (\App\Models\MasaPenilaian::BULAN as $nilai => $nama)
                                     <option value="{{ $nilai }}" @selected($nilai === $mulaiBulan)>{{ $nama }}</option>
                                 @endforeach
@@ -63,7 +63,7 @@
                         </div>
                         <div>
                             <label for="mulai_tahun" class="sr-only">Tahun awal</label>
-                            <select id="mulai_tahun" name="mulai_tahun" class="form-select" required>
+                            <select id="mulai_tahun" name="mulai_tahun" class="form-select" required data-select-search="Cari tahun…">
                                 @foreach ($pilihanTahun as $opsi)
                                     <option value="{{ $opsi }}" @selected($opsi === $mulaiTahun)>{{ $opsi }}</option>
                                 @endforeach
@@ -77,7 +77,7 @@
                     <div class="grid gap-3 sm:grid-cols-2">
                         <div>
                             <label for="akhir_bulan" class="sr-only">Bulan akhir</label>
-                            <select id="akhir_bulan" name="akhir_bulan" class="form-select" required>
+                            <select id="akhir_bulan" name="akhir_bulan" class="form-select" required data-select-search="Cari bulan…">
                                 @foreach (\App\Models\MasaPenilaian::BULAN as $nilai => $nama)
                                     <option value="{{ $nilai }}" @selected($nilai === $akhirBulan)>{{ $nama }}</option>
                                 @endforeach
@@ -85,7 +85,7 @@
                         </div>
                         <div>
                             <label for="akhir_tahun" class="sr-only">Tahun akhir</label>
-                            <select id="akhir_tahun" name="akhir_tahun" class="form-select" required>
+                            <select id="akhir_tahun" name="akhir_tahun" class="form-select" required data-select-search="Cari tahun…">
                                 @foreach ($pilihanTahun as $opsi)
                                     <option value="{{ $opsi }}" @selected($opsi === $akhirTahun)>{{ $opsi }}</option>
                                 @endforeach

@@ -57,6 +57,7 @@
                     data-reveal-select="#bukti-{{ $suffix }}"
                     data-dependent-select="#sub_jenis-{{ $suffix }}"
                     data-sub-options="{{ json_encode($subMap, JSON_UNESCAPED_SLASHES) }}"
+                    data-select-search="Cari komponen…"
                     @class(['form-select', 'border-rose-300 bg-rose-50/40' => $errors->has('jenis')])>
                 <option value="">{{ $bidang['placeholderKomponen'] }}</option>
                 @foreach ($jenisMap as $value => $label)
@@ -76,6 +77,7 @@
                         @endif
                         data-selected="{{ $subForm }}"
                         data-placeholder="Pilih rincian komponen"
+                        data-select-search="Cari rincian komponen…"
                         @class(['form-select', 'border-rose-300 bg-rose-50/40' => $errors->has('sub_jenis')])>
                     <option value="">Pilih rincian komponen</option>
                     @foreach ($opsiSub as $value => $label)
@@ -91,6 +93,7 @@
                     <select id="rincian-{{ $suffix }}" name="rincian"
                             data-selected="{{ $rincianForm }}"
                             data-placeholder="Pilih rincian kegiatan"
+                            data-select-search="Cari rincian kegiatan…"
                             @class(['form-select', 'border-rose-300 bg-rose-50/40' => $errors->has('rincian')])>
                         <option value="">Pilih rincian kegiatan</option>
                         @foreach ($opsiRincian as $value => $label)

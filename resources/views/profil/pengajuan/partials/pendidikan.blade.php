@@ -38,6 +38,7 @@
         <div>
             <label for="jenis" class="form-label">Komponen <span class="text-rose-500">*</span></label>
             <select id="jenis" name="jenis" data-reveal-select="#bukti-pendidikan"
+                    data-select-search="Cari komponen…"
                     @class(['form-select', 'border-rose-300 bg-rose-50/40' => $errors->has('jenis')])>
                 <option value="">Pilih komponen pendidikan</option>
                 @foreach (\App\Models\KegiatanDupak::JENIS_PENDIDIKAN as $value => $label)

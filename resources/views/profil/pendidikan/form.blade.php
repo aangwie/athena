@@ -81,6 +81,7 @@
                     <div>
                         <label for="jenjang" class="form-label">Jenjang Pendidikan <span class="text-rose-500">*</span></label>
                         <select id="jenjang" name="jenjang" data-jenjang-select
+                                data-select-search="Cari jenjang…"
                                 @class(['form-select', 'border-rose-300 bg-rose-50/40' => $errors->has('jenjang')])>
                             <option value="">Pilih jenjang</option>
                             @foreach (\App\Models\RiwayatPendidikan::JENJANG as $value => $label)

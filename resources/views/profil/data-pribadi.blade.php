@@ -111,7 +111,7 @@
 
                     <div class="sm:col-span-2">
                         <label for="agama" class="form-label">Agama</label>
-                        <select id="agama" name="agama"
+                        <select id="agama" name="agama" data-select-search="Cari agama…"
                                 @class(['form-select', 'border-rose-300 bg-rose-50/40' => $errors->has('agama')])>
                             <option value="">Pilih agama</option>
                             @foreach (\App\Models\ProfilDosen::AGAMA as $nilai => $label)
