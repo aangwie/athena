@@ -32,6 +32,7 @@
         <section data-tabs data-wa-page
                  data-status-url="{{ route('whatsapp.status') }}"
                  data-qr-url="{{ route('whatsapp.qr') }}"
+                 data-putus-url="{{ route('whatsapp.putus') }}"
                  data-kirim-url="{{ route('whatsapp.kirim') }}"
                  class="section-card overflow-hidden">
             <div role="tablist" aria-label="Menu WhatsApp API"
@@ -202,16 +203,28 @@
                                 <div>
                                     <h3 class="text-sm font-extrabold text-slate-800">QR Code</h3>
                                     <p class="mt-0.5 text-xs leading-relaxed text-slate-400">
-                                        Pindai untuk menautkan perangkat WhatsApp ke gateway.
+                                        Pindai untuk menautkan perangkat WhatsApp ke gateway. Gunakan "Putuskan Koneksi" untuk melepas perangkat dan menampilkan QR baru.
                                     </p>
                                 </div>
                             </div>
-                            <button type="button" data-wa-qr-refresh class="btn-secondary shrink-0">
-                                <svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                                    <path d="M20 12a8 8 0 1 1-2.5-5.8M20 4v4h-4" stroke-linecap="round" stroke-linejoin="round" />
-                                </svg>
-                                Muat Ulang QR
-                            </button>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <button type="button" data-wa-qr-refresh class="btn-secondary shrink-0">
+                                    <svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                        <path d="M20 12a8 8 0 1 1-2.5-5.8M20 4v4h-4" stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
+                                    Muat Ulang QR
+                                </button>
+                                <button type="button" data-wa-putus class="btn-secondary shrink-0 text-rose-600 hover:border-rose-300 hover:bg-rose-50 hover:text-rose-700">
+                                    <svg data-wa-putus-icon class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                        <path d="M12 3.5V11M7.4 6.2a7.5 7.5 0 1 0 9.2 0" stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
+                                    <svg data-wa-putus-spinner class="hidden size-3.5 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                        <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.5" class="opacity-25" />
+                                        <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
+                                    </svg>
+                                    <span data-wa-putus-label>Putuskan Koneksi</span>
+                                </button>
+                            </div>
                         </div>
 
                         <div class="mt-4 grid items-center gap-5 sm:grid-cols-[minmax(0,18rem)_minmax(0,1fr)]">

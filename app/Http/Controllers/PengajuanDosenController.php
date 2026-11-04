@@ -12,6 +12,7 @@ use App\Models\MasaPenilaian;
 use App\Models\PengajuanDupak;
 use App\Models\SyaratKhusus;
 use App\Models\User;
+use App\Support\WhatsAppNotifikasi;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -272,6 +273,13 @@ class PengajuanDosenController extends Controller
             return $kembali->with('error', 'Berkas periode ini sudah diajukan dan tidak dapat diajukan ulang.');
         }
 
+        WhatsAppNotifikasi::berkasMasuk(
+            $request->user(),
+            $syaratKhusus->jenisDiajukan(),
+            $syaratKhusus->tahun,
+            $syaratKhusus->semester,
+        );
+
         return $kembali->with('status', 'Berkas syarat khusus berhasil diajukan ke admin.');
     }
 
@@ -295,6 +303,10 @@ class PengajuanDosenController extends Controller
             ->get()
             ->filter(fn (SyaratKhusus $item) => $item->ajukan())
             ->count();
+
+        if ($jumlah > 0 && $periode !== null) {
+            WhatsAppNotifikasi::berkasMasuk($request->user(), SyaratKhusus::JENIS, $periode[0], $periode[1]);
+        }
 
         return $jumlah === 0
             ? $kembali->with('error', 'Belum ada berkas lengkap (BKD & IKD) yang bisa diajukan.')
@@ -339,6 +351,13 @@ class PengajuanDosenController extends Controller
         }
 
         $syaratKhusus->putuskan($jenis, $data['keputusan'], $data['catatan'] ?? null);
+
+        WhatsAppNotifikasi::berkasDiputuskan(
+            $syaratKhusus,
+            $jenis,
+            $data['keputusan'],
+            $data['catatan'] ?? null,
+        );
 
         return redirect()
             ->route('verifikasi-berkas.index')
@@ -439,6 +458,8 @@ class PengajuanDosenController extends Controller
             ['status' => 'diajukan', 'diajukan_at' => now(), 'dinilai_at' => null],
         );
 
+        WhatsAppNotifikasi::ajuanPakMasuk($request->user(), $tahun, $semester);
+
         return $this->kembaliKeReview($tahun, $semester)
             ->with('status', 'Usulan dikirim ke TIM PAK. Nilai angka kredit akan muncul setelah dinilai.');
     }
@@ -461,6 +482,8 @@ class PengajuanDosenController extends Controller
         }
 
         $pengajuan->update(['status' => 'diajukan_dupak']);
+
+        WhatsAppNotifikasi::dupakMasuk($request->user(), $tahun, $semester);
 
         return $this->kembaliKeReview($tahun, $semester)
             ->with('status', 'DUPAK periode ini berhasil diajukan.');
@@ -534,6 +557,8 @@ class PengajuanDosenController extends Controller
         }
 
         $pengajuan->update(['status' => 'diajukan', 'diajukan_at' => now(), 'dinilai_at' => null]);
+
+        WhatsAppNotifikasi::ajuanPakMasuk($request->user(), $tahun, $semester);
 
         return redirect()->route('profil.pengajuan.riwayat')
             ->with('status', 'Nilai PAK periode '.$pengajuan->periodeLabel().' diajukan ulang ke TIM PAK.');

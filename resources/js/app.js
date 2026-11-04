@@ -959,6 +959,19 @@ const boot = () => {
         });
     });
 
+    // Alert hasil pengiriman notifikasi WhatsApp (dari session('wa_notif')).
+    const waNotifAlert = document.querySelector('[data-wa-notif-alert]');
+
+    if (waNotifAlert) {
+        Swal.fire({
+            icon: waNotifAlert.dataset.waIcon || 'info',
+            title: waNotifAlert.dataset.waTitle || 'Notifikasi WhatsApp',
+            text: waNotifAlert.dataset.waText || '',
+            confirmButtonColor: '#0d9488',
+            confirmButtonText: 'Mengerti',
+        });
+    }
+
     document.querySelectorAll('[data-user-menu-button]').forEach((button) => {
         const menu = button.parentElement?.querySelector('[data-user-menu]');
 

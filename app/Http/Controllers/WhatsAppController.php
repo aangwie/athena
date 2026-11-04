@@ -73,6 +73,26 @@ class WhatsAppController extends Controller
             ->header('Cache-Control', 'no-store, max-age=0');
     }
 
+    /**
+     * Putus koneksi WhatsApp pada gateway. Gateway umumnya akan membuat sesi
+     * baru dan menerbitkan QR code baru agar perangkat lain bisa ditautkan.
+     */
+    public function putus(): JsonResponse
+    {
+        $hasil = WhatsAppGateway::aktif()->putus();
+
+        Log::info('[whatsapp] Putus koneksi gateway', [
+            'sukses' => $hasil['sukses'],
+            'http_status' => $hasil['http_status'],
+            'endpoint' => $hasil['endpoint'],
+            'oleh' => auth()->user()->nidn,
+        ]);
+
+        return response()
+            ->json($hasil, $hasil['terkonfigurasi'] ? 200 : 422)
+            ->header('Cache-Control', 'no-store, max-age=0');
+    }
+
     public function kirim(Request $request): JsonResponse
     {
         $data = $request->validate([

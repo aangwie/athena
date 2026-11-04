@@ -471,6 +471,30 @@
                     </div>
                 @endif
 
+                {{-- Ringkasan pengiriman notifikasi WhatsApp; diubah JavaScript menjadi alert SweetAlert2. --}}
+                @php
+                    $waNotif = session('wa_notif');
+                @endphp
+                @if ($waNotif && ($waNotif['terkirim'] > 0 || $waNotif['gagal'] > 0))
+                    @php
+                        $waTerkirim = (int) $waNotif['terkirim'];
+                        $waGagal = (int) $waNotif['gagal'];
+                        $waIkon = $waGagal === 0 ? 'success' : ($waTerkirim === 0 ? 'error' : 'warning');
+                        $waJudul = $waGagal === 0 ? 'Notifikasi WhatsApp terkirim' : 'Notifikasi WhatsApp gagal';
+                        $waIsi = $waGagal === 0
+                            ? "Notifikasi \"{$waNotif['judul']}\" berhasil dikirim via WhatsApp ke {$waTerkirim} penerima."
+                            : ($waTerkirim === 0
+                                ? "Notifikasi \"{$waNotif['judul']}\" gagal dikirim via WhatsApp ke {$waGagal} penerima."
+                                : "Notifikasi \"{$waNotif['judul']}\" terkirim ke {$waTerkirim} penerima, namun gagal ke {$waGagal} penerima.");
+                    @endphp
+                    <div data-wa-notif-alert
+                         data-wa-icon="{{ $waIkon }}"
+                         data-wa-title="{{ $waJudul }}"
+                         data-wa-text="{{ $waIsi }}"
+                         class="hidden"
+                         aria-hidden="true"></div>
+                @endif
+
                 @yield('content')
             </main>
 

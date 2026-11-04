@@ -81,6 +81,24 @@ class WhatsAppGateway
         'send-text',
     ];
 
+    /**
+     * Kandidat jalur untuk memutus (logout) sesi WhatsApp pada gateway.
+     * Setelah sesi diputus, gateway umumnya membuat sesi baru dan menerbitkan
+     * QR code baru untuk ditautkan ulang.
+     */
+    private const JALUR_PUTUS = [
+        'logout/%s',
+        'logout',
+        'api/logout',
+        'disconnect/%s',
+        'disconnect',
+        'api/disconnect',
+        'session/logout',
+        'instance/logout',
+        'close-session',
+        'api/session/logout',
+    ];
+
     public function __construct(
         private readonly ?string $url,
         private readonly string $sesi = self::SESI_DEFAULT,
@@ -281,7 +299,14 @@ class WhatsAppGateway
             } catch (Throwable $exception) {
                 $error = 'Tidak dapat terhubung ke gateway: '.$exception->getMessage();
 
-                break;
+                // Satu jalur bisa gagal sementara (mis. koneksi di-reset) sementara
+                // jalur lain berhasil, jadi kandidat berikutnya tetap dicoba. Berhenti
+                // hanya bila host gateway sendiri tidak dapat dijangkau.
+                if (self::hostTidakTerjangkau($exception)) {
+                    break;
+                }
+
+                continue;
             }
 
             if (in_array($response->status(), [404, 405], true)) {
@@ -294,8 +319,8 @@ class WhatsAppGateway
 
             return [
                 'terkonfigurasi' => true,
-                'sukses' => $this->suksesKirim($response, $json),
-                'pesan' => $this->pesanKirim($response, $json),
+                'sukses' => $this->suksesRespons($response, $json),
+                'pesan' => $this->pesanRespons($response, $json),
                 'nomor' => $nomor,
                 'http_status' => $response->status(),
                 'durasi_ms' => $this->durasi($mulai),
@@ -312,6 +337,94 @@ class WhatsAppGateway
             'http_status' => null,
             'durasi_ms' => $this->durasi($mulai),
             'endpoint' => null,
+            'respon' => null,
+        ];
+    }
+
+    /**
+     * Putuskan (logout) sesi WhatsApp pada gateway sehingga perangkat yang
+     * tertaut dilepas dan gateway menerbitkan QR code baru.
+     *
+     * @return array<string, mixed>
+     */
+    public function putus(): array
+    {
+        if (! $this->terkonfigurasi()) {
+            return [
+                'terkonfigurasi' => false,
+                'sukses' => false,
+                'pesan' => 'URL gateway belum diatur.',
+                'endpoint' => null,
+                'http_status' => null,
+                'durasi_ms' => null,
+                'respon' => null,
+            ];
+        }
+
+        $mulai = hrtime(true);
+        $error = null;
+
+        // Sebagian gateway membaca nama sesi dari kunci yang berbeda.
+        $payload = [
+            'device_id' => $this->sesi,
+            'session' => $this->sesi,
+            'instance' => $this->sesi,
+            'logout' => true,
+            'clear' => true,
+        ];
+
+        foreach (self::JALUR_PUTUS as $pola) {
+            $jalur = $this->terapkanSesi($pola);
+            $url = $this->gabungUrl($jalur);
+
+            try {
+                $response = $this->request()->asJson()->post($url, $payload);
+
+                // Sebagian gateway hanya menerima GET untuk logout.
+                if ($response->status() === 405) {
+                    $response = $this->request()->get($url);
+                }
+            } catch (Throwable $exception) {
+                $error = 'Tidak dapat terhubung ke gateway: '.$exception->getMessage();
+
+                // Kandidat berikutnya tetap dicoba bila hanya jalur ini yang gagal.
+                if (self::hostTidakTerjangkau($exception)) {
+                    break;
+                }
+
+                continue;
+            }
+
+            if (in_array($response->status(), [404, 405], true)) {
+                continue;
+            }
+
+            // Endpoint lama tidak lagi relevan setelah sesi diputus.
+            $this->lupakanCache();
+
+            $json = $this->json($response);
+
+            return [
+                'terkonfigurasi' => true,
+                'sukses' => $this->suksesRespons($response, $json),
+                'pesan' => $this->pesanRespons($response, $json),
+                'endpoint' => $url,
+                'http_status' => $response->status(),
+                'durasi_ms' => $this->durasi($mulai),
+                'respon' => $this->responRingkas($response, $json),
+            ];
+        }
+
+        // Tetap bersihkan cache agar QR berikutnya diambil ulang dari awal.
+        $this->lupakanCache();
+
+        return [
+            'terkonfigurasi' => true,
+            'sukses' => false,
+            'pesan' => $error ?? 'Endpoint putus koneksi tidak ditemukan pada gateway (404).',
+            'endpoint' => null,
+            'http_status' => null,
+            'durasi_ms' => $this->durasi($mulai),
             'respon' => null,
         ];
     }
@@ -443,6 +556,17 @@ class WhatsAppGateway
     private function kunciCache(string $jenis): string
     {
         return 'wa-gateway:'.$jenis.':'.md5((string) $this->url);
+    }
+
+    /**
+     * Hapus ingatan endpoint yang berhasil agar percobaan berikutnya
+     * menemukan jalur terbaru (dipakai setelah sesi WhatsApp diputus).
+     */
+    private function lupakanCache(): void
+    {
+        foreach (['status', 'qr', 'kirim'] as $jenis) {
+            Cache::forget($this->kunciCache($jenis));
+        }
     }
 
     /**
@@ -772,7 +896,7 @@ class WhatsAppGateway
         return $nilai;
     }
 
-    private function suksesKirim(Response $response, ?array $json): bool
+    private function suksesRespons(Response $response, ?array $json): bool
     {
         if (! $response->successful()) {
             return false;
@@ -817,7 +941,7 @@ class WhatsAppGateway
         return true;
     }
 
-    private function pesanKirim(Response $response, ?array $json): string
+    private function pesanRespons(Response $response, ?array $json): string
     {
         if (! $response->successful()) {
             return 'Gateway menolak permintaan (HTTP '.$response->status().').';
@@ -851,6 +975,42 @@ class WhatsAppGateway
             str_starts_with($nomor, '8') => '62'.$nomor,
             default => $nomor,
         };
+    }
+
+    /**
+     * Apakah galat menandakan host gateway tidak dapat dijangkau sama sekali
+     * (DNS gagal, koneksi ditolak, atau timeout saat menyambung), sehingga
+     * mencoba jalur lain tidak akan menolong.
+     *
+     * Cek ini sengaja longgar: galat seperti "Connection was reset" (cURL 56)
+     * sering hanya dialami satu jalur dan jalur lain tetap bisa dihubungi,
+     * jadi bukan alasan untuk berhenti mencoba.
+     */
+    private static function hostTidakTerjangkau(Throwable $exception): bool
+    {
+        $pesan = strtolower($exception->getMessage());
+
+        foreach ([
+            'could not resolve host',
+            'connection refused',
+            'failed to connect',
+            'resolve host name',
+            'connection timed out',
+            'operation timed out',
+            'no route to host',
+            'network is unreachable',
+            'ssl certificate',
+            'curl error 6',   // couldn't resolve host
+            'curl error 7',   // couldn't connect
+            'curl error 28',  // timeout
+            'curl error 35',  // SSL connect error
+        ] as $penanda) {
+            if (str_contains($pesan, $penanda)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function durasi(int $mulai): int

@@ -74,6 +74,19 @@ class SyaratKhusus extends Model
         return $this->{$jenis.'_status'} ?? 'draf';
     }
 
+    /**
+     * Jenis berkas yang sedang berstatus diajukan (menunggu verifikasi admin).
+     *
+     * @return list<string>
+     */
+    public function jenisDiajukan(): array
+    {
+        return array_values(array_filter(
+            self::JENIS,
+            fn (string $jenis) => $this->statusJenis($jenis) === 'diajukan',
+        ));
+    }
+
     public function catatanJenis(string $jenis): ?string
     {
         return $this->{$jenis.'_catatan'};

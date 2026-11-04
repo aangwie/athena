@@ -32,6 +32,7 @@ class DatabaseSeeder extends Seeder
                 'email' => 'admin@athena.test',
                 'program_studi' => 'Rektorat',
                 'jabatan_fungsional' => 'Administrator',
+                'no_hp' => '0812-0000-0001',
                 'role' => 'admin',
                 'roles' => ['admin'],
                 'is_active' => true,
@@ -62,6 +63,7 @@ class DatabaseSeeder extends Seeder
                 'email' => 'citra.maharani@athena.test',
                 'program_studi' => 'Pendidikan Biologi',
                 'jabatan_fungsional' => 'Lektor Kepala',
+                'no_hp' => '0812-0000-0002',
                 'roles' => ['dosen', 'tim_pak'],
             ],
         ])->map(fn (array $data) => User::updateOrCreate(

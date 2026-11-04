@@ -42,6 +42,7 @@ class DataDosenController extends Controller
             'nidn' => $data['nidn'],
             'jabatan_fungsional' => $data['jabatan_fungsional'],
             'pangkat' => $data['pangkat'],
+            'no_hp' => $data['no_hp'] ?? null,
             'password' => $data['password'],
         ]);
 
@@ -71,6 +72,7 @@ class DataDosenController extends Controller
             'nidn' => $data['nidn'],
             'jabatan_fungsional' => $data['jabatan_fungsional'],
             'pangkat' => $data['pangkat'],
+            'no_hp' => $data['no_hp'] ?? null,
         ];
 
         if (! empty($data['password'])) {
@@ -144,6 +146,7 @@ class DataDosenController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:100'],
             'nidn' => ['required', 'string', 'max:20', $uniqueNidn],
+            'no_hp' => ['nullable', 'string', 'max:25', 'regex:/^[0-9+\-\s()]+$/'],
             'memiliki_jabatan' => ['required', Rule::in(['ya', 'tidak'])],
             'jabatan_fungsional' => ['nullable', 'string', 'max:100', Rule::requiredIf($memilikiJabatan === 'ya')],
             'pangkat' => ['nullable', 'string', 'max:100', Rule::requiredIf($memilikiJabatan === 'ya')],
@@ -154,6 +157,8 @@ class DataDosenController extends Controller
             'name.required' => 'Nama Dosen wajib diisi.',
             'nidn.required' => 'NIDN wajib diisi.',
             'nidn.unique' => 'NIDN tersebut sudah terdaftar.',
+            'no_hp.regex' => 'Format nomor WhatsApp tidak valid.',
+            'no_hp.max' => 'Nomor WhatsApp maksimal 25 karakter.',
             'memiliki_jabatan.required' => 'Pilih apakah dosen memiliki jabatan akademik.',
             'memiliki_jabatan.in' => 'Pilihan jabatan akademik tidak valid.',
             'jabatan_fungsional.required' => 'Jabatan Akademik wajib dipilih jika dosen memiliki jabatan akademik.',

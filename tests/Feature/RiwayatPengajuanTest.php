@@ -75,6 +75,47 @@ class RiwayatPengajuanTest extends TestCase
             ->assertSee('/profil/pengajuan/create?tahun=2026&amp;semester=ganjil', false);
     }
 
+    public function test_tombol_lihat_aktif_dan_mengarah_ke_tab_review_setelah_dinilai(): void
+    {
+        $dosen = $this->makeDosen();
+        $this->makeKegiatan($dosen, 2);
+
+        $dosen->pengajuanDupak()->create([
+            'tahun' => 2026,
+            'semester' => 'ganjil',
+            'status' => 'dinilai',
+            'diajukan_at' => now()->subDays(10),
+            'dinilai_at' => now()->subDays(2),
+        ]);
+
+        $this->actingAs($dosen)
+            ->get(route('profil.pengajuan.riwayat'))
+            ->assertOk()
+            ->assertSee('Lihat')
+            ->assertSee('/profil/pengajuan/create?tahun=2026&amp;semester=ganjil#review', false);
+    }
+
+    public function test_tombol_lihat_nonaktif_bila_belum_dinilai_tim_pak(): void
+    {
+        $dosen = $this->makeDosen();
+        $this->makeKegiatan($dosen, 0);
+
+        $dosen->pengajuanDupak()->create([
+            'tahun' => 2026,
+            'semester' => 'ganjil',
+            'status' => 'diajukan',
+            'diajukan_at' => now()->subDays(3),
+            'dinilai_at' => null,
+        ]);
+
+        $this->actingAs($dosen)
+            ->get(route('profil.pengajuan.riwayat'))
+            ->assertOk()
+            // Tombol Lihat nonaktif: bukan tautan ke halaman entri.
+            ->assertSee('aria-disabled="true">Lihat', false)
+            ->assertDontSee('/profil/pengajuan/create?tahun=2026&amp;semester=ganjil#review', false);
+    }
+
     public function test_dosen_can_ajukan_ulang_nilai_pak(): void
     {
         $dosen = $this->makeDosen();
@@ -178,7 +219,9 @@ class RiwayatPengajuanTest extends TestCase
             ->assertOk()
             ->assertSee('Perbaikan')
             ->assertSee('pointer-events-none', false)
-            ->assertDontSee('/profil/pengajuan/create?tahun=2026', false);
+            // Perbaikan nonaktif; tautan ke halaman entri kini hanya lewat tombol Lihat.
+            ->assertSee('aria-disabled="true">Perbaikan', false)
+            ->assertSee('/profil/pengajuan/create?tahun=2026&amp;semester=ganjil#review', false);
 
         // Tombol Ajukan ke TIM PAK nonaktif pada tab Review periode tersebut.
         $this->actingAs($dosen)

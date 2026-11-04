@@ -1,4 +1,5 @@
 import QRCode from 'qrcode';
+import Swal from 'sweetalert2';
 
 (() => {
             const root = document.querySelector('[data-wa-page]');
@@ -9,6 +10,7 @@ import QRCode from 'qrcode';
 
             const urlStatus = root.dataset.statusUrl;
             const urlQr = root.dataset.qrUrl;
+            const urlPutus = root.dataset.putusUrl;
             const urlKirim = root.dataset.kirimUrl;
             const csrf = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
 
@@ -34,6 +36,10 @@ import QRCode from 'qrcode';
             const qrEndpoint = $('[data-wa-qr-endpoint]');
             const qrTime = $('[data-wa-qr-time]');
             const qrLink = $('[data-wa-qr-link]');
+            const putusButton = $('[data-wa-putus]');
+            const putusIcon = $('[data-wa-putus-icon]');
+            const putusSpinner = $('[data-wa-putus-spinner]');
+            const putusLabel = $('[data-wa-putus-label]');
             const raw = $('[data-wa-raw]');
 
             const testForm = $('[data-wa-test-form]');
@@ -401,6 +407,96 @@ import QRCode from 'qrcode';
                 }
 
                 muatQr();
+            });
+
+            const setLoadingPutus = (aktif) => {
+                if (putusButton) {
+                    putusButton.disabled = aktif;
+                    putusButton.classList.toggle('opacity-60', aktif);
+                    putusButton.classList.toggle('cursor-not-allowed', aktif);
+                }
+
+                putusIcon?.classList.toggle('hidden', aktif);
+                putusSpinner?.classList.toggle('hidden', !aktif);
+
+                if (putusLabel) {
+                    putusLabel.textContent = aktif ? 'Memutuskan…' : 'Putuskan Koneksi';
+                }
+            };
+
+            const putusKoneksi = async () => {
+                if (!urlPutus) {
+                    return;
+                }
+
+                if (putusButton?.disabled) {
+                    return;
+                }
+
+                setLoadingPutus(true);
+
+                try {
+                    const respons = await fetch(urlPutus, {
+                        method: 'POST',
+                        headers: {
+                            Accept: 'application/json',
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrf,
+                        },
+                    });
+                    const data = await respons.json();
+
+                    if (!data.terkonfigurasi) {
+                        throw new Error(data.pesan || 'URL gateway belum diatur.');
+                    }
+
+                    if (!data.sukses) {
+                        throw new Error(data.pesan || 'Gateway menolak permintaan putus koneksi.');
+                    }
+
+                    // Sesi sudah putus: tampilkan QR baru dan periksa ulang status.
+                    statusTerakhirTerhubung = null;
+                    mulaiPollingQr();
+                    await muatQr();
+                    cekStatus();
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Koneksi diputus',
+                        text: data.pesan || 'Perangkat WhatsApp dilepas. Pindai QR code baru untuk menautkan ulang.',
+                        confirmButtonColor: '#0d9488',
+                        confirmButtonText: 'Mengerti',
+                    });
+                } catch (error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal memutus koneksi',
+                        text: error.message || 'Gagal memutus koneksi ke gateway.',
+                        confirmButtonColor: '#0d9488',
+                        confirmButtonText: 'Tutup',
+                    });
+                } finally {
+                    setLoadingPutus(false);
+                }
+            };
+
+            putusButton?.addEventListener('click', () => {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Putuskan koneksi WhatsApp?',
+                    text: 'Sesi WhatsApp pada gateway akan diputus dan QR code baru akan ditampilkan. Pindai QR tersebut untuk menautkan perangkat kembali.',
+                    showCancelButton: true,
+                    confirmButtonText: 'Ya, putuskan',
+                    cancelButtonText: 'Batal',
+                    confirmButtonColor: '#e11d48',
+                    cancelButtonColor: '#64748b',
+                    reverseButtons: true,
+                    focusCancel: true,
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        putusKoneksi();
+                    }
+                });
             });
 
             document.addEventListener('visibilitychange', () => {

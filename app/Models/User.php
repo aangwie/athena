@@ -42,6 +42,7 @@ class User extends Authenticatable
         'program_studi',
         'jabatan_fungsional',
         'pangkat',
+        'no_hp',
         'role',
         'roles',
         'is_active',
@@ -266,6 +267,40 @@ class User extends Authenticatable
     public function canReview(): bool
     {
         return $this->isAdmin() || $this->isTimPak();
+    }
+
+    /**
+     * Semua akun aktif yang memiliki salah satu role tertentu, tanpa duplikat.
+     * Pencocokan memakai kolom role lama dan kolom JSON roles, sama seperti
+     * pencarian penilai TIM PAK pada halaman cetak DUPAK.
+     *
+     * @param  list<string>  $roles
+     * @return \Illuminate\Database\Eloquent\Collection<int, self>
+     */
+    public static function berRole(array $roles): Collection
+    {
+        return static::query()
+            ->where('is_active', true)
+            ->where(function ($query) use ($roles): void {
+                $query->whereIn('role', $roles);
+
+                foreach ($roles as $role) {
+                    $query->orWhereJsonContains('roles', $role);
+                }
+            })
+            ->orderBy('name')
+            ->get();
+    }
+
+    /**
+     * Nomor WhatsApp yang dipakai untuk notifikasi: nomor profil dosen bila ada,
+     * selain itu nomor pada akun.
+     */
+    public function nomorWhatsapp(): ?string
+    {
+        $nomor = $this->profilDosen?->no_hp ?: $this->no_hp;
+
+        return filled($nomor) ? (string) $nomor : null;
     }
 
     public function initials(): string

@@ -93,6 +93,16 @@
                                     </td>
                                     <td>
                                         <div class="flex items-center justify-end gap-1.5">
+                                            {{-- Lihat baru aktif setelah TIM PAK menyimpan nilai PAK periode ini. --}}
+                                            @if ($item->dinilai_at === null)
+                                                <span class="btn-secondary pointer-events-none px-3 py-1.5 text-xs opacity-50" aria-disabled="true">Lihat</span>
+                                            @else
+                                                <a href="{{ route('profil.pengajuan.create', ['tahun' => $item->tahun, 'semester' => $item->semester]).'#review' }}"
+                                                   class="btn-secondary px-3 py-1.5 text-xs">
+                                                    Lihat
+                                                </a>
+                                            @endif
+
                                             @if ($item->nilaiTerkunci())
                                                 <span class="btn-secondary pointer-events-none px-3 py-1.5 text-xs opacity-50" aria-disabled="true">Perbaikan</span>
                                             @else

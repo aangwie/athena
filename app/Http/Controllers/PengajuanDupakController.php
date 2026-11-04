@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\PengajuanDupak;
+use App\Support\WhatsAppNotifikasi;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -54,6 +55,8 @@ class PengajuanDupakController extends Controller
             'catatan' => $data['catatan'] ?? null,
         ]);
 
+        WhatsAppNotifikasi::dupakDiputuskan($pengajuan);
+
         return redirect()
             ->route('verifikasi-dupak.show', $pengajuan)
             ->with('status', 'Keputusan "'.$pengajuan->statusLabel().'" berhasil disimpan.');
@@ -100,6 +103,8 @@ class PengajuanDupakController extends Controller
             ->each(fn ($kegiatan) => $kegiatan->update(['nilai_baru' => $nilai[$kegiatan->id]]));
 
         $pengajuan->update(['status' => 'dinilai', 'dinilai_at' => now()]);
+
+        WhatsAppNotifikasi::pakDinilai($pengajuan);
 
         return redirect()
             ->route('tim-pak.pengajuan.show', $pengajuan)

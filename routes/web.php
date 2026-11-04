@@ -251,6 +251,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/gateway', [WhatsAppController::class, 'simpan'])->name('simpan');
         Route::get('/status', [WhatsAppController::class, 'status'])->name('status');
         Route::get('/qr', [WhatsAppController::class, 'qr'])->name('qr');
+        Route::post('/putus', [WhatsAppController::class, 'putus'])->name('putus');
         Route::post('/kirim', [WhatsAppController::class, 'kirim'])->name('kirim');
     });
 });

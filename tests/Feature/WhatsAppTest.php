@@ -57,8 +57,11 @@ class WhatsAppTest extends TestCase
             ->assertSee('data-tab-target="uji-kirim"', false)
             ->assertSee('data-tab-panel="uji-kirim"', false)
             ->assertSee('Uji Pengiriman')
+            ->assertSee('Putuskan Koneksi')
+            ->assertSee('data-wa-putus', false)
             ->assertSee(route('whatsapp.status'), false)
             ->assertSee(route('whatsapp.qr'), false)
+            ->assertSee(route('whatsapp.putus'), false)
             ->assertSee(route('whatsapp.kirim'), false);
     }
 
@@ -209,6 +212,60 @@ class WhatsAppTest extends TestCase
             ->assertJsonPath('endpoint', 'http://wa.test/qr/default');
     }
 
+    public function test_kirim_falls_through_to_next_path_when_one_path_resets_connection(): void
+    {
+        $this->simpanGateway();
+
+        // Jalur pertama (send-message) gagal sementara dengan koneksi di-reset,
+        // sedangkan jalur berikutnya (/send) berhasil. Pengiriman tetap sukses.
+        Http::fake(function ($request) {
+            if (str_ends_with($request->url(), '/send-message')) {
+                throw new ConnectionException('cURL error 56: Recv failure: Connection was reset');
+            }
+
+            if (str_ends_with($request->url(), '/send')) {
+                return Http::response(['success' => true, 'messageId' => 'ABC123']);
+            }
+
+            return Http::response('not found', 404);
+        });
+
+        $this->actingAs($this->makeAdmin())
+            ->postJson(route('whatsapp.kirim'), [
+                'nomor' => '081234084994',
+                'pesan' => 'Notifikasi DUPAK',
+            ])
+            ->assertOk()
+            ->assertJsonPath('sukses', true)
+            ->assertJsonPath('http_status', 200)
+            ->assertJsonPath('endpoint', 'http://wa.test/send')
+            ->assertJsonPath('respon.success', true);
+    }
+
+    public function test_kirim_berhenti_mencoba_bila_host_gateway_tidak_terjangkau(): void
+    {
+        $this->simpanGateway();
+
+        // Host tidak dapat dihubungi: cukup satu percobaan, tidak mencoba jalur lain.
+        $percobaan = 0;
+
+        Http::fake(function ($request) use (&$percobaan) {
+            $percobaan++;
+
+            throw new ConnectionException('cURL error 7: Failed to connect: Connection refused');
+        });
+
+        $this->actingAs($this->makeAdmin())
+            ->postJson(route('whatsapp.kirim'), [
+                'nomor' => '081234084994',
+                'pesan' => 'Halo',
+            ])
+            ->assertOk()
+            ->assertJsonPath('sukses', false);
+
+        $this->assertSame(1, $percobaan);
+    }
+
     public function test_admin_can_send_test_message_and_see_gateway_response(): void
     {
         $this->simpanGateway();
@@ -235,6 +292,78 @@ class WhatsAppTest extends TestCase
             && $request['device_id'] === 'default'
             && $request['nomor_penerima'] === '6281234567890'
             && $request['pesan'] === 'Halo dari Athena');
+    }
+
+    public function test_admin_can_disconnect_whatsapp_session(): void
+    {
+        $this->simpanGateway();
+
+        Http::fake([
+            'wa.test/logout/default' => Http::response(['status' => 'success', 'message' => 'Sesi diputus']),
+            'wa.test/*' => Http::response('not found', 404),
+        ]);
+
+        $this->actingAs($this->makeAdmin())
+            ->postJson(route('whatsapp.putus'))
+            ->assertOk()
+            ->assertJsonPath('terkonfigurasi', true)
+            ->assertJsonPath('sukses', true)
+            ->assertJsonPath('pesan', 'Sesi diputus')
+            ->assertJsonPath('endpoint', 'http://wa.test/logout/default')
+            ->assertJsonPath('http_status', 200);
+
+        Http::assertSent(fn ($request) => $request->url() === 'http://wa.test/logout/default'
+            && $request->method() === 'POST');
+    }
+
+    public function test_disconnect_clears_cached_endpoints_so_new_qr_is_fetched(): void
+    {
+        $this->simpanGateway();
+
+        $admin = $this->makeAdmin();
+
+        Cache::put('wa-gateway:qr:'.md5('http://wa.test'), 'qr/default', 3600);
+
+        Http::fake([
+            'wa.test/logout/default' => Http::response(['status' => 'success']),
+            'wa.test/qr/default' => Http::response([
+                'status' => 'pending',
+                'qr' => 'data:image/png;base64,BBBB',
+            ]),
+            'wa.test/*' => Http::response('not found', 404),
+        ]);
+
+        $this->actingAs($admin)
+            ->postJson(route('whatsapp.putus'))
+            ->assertOk()
+            ->assertJsonPath('sukses', true);
+
+        // Cache endpoint QR lama harus dibuang agar QR baru diambil ulang.
+        $this->assertNull(Cache::get('wa-gateway:qr:'.md5('http://wa.test')));
+
+        $this->actingAs($admin)
+            ->getJson(route('whatsapp.qr'))
+            ->assertOk()
+            ->assertJsonPath('tersedia', true)
+            ->assertJsonPath('qr', 'data:image/png;base64,BBBB');
+    }
+
+    public function test_disconnect_requires_configured_gateway(): void
+    {
+        $this->actingAs($this->makeAdmin())
+            ->postJson(route('whatsapp.putus'))
+            ->assertStatus(422)
+            ->assertJsonPath('terkonfigurasi', false)
+            ->assertJsonPath('sukses', false);
+    }
+
+    public function test_dosen_cannot_disconnect_whatsapp_session(): void
+    {
+        $this->simpanGateway();
+
+        $this->actingAs($this->makeDosen())
+            ->postJson(route('whatsapp.putus'))
+            ->assertForbidden();
     }
 
     public function test_send_test_message_requires_configured_gateway(): void

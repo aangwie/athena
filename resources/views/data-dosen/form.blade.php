@@ -79,6 +79,15 @@
                     </div>
 
                     <div>
+                        <label for="no_hp" class="form-label">Nomor WhatsApp</label>
+                        <input type="tel" id="no_hp" name="no_hp" value="{{ old('no_hp', $item->no_hp ?? '') }}"
+                               placeholder="Contoh: 0812-3456-7890"
+                               @class(['form-input', 'border-rose-300 bg-rose-50/40' => $errors->has('no_hp')])>
+                        <p class="mt-1.5 text-[11px] text-slate-400">Dipakai menerima notifikasi pengajuan via WhatsApp.</p>
+                        @error('no_hp') <p class="form-error">{{ $message }}</p> @enderror
+                    </div>
+
+                    <div>
                         <span class="form-label">Memiliki Jabatan Akademik? <span class="text-rose-500">*</span></span>
                         <div class="grid gap-3 sm:grid-cols-2">
                             @foreach (['ya' => 'Ya', 'tidak' => 'Tidak'] as $value => $label)
