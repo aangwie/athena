@@ -231,9 +231,8 @@ class RiwayatPekerjaanTest extends TestCase
         $master = $this->master();
 
         $this->actingAs($user)
-            ->post(route('profil.pekerjaan.jabatan.store'), [
+            ->post(route('profil.pekerjaan.struktural.store'), [
                 'jabatan_struktural_id' => $master['struktural']->id,
-                'jabatan_fungsional_id' => $master['fungsional']->id,
                 'tmt' => '2019-08-02',
             ])
             ->assertRedirect(route('profil.pekerjaan.index'));
@@ -241,7 +240,7 @@ class RiwayatPekerjaanTest extends TestCase
         $this->assertDatabaseHas('riwayat_jabatan_struktural', [
             'user_id' => $user->id,
             'jabatan_struktural_id' => $master['struktural']->id,
-            'jabatan_fungsional_id' => $master['fungsional']->id,
+            'jabatan_fungsional_id' => null,
         ]);
 
         $this->actingAs($user)
@@ -251,11 +250,95 @@ class RiwayatPekerjaanTest extends TestCase
 
         $riwayat = RiwayatJabatanStruktural::query()->firstOrFail();
 
+        // Form edit struktural memakai parameter ?edit-struktural=.
         $this->actingAs($user)
-            ->delete(route('profil.pekerjaan.jabatan.destroy', $riwayat))
+            ->get(route('profil.pekerjaan.index', ['edit-struktural' => $riwayat->id]))
+            ->assertOk()
+            ->assertSee('Batal Edit');
+
+        $this->actingAs($user)
+            ->delete(route('profil.pekerjaan.struktural.destroy', $riwayat))
             ->assertRedirect(route('profil.pekerjaan.index'));
 
         $this->assertDatabaseMissing('riwayat_jabatan_struktural', ['id' => $riwayat->id]);
+    }
+
+    public function test_dosen_can_manage_riwayat_jabatan_akademik(): void
+    {
+        $user = $this->makeDosen();
+        $master = $this->master();
+
+        $this->actingAs($user)
+            ->post(route('profil.pekerjaan.fungsional.store'), [
+                'jabatan_fungsional_id' => $master['fungsional']->id,
+                'tmt' => '2020-01-15',
+            ])
+            ->assertRedirect(route('profil.pekerjaan.index'));
+
+        $this->assertDatabaseHas('riwayat_jabatan_struktural', [
+            'user_id' => $user->id,
+            'jabatan_fungsional_id' => $master['fungsional']->id,
+            'jabatan_struktural_id' => null,
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('profil.pekerjaan.index'))
+            ->assertSee('Lektor')
+            ->assertSee('15 Januari 2020');
+
+        $riwayat = RiwayatJabatanStruktural::query()->firstOrFail();
+
+        $this->actingAs($user)
+            ->put(route('profil.pekerjaan.fungsional.update', $riwayat), [
+                'jabatan_fungsional_id' => $master['fungsional']->id,
+                'tmt' => '2021-02-03',
+            ])
+            ->assertRedirect(route('profil.pekerjaan.index'));
+
+        $this->assertSame('2021-02-03', $riwayat->fresh()->tmt->format('Y-m-d'));
+
+        $this->actingAs($user)
+            ->delete(route('profil.pekerjaan.fungsional.destroy', $riwayat))
+            ->assertRedirect(route('profil.pekerjaan.index'));
+
+        $this->assertDatabaseMissing('riwayat_jabatan_struktural', ['id' => $riwayat->id]);
+    }
+
+    public function test_riwayat_struktural_dan_fungsional_terpisah_pada_halaman(): void
+    {
+        $user = $this->makeDosen();
+        $master = $this->master();
+
+        $user->riwayatJabatanStruktural()->create([
+            'jabatan_struktural_id' => $master['struktural']->id,
+            'tmt' => '2019-08-02',
+        ]);
+
+        // Baris akademik hanya muncul di tabel Jabatan Akademik, bukan struktural.
+        $user->riwayatJabatanStruktural()->create([
+            'jabatan_fungsional_id' => $master['fungsional']->id,
+            'tmt' => '2020-01-15',
+        ]);
+
+        $html = $this->actingAs($user)
+            ->get(route('profil.pekerjaan.index'))
+            ->assertOk()
+            ->getContent();
+
+        // Dua section terpisah dengan tabel masing-masing.
+        $this->assertStringContainsString('Riwayat Jabatan Struktural', $html);
+        $this->assertStringContainsString('Riwayat Jabatan Akademik', $html);
+
+        // Order: struktural sebelum akademik.
+        $this->assertGreaterThan(
+            strpos($html, 'id="jabatan_struktural_id"'),
+            strpos($html, 'id="jabatan_fungsional_id"'),
+        );
+
+        // Tabel struktural tidak memuat kolom/nilai jabatan akademik.
+        $tabelStruktural = substr($html, strpos($html, 'Riwayat Jabatan Struktural'), strpos($html, 'Riwayat Jabatan Akademik') - strpos($html, 'Riwayat Jabatan Struktural'));
+        $this->assertStringNotContainsString('Lektor', $tabelStruktural);
+        $this->assertStringContainsString('Kepala Lembaga Penjaminan Mutu', $tabelStruktural);
     }
 
     public function test_riwayat_pekerjaan_fields_are_validated(): void

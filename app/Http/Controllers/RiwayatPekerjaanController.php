@@ -34,8 +34,8 @@ class RiwayatPekerjaanController extends Controller
             'riwayatAngkaKredit',
         ]);
 
-        // Parameter ?edit-kepangkatan= / ?edit-jabatan= / ?edit-angka-kredit=
-        // memakai ulang formulir yang sama.
+        // Parameter ?edit-kepangkatan= / ?edit-struktural= / ?edit-fungsional= /
+        // ?edit-angka-kredit= memakai ulang formulir yang sama.
         return view('profil.pekerjaan.index', [
             'user' => $user,
             'profil' => $user->profilDosen,
@@ -44,10 +44,16 @@ class RiwayatPekerjaanController extends Controller
             'jabatanStrukturalList' => JabatanStruktural::query()->orderBy('nama')->get(),
             'jabatanFungsionalList' => JabatanFungsional::query()->orderBy('nama')->get(),
             'riwayatKepangkatanList' => $user->riwayatKepangkatan->sortByDesc('tmt')->values(),
-            'riwayatJabatanList' => $user->riwayatJabatanStruktural->sortByDesc('tmt')->values(),
+            // Satu baris hanya mewakili satu jenis jabatan, jadi daftar dipisah
+            // menurut kolom yang terisi: struktural atau akademik (fungsional).
+            'riwayatStrukturalList' => $user->riwayatJabatanStruktural
+                ->whereNotNull('jabatan_struktural_id')->sortByDesc('tmt')->values(),
+            'riwayatFungsionalList' => $user->riwayatJabatanStruktural
+                ->whereNotNull('jabatan_fungsional_id')->sortByDesc('tmt')->values(),
             'riwayatAngkaKreditList' => $user->riwayatAngkaKredit->sortByDesc('tahun')->values(),
             'editKepangkatan' => $user->riwayatKepangkatan->firstWhere('id', (int) $request->query('edit-kepangkatan')),
-            'editJabatan' => $user->riwayatJabatanStruktural->firstWhere('id', (int) $request->query('edit-jabatan')),
+            'editStruktural' => $user->riwayatJabatanStruktural->firstWhere('id', (int) $request->query('edit-struktural')),
+            'editFungsional' => $user->riwayatJabatanStruktural->firstWhere('id', (int) $request->query('edit-fungsional')),
             'editAngkaKredit' => $user->riwayatAngkaKredit->firstWhere('id', (int) $request->query('edit-angka-kredit')),
         ]);
     }
@@ -165,27 +171,30 @@ class RiwayatPekerjaanController extends Controller
             ->with('status', 'Riwayat angka kredit berhasil dihapus.');
     }
 
-    public function storeJabatan(Request $request): RedirectResponse
+    public function storeStruktural(Request $request): RedirectResponse
     {
-        $request->user()->riwayatJabatanStruktural()->create($this->validatedJabatan($request));
+        $request->user()->riwayatJabatanStruktural()->create(
+            $this->validatedStruktural($request) + ['jabatan_fungsional_id' => null],
+        );
 
         return redirect()
             ->route('profil.pekerjaan.index')
             ->with('status', 'Riwayat jabatan struktural berhasil ditambahkan.');
     }
 
-    public function updateJabatan(Request $request, RiwayatJabatanStruktural $riwayatJabatan): RedirectResponse
+    public function updateStruktural(Request $request, RiwayatJabatanStruktural $riwayatJabatan): RedirectResponse
     {
         $this->ensureOwner($request->user(), $riwayatJabatan->user_id);
 
-        $riwayatJabatan->update($this->validatedJabatan($request));
+        // Baris ini tetap dianggap jabatan struktural; kolom akademik dibiarkan.
+        $riwayatJabatan->update($this->validatedStruktural($request) + ['jabatan_fungsional_id' => null]);
 
         return redirect()
             ->route('profil.pekerjaan.index')
             ->with('status', 'Riwayat jabatan struktural berhasil diperbarui.');
     }
 
-    public function destroyJabatan(Request $request, RiwayatJabatanStruktural $riwayatJabatan): RedirectResponse
+    public function destroyStruktural(Request $request, RiwayatJabatanStruktural $riwayatJabatan): RedirectResponse
     {
         $this->ensureOwner($request->user(), $riwayatJabatan->user_id);
 
@@ -194,6 +203,40 @@ class RiwayatPekerjaanController extends Controller
         return redirect()
             ->route('profil.pekerjaan.index')
             ->with('status', 'Riwayat jabatan struktural berhasil dihapus.');
+    }
+
+    public function storeFungsional(Request $request): RedirectResponse
+    {
+        $request->user()->riwayatJabatanStruktural()->create(
+            $this->validatedFungsional($request) + ['jabatan_struktural_id' => null],
+        );
+
+        return redirect()
+            ->route('profil.pekerjaan.index')
+            ->with('status', 'Riwayat jabatan akademik berhasil ditambahkan.');
+    }
+
+    public function updateFungsional(Request $request, RiwayatJabatanStruktural $riwayatJabatan): RedirectResponse
+    {
+        $this->ensureOwner($request->user(), $riwayatJabatan->user_id);
+
+        // Baris ini tetap dianggap jabatan akademik; kolom struktural dibiarkan.
+        $riwayatJabatan->update($this->validatedFungsional($request) + ['jabatan_struktural_id' => null]);
+
+        return redirect()
+            ->route('profil.pekerjaan.index')
+            ->with('status', 'Riwayat jabatan akademik berhasil diperbarui.');
+    }
+
+    public function destroyFungsional(Request $request, RiwayatJabatanStruktural $riwayatJabatan): RedirectResponse
+    {
+        $this->ensureOwner($request->user(), $riwayatJabatan->user_id);
+
+        $riwayatJabatan->delete();
+
+        return redirect()
+            ->route('profil.pekerjaan.index')
+            ->with('status', 'Riwayat jabatan akademik berhasil dihapus.');
     }
 
     /**
@@ -215,15 +258,28 @@ class RiwayatPekerjaanController extends Controller
     /**
      * @return array<string, mixed>
      */
-    private function validatedJabatan(Request $request): array
+    private function validatedStruktural(Request $request): array
     {
         return $request->validate([
             'jabatan_struktural_id' => ['required', Rule::exists('jabatan_struktural', 'id')],
-            'jabatan_fungsional_id' => ['required', Rule::exists('jabatan_fungsional', 'id')],
             'tmt' => ['required', 'date'],
         ], [
             'jabatan_struktural_id.required' => 'Jabatan struktural wajib dipilih.',
             'jabatan_struktural_id.exists' => 'Jabatan struktural tidak ditemukan.',
+            'tmt.required' => 'TMT wajib diisi.',
+            'tmt.date' => 'Format TMT tidak valid.',
+        ]);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function validatedFungsional(Request $request): array
+    {
+        return $request->validate([
+            'jabatan_fungsional_id' => ['required', Rule::exists('jabatan_fungsional', 'id')],
+            'tmt' => ['required', 'date'],
+        ], [
             'jabatan_fungsional_id.required' => 'Jabatan akademik wajib dipilih.',
             'jabatan_fungsional_id.exists' => 'Jabatan akademik tidak ditemukan.',
             'tmt.required' => 'TMT wajib diisi.',

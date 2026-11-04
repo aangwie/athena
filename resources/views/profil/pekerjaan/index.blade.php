@@ -23,7 +23,7 @@
                 <h2 class="text-xl font-extrabold tracking-tight text-slate-900 sm:text-2xl">Riwayat Pekerjaan</h2>
                 <p class="mt-1.5 max-w-2xl text-sm leading-relaxed text-slate-500">
                     Kelola identitas kepegawaian, masa kerja SK, masa kerja golongan, riwayat kepangkatan,
-                    riwayat angka kredit, dan riwayat jabatan struktural.
+                    riwayat angka kredit, riwayat jabatan struktural, dan riwayat jabatan akademik.
                 </p>
             </div>
 
@@ -396,23 +396,23 @@
             </div>
         </section>
 
-        {{-- Riwayat jabatan struktural --}}
-        <section class="rounded-2xl border border-slate-200/80 bg-white shadow-sm" data-table-card>
+        {{-- Riwayat Jabatan Struktural --}}
+        <section class="mb-5 rounded-2xl border border-slate-200/80 bg-white shadow-sm" data-table-card>
             <div class="flex flex-col gap-3 border-b border-slate-100 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
                 <div>
                     <h3 class="text-sm font-extrabold text-slate-800">Riwayat Jabatan Struktural</h3>
-                    <p class="mt-0.5 text-xs text-slate-400">Jabatan struktural dan akademik diambil dari data kepegawaian instansi.</p>
+                    <p class="mt-0.5 text-xs text-slate-400">Jabatan struktural beserta TMT, diambil dari data kepegawaian instansi.</p>
                 </div>
-                @if ($editJabatan)
+                @if ($editStruktural)
                     <a href="{{ route('profil.pekerjaan.index') }}" class="btn-secondary w-auto shrink-0 px-4">Batal Edit</a>
                 @endif
             </div>
 
             <form method="POST"
-                  action="{{ $editJabatan ? route('profil.pekerjaan.jabatan.update', $editJabatan) : route('profil.pekerjaan.jabatan.store') }}"
-                  class="grid gap-4 border-b border-slate-100 bg-slate-50/50 px-5 py-5 sm:grid-cols-[1fr_1fr_12rem_auto] sm:items-end sm:px-6">
+                  action="{{ $editStruktural ? route('profil.pekerjaan.struktural.update', $editStruktural) : route('profil.pekerjaan.struktural.store') }}"
+                  class="grid gap-4 border-b border-slate-100 bg-slate-50/50 px-5 py-5 sm:grid-cols-[1fr_12rem_auto] sm:items-end sm:px-6">
                 @csrf
-                @if ($editJabatan)
+                @if ($editStruktural)
                     @method('PUT')
                 @endif
 
@@ -423,7 +423,7 @@
                             @class(['form-select', 'border-rose-300 bg-rose-50/40' => $errors->has('jabatan_struktural_id')])>
                         <option value="">Pilih jabatan struktural</option>
                         @foreach ($jabatanStrukturalList as $jabatan)
-                            <option value="{{ $jabatan->id }}" @selected((int) old('jabatan_struktural_id', $editJabatan?->jabatan_struktural_id) === $jabatan->id)>
+                            <option value="{{ $jabatan->id }}" @selected((int) old('jabatan_struktural_id', $editStruktural?->jabatan_struktural_id) === $jabatan->id)>
                                 {{ $jabatan->nama }}
                             </option>
                         @endforeach
@@ -432,30 +432,15 @@
                 </div>
 
                 <div>
-                    <label for="jabatan_fungsional_id" class="form-label">Jabatan Akademik <span class="text-rose-500">*</span></label>
-                    <select id="jabatan_fungsional_id" name="jabatan_fungsional_id" required
-                            data-select-search="Cari jabatan akademik…"
-                            @class(['form-select', 'border-rose-300 bg-rose-50/40' => $errors->has('jabatan_fungsional_id')])>
-                        <option value="">Pilih jabatan akademik</option>
-                        @foreach ($jabatanFungsionalList as $jabatan)
-                            <option value="{{ $jabatan->id }}" @selected((int) old('jabatan_fungsional_id', $editJabatan?->jabatan_fungsional_id) === $jabatan->id)>
-                                {{ $jabatan->nama }}
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('jabatan_fungsional_id') <p class="form-error">{{ $message }}</p> @enderror
-                </div>
-
-                <div>
-                    <label for="jabatan_tmt" class="form-label">TMT <span class="text-rose-500">*</span></label>
-                    <input type="date" id="jabatan_tmt" name="tmt" required
-                           value="{{ old('tmt', $editJabatan?->tmt?->format('Y-m-d')) }}"
+                    <label for="struktural_tmt" class="form-label">TMT <span class="text-rose-500">*</span></label>
+                    <input type="date" id="struktural_tmt" name="tmt" required
+                           value="{{ old('tmt', $editStruktural?->tmt?->format('Y-m-d')) }}"
                            @class(['form-input', 'border-rose-300 bg-rose-50/40' => $errors->has('tmt')])>
                     @error('tmt') <p class="form-error">{{ $message }}</p> @enderror
                 </div>
 
                 <button type="submit" class="btn-primary h-11 w-auto px-5 whitespace-nowrap">
-                    {{ $editJabatan ? 'Simpan Perubahan' : 'Tambah' }}
+                    {{ $editStruktural ? 'Simpan Perubahan' : 'Tambah' }}
                 </button>
             </form>
 
@@ -464,24 +449,22 @@
                     <thead>
                         <tr>
                             <th scope="col">Jabatan Struktural</th>
-                            <th scope="col">Jabatan Akademik</th>
                             <th scope="col" class="w-44">TMT</th>
                             <th scope="col" class="no-sort w-40 text-right">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse ($riwayatJabatanList as $item)
+                        @forelse ($riwayatStrukturalList as $item)
                             <tr>
                                 <td class="font-bold text-slate-700">{{ $item->strukturalLabel() }}</td>
-                                <td class="text-slate-600">{{ $item->fungsionalLabel() }}</td>
                                 <td data-order="{{ $item->tmt?->format('Y-m-d') }}">{{ $item->tmtLabel() }}</td>
                                 <td>
                                     <div class="flex items-center justify-end gap-1">
-                                        <a href="{{ route('profil.pekerjaan.index', ['edit-jabatan' => $item->id]) }}"
+                                        <a href="{{ route('profil.pekerjaan.index', ['edit-struktural' => $item->id]) }}"
                                            class="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-[11px] font-bold text-slate-500 transition hover:bg-teal-50 hover:text-teal-700">
                                             Edit
                                         </a>
-                                        <form method="POST" action="{{ route('profil.pekerjaan.jabatan.destroy', $item) }}"
+                                        <form method="POST" action="{{ route('profil.pekerjaan.struktural.destroy', $item) }}"
                                               data-confirm="Hapus riwayat jabatan {{ $item->strukturalLabel() }}?">
                                             @csrf
                                             @method('DELETE')
@@ -495,7 +478,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="4" class="px-5 py-12 text-center text-xs text-slate-400">
+                                <td colspan="3" class="px-5 py-12 text-center text-xs text-slate-400">
                                     Belum ada riwayat jabatan struktural.
                                 </td>
                             </tr>
@@ -504,5 +487,97 @@
                 </table>
             </div>
         </section>
+        {{-- Riwayat Jabatan Akademik --}}
+        <section class="rounded-2xl border border-slate-200/80 bg-white shadow-sm" data-table-card>
+            <div class="flex flex-col gap-3 border-b border-slate-100 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+                <div>
+                    <h3 class="text-sm font-extrabold text-slate-800">Riwayat Jabatan Akademik</h3>
+                    <p class="mt-0.5 text-xs text-slate-400">Jabatan akademik beserta TMT, diambil dari data kepegawaian instansi.</p>
+                </div>
+                @if ($editFungsional)
+                    <a href="{{ route('profil.pekerjaan.index') }}" class="btn-secondary w-auto shrink-0 px-4">Batal Edit</a>
+                @endif
+            </div>
+
+            <form method="POST"
+                  action="{{ $editFungsional ? route('profil.pekerjaan.fungsional.update', $editFungsional) : route('profil.pekerjaan.fungsional.store') }}"
+                  class="grid gap-4 border-b border-slate-100 bg-slate-50/50 px-5 py-5 sm:grid-cols-[1fr_12rem_auto] sm:items-end sm:px-6">
+                @csrf
+                @if ($editFungsional)
+                    @method('PUT')
+                @endif
+
+                <div>
+                    <label for="jabatan_fungsional_id" class="form-label">Jabatan Akademik <span class="text-rose-500">*</span></label>
+                    <select id="jabatan_fungsional_id" name="jabatan_fungsional_id" required
+                            data-select-search="Cari jabatan akademik…"
+                            @class(['form-select', 'border-rose-300 bg-rose-50/40' => $errors->has('jabatan_fungsional_id')])>
+                        <option value="">Pilih jabatan akademik</option>
+                        @foreach ($jabatanFungsionalList as $jabatan)
+                            <option value="{{ $jabatan->id }}" @selected((int) old('jabatan_fungsional_id', $editFungsional?->jabatan_fungsional_id) === $jabatan->id)>
+                                {{ $jabatan->nama }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('jabatan_fungsional_id') <p class="form-error">{{ $message }}</p> @enderror
+                </div>
+
+                <div>
+                    <label for="fungsional_tmt" class="form-label">TMT <span class="text-rose-500">*</span></label>
+                    <input type="date" id="fungsional_tmt" name="tmt" required
+                           value="{{ old('tmt', $editFungsional?->tmt?->format('Y-m-d')) }}"
+                           @class(['form-input', 'border-rose-300 bg-rose-50/40' => $errors->has('tmt')])>
+                    @error('tmt') <p class="form-error">{{ $message }}</p> @enderror
+                </div>
+
+                <button type="submit" class="btn-primary h-11 w-auto px-5 whitespace-nowrap">
+                    {{ $editFungsional ? 'Simpan Perubahan' : 'Tambah' }}
+                </button>
+            </form>
+
+            <div class="overflow-x-auto px-2 pb-2 sm:px-4">
+                <table data-datatable data-page-length="10" class="w-full text-left text-sm">
+                    <thead>
+                        <tr>
+                            <th scope="col">Jabatan Akademik</th>
+                            <th scope="col" class="w-44">TMT</th>
+                            <th scope="col" class="no-sort w-40 text-right">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($riwayatFungsionalList as $item)
+                            <tr>
+                                <td class="font-bold text-slate-700">{{ $item->fungsionalLabel() }}</td>
+                                <td data-order="{{ $item->tmt?->format('Y-m-d') }}">{{ $item->tmtLabel() }}</td>
+                                <td>
+                                    <div class="flex items-center justify-end gap-1">
+                                        <a href="{{ route('profil.pekerjaan.index', ['edit-fungsional' => $item->id]) }}"
+                                           class="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-[11px] font-bold text-slate-500 transition hover:bg-teal-50 hover:text-teal-700">
+                                            Edit
+                                        </a>
+                                        <form method="POST" action="{{ route('profil.pekerjaan.fungsional.destroy', $item) }}"
+                                              data-confirm="Hapus riwayat jabatan {{ $item->fungsionalLabel() }}?">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit"
+                                                    class="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-[11px] font-bold text-slate-400 transition hover:bg-rose-50 hover:text-rose-600">
+                                                Hapus
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="3" class="px-5 py-12 text-center text-xs text-slate-400">
+                                    Belum ada riwayat jabatan akademik.
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
     </div>
 @endsection

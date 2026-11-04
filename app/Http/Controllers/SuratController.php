@@ -439,7 +439,11 @@ class SuratController extends Controller
         $identitas = $this->identitas($dosen);
 
         // Pada surat, "Jabatan / TMT" adalah jabatan akademik, bukan struktural.
-        $fungsional = $dosen?->riwayatJabatanStruktural->sortByDesc('tmt')->first();
+        // Ambil dari baris yang benar-benar memuat jabatan akademik.
+        $fungsional = $dosen?->riwayatJabatanStruktural
+            ->whereNotNull('jabatan_fungsional_id')
+            ->sortByDesc('tmt')
+            ->first();
 
         $identitas['jabatan'] = $fungsional?->fungsionalLabel() ?? $identitas['jabatan'];
         $identitas['jabatan_tmt'] = $fungsional?->tmtLabel() ?? $identitas['jabatan_tmt'];
@@ -538,7 +542,12 @@ class SuratController extends Controller
 
         $profil = $user?->profilDosen;
         $pangkat = $user?->riwayatKepangkatan->sortByDesc('tmt')->first();
-        $jabatanTerakhir = $user?->riwayatJabatanStruktural->sortByDesc('tmt')->first();
+        // Jabatan terakhir pada identitas surat adalah jabatan struktural: ambil
+        // dari baris yang memuat jabatan struktural saja.
+        $jabatanTerakhir = $user?->riwayatJabatanStruktural
+            ->whereNotNull('jabatan_struktural_id')
+            ->sortByDesc('tmt')
+            ->first();
         $pendidikan = $user?->riwayatPendidikan
             ->sortByDesc(fn (RiwayatPendidikan $item) => $item->jenjangRank())
             ->first();

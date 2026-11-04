@@ -133,9 +133,13 @@ Route::middleware('auth')->group(function () {
         Route::put('/riwayat-pekerjaan/kepangkatan/{riwayatKepangkatan}', [RiwayatPekerjaanController::class, 'updateKepangkatan'])->name('pekerjaan.kepangkatan.update');
         Route::delete('/riwayat-pekerjaan/kepangkatan/{riwayatKepangkatan}', [RiwayatPekerjaanController::class, 'destroyKepangkatan'])->name('pekerjaan.kepangkatan.destroy');
 
-        Route::post('/riwayat-pekerjaan/jabatan', [RiwayatPekerjaanController::class, 'storeJabatan'])->name('pekerjaan.jabatan.store');
-        Route::put('/riwayat-pekerjaan/jabatan/{riwayatJabatan}', [RiwayatPekerjaanController::class, 'updateJabatan'])->name('pekerjaan.jabatan.update');
-        Route::delete('/riwayat-pekerjaan/jabatan/{riwayatJabatan}', [RiwayatPekerjaanController::class, 'destroyJabatan'])->name('pekerjaan.jabatan.destroy');
+        Route::post('/riwayat-pekerjaan/struktural', [RiwayatPekerjaanController::class, 'storeStruktural'])->name('pekerjaan.struktural.store');
+        Route::put('/riwayat-pekerjaan/struktural/{riwayatJabatan}', [RiwayatPekerjaanController::class, 'updateStruktural'])->name('pekerjaan.struktural.update');
+        Route::delete('/riwayat-pekerjaan/struktural/{riwayatJabatan}', [RiwayatPekerjaanController::class, 'destroyStruktural'])->name('pekerjaan.struktural.destroy');
+
+        Route::post('/riwayat-pekerjaan/fungsional', [RiwayatPekerjaanController::class, 'storeFungsional'])->name('pekerjaan.fungsional.store');
+        Route::put('/riwayat-pekerjaan/fungsional/{riwayatJabatan}', [RiwayatPekerjaanController::class, 'updateFungsional'])->name('pekerjaan.fungsional.update');
+        Route::delete('/riwayat-pekerjaan/fungsional/{riwayatJabatan}', [RiwayatPekerjaanController::class, 'destroyFungsional'])->name('pekerjaan.fungsional.destroy');
 
         Route::post('/riwayat-pekerjaan/angka-kredit', [RiwayatPekerjaanController::class, 'storeAngkaKredit'])->name('pekerjaan.angka-kredit.store');
         Route::put('/riwayat-pekerjaan/angka-kredit/{riwayatAngkaKredit}', [RiwayatPekerjaanController::class, 'updateAngkaKredit'])->name('pekerjaan.angka-kredit.update');
