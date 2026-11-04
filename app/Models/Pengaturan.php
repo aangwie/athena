@@ -11,6 +11,11 @@ class Pengaturan extends Model
      */
     public const NAMA_WEB = 'nama_web';
 
+    /**
+     * Kunci pengaturan URL WhatsApp gateway.
+     */
+    public const WHATSAPP_GATEWAY = 'whatsapp_gateway_url';
+
     protected $table = 'pengaturan';
 
     protected $fillable = [
@@ -32,6 +37,26 @@ class Pengaturan extends Model
         static::query()->updateOrCreate(
             ['kunci' => self::NAMA_WEB],
             ['nilai' => trim($nama)],
+        );
+    }
+
+    /**
+     * URL dasar WhatsApp gateway, tanpa garis miring di akhir.
+     */
+    public static function whatsappGatewayUrl(): ?string
+    {
+        $url = static::query()->where('kunci', self::WHATSAPP_GATEWAY)->value('nilai');
+
+        return filled($url) ? rtrim((string) $url, '/') : null;
+    }
+
+    public static function simpanWhatsappGatewayUrl(?string $url): void
+    {
+        $url = $url === null ? null : rtrim(trim($url), '/');
+
+        static::query()->updateOrCreate(
+            ['kunci' => self::WHATSAPP_GATEWAY],
+            ['nilai' => $url === '' ? null : $url],
         );
     }
 }

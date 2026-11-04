@@ -326,6 +326,13 @@
                                 </svg>
                                 <span class="sidebar-label">Pengaturan</span>
                             </a>
+                            <a href="{{ route('whatsapp.index') }}" title="WhatsApp API" @class(['sidebar-link', 'sidebar-link-active' => request()->routeIs('whatsapp.*')])>
+                                <svg class="size-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                    <path d="M20.5 11.6a8.5 8.5 0 0 1-12.5 7.6L3.5 20.5l1.4-4.4A8.5 8.5 0 1 1 20.5 11.6Z" stroke-linejoin="round" />
+                                    <path d="M8.6 8.4c.2-.4.4-.4.7-.4h.5c.2 0 .4.1.5.4l.7 1.6c.1.3 0 .5-.2.7l-.5.6c.5 1 1.3 1.8 2.3 2.3l.6-.5c.2-.2.4-.3.7-.2l1.6.7c.3.1.4.3.4.5v.5c0 .3 0 .5-.4.7-.5.3-1.1.4-1.7.3-2.9-.6-5.1-2.8-5.7-5.7-.1-.6 0-1.2.3-1.7Z" stroke-linejoin="round" />
+                                </svg>
+                                <span class="sidebar-label">WhatsApp API</span>
+                            </a>
                         </div>
                     </div>
                 @endif

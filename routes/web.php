@@ -11,10 +11,10 @@ use App\Http\Controllers\Instansi\SenatController;
 use App\Http\Controllers\Instansi\StrukturInstansiController;
 use App\Http\Controllers\Instansi\TimKomiteController;
 use App\Http\Controllers\KaryaTulisController;
-use App\Http\Controllers\NotifikasiController;
 use App\Http\Controllers\Kepegawaian\JabatanFungsionalController;
 use App\Http\Controllers\Kepegawaian\JabatanStrukturalController;
 use App\Http\Controllers\Kepegawaian\KepangkatanController;
+use App\Http\Controllers\NotifikasiController;
 use App\Http\Controllers\PengajuanDosenController;
 use App\Http\Controllers\PengajuanDupakController;
 use App\Http\Controllers\PengaturanController;
@@ -22,6 +22,7 @@ use App\Http\Controllers\ProfilDosenController;
 use App\Http\Controllers\RiwayatPekerjaanController;
 use App\Http\Controllers\RiwayatPendidikanController;
 use App\Http\Controllers\SuratController;
+use App\Http\Controllers\WhatsAppController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -243,5 +244,13 @@ Route::middleware('auth')->group(function () {
         Route::get('/database/unduh/{berkas}', [PengaturanController::class, 'dbUnduh'])->name('db.unduh');
         Route::delete('/database/kosongkan', [PengaturanController::class, 'dbKosongkan'])->name('db.kosongkan');
         Route::delete('/log', [PengaturanController::class, 'hapusLog'])->name('log.hapus');
+    });
+
+    Route::middleware('admin')->prefix('whatsapp-api')->name('whatsapp.')->group(function () {
+        Route::get('/', [WhatsAppController::class, 'index'])->name('index');
+        Route::post('/gateway', [WhatsAppController::class, 'simpan'])->name('simpan');
+        Route::get('/status', [WhatsAppController::class, 'status'])->name('status');
+        Route::get('/qr', [WhatsAppController::class, 'qr'])->name('qr');
+        Route::post('/kirim', [WhatsAppController::class, 'kirim'])->name('kirim');
     });
 });
