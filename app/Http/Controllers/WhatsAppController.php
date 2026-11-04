@@ -17,6 +17,7 @@ class WhatsAppController extends Controller
     {
         return view('whatsapp.index', [
             'gatewayUrl' => Pengaturan::whatsappGatewayUrl(),
+            'sesi' => WhatsAppGateway::sesiTerpasang(),
         ]);
     }
 

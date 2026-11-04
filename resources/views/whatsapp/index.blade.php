@@ -100,7 +100,9 @@
                                 <span class="font-mono text-slate-500">/send-message</span>; variasi jalur umum
                                 (termasuk <span class="font-mono text-slate-500">/status/default</span> dan
                                 <span class="font-mono text-slate-500">/qr/default</span> untuk gateway multi-sesi)
-                                dicoba otomatis.
+                                dicoba otomatis. Nama sesi/device aktif: <span class="font-mono font-semibold text-slate-500">{{ $sesi }}</span>
+                                (diatur lewat <span class="font-mono text-slate-500">WHATSAPP_SESSION</span> pada berkas
+                                <span class="font-mono text-slate-500">.env</span>).
                             </p>
                         </form>
                     </div>
@@ -168,6 +170,10 @@
                             </div>
 
                             <dl class="mt-4 space-y-2 text-[11px]">
+                                <div class="flex items-center justify-between gap-3">
+                                    <dt class="text-slate-400">Sesi / Device</dt>
+                                    <dd class="font-mono font-semibold text-slate-600">{{ $sesi }}</dd>
+                                </div>
                                 <div class="flex items-center justify-between gap-3">
                                     <dt class="text-slate-400">Nomor</dt>
                                     <dd data-wa-connection-number class="font-mono font-semibold text-slate-600">—</dd>

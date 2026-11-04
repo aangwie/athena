@@ -30,7 +30,7 @@ class WhatsAppGateway
     /** Panjang maksimum isi respons mentah yang dikirim ke halaman. */
     private const MAX_RESPONS = 5000;
 
-    /** Nama sesi/device default untuk gateway multi-sesi (mis. /status/default). */
+    /** Nama sesi/device bawaan bila config tidak diisi. */
     private const SESI_DEFAULT = 'default';
 
     /**
@@ -105,11 +105,32 @@ class WhatsAppGateway
     ) {}
 
     /**
-     * Gateway yang URL-nya sedang tersimpan di pengaturan.
+     * Nama sesi/device dari konfigurasi deployment (config whatsapp.session).
+     * Setiap server dapat memakai nama berbeda agar tidak saling memutus saat
+     * salah satu melakukan logout pada gateway yang sama.
+     */
+    public static function sesiTerpasang(): string
+    {
+        $sesi = config('whatsapp.session', self::SESI_DEFAULT);
+
+        return is_string($sesi) && trim($sesi) !== '' ? trim($sesi) : self::SESI_DEFAULT;
+    }
+
+    /**
+     * Gateway yang URL-nya sedang tersimpan di pengaturan, memakai nama sesi
+     * yang terpasang pada deployment ini.
      */
     public static function aktif(): self
     {
-        return new self(Pengaturan::whatsappGatewayUrl());
+        return new self(Pengaturan::whatsappGatewayUrl(), self::sesiTerpasang());
+    }
+
+    /**
+     * Nama sesi/device yang dipakai instance ini.
+     */
+    public function sesi(): string
+    {
+        return $this->sesi;
     }
 
     public function terkonfigurasi(): bool

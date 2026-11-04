@@ -65,6 +65,96 @@ class WhatsAppTest extends TestCase
             ->assertSee(route('whatsapp.kirim'), false);
     }
 
+    public function test_halaman_menampilkan_nama_sesi_dari_konfigurasi(): void
+    {
+        config()->set('whatsapp.session', 'server-lokal');
+
+        $this->actingAs($this->makeAdmin())
+            ->get(route('whatsapp.index'))
+            ->assertOk()
+            ->assertSee('Sesi / Device')
+            ->assertSee('server-lokal');
+    }
+
+    public function test_putus_memakai_nama_sesi_terpasang_bukan_default(): void
+    {
+        config()->set('whatsapp.session', 'server-lokal');
+        $this->simpanGateway();
+
+        Http::fake([
+            'wa.test/disconnect/server-lokal' => Http::response(['success' => true, 'message' => 'Disconnected']),
+            'wa.test/*' => Http::response('not found', 404),
+        ]);
+
+        $this->actingAs($this->makeAdmin())
+            ->postJson(route('whatsapp.putus'))
+            ->assertOk()
+            ->assertJsonPath('sukses', true)
+            ->assertJsonPath('endpoint', 'http://wa.test/disconnect/server-lokal');
+
+        // Sesi default TIDAK boleh dihubungi agar server lain tidak ikut terputus.
+        Http::assertNotSent(fn ($request) => str_contains($request->url(), '/disconnect/default'));
+        Http::assertNotSent(fn ($request) => str_contains($request->url(), '/logout/default'));
+    }
+
+    public function test_status_dan_kirim_memakai_nama_sesi_terpasang(): void
+    {
+        config()->set('whatsapp.session', 'server-hosting');
+        $this->simpanGateway();
+
+        $admin = $this->makeAdmin();
+
+        Http::fake([
+            'wa.test/status/server-hosting' => Http::response([
+                'status' => 'connected',
+                'phone_number' => '6282143459930',
+            ]),
+            'wa.test/send' => Http::response(['success' => true, 'messageId' => 'X']),
+            'wa.test/*' => Http::response('not found', 404),
+        ]);
+
+        $this->actingAs($admin)
+            ->getJson(route('whatsapp.status'))
+            ->assertOk()
+            ->assertJsonPath('whatsapp.terhubung', true)
+            ->assertJsonPath('gateway.endpoint', 'http://wa.test/status/server-hosting');
+
+        $this->actingAs($admin)
+            ->postJson(route('whatsapp.kirim'), ['nomor' => '081234084994', 'pesan' => 'Halo'])
+            ->assertOk()
+            ->assertJsonPath('sukses', true);
+
+        // device_id pada payload ikut nama sesi yang terpasang.
+        Http::assertSent(fn ($request) => $request->url() === 'http://wa.test/send'
+            && $request['device_id'] === 'server-hosting');
+    }
+
+    public function test_dua_deployment_dengan_sesi_berbeda_tidak_saling_memutus(): void
+    {
+        $this->simpanGateway();
+
+        $admin = $this->makeAdmin();
+
+        // Deployment A (lokal) memakai sesi local.
+        config()->set('whatsapp.session', 'local');
+
+        Http::fake([
+            'wa.test/disconnect/local' => Http::response(['success' => true]),
+            'wa.test/disconnect/hosting' => Http::response(['success' => true]),
+            'wa.test/*' => Http::response('not found', 404),
+        ]);
+
+        $this->actingAs($admin)->postJson(route('whatsapp.putus'))->assertOk();
+
+        // Deployment B (hosting) memakai sesi hosting, tidak terpengaruh.
+        config()->set('whatsapp.session', 'hosting');
+
+        $this->actingAs($admin)->postJson(route('whatsapp.putus'))->assertOk();
+
+        Http::assertSent(fn ($request) => $request->url() === 'http://wa.test/disconnect/local');
+        Http::assertSent(fn ($request) => $request->url() === 'http://wa.test/disconnect/hosting');
+    }
+
     public function test_dosen_cannot_open_whatsapp_api_page(): void
     {
         $this->actingAs($this->makeDosen())
