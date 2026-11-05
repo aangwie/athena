@@ -26,12 +26,23 @@ class ProfilDosen extends Model
         'konghucu' => 'Konghucu',
     ];
 
+    /**
+     * Pilihan jenis kelamin yang dipakai pada formulir data pribadi.
+     *
+     * @var array<string, string>
+     */
+    public const JENIS_KELAMIN = [
+        'L' => 'Laki-laki',
+        'P' => 'Perempuan',
+    ];
+
     protected $fillable = [
         'user_id',
         'tempat_lahir',
         'tanggal_lahir',
         'alamat',
         'agama',
+        'jenis_kelamin',
         'no_hp',
         'nuptk',
         'bidang_ilmu',
@@ -78,6 +89,11 @@ class ProfilDosen extends Model
     public function agamaLabel(): string
     {
         return self::AGAMA[$this->agama] ?? '—';
+    }
+
+    public function jenisKelaminLabel(): string
+    {
+        return self::JENIS_KELAMIN[$this->jenis_kelamin] ?? '—';
     }
 
     /**

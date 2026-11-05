@@ -156,7 +156,10 @@ class VerifikasiDupakTest extends TestCase
         $dupak = $this->makeDupak($dosen);
 
         $this->actingAs($this->makeUser('admin'))
-            ->put(route('verifikasi-dupak.update', $dupak), ['keputusan' => 'disetujui'])
+            ->put(route('verifikasi-dupak.update', $dupak), [
+                'keputusan' => 'disetujui',
+                'nomor_sk' => '001/SK/PAK/2026',
+            ])
             ->assertRedirect(route('verifikasi-dupak.show', $dupak))
             ->assertSessionHas('status');
 
@@ -164,10 +167,75 @@ class VerifikasiDupakTest extends TestCase
 
         $this->assertSame('disetujui', $dupak->status);
         $this->assertNull($dupak->catatan);
+        $this->assertSame('001/SK/PAK/2026', $dupak->nomor_sk);
 
         $this->actingAs($this->makeUser('admin', '2'))
             ->get('/dashboard')
             ->assertSee('Disetujui');
+    }
+
+    public function test_nomor_sk_wajib_diisi_saat_menyetujui_dupak(): void
+    {
+        $dosen = $this->makeUser('dosen');
+        $dupak = $this->makeDupak($dosen);
+
+        $this->actingAs($this->makeUser('admin'))
+            ->put(route('verifikasi-dupak.update', $dupak), ['keputusan' => 'disetujui'])
+            ->assertSessionHasErrors('nomor_sk');
+
+        $this->assertSame('diajukan_dupak', $dupak->fresh()->status);
+        $this->assertNull($dupak->fresh()->nomor_sk);
+    }
+
+    public function test_halaman_verifikasi_menampilkan_nomor_sk_dan_masa_penilaian(): void
+    {
+        $dosen = $this->makeUser('dosen');
+        $dupak = $this->makeDupak($dosen);
+        $dosen->masaPenilaian()->create([
+            'tahun' => 2026,
+            'semester' => 'ganjil',
+            'mulai' => '2025-01-01',
+            'akhir' => '2025-12-01',
+        ]);
+
+        $this->actingAs($this->makeUser('admin'))
+            ->get(route('verifikasi-dupak.show', $dupak))
+            ->assertOk()
+            ->assertSee('Nomor Surat Keputusan')
+            ->assertSee('name="nomor_sk"', false)
+            ->assertSee('Masa Penilaian')
+            // Label masa penilaian dosen ditampilkan apa adanya.
+            ->assertSee('Januari 2025 s.d. Desember 2025');
+    }
+
+    public function test_masa_penilaian_belum_diisi_ditandai_pada_halaman_verifikasi(): void
+    {
+        $dosen = $this->makeUser('dosen');
+        $dupak = $this->makeDupak($dosen);
+
+        $this->actingAs($this->makeUser('admin'))
+            ->get(route('verifikasi-dupak.show', $dupak))
+            ->assertOk()
+            ->assertSee('Belum diisi dosen');
+    }
+
+    public function test_nomor_sk_dibersihkan_saat_keputusan_bukan_setujui(): void
+    {
+        $dosen = $this->makeUser('dosen');
+        $dupak = $this->makeDupak($dosen, 'disetujui');
+        $dupak->update(['nomor_sk' => '001/SK/PAK/2026']);
+
+        $this->actingAs($this->makeUser('admin'))
+            ->put(route('verifikasi-dupak.update', $dupak), [
+                'keputusan' => 'perlu_perbaikan',
+                'catatan' => 'Bukti publikasi belum dilampirkan.',
+            ])
+            ->assertSessionHas('status');
+
+        $dupak->refresh();
+
+        $this->assertSame('perlu_perbaikan', $dupak->status);
+        $this->assertNull($dupak->nomor_sk);
     }
 
     public function test_butuh_perbaikan_wajib_menyertakan_alasan(): void

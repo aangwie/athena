@@ -41,6 +41,7 @@ class User extends Authenticatable
         'email',
         'program_studi',
         'jabatan_fungsional',
+        'jabatan_diajukan',
         'pangkat',
         'no_hp',
         'role',

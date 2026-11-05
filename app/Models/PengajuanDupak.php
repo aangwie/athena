@@ -39,6 +39,7 @@ class PengajuanDupak extends Model
         'diajukan_at',
         'dinilai_at',
         'catatan',
+        'nomor_sk',
     ];
 
     protected function casts(): array
@@ -75,6 +76,19 @@ class PengajuanDupak extends Model
     public function nilaiTerkunci(): bool
     {
         return $this->status === 'disetujui';
+    }
+
+    /**
+     * Rentang masa penilaian yang diisi dosen saat mengusulkan periode ini.
+     * Dipakai admin pada halaman verifikasi sebagai info Surat Keputusan.
+     */
+    public function masaPenilaian(): ?MasaPenilaian
+    {
+        return MasaPenilaian::query()->firstWhere([
+            'user_id' => $this->user_id,
+            'tahun' => $this->tahun,
+            'semester' => $this->semester,
+        ]);
     }
 
     public function statusLabel(): string

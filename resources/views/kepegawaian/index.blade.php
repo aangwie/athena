@@ -93,6 +93,9 @@
                             <tr>
                                 <th scope="col" class="w-24">ID</th>
                                 <th scope="col">Nama</th>
+                                @if ($modul['golongan'] ?? false)
+                                    <th scope="col" class="w-32">Golongan</th>
+                                @endif
                                 <th scope="col" class="no-sort text-right">Aksi</th>
                             </tr>
                         </thead>
@@ -105,6 +108,11 @@
                                     <td>
                                         <p class="text-sm font-semibold text-slate-700">{{ $item->nama }}</p>
                                     </td>
+                                    @if ($modul['golongan'] ?? false)
+                                        <td>
+                                            <span class="text-xs font-semibold text-slate-500">{{ $item->golongan ?: '—' }}</span>
+                                        </td>
+                                    @endif
                                     <td>
                                         <div class="flex items-center justify-end gap-1">
                                             <a href="{{ route($modul['route'].'.edit', $item->id) }}"
@@ -133,7 +141,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="3" class="px-5 py-16 text-center">
+                                    <td colspan="{{ ($modul['golongan'] ?? false) ? 4 : 3 }}" class="px-5 py-16 text-center">
                                         <span class="mx-auto flex size-14 items-center justify-center rounded-2xl bg-slate-50 text-slate-300">
                                             <svg class="size-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
                                                 <path d="M4 7.5 12 3l8 4.5-8 4.5-8-4.5Z" stroke-linejoin="round" />

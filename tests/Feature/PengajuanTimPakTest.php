@@ -2,7 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Models\JabatanStruktural;
 use App\Models\KegiatanDupak;
+use App\Models\Kepangkatan;
+use App\Models\StrukturInstansi;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -262,7 +265,6 @@ class PengajuanTimPakTest extends TestCase
     public function test_dosen_dapat_mencetak_dupak_periode_terpilih(): void
     {
         $dosen = $this->makeUser('dosen');
-        $penilai = $this->makeUser('tim_pak');
         $kegiatan = $this->makeKegiatan($dosen, ['nilai_baru' => 2]);
 
         $this->actingAs($dosen)->post('/profil/pengajuan/ajukan', ['tahun' => 2026, 'semester' => 'ganjil']);
@@ -270,17 +272,224 @@ class PengajuanTimPakTest extends TestCase
         $this->actingAs($dosen)
             ->get('/profil/pengajuan/cetak?tahun=2026&semester=ganjil')
             ->assertOk()
-            ->assertSee('Daftar Usulan Penetapan Angka Kredit (DUPAK)')
+            // Judul mengikuti lampiran DUPAK: judul + "Jabatan Akademik Dosen".
+            ->assertSee('Daftar Usul Penetapan Angka Kredit')
+            ->assertSee('Jabatan Akademik Dosen')
             ->assertSee($kegiatan->nama_kegiatan)
-            ->assertSee('2026/2027 · Ganjil')
-            // Blok tanda tangan: NIDN dosen pengusul dan nama + NIDN penilai TIM PAK.
-            ->assertSee('NIDN '.$dosen->nidn)
-            ->assertSee($penilai->name)
-            ->assertSee('NIDN '.$penilai->nidn);
+            // Nomor SK belum diisi admin: ditampilkan sebagai titik-titik.
+            ->assertSee('Nomor:')
+            // Blok identitas menampilkan NIDN dosen pengusul pada tabel "Keterangan Perorangan".
+            ->assertSee('NUPTK/NIDN')
+            ->assertSee($dosen->nidn)
+            // Blok pengesahan: pernyataan validasi, pendapat tim penilai, dan tanda tangan Ketua.
+            ->assertSee('Saya menyatakan bahwa Angka kredit telah dihitung')
+            ->assertSee('Pendapat Tim Penilai Jabatan Angka Kredit')
+            ->assertSee('Telah memenuhi syarat angka kredit untuk kenaikan Jabatan dan Pangkat menjadi')
+            ->assertSee('Tim Penilai Pusat');
 
         // Periode tanpa parameter valid dikembalikan ke pemilihan periode.
         $this->actingAs($dosen)
             ->get('/profil/pengajuan/cetak?tahun=2026&semester=pendek')
             ->assertRedirect(route('profil.pengajuan.periode'));
+    }
+
+    public function test_cetak_menampilkan_nomor_sk_dari_keputusan_admin(): void
+    {
+        $dosen = $this->makeUser('dosen');
+        $this->makeKegiatan($dosen, ['nilai_baru' => 2]);
+
+        // Admin menyetujui DUPAK beserta nomor SK; nomor itu tampil di judul cetak.
+        $pengajuan = $dosen->pengajuanDupak()->create([
+            'tahun' => 2026,
+            'semester' => 'ganjil',
+            'status' => 'disetujui',
+            'diajukan_at' => now()->subDays(5),
+            'dinilai_at' => now()->subDays(2),
+            'nomor_sk' => '806/STKIP PGRI/KL/VIII/2026',
+        ]);
+
+        $this->actingAs($dosen)
+            ->get('/profil/pengajuan/cetak?tahun=2026&semester=ganjil')
+            ->assertOk()
+            ->assertSee('Nomor: '.$pengajuan->nomor_sk);
+    }
+
+    public function test_cetak_memakai_tabel_layout_tetap_agar_kolom_kanan_tidak_terpotong(): void
+    {
+        $dosen = $this->makeUser('dosen');
+        $this->makeKegiatan($dosen, ['nilai_baru' => 2]);
+
+        $cetak = $this->actingAs($dosen)
+            ->get('/profil/pengajuan/cetak?tahun=2026&semester=ganjil')
+            ->assertOk()
+            ->getContent();
+
+        // Tabel rekap & pengesahan memakai kelas penanda agar bisa dikunci oleh CSS cetak.
+        $this->assertStringContainsString('tabel-rekap', $cetak);
+        $this->assertStringContainsString('tabel-cetak', $cetak);
+
+        // Aturan cetak: table-layout fixed + min-width dilucuti + teks dibungkus,
+        // sehingga kolom paling kanan (Lama/Baru/Jumlah) tidak terpotong saat dicetak.
+        $this->assertStringContainsString('table-layout: fixed', $cetak);
+        $this->assertStringContainsString('min-width: 0', $cetak);
+        $this->assertStringContainsString('overflow-wrap: anywhere', $cetak);
+        // Padding body dilepas saat mencetak agar lebar kertas terpakai penuh.
+        $this->assertStringContainsString('body { background: #fff !important; padding: 0 !important; }', $cetak);
+
+        // Lebar kolom dikunci lewat <colgroup>; kolom "Unsur, Sub Unsur, dan Butir
+        // Kegiatan" dipersempit (28% pada formulir cetak bertim penilai).
+        $this->assertStringContainsString('<colgroup>', $cetak);
+        $this->assertStringContainsString('width: 28%', $cetak);
+    }
+
+    public function test_cetak_menambahkan_grup_kolom_tim_penilai(): void
+    {
+        $dosen = $this->makeUser('dosen');
+        $this->makeKegiatan($dosen, ['nilai_baru' => 2]);
+
+        $cetak = $this->actingAs($dosen)
+            ->get('/profil/pengajuan/cetak?tahun=2026&semester=ganjil')
+            ->assertOk()
+            // Grup kolom baru sejajar "Instansi Pengusul".
+            ->assertSee('Instansi Pengusul')
+            ->assertSee('Tim Penilai')
+            ->getContent();
+
+        // "Lama", "Baru", "Jumlah" masing-masing muncul 2x (Instansi Pengusul + Tim Penilai),
+        // sedangkan "Link Bukti" hanya sekali (hanya pada grup Instansi Pengusul).
+        $this->assertSame(2, substr_count($cetak, '>Lama</th>'));
+        $this->assertSame(2, substr_count($cetak, '>Baru</th>'));
+        $this->assertSame(2, substr_count($cetak, '>Jumlah</th>'));
+        $this->assertSame(1, substr_count($cetak, '>Link Bukti</th>'));
+
+        // Grup Tim Penilai mengikuti grup Instansi Pengusul (muncul setelahnya).
+        $this->assertGreaterThan(
+            strpos($cetak, '>Instansi Pengusul</th>'),
+            strpos($cetak, '>Tim Penilai</th>'),
+        );
+
+        // Kolom Tim Penilai tidak memuat link bukti: jumlah tautan tetap 1 tautan
+        // per entri (dari grup Instansi Pengusul).
+        $this->assertSame(1, substr_count($cetak, 'href="https://drive.google.com'));
+
+        // Nilai angka kredit (2) pada baris jumlah hanya ada di grup Instansi Pengusul,
+        // tepatnya 2x per baris (kolom Baru + Jumlah). Grup Tim Penilai dikosongkan.
+        $this->assertSame(2, substr_count($cetak, 'data-jumlah-total="g0">2<'));
+        $this->assertSame(2, substr_count($cetak, 'data-jumlah-grand-total>2<'));
+    }
+
+    public function test_cetak_menampilkan_keterangan_perorangan_dosen_pengusul(): void
+    {
+        $dosen = $this->makeUser('dosen');
+        $this->makeKegiatan($dosen, ['nilai_baru' => 2]);
+
+        // Identitas kepegawaian yang mengisi blok "Keterangan Perorangan".
+        $dosen->profilDosen()->create([
+            'tempat_lahir' => 'Bandung',
+            'tanggal_lahir' => '1987-05-14',
+            'nuptk' => '0943761662230152',
+            'bidang_ilmu' => 'Rekayasa Perangkat Lunak',
+            'jenis_kelamin' => 'P',
+            'masa_kerja_golongan_lama_tahun' => 0,
+            'masa_kerja_golongan_lama_bulan' => 9,
+            'masa_kerja_golongan_baru_tahun' => 1,
+            'masa_kerja_golongan_baru_bulan' => 3,
+        ]);
+
+        $dosen->riwayatPendidikan()->create([
+            'jenjang' => 's2',
+            'nama_institusi' => 'Institut Teknologi Bandung',
+            'jurusan' => 'Ilmu Komputer',
+            'tahun_masuk' => 2010,
+            'tahun_lulus' => 2012,
+        ]);
+
+        $kepangkatan = Kepangkatan::create(['nama' => 'Penata Muda Tk.1 / Golongan III/b']);
+        $dosen->riwayatKepangkatan()->create(['kepangkatan_id' => $kepangkatan->id, 'tmt' => '2021-05-01']);
+        $dosen->riwayatAngkaKredit()->create(['tahun' => 2020, 'angka_kredit' => 150]);
+        $dosen->masaPenilaian()->create([
+            'tahun' => 2026,
+            'semester' => 'ganjil',
+            'mulai' => '2018-09-01',
+            'akhir' => '2022-12-01',
+        ]);
+
+        $this->actingAs($dosen)
+            ->get('/profil/pengajuan/cetak?tahun=2026&semester=ganjil')
+            ->assertOk()
+            // Judul blok dan baris identitas sesuai lampiran DUPAK.
+            ->assertSee('Keterangan Perorangan')
+            ->assertSee('INSTANSI')
+            ->assertSee('MASA PENILAIAN')
+            ->assertSee('NUPTK/NIDN')
+            ->assertSee('Tempat dan Tanggal Lahir')
+            ->assertSee('Jenis Kelamin')
+            ->assertSee('Pendidikan Terakhir')
+            ->assertSee('Jabatan Akademik Dosen, Angka Kredit/TMT')
+            ->assertSee('Jurusan/Program Studi')
+            ->assertSee('Bidang Ilmu')
+            ->assertSee('Pangkat dan Golongan Ruang/TMT')
+            ->assertSee('Masa kerja golongan lama')
+            ->assertSee('Masa kerja golongan baru')
+            ->assertSee('Unit Kerja')
+            // Nilai dari data dosen.
+            ->assertSee('Dr. Ayu Lestari, M.Kom.')
+            ->assertSee('0943761662230152')
+            ->assertSee('Bandung, 14 Mei 1987')
+            ->assertSee('Perempuan')
+            ->assertSee('S2')
+            ->assertSee('Ilmu Komputer')
+            ->assertSee('Rekayasa Perangkat Lunak')
+            ->assertSee('Penata Muda Tk.1 / Golongan III/b')
+            ->assertSee('150,00')
+            ->assertSee('0 Tahun 09 Bulan')
+            ->assertSee('1 Tahun 03 Bulan')
+            // Masa penilaian mengikuti isian dosen (September 2018 s.d. Desember 2022).
+            ->assertSee('September 2018 s.d. Desember 2022');
+    }
+
+    public function test_cetak_menampilkan_blok_pengesahan_pendapat_tim_penilai(): void
+    {
+        $dosen = $this->makeUser('dosen');
+        $this->makeKegiatan($dosen, ['nilai_baru' => 4]);
+
+        // Pimpinan instansi (Rektor) sebagai penanda tangan pengesahan DUPAK.
+        $rektor = $this->makeUser('dosen', '9');
+        $jabatan = JabatanStruktural::create(['nama' => 'Rektor']);
+        StrukturInstansi::create(['jabatan_struktural_id' => $jabatan->id, 'user_id' => $rektor->id]);
+
+        $kepangkatan = Kepangkatan::create(['nama' => 'Penata / IIIc']);
+        $dosen->riwayatKepangkatan()->create(['kepangkatan_id' => $kepangkatan->id, 'tmt' => '2021-05-01']);
+
+        $this->actingAs($dosen)
+            ->get('/profil/pengajuan/cetak?tahun=2026&semester=ganjil')
+            ->assertOk()
+            // Blok pengesahan berada setelah baris "Jumlah" (kolom bawah jumlah).
+            ->assertSee('Saya menyatakan bahwa Angka kredit telah dihitung dan dokumen pendukung')
+            ->assertSee('DUPAK ini telah divalidasi oleh TIM PAK Perguruan Tinggi')
+            ->assertSee('Pendapat Tim Penilai Jabatan Angka Kredit')
+            ->assertSee('Telah memenuhi syarat angka kredit untuk kenaikan Jabatan dan Pangkat menjadi')
+            // Nama jabatan & pangkat dosen (tanpa TMT) tampil pada pendapat tim penilai.
+            ->assertSee('Jabatan')
+            ->assertSee('Pangkat/Gol')
+            ->assertSee('Penata / IIIc')
+            // Penanda tangan: pimpinan instansi + blok tanda tangan Tim Penilai Pusat.
+            ->assertSee('Ketua')
+            ->assertSee($rektor->name)
+            ->assertSee('Tim Penilai Pusat');
+    }
+
+    public function test_halaman_review_lain_tetap_tanpa_kolom_tim_penilai(): void
+    {
+        $dosen = $this->makeUser('dosen');
+        $this->makeKegiatan($dosen, ['nilai_baru' => 2]);
+
+        $this->actingAs($dosen)
+            ->get('/profil/pengajuan/create?tahun=2026&semester=ganjil')
+            ->assertOk()
+            ->assertSee('Instansi Pengusul')
+            // Header grup "Tim Penilai" tidak ditambahkan pada halaman review biasa.
+            ->assertDontSee('>Tim Penilai</th>', false)
+            ->assertSee('>Link Bukti</th>', false);
     }
 }

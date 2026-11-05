@@ -20,6 +20,8 @@ class KepangkatanController extends KepegawaianController
             'route' => 'kepegawaian.kepangkatan',
             'ikon' => 'kepangkatan',
             'contoh' => 'Contoh: Penata Tingkat I',
+            // Kepangkatan punya kolom tambahan: golongan ruang (mis. "IIIa").
+            'golongan' => true,
         ];
     }
 }

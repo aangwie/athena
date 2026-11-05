@@ -7,6 +7,11 @@
 
     // TIM PAK mengisi kolom "Baru"; dosen hanya melihat hasilnya.
     $editable = $editable ?? false;
+
+    // Halaman cetak menambahkan grup kolom "Tim Penilai" (Lama, Baru, Jumlah)
+    // di samping "Instansi Pengusul", tanpa kolom Link Bukti. Halaman lain tidak
+    // memakai flag ini sehingga tampilannya tetap sama.
+    $kolomPenilai = $kolomPenilai ?? false;
     $angka = fn ($nilai) => $nilai === null || $nilai === ''
         ? ''
         : rtrim(rtrim(number_format((float) $nilai, 2, ',', '.'), '0'), ',');
@@ -135,25 +140,53 @@
 
 
 <div class="overflow-x-auto">
-    <table class="w-full min-w-[54rem] border-collapse text-xs">
+    <table class="tabel-rekap w-full {{ $kolomPenilai ? 'min-w-[68rem]' : 'min-w-[54rem]' }} border-collapse text-xs">
         <caption class="sr-only">Rekap unsur, sub unsur, dan butir kegiatan DUPAK</caption>
+        <colgroup>
+            {{-- Lebar kolom dikunci agar muat satu halaman A4 landscape (kolom paling
+                 kanan tidak terpotong). Kolom "Unsur, Sub Unsur, dan Butir Kegiatan"
+                 dipersempit; teks panjang dibungkus, bukan melebarkan kolom.
+                 Total = 100%. --}}
+            <col style="width: 4%">
+            <col style="width: 3%">
+            <col style="width: 3%">
+            <col style="width: 3%">
+            <col style="width: {{ $kolomPenilai ? '28%' : '39%' }}">
+            <col style="width: {{ $kolomPenilai ? '9%' : '12%' }}">
+            <col style="width: {{ $kolomPenilai ? '9%' : '12%' }}">
+            <col style="width: {{ $kolomPenilai ? '9%' : '12%' }}">
+            <col style="width: {{ $kolomPenilai ? '14%' : '12%' }}">
+            @if ($kolomPenilai)
+                <col style="width: 6%">
+                <col style="width: 6%">
+                <col style="width: 6%">
+            @endif
+        </colgroup>
         <thead>
             <tr>
                 <th scope="col" rowspan="4" class="{{ $kepala }} w-12 align-middle">No</th>
-                <th scope="col" colspan="8" class="{{ $kepala }}">Unsur yang Dinilai</th>
+                <th scope="col" colspan="{{ $kolomPenilai ? 11 : 8 }}" class="{{ $kepala }}">Unsur yang Dinilai</th>
             </tr>
             <tr>
                 <th scope="col" rowspan="3" colspan="4" class="{{ $kepala }} align-middle">Unsur, Sub Unsur, dan Butir Kegiatan</th>
-                <th scope="col" colspan="4" class="{{ $kepala }}">Angka Kredit Menurut</th>
+                <th scope="col" colspan="{{ $kolomPenilai ? 7 : 4 }}" class="{{ $kepala }}">Angka Kredit Menurut</th>
             </tr>
             <tr>
                 <th scope="col" colspan="4" class="{{ $kepala }}">Instansi Pengusul</th>
+                @if ($kolomPenilai)
+                    <th scope="col" colspan="3" class="{{ $kepala }}">Tim Penilai</th>
+                @endif
             </tr>
             <tr>
                 <th scope="col" class="{{ $kepala }}">Lama</th>
                 <th scope="col" class="{{ $kepala }}">Baru</th>
                 <th scope="col" class="{{ $kepala }}">Jumlah</th>
                 <th scope="col" class="{{ $kepala }}">Link Bukti</th>
+                @if ($kolomPenilai)
+                    <th scope="col" class="{{ $kepala }}">Lama</th>
+                    <th scope="col" class="{{ $kepala }}">Baru</th>
+                    <th scope="col" class="{{ $kepala }}">Jumlah</th>
+                @endif
             </tr>
         </thead>
 
@@ -242,6 +275,13 @@
                         <td class="{{ $sel }}"></td>
                         <td class="{{ $sel }}"></td>
                     @endif
+
+                    @if ($kolomPenilai)
+                        {{-- Grup "Tim Penilai": dikosongkan untuk diisi manual, tanpa kolom Link Bukti. --}}
+                        <td class="{{ $selAngka }}"></td>
+                        <td class="{{ $selAngka }}"></td>
+                        <td class="{{ $selAngka }}"></td>
+                    @endif
                 </tr>
             @endforeach
         </tbody>
@@ -249,7 +289,12 @@
 </div>
 
 <p class="mt-3 text-[11px] leading-relaxed text-slate-400">
-    Kolom <span class="font-semibold">Baru</span> diisi oleh TIM PAK saat menilai usulan; baris
-    <span class="font-semibold">Jumlah</span> di setiap bidang dan <span class="font-semibold">Jumlah Total</span>
-    di paling bawah dihitung otomatis dari nilai tersebut.
+    @if ($kolomPenilai)
+        Kolom <span class="font-semibold">Instansi Pengusul</span> diisi dari entri DUPAK dosen; kolom
+        <span class="font-semibold">Tim Penilai</span> disediakan kosong untuk diisi manual oleh penilai.
+    @else
+        Kolom <span class="font-semibold">Baru</span> diisi oleh TIM PAK saat menilai usulan; baris
+        <span class="font-semibold">Jumlah</span> di setiap bidang dan <span class="font-semibold">Jumlah Total</span>
+        di paling bawah dihitung otomatis dari nilai tersebut.
+    @endif
 </p>

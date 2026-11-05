@@ -102,13 +102,21 @@ abstract class KepegawaianController extends Controller
             $unique->ignore($item->getKey());
         }
 
-        return $request->validate([
+        $rules = [
             'nama' => ['required', 'string', 'max:100', $unique],
-        ], [
+        ];
+
+        // Sub menu yang memakai kolom golongan (mis. Kepangkatan) memvalidasinya juga.
+        if ($this->modul()['golongan'] ?? false) {
+            $rules['golongan'] = ['nullable', 'string', 'max:20'];
+        }
+
+        return $request->validate($rules, [
             'nama.required' => 'Nama wajib diisi.',
             'nama.string' => 'Nama harus berupa teks.',
             'nama.max' => 'Nama maksimal 100 karakter.',
             'nama.unique' => 'Nama tersebut sudah terdaftar.',
+            'golongan.max' => 'Golongan maksimal 20 karakter.',
         ]);
     }
 }

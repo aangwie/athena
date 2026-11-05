@@ -103,6 +103,18 @@
                     </div>
 
                     <div class="sm:col-span-2">
+                        <label for="jenis_kelamin" class="form-label">Jenis Kelamin</label>
+                        <select id="jenis_kelamin" name="jenis_kelamin" data-select-search="Cari jenis kelamin…"
+                                @class(['form-select', 'border-rose-300 bg-rose-50/40' => $errors->has('jenis_kelamin')])>
+                            <option value="">Pilih jenis kelamin</option>
+                            @foreach (\App\Models\ProfilDosen::JENIS_KELAMIN as $nilai => $label)
+                                <option value="{{ $nilai }}" @selected(old('jenis_kelamin', $profil->jenis_kelamin ?? '') === $nilai)>{{ $label }}</option>
+                            @endforeach
+                        </select>
+                        @error('jenis_kelamin') <p class="form-error">{{ $message }}</p> @enderror
+                    </div>
+
+                    <div class="sm:col-span-2">
                         <label for="alamat" class="form-label">Alamat <span class="text-rose-500">*</span></label>
                         <textarea id="alamat" name="alamat" rows="3" placeholder="Alamat lengkap tempat tinggal saat ini"
                                   @class(['form-input resize-none', 'border-rose-300 bg-rose-50/40' => $errors->has('alamat')])>{{ old('alamat', $profil->alamat ?? '') }}</textarea>

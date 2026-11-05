@@ -150,6 +150,10 @@
                                 <dt class="text-[10px] font-bold tracking-[0.12em] text-slate-400 uppercase">No. HP</dt>
                                 <dd class="mt-1 text-sm font-semibold text-slate-800">{{ $profil->no_hp ?? '—' }}</dd>
                             </div>
+                            <div>
+                                <dt class="text-[10px] font-bold tracking-[0.12em] text-slate-400 uppercase">Jenis Kelamin</dt>
+                                <dd class="mt-1 text-sm font-semibold text-slate-800">{{ $profil->jenisKelaminLabel() }}</dd>
+                            </div>
                             <div class="sm:col-span-2">
                                 <dt class="text-[10px] font-bold tracking-[0.12em] text-slate-400 uppercase">Alamat</dt>
                                 <dd class="mt-1 text-sm leading-relaxed font-medium text-slate-700">{{ $profil->alamat ?? '—' }}</dd>

@@ -163,6 +163,15 @@
         display: block;
     }
 
+    /* Kolom Nomor SK & masa penilaian hanya tampil saat keputusan "Disetujui". */
+    [data-keputusan] [data-setujui] {
+        display: none;
+    }
+
+    [data-keputusan]:has(input[value='disetujui']:checked) [data-setujui] {
+        display: block;
+    }
+
     /* ----------------------------------------------------------------------
        Dropdown pencarian (komponen .sd) — pengganti select[data-select-search]
        ---------------------------------------------------------------------- */

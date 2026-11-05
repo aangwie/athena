@@ -33,6 +33,7 @@ class PengajuanDupakController extends Controller
 
         return view('admin.dupak.show', [
             'pengajuan' => $pengajuan,
+            'masaPenilaian' => $pengajuan->masaPenilaian(),
             'editable' => false,
             ...$pengajuan->user->kegiatanPeriode($pengajuan->tahun, $pengajuan->semester),
         ]);
@@ -46,13 +47,17 @@ class PengajuanDupakController extends Controller
         $data = $request->validate([
             'keputusan' => ['required', Rule::in(['disetujui', 'perlu_perbaikan', 'ditolak'])],
             'catatan' => ['nullable', 'string', 'max:1000', 'required_unless:keputusan,disetujui'],
+            'nomor_sk' => ['nullable', 'string', 'max:150', 'required_if:keputusan,disetujui'],
         ], [
             'catatan.required_unless' => 'Alasan wajib diisi saat memilih Butuh Perbaikan atau Tolak.',
+            'nomor_sk.required_if' => 'Nomor Surat Keputusan wajib diisi saat menyetujui DUPAK.',
         ]);
 
         $pengajuan->update([
             'status' => $data['keputusan'],
             'catatan' => $data['catatan'] ?? null,
+            // Nomor SK hanya berlaku untuk keputusan Setujui.
+            'nomor_sk' => $data['keputusan'] === 'disetujui' ? ($data['nomor_sk'] ?? null) : null,
         ]);
 
         WhatsAppNotifikasi::dupakDiputuskan($pengajuan);

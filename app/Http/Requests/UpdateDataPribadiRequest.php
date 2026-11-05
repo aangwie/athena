@@ -29,6 +29,7 @@ class UpdateDataPribadiRequest extends FormRequest
             'tanggal_lahir' => ['required', 'date', 'before:today'],
             'alamat' => ['required', 'string', 'max:500'],
             'agama' => ['nullable', Rule::in(array_keys(ProfilDosen::AGAMA))],
+            'jenis_kelamin' => ['nullable', Rule::in(array_keys(ProfilDosen::JENIS_KELAMIN))],
             'no_hp' => ['required', 'string', 'max:20', 'regex:/^[0-9+\-\s()]+$/'],
         ];
     }
@@ -46,6 +47,7 @@ class UpdateDataPribadiRequest extends FormRequest
             'tanggal_lahir' => 'tanggal lahir',
             'alamat' => 'alamat',
             'agama' => 'agama',
+            'jenis_kelamin' => 'jenis kelamin',
             'no_hp' => 'nomor HP',
         ];
     }
@@ -63,6 +65,7 @@ class UpdateDataPribadiRequest extends FormRequest
             'tanggal_lahir.required' => 'Tanggal lahir wajib diisi.',
             'tanggal_lahir.before' => 'Tanggal lahir harus sebelum hari ini.',
             'alamat.required' => 'Alamat wajib diisi.',
+            'jenis_kelamin.in' => 'Jenis kelamin yang dipilih tidak valid.',
             'no_hp.required' => 'Nomor HP wajib diisi.',
             'no_hp.regex' => 'Format nomor HP tidak valid.',
         ];

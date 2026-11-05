@@ -18,6 +18,13 @@
         </div>
 
         <section class="section-card p-5 sm:p-6">
+            {{-- Dosen yang sudah punya jabatan akademik memilih jabatan tujuan
+                 sebelum lanjut ke pemilihan periode; pengajuan pertama (IKD) tidak. --}}
+            @if ($jabatan)
+                <form method="POST" action="{{ route('profil.pengajuan.jabatan.store') }}">
+                    @csrf
+            @endif
+
             <div class="flex items-start gap-4">
                 @if ($jabatan)
                     <span class="flex size-11 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
@@ -49,6 +56,25 @@
                 @endif
             </div>
 
+            @if ($jabatan)
+                {{-- Jabatan akademik yang dituju pada pengajuan periode ini. --}}
+                <div class="mt-5">
+                    <label for="jabatan_diajukan" class="form-label">Jabatan Akademik yang akan Diajukan <span class="text-rose-500">*</span></label>
+                    <select id="jabatan_diajukan" name="jabatan_diajukan" required
+                            data-select-search="Cari jabatan akademik…"
+                            @class(['form-select', 'border-rose-300 bg-rose-50/40' => $errors->has('jabatan_diajukan')])>
+                        <option value="">Pilih jabatan akademik</option>
+                        @foreach ($jabatanList as $opsi)
+                            <option value="{{ $opsi }}" @selected(old('jabatan_diajukan', $jabatanDiajukan) === $opsi)>{{ $opsi }}</option>
+                        @endforeach
+                    </select>
+                    @error('jabatan_diajukan') <p class="form-error">{{ $message }}</p> @enderror
+                    <p class="mt-1.5 text-[11px] text-slate-400">
+                        Target jabatan akademik yang akan diusulkan, terpisah dari jabatan akademik Anda saat ini.
+                    </p>
+                </div>
+            @endif
+
             <div class="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <a href="{{ route('dashboard') }}" class="btn-secondary justify-center">
                     <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
@@ -56,14 +82,27 @@
                     </svg>
                     Kembali ke Dashboard
                 </a>
-                <a href="{{ $jabatan ? route('profil.pengajuan.periode') : route('profil.pengajuan.periode-pertama') }}"
-                   class="btn-primary w-auto justify-center px-5">
-                    Lanjut Pilih Periode
-                    <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                        <path d="M4.5 12h15M14.5 5.5 21 12l-6.5 6.5" stroke-linecap="round" stroke-linejoin="round" />
-                    </svg>
-                </a>
+
+                @if ($jabatan)
+                    <button type="submit" class="btn-primary w-auto justify-center px-5">
+                        Lanjut Pilih Periode
+                        <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                            <path d="M4.5 12h15M14.5 5.5 21 12l-6.5 6.5" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </button>
+                @else
+                    <a href="{{ route('profil.pengajuan.periode-pertama') }}" class="btn-primary w-auto justify-center px-5">
+                        Lanjut Pilih Periode
+                        <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                            <path d="M4.5 12h15M14.5 5.5 21 12l-6.5 6.5" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </a>
+                @endif
             </div>
+
+            @if ($jabatan)
+                </form>
+            @endif
         </section>
     </div>
 @endsection

@@ -104,6 +104,35 @@ class ProfilDosenTest extends TestCase
             ->assertSessionHasErrors('agama');
     }
 
+    public function test_dosen_can_save_jenis_kelamin_on_data_pribadi(): void
+    {
+        $dosen = $this->makeDosen();
+
+        $this->actingAs($dosen)
+            ->get('/profil/data-pribadi')
+            ->assertOk()
+            ->assertSee('Jenis Kelamin')
+            ->assertSee('name="jenis_kelamin"', false)
+            ->assertSee('Laki-laki')
+            ->assertSee('Perempuan');
+
+        $this->actingAs($dosen)
+            ->put('/profil/data-pribadi', $this->payload(['jenis_kelamin' => 'P']))
+            ->assertRedirect(route('profil.show'));
+
+        $this->assertDatabaseHas('profil_dosen', [
+            'user_id' => $dosen->id,
+            'jenis_kelamin' => 'P',
+        ]);
+    }
+
+    public function test_jenis_kelamin_must_be_one_of_the_available_options(): void
+    {
+        $this->actingAs($this->makeDosen())
+            ->put('/profil/data-pribadi', $this->payload(['jenis_kelamin' => 'X']))
+            ->assertSessionHasErrors('jenis_kelamin');
+    }
+
     public function test_portfolio_displays_personal_data(): void
     {
         $dosen = $this->makeDosen();

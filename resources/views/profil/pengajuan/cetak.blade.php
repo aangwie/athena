@@ -13,15 +13,29 @@
             @page { size: A4 landscape; margin: 10mm; }
 
             .cetak-aksi { display: none !important; }
-            body { background: #fff !important; }
+            /* Padding body dilepas supaya seluruh lebar kertas terpakai. */
+            body { background: #fff !important; padding: 0 !important; }
             .cetak-kertas { box-shadow: none !important; border: 0 !important; padding: 0 !important; }
             table { font-size: 9px; }
+
+            /* Tabel rekap DUPAK dipaksa muat satu halaman: lebar kolom tetap mengikuti
+               <colgroup> dan teks dibungkus, sehingga kolom paling kanan (Lama/Baru/Jumlah)
+               tidak terpotong. */
+            .tabel-rekap,
+            .tabel-cetak { table-layout: fixed !important; width: 100% !important; min-width: 0 !important; }
+
+            .tabel-rekap th,
+            .tabel-rekap td,
+            .tabel-cetak th,
+            .tabel-cetak td {
+                padding: 1px 3px !important;
+                overflow-wrap: anywhere;
+                word-break: break-word;
+            }
         }
     </style>
 </head>
 <body class="min-h-screen bg-slate-100 p-4 font-sans text-slate-900 sm:p-8">
-    @php($dosen = auth()->user())
-
     <div class="mx-auto max-w-6xl">
         <div class="cetak-aksi mb-4 flex flex-wrap items-center justify-between gap-2">
             <a href="{{ route('profil.pengajuan.create', ['tahun' => $tahun, 'semester' => $semester]) }}#review"
@@ -36,54 +50,29 @@
         <div class="cetak-kertas rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <header class="mb-5 border-b border-slate-200 pb-4 text-center">
                 <h1 class="text-base font-extrabold tracking-tight text-slate-900 uppercase">
-                    Daftar Usulan Penetapan Angka Kredit (DUPAK)
+                    Daftar Usul Penetapan Angka Kredit<br>
+                    Jabatan Akademik Dosen
                 </h1>
-                <p class="mt-1 text-xs text-slate-500">Periode {{ \App\Models\KegiatanDupak::labelPeriode($tahun, $semester) }}</p>
+                {{-- Nomor SK diisi admin saat keputusan verifikasi memilih "Setujui". --}}
+                <p class="mt-1 text-xs font-semibold text-slate-700">
+                    Nomor: {{ $pengajuan?->nomor_sk ?: str_repeat('.', 30) }}
+                </p>
             </header>
 
-            <dl class="mb-5 grid grid-cols-1 gap-x-6 gap-y-1.5 text-xs sm:grid-cols-2">
-                <div class="flex gap-2">
-                    <dt class="w-28 shrink-0 text-slate-500">Nama</dt>
-                    <dd class="font-bold text-slate-800">{{ $dosen->name }}</dd>
-                </div>
-                <div class="flex gap-2">
-                    <dt class="w-28 shrink-0 text-slate-500">NIDN</dt>
-                    <dd class="font-semibold text-slate-700">{{ $dosen->nidn ?? '—' }}</dd>
-                </div>
-                <div class="flex gap-2">
-                    <dt class="w-28 shrink-0 text-slate-500">Program Studi</dt>
-                    <dd class="font-semibold text-slate-700">{{ $dosen->program_studi ?? '—' }}</dd>
-                </div>
-                <div class="flex gap-2">
-                    <dt class="w-28 shrink-0 text-slate-500">Jabatan Akademik</dt>
-                    <dd class="font-semibold text-slate-700">{{ $dosen->jabatan_fungsional ?? '—' }}</dd>
-                </div>
-                <div class="flex gap-2">
-                    <dt class="w-28 shrink-0 text-slate-500">Status</dt>
-                    <dd class="font-semibold text-slate-700">{{ $pengajuan?->statusLabel() ?? 'Belum diajukan' }}</dd>
-                </div>
-                <div class="flex gap-2">
-                    <dt class="w-28 shrink-0 text-slate-500">Dinilai pada</dt>
-                    <dd class="font-semibold text-slate-700">{{ $pengajuan?->dinilai_at?->translatedFormat('d F Y') ?? '—' }}</dd>
-                </div>
-            </dl>
+            {{-- Identitas dosen pengusul ("Keterangan Perorangan") di atas kolom "Unsur yang Dinilai". --}}
+            @include('profil.pengajuan.partials.identitas')
 
-            @include('profil.pengajuan.partials.review')
+            <p class="mb-3 text-xs text-slate-500">
+                Status pengajuan: <span class="font-semibold text-slate-700">{{ $pengajuan?->statusLabel() ?? 'Belum diajukan' }}</span>
+                <span class="text-slate-300">·</span>
+                Dinilai pada: <span class="font-semibold text-slate-700">{{ $pengajuan?->dinilai_at?->translatedFormat('d F Y') ?? '—' }}</span>
+            </p>
 
-            <div class="mt-10 grid grid-cols-2 gap-8 text-xs text-slate-600">
-                <div class="text-center">
-                    <p>Dosen yang mengusulkan</p>
-                    <div class="h-16"></div>
-                    <p class="font-bold text-slate-800 underline underline-offset-4">{{ $dosen->name }}</p>
-                    <p class="mt-0.5 text-[11px] text-slate-500">NIDN {{ $dosen->nidn ?? '—' }}</p>
-                </div>
-                <div class="text-center">
-                    <p>Tim Penilai Angka Kredit</p>
-                    <div class="h-16"></div>
-                    <p class="font-bold text-slate-800 underline underline-offset-4">{{ $penilai?->name ?? '—' }}</p>
-                    <p class="mt-0.5 text-[11px] text-slate-500">NIDN {{ $penilai?->nidn ?? '—' }}</p>
-                </div>
-            </div>
+            {{-- Formulir cetak memuat tambahan grup kolom "Tim Penilai" di samping "Instansi Pengusul". --}}
+            @include('profil.pengajuan.partials.review', ['kolomPenilai' => true])
+
+            {{-- Blok pengesahan: rekap identitas, pernyataan Ketua, dan Pendapat Tim Penilai. --}}
+            @include('profil.pengajuan.partials.pengesahan', ['kolomPenilai' => true])
         </div>
     </div>
     @if (request()->boolean('print'))

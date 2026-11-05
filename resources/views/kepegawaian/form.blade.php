@@ -88,6 +88,21 @@
                         @error('nama') <p class="form-error">{{ $message }}</p> @enderror
                         <p class="mt-1.5 text-[11px] text-slate-400">Maksimal 100 karakter dan tidak boleh sama dengan data lain.</p>
                     </div>
+
+                    {{-- Golongan ruang: hanya pada sub menu Kepangkatan. --}}
+                    @if ($modul['golongan'] ?? false)
+                        <div>
+                            <label for="golongan" class="form-label">Golongan Ruang</label>
+                            <input type="text" id="golongan" name="golongan"
+                                   value="{{ old('golongan', $item->golongan ?? '') }}"
+                                   placeholder="Contoh: IIIa" maxlength="20"
+                                   @class(['form-input', 'border-rose-300 bg-rose-50/40' => $errors->has('golongan')])>
+                            @error('golongan') <p class="form-error">{{ $message }}</p> @enderror
+                            <p class="mt-1.5 text-[11px] text-slate-400">
+                                Diisi kode golongan tanpa spasi. Dicetak sebagai "IIIa / Nama Pangkat" pada DUPAK.
+                            </p>
+                        </div>
+                    @endif
                 </div>
             </section>
 

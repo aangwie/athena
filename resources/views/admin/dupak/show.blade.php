@@ -100,6 +100,33 @@
                     @endforeach
                 </div>
 
+                <div data-setujui class="mt-4 rounded-xl border border-teal-100 bg-teal-50/50 p-4">
+                    <div class="grid gap-4 sm:grid-cols-2">
+                        <div>
+                            <label for="nomor_sk" class="form-label">Nomor Surat Keputusan <span class="text-rose-500">*</span></label>
+                            <input type="text" id="nomor_sk" name="nomor_sk" maxlength="150" class="form-input"
+                                   value="{{ old('nomor_sk', $pengajuan->nomor_sk) }}"
+                                   placeholder="Contoh: 001/SK/PAK/2026" autocomplete="off">
+                            <p class="mt-1 text-[11px] text-slate-500">Wajib diisi saat menyetujui DUPAK.</p>
+                            @error('nomor_sk')
+                                <p class="form-error">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <p class="form-label">Masa Penilaian</p>
+                            <div class="rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm font-semibold text-slate-800">
+                                @if ($masaPenilaian)
+                                    {{ $masaPenilaian->label() }}
+                                @else
+                                    <span class="font-normal text-slate-400 italic">Belum diisi dosen</span>
+                                @endif
+                            </div>
+                            <p class="mt-1 text-[11px] text-slate-500">Sesuai masukan dosen saat mengusulkan DUPAK.</p>
+                        </div>
+                    </div>
+                </div>
+
                 <div data-catatan class="mt-4">
                     <label for="catatan" class="form-label">Alasan / catatan untuk dosen</label>
                     <textarea id="catatan" name="catatan" rows="3" class="form-input"

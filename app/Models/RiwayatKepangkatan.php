@@ -42,6 +42,6 @@ class RiwayatKepangkatan extends Model
 
     public function pangkatLabel(): string
     {
-        return $this->kepangkatan?->nama ?? '—';
+        return $this->kepangkatan?->label() ?? '—';
     }
 }

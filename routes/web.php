@@ -87,6 +87,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/', [ProfilDosenController::class, 'show'])->name('show');
 
         Route::get('/pengajuan', [PengajuanDosenController::class, 'mulai'])->name('pengajuan.mulai');
+        Route::post('/pengajuan/jabatan', [PengajuanDosenController::class, 'simpanJabatan'])->name('pengajuan.jabatan.store');
         Route::get('/pengajuan/periode', [PengajuanDosenController::class, 'periode'])->name('pengajuan.periode');
         Route::get('/pengajuan/periode-pertama', [PengajuanDosenController::class, 'periodePertama'])->name('pengajuan.periode-pertama');
         Route::get('/pengajuan/masa-penilaian', [PengajuanDosenController::class, 'masaPenilaian'])->name('pengajuan.masa-penilaian');

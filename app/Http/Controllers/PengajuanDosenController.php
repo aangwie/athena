@@ -7,9 +7,13 @@ use App\Http\Requests\KegiatanPendidikanRequest;
 use App\Http\Requests\KegiatanPenelitianRequest;
 use App\Http\Requests\KegiatanPengabdianRequest;
 use App\Http\Requests\KegiatanPenunjangRequest;
+use App\Models\Instansi;
+use App\Models\JabatanFungsional;
 use App\Models\KegiatanDupak;
 use App\Models\MasaPenilaian;
 use App\Models\PengajuanDupak;
+use App\Models\RiwayatPendidikan;
+use App\Models\StrukturInstansi;
 use App\Models\SyaratKhusus;
 use App\Models\User;
 use App\Support\WhatsAppNotifikasi;
@@ -67,12 +71,60 @@ class PengajuanDosenController extends Controller
 
     /**
      * Halaman status jabatan akademik sebelum dosen memilih periode pengajuan.
+     * Memuat juga dropdown jabatan akademik yang akan diajukan (target kenaikan).
      */
     public function mulai(Request $request): View
     {
+        $user = $request->user();
+        $jabatan = $user->jabatan_fungsional ?: null;
+
+        // Pilihan jabatan akademik dari data master, milik dosen yang sudah punya
+        // jabatan akademik (pengajuan pertama memakai alur khusus IKD).
+        $jabatanList = $jabatan
+            ? JabatanFungsional::query()->orderBy('nama')->pluck('nama')
+            : collect();
+
+        // Jabatan tersimpan bisa saja sudah tidak ada di data master: tetap
+        // ditampilkan agar tidak hilang dari pilihan.
+        $jabatanDiajukan = $user->jabatan_diajukan ?: null;
+
+        if ($jabatanDiajukan && $jabatanList->isNotEmpty() && ! $jabatanList->contains($jabatanDiajukan)) {
+            $jabatanList = $jabatanList->push($jabatanDiajukan)->sort()->values();
+        }
+
         return view('profil.pengajuan.mulai', [
-            'jabatan' => $request->user()->jabatan_fungsional ?: null,
+            'jabatan' => $jabatan,
+            'jabatanList' => $jabatanList,
+            'jabatanDiajukan' => $jabatanDiajukan,
         ]);
+    }
+
+    /**
+     * Simpan jabatan akademik yang akan diajukan pada halaman Status Jabatan Akademik.
+     * Setelah tersimpan, dosen melanjutkan ke pemilihan periode.
+     */
+    public function simpanJabatan(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+
+        // Dosen tanpa jabatan akademik memakai alur pengajuan pertama (IKD),
+        // jadi dropdown ini tidak berlaku untuk mereka.
+        if (! $user->jabatan_fungsional) {
+            return redirect()->route('profil.pengajuan.periode-pertama');
+        }
+
+        $data = $request->validate([
+            'jabatan_diajukan' => ['required', 'string', 'max:100'],
+        ], [
+            'jabatan_diajukan.required' => 'Jabatan akademik yang akan diajukan wajib dipilih.',
+            'jabatan_diajukan.max' => 'Jabatan akademik maksimal 100 karakter.',
+        ]);
+
+        $user->update(['jabatan_diajukan' => $data['jabatan_diajukan']]);
+
+        return redirect()
+            ->route('profil.pengajuan.periode')
+            ->with('status', 'Jabatan akademik yang akan diajukan berhasil disimpan.');
     }
 
     public function periode(): View
@@ -577,24 +629,102 @@ class PengajuanDosenController extends Controller
             return redirect()->route('profil.pengajuan.periode');
         }
 
+        $user = $request->user()->load([
+            'profilDosen',
+            'riwayatKepangkatan.kepangkatan',
+            'riwayatJabatanStruktural.jabatanFungsional',
+            'riwayatAngkaKredit',
+            'riwayatPendidikan',
+        ]);
+
         return view('profil.pengajuan.cetak', [
             'tahun' => $tahun,
             'semester' => $semester,
-            'pengajuan' => $request->user()->pengajuanDupak()
+            'pengajuan' => $user->pengajuanDupak()
                 ->where('tahun', $tahun)
                 ->where('semester', $semester)
                 ->first(),
-            // Penanda tangan DUPAK: akun TIM PAK yang aktif.
-            // ponytail: belum dicatat per penilaian (tidak ada kolom dinilai_oleh);
-            // tambahkan kolom itu kalau penilai TIM PAK lebih dari satu orang.
-            'penilai' => User::query()
-                ->where('is_active', true)
-                ->where(fn ($query) => $query->where('role', 'tim_pak')
-                    ->orWhereJsonContains('roles', 'tim_pak'))
-                ->orderBy('name')
+            // Blok identitas "Keterangan Perorangan" di atas tabel unsur yang dinilai.
+            'instansi' => Instansi::query()->first(),
+            'masaPenilaian' => $user->masaPenilaian()
+                ->where('tahun', $tahun)
+                ->where('semester', $semester)
                 ->first(),
-            ...$request->user()->kegiatanPeriode($tahun, $semester),
+            'identitas' => $this->identitasDupak($user),
+            // Blok bawah: pimpinan yang mengesahkan DUPAK (satu kolom dengan identitas dosen).
+            'pimpinan' => $this->pimpinanInstansi(),
+            ...$user->kegiatanPeriode($tahun, $semester),
         ]);
+    }
+
+    /**
+     * Pimpinan instansi yang mengesahkan DUPAK pada blok tanda tangan bawah.
+     * Dipilih dari struktur instansi: jabatan Rektor/Ketua, atau pimpinan pertama.
+     */
+    private function pimpinanInstansi(): ?User
+    {
+        $struktur = StrukturInstansi::query()->with(['jabatanStruktural', 'user'])->get();
+
+        $pimpinan = $struktur->first(fn (StrukturInstansi $item) => in_array(
+            Str::lower($item->jabatanStruktural?->nama ?? ''),
+            ['ketua', 'rektor'],
+            true,
+        ));
+
+        return ($pimpinan ?? $struktur->first())?->user;
+    }
+
+    /**
+     * Identitas dosen pengusul untuk blok "Keterangan Perorangan" pada formulir cetak.
+     *
+     * @return array<string, string>
+     */
+    private function identitasDupak(User $user): array
+    {
+        $profil = $user->profilDosen;
+        $pangkat = $user->riwayatKepangkatan->sortByDesc('tmt')->first();
+        $jabatan = $user->riwayatJabatanStruktural
+            ->whereNotNull('jabatan_fungsional_id')
+            ->sortByDesc('tmt')
+            ->first();
+        $pendidikan = $user->riwayatPendidikan
+            ->sortByDesc(fn (RiwayatPendidikan $item) => $item->jenjangRank())
+            ->first();
+        $angkaKredit = $user->riwayatAngkaKredit->sortByDesc('tahun')->first();
+
+        // Angka kredit terakhir + TMT jabatan akademik, mis. "150,00 / 02 Agustus 2019".
+        $angkaKreditTmt = collect([
+            $angkaKredit?->angkaKreditLabel(),
+            $jabatan?->tmtLabel(),
+        ])->filter(fn ($nilai) => filled($nilai) && $nilai !== '—')->implode(' / ');
+
+        return [
+            'nama' => $user->name ?: '—',
+            'nuptk_nidn' => collect([$profil?->nuptk, $user->nidn])
+                ->filter()->implode('/') ?: '—',
+            'ttl' => collect([
+                $profil?->tempat_lahir,
+                $profil?->tanggal_lahir?->locale('id')->translatedFormat('d F Y'),
+            ])->filter()->implode(', ') ?: '—',
+            'jenis_kelamin' => $profil?->jenisKelaminLabel() ?? '—',
+            'pendidikan_terakhir' => $pendidikan?->jenjangLabel() ?? '—',
+            'jabatan_akademik' => trim(collect([
+                $user->jabatan_fungsional,
+                $angkaKreditTmt !== '' ? '('.$angkaKreditTmt.')' : null,
+            ])->filter()->implode(' ')) ?: '—',
+            // Nama jabatan & pangkat tanpa TMT, dipakai blok "Pendapat Tim Penilai".
+            'jabatan' => $user->jabatan_fungsional ?: '—',
+            'pangkat_nama' => $pangkat?->pangkatLabel() ?? '—',
+            'jurusan_prodi' => $pendidikan?->jurusan ?: ($user->program_studi ?: '—'),
+            'bidang_ilmu' => $profil?->bidang_ilmu ?: '—',
+            'pangkat' => trim(collect([
+                $pangkat?->pangkatLabel(),
+                $pangkat?->tmtLabel(),
+            ])->filter(fn ($nilai) => filled($nilai) && $nilai !== '—')
+                ->implode(' / ')) ?: '—',
+            'masa_kerja_lama' => $profil?->masaKerjaGolonganLabel('lama') ?? '—',
+            'masa_kerja_baru' => $profil?->masaKerjaGolonganLabel('baru') ?? '—',
+        ];
     }
 
     public function storePendidikan(KegiatanPendidikanRequest $request): RedirectResponse
