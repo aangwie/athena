@@ -9,9 +9,25 @@
     $editable = $editable ?? false;
 
     // Halaman cetak menambahkan grup kolom "Tim Penilai" (Lama, Baru, Jumlah)
-    // di samping "Instansi Pengusul", tanpa kolom Link Bukti. Halaman lain tidak
-    // memakai flag ini sehingga tampilannya tetap sama.
+    // di samping "Instansi Pengusul". Halaman lain tidak memakai flag ini
+    // sehingga tampilannya tetap sama.
     $kolomPenilai = $kolomPenilai ?? false;
+
+    // Halaman cetak tidak memuat kolom "Link Bukti"; halaman lain tetap memuatnya.
+    $kolomLinkBukti = $kolomLinkBukti ?? true;
+
+    // Banyak kolom grup "Angka Kredit Menurut": Instansi Pengusul (+ Link Bukti) + Tim Penilai.
+    $totalAngkaKredit = 3 + ($kolomLinkBukti ? 1 : 0) + ($kolomPenilai ? 3 : 0);
+
+    // Lebar kolom grup "Angka Kredit Menurut" (persen) supaya total tabel selalu 100%.
+    // Urutan: Instansi Pengusul (Lama, Baru, Jumlah) [+ Link Bukti] + Tim Penilai (Lama, Baru, Jumlah).
+    // Kolom Lama/Baru/Jumlah pada "Instansi Pengusul" dan "Tim Penilai" sengaja
+    // dibuat sama lebar agar kedua grup tampak sejajar.
+    $lebarAngka = match (true) {
+        $kolomPenilai && $kolomLinkBukti => [8, 8, 8, 12, 8, 8, 8],
+        $kolomPenilai => [10, 10, 10, 10, 10, 10],
+        default => [12, 12, 12, 12],
+    };
     $angka = fn ($nilai) => $nilai === null || $nilai === ''
         ? ''
         : rtrim(rtrim(number_format((float) $nilai, 2, ',', '.'), '0'), ',');
@@ -151,28 +167,22 @@
             <col style="width: 3%">
             <col style="width: 3%">
             <col style="width: 3%">
-            <col style="width: {{ $kolomPenilai ? '28%' : '39%' }}">
-            <col style="width: {{ $kolomPenilai ? '9%' : '12%' }}">
-            <col style="width: {{ $kolomPenilai ? '9%' : '12%' }}">
-            <col style="width: {{ $kolomPenilai ? '9%' : '12%' }}">
-            <col style="width: {{ $kolomPenilai ? '14%' : '12%' }}">
-            @if ($kolomPenilai)
-                <col style="width: 6%">
-                <col style="width: 6%">
-                <col style="width: 6%">
-            @endif
+            <col style="width: {{ $kolomPenilai ? '27%' : '39%' }}">
+            @foreach ($lebarAngka as $lebar)
+                <col style="width: {{ $lebar }}%">
+            @endforeach
         </colgroup>
         <thead>
             <tr>
                 <th scope="col" rowspan="4" class="{{ $kepala }} w-12 align-middle">No</th>
-                <th scope="col" colspan="{{ $kolomPenilai ? 11 : 8 }}" class="{{ $kepala }}">Unsur yang Dinilai</th>
+                <th scope="col" colspan="{{ $totalAngkaKredit + 4 }}" class="{{ $kepala }}">Unsur yang Dinilai</th>
             </tr>
             <tr>
                 <th scope="col" rowspan="3" colspan="4" class="{{ $kepala }} align-middle">Unsur, Sub Unsur, dan Butir Kegiatan</th>
-                <th scope="col" colspan="{{ $kolomPenilai ? 7 : 4 }}" class="{{ $kepala }}">Angka Kredit Menurut</th>
+                <th scope="col" colspan="{{ $totalAngkaKredit }}" class="{{ $kepala }}">Angka Kredit Menurut</th>
             </tr>
             <tr>
-                <th scope="col" colspan="4" class="{{ $kepala }}">Instansi Pengusul</th>
+                <th scope="col" colspan="{{ 3 + ($kolomLinkBukti ? 1 : 0) }}" class="{{ $kepala }}">Instansi Pengusul</th>
                 @if ($kolomPenilai)
                     <th scope="col" colspan="3" class="{{ $kepala }}">Tim Penilai</th>
                 @endif
@@ -181,7 +191,9 @@
                 <th scope="col" class="{{ $kepala }}">Lama</th>
                 <th scope="col" class="{{ $kepala }}">Baru</th>
                 <th scope="col" class="{{ $kepala }}">Jumlah</th>
-                <th scope="col" class="{{ $kepala }}">Link Bukti</th>
+                @if ($kolomLinkBukti)
+                    <th scope="col" class="{{ $kepala }}">Link Bukti</th>
+                @endif
                 @if ($kolomPenilai)
                     <th scope="col" class="{{ $kepala }}">Lama</th>
                     <th scope="col" class="{{ $kepala }}">Baru</th>
@@ -244,36 +256,44 @@
                             @endif
                         </td>
                         <td class="{{ $selAngka }}"></td>
-                        <td class="{{ $sel }}">
-                            @if ($r['link'])
-                                <a href="{{ $r['link'] }}" target="_blank" rel="noopener noreferrer"
-                                   title="{{ $r['link'] }}"
-                                   class="inline-flex items-center gap-1 font-semibold text-teal-700 transition hover:text-teal-900">
-                                    <svg class="size-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                                        <path d="M10.5 13.5a3.5 3.5 0 0 0 5 0l3-3a3.54 3.54 0 0 0-5-5l-1.2 1.2" stroke-linecap="round" stroke-linejoin="round" />
-                                        <path d="M13.5 10.5a3.5 3.5 0 0 0-5 0l-3 3a3.54 3.54 0 0 0 5 5l1.2-1.2" stroke-linecap="round" stroke-linejoin="round" />
-                                    </svg>
-                                    <span class="underline underline-offset-2">Bukti</span>
-                                </a>
-                            @else
-                                <span class="text-[11px] text-rose-500 italic">Tidak ada bukti</span>
-                            @endif
-                        </td>
+                        @if ($kolomLinkBukti)
+                            <td class="{{ $sel }}">
+                                @if ($r['link'])
+                                    <a href="{{ $r['link'] }}" target="_blank" rel="noopener noreferrer"
+                                       title="{{ $r['link'] }}"
+                                       class="inline-flex items-center gap-1 font-semibold text-teal-700 transition hover:text-teal-900">
+                                        <svg class="size-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                            <path d="M10.5 13.5a3.5 3.5 0 0 0 5 0l3-3a3.54 3.54 0 0 0-5-5l-1.2 1.2" stroke-linecap="round" stroke-linejoin="round" />
+                                            <path d="M13.5 10.5a3.5 3.5 0 0 0-5 0l-3 3a3.54 3.54 0 0 0 5 5l1.2-1.2" stroke-linecap="round" stroke-linejoin="round" />
+                                        </svg>
+                                        <span class="underline underline-offset-2">Bukti</span>
+                                    </a>
+                                @else
+                                    <span class="text-[11px] text-rose-500 italic">Tidak ada bukti</span>
+                                @endif
+                            </td>
+                        @endif
                     @elseif ($r['tingkat'] === 5)
                         <td class="{{ $selAngka }} font-extrabold text-slate-700">0</td>
                         <td class="{{ $selAngka }} font-extrabold text-slate-700" data-jumlah-total="{{ $r['grup'] }}">{{ $angka($r['kredit']) }}</td>
                         <td class="{{ $selAngka }} font-extrabold text-slate-700" data-jumlah-total="{{ $r['grup'] }}">{{ $angka($r['kredit']) }}</td>
-                        <td class="{{ $sel }}"></td>
+                        @if ($kolomLinkBukti)
+                            <td class="{{ $sel }}"></td>
+                        @endif
                     @elseif ($r['tingkat'] === 6)
                         <td class="{{ $selAngka }} font-extrabold text-teal-800">0</td>
                         <td class="{{ $selAngka }} font-extrabold text-teal-800" data-jumlah-grand-total>{{ $angka($r['kredit']) }}</td>
                         <td class="{{ $selAngka }} font-extrabold text-teal-800" data-jumlah-grand-total>{{ $angka($r['kredit']) }}</td>
-                        <td class="{{ $sel }}"></td>
+                        @if ($kolomLinkBukti)
+                            <td class="{{ $sel }}"></td>
+                        @endif
                     @else
                         <td class="{{ $sel }}"></td>
                         <td class="{{ $sel }}"></td>
                         <td class="{{ $sel }}"></td>
-                        <td class="{{ $sel }}"></td>
+                        @if ($kolomLinkBukti)
+                            <td class="{{ $sel }}"></td>
+                        @endif
                     @endif
 
                     @if ($kolomPenilai)

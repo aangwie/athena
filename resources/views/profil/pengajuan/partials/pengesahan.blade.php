@@ -69,7 +69,7 @@
                     <div class="mt-3 space-y-1">
                         <div class="flex gap-2">
                             <span class="{{ $labelPengesahan }}">Jabatan</span>
-                            <span class="{{ $isiPengesahan }}">: {{ $identitas['jabatan'] }}</span>
+                            <span class="{{ $isiPengesahan }}">: {{ $identitas['jabatan_diajukan'] }}</span>
                         </div>
                         <div class="flex gap-2">
                             <span class="{{ $labelPengesahan }}">Pangkat/Gol</span>

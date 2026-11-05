@@ -226,6 +226,34 @@ class KepegawaianTest extends TestCase
         $this->assertDatabaseHas('kepangkatan', ['nama' => 'Lektor']);
     }
 
+    public function test_admin_dapat_mengisi_golongan_ruang_pada_kepangkatan(): void
+    {
+        $admin = $this->makeAdmin();
+
+        $this->actingAs($admin)
+            ->get('/kepegawaian/kepangkatan/create')
+            ->assertOk()
+            ->assertSee('Golongan Ruang')
+            ->assertSee('name="golongan"', false);
+
+        $this->actingAs($admin)
+            ->post('/kepegawaian/kepangkatan', ['nama' => 'Penata Muda', 'golongan' => 'IIIa'])
+            ->assertRedirect(route('kepegawaian.kepangkatan.index'))
+            ->assertSessionHasNoErrors();
+
+        $item = Kepangkatan::firstOrFail();
+        $this->assertSame('IIIa', $item->golongan);
+        // Label gabungan dipakai pada cetak DUPAK.
+        $this->assertSame('IIIa / Penata Muda', $item->label());
+
+        // Sub menu lain tidak menampilkan kolom golongan.
+        $this->actingAs($admin)
+            ->get('/kepegawaian/jabatan-fungsional/create')
+            ->assertOk()
+            ->assertDontSee('Golongan Ruang')
+            ->assertDontSee('name="golongan"', false);
+    }
+
     public function test_update_can_keep_the_same_nama(): void
     {
         $admin = $this->makeAdmin();

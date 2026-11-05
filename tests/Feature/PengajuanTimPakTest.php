@@ -337,9 +337,46 @@ class PengajuanTimPakTest extends TestCase
         $this->assertStringContainsString('body { background: #fff !important; padding: 0 !important; }', $cetak);
 
         // Lebar kolom dikunci lewat <colgroup>; kolom "Unsur, Sub Unsur, dan Butir
-        // Kegiatan" dipersempit (28% pada formulir cetak bertim penilai).
+        // Kegiatan" dipersempit (27% pada formulir cetak bertim penilai).
         $this->assertStringContainsString('<colgroup>', $cetak);
-        $this->assertStringContainsString('width: 28%', $cetak);
+        $this->assertStringContainsString('width: 27%', $cetak);
+    }
+
+    public function test_kolom_lama_baru_jumlah_instansi_pengusul_dan_tim_penilai_sama_lebar(): void
+    {
+        $dosen = $this->makeUser('dosen');
+        $this->makeKegiatan($dosen, ['nilai_baru' => 2]);
+
+        $cetak = $this->actingAs($dosen)
+            ->get('/profil/pengajuan/cetak?tahun=2026&semester=ganjil')
+            ->assertOk()
+            ->getContent();
+
+        // Ambil nilai width dari setiap <col> pada tabel rekap (formulir cetak).
+        $dom = new \DOMDocument();
+        libxml_use_internal_errors(true);
+        $dom->loadHTML($cetak);
+        libxml_clear_errors();
+
+        $xpath = new \DOMXPath($dom);
+        $cols = $xpath->query('//table[contains(@class, "tabel-rekap")]/colgroup/col');
+
+        $lebar = [];
+        foreach ($cols as $col) {
+            if (preg_match('/width:\s*([\d.]+)%/', $col->getAttribute('style'), $m)) {
+                $lebar[] = (float) $m[1];
+            }
+        }
+
+        // 4 kolom indent + 1 kolom unsur + 6 kolom angka (3 Instansi Pengusul + 3 Tim Penilai).
+        $this->assertCount(11, $lebar);
+
+        $angka = array_slice($lebar, 5);
+        $this->assertCount(6, $angka);
+
+        // Keenam kolom Lama/Baru/Jumlah sama lebar dan total tabel tepat 100%.
+        $this->assertCount(1, array_unique($angka), 'Kolom Lama/Baru/Jumlah harus sama lebar.');
+        $this->assertSame(100.0, array_sum($lebar));
     }
 
     public function test_cetak_menambahkan_grup_kolom_tim_penilai(): void
@@ -355,12 +392,10 @@ class PengajuanTimPakTest extends TestCase
             ->assertSee('Tim Penilai')
             ->getContent();
 
-        // "Lama", "Baru", "Jumlah" masing-masing muncul 2x (Instansi Pengusul + Tim Penilai),
-        // sedangkan "Link Bukti" hanya sekali (hanya pada grup Instansi Pengusul).
+        // "Lama", "Baru", "Jumlah" masing-masing muncul 2x (Instansi Pengusul + Tim Penilai).
         $this->assertSame(2, substr_count($cetak, '>Lama</th>'));
         $this->assertSame(2, substr_count($cetak, '>Baru</th>'));
         $this->assertSame(2, substr_count($cetak, '>Jumlah</th>'));
-        $this->assertSame(1, substr_count($cetak, '>Link Bukti</th>'));
 
         // Grup Tim Penilai mengikuti grup Instansi Pengusul (muncul setelahnya).
         $this->assertGreaterThan(
@@ -368,14 +403,99 @@ class PengajuanTimPakTest extends TestCase
             strpos($cetak, '>Tim Penilai</th>'),
         );
 
-        // Kolom Tim Penilai tidak memuat link bukti: jumlah tautan tetap 1 tautan
-        // per entri (dari grup Instansi Pengusul).
-        $this->assertSame(1, substr_count($cetak, 'href="https://drive.google.com'));
-
         // Nilai angka kredit (2) pada baris jumlah hanya ada di grup Instansi Pengusul,
         // tepatnya 2x per baris (kolom Baru + Jumlah). Grup Tim Penilai dikosongkan.
         $this->assertSame(2, substr_count($cetak, 'data-jumlah-total="g0">2<'));
         $this->assertSame(2, substr_count($cetak, 'data-jumlah-grand-total>2<'));
+    }
+
+    public function test_cetak_tanpa_kolom_link_bukti(): void
+    {
+        $dosen = $this->makeUser('dosen');
+        $this->makeKegiatan($dosen, ['nilai_baru' => 2]);
+
+        $cetak = $this->actingAs($dosen)
+            ->get('/profil/pengajuan/cetak?tahun=2026&semester=ganjil')
+            ->assertOk()
+            // Kolom & judul "Link Bukti" tidak dicetak pada formulir DUPAK.
+            ->assertDontSee('Link Bukti')
+            ->assertDontSee('>Bukti</span>', false)
+            ->getContent();
+
+        $this->assertSame(0, substr_count($cetak, '>Link Bukti</th>'));
+        // Tidak ada tautan bukti yang tercetak.
+        $this->assertSame(0, substr_count($cetak, 'href="https://drive.google.com'));
+    }
+
+    public function test_cetak_memiliki_jumlah_kolom_konsisten_tanpa_link_bukti(): void
+    {
+        $dosen = $this->makeUser('dosen');
+        $this->makeKegiatan($dosen, ['nilai_baru' => 2]);
+
+        $cetak = $this->actingAs($dosen)
+            ->get('/profil/pengajuan/cetak?tahun=2026&semester=ganjil')
+            ->assertOk()
+            ->getContent();
+
+        $dom = new \DOMDocument();
+        libxml_use_internal_errors(true);
+        $dom->loadHTML($cetak);
+        libxml_clear_errors();
+
+        $xpath = new \DOMXPath($dom);
+        // Hanya baris <tbody> (tanpa rowspan) supaya jumlah kolom tiap baris sebanding.
+        $baris = $xpath->query('//table[contains(@class, "tabel-rekap")]/tbody/tr');
+
+        $jumlahKolom = [];
+        foreach ($baris as $tr) {
+            $total = 0;
+            foreach ($tr->childNodes as $sel) {
+                if ($sel->nodeName === 'td' || $sel->nodeName === 'th') {
+                    $total += (int) ($sel->getAttribute('colspan') ?: 1);
+                }
+            }
+            if ($total > 0) {
+                $jumlahKolom[] = $total;
+            }
+        }
+
+        // Cetak: 11 kolom = No (1) + Unsur (5) + Instansi Pengusul (3) + Tim Penilai (3).
+        // Tanpa kolom "Link Bukti". Semua baris harus sama agar tabel tidak rusak.
+        $this->assertNotEmpty($jumlahKolom);
+        $this->assertSame([11], array_values(array_unique($jumlahKolom)));
+    }
+
+    public function test_halaman_review_lain_tetap_menampilkan_kolom_link_bukti(): void
+    {
+        $dosen = $this->makeUser('dosen');
+        $this->makeKegiatan($dosen, ['nilai_baru' => 2]);
+
+        $this->actingAs($dosen)
+            ->get('/profil/pengajuan/create?tahun=2026&semester=ganjil')
+            ->assertOk()
+            ->assertSee('>Link Bukti</th>', false)
+            ->assertSee('href="https://drive.google.com', false);
+    }
+
+    public function test_pendapat_tim_penilai_menampilkan_jabatan_diajukan_dan_pangkat_golongan(): void
+    {
+        $dosen = $this->makeUser('dosen');
+        // Target jabatan yang diisi dosen pada halaman Status Jabatan Akademik.
+        $dosen->update(['jabatan_diajukan' => 'Lektor Kepala']);
+        $this->makeKegiatan($dosen, ['nilai_baru' => 2]);
+
+        // Pangkat dengan golongan ruang → dicetak "IIIa / Penata Muda".
+        $kepangkatan = Kepangkatan::create(['nama' => 'Penata Muda', 'golongan' => 'IIIa']);
+        $dosen->riwayatKepangkatan()->create(['kepangkatan_id' => $kepangkatan->id, 'tmt' => '2019-05-01']);
+
+        $this->actingAs($dosen)
+            ->get('/profil/pengajuan/cetak?tahun=2026&semester=ganjil')
+            ->assertOk()
+            // Jabatan baris pendapat = jabatan yang diajukan, bukan jabatan saat ini.
+            ->assertSee('Telah memenuhi syarat angka kredit untuk kenaikan Jabatan dan Pangkat menjadi')
+            ->assertSee(': Lektor Kepala')
+            // Pangkat/Gol memuat golongan ruang di depan nama pangkat.
+            ->assertSee(': IIIa / Penata Muda');
     }
 
     public function test_cetak_menampilkan_keterangan_perorangan_dosen_pengusul(): void

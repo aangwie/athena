@@ -68,8 +68,8 @@
                 Dinilai pada: <span class="font-semibold text-slate-700">{{ $pengajuan?->dinilai_at?->translatedFormat('d F Y') ?? '—' }}</span>
             </p>
 
-            {{-- Formulir cetak memuat tambahan grup kolom "Tim Penilai" di samping "Instansi Pengusul". --}}
-            @include('profil.pengajuan.partials.review', ['kolomPenilai' => true])
+            {{-- Formulir cetak: ada grup kolom "Tim Penilai" dan tanpa kolom "Link Bukti". --}}
+            @include('profil.pengajuan.partials.review', ['kolomPenilai' => true, 'kolomLinkBukti' => false])
 
             {{-- Blok pengesahan: rekap identitas, pernyataan Ketua, dan Pendapat Tim Penilai. --}}
             @include('profil.pengajuan.partials.pengesahan', ['kolomPenilai' => true])

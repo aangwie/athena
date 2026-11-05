@@ -713,7 +713,8 @@ class PengajuanDosenController extends Controller
                 $angkaKreditTmt !== '' ? '('.$angkaKreditTmt.')' : null,
             ])->filter()->implode(' ')) ?: '—',
             // Nama jabatan & pangkat tanpa TMT, dipakai blok "Pendapat Tim Penilai".
-            'jabatan' => $user->jabatan_fungsional ?: '—',
+            // Jabatan = target yang diajukan dosen; Pangkat memuat golongan ("IIIa / Penata Muda").
+            'jabatan_diajukan' => $user->jabatan_diajukan ?: ($user->jabatan_fungsional ?: '—'),
             'pangkat_nama' => $pangkat?->pangkatLabel() ?? '—',
             'jurusan_prodi' => $pendidikan?->jurusan ?: ($user->program_studi ?: '—'),
             'bidang_ilmu' => $profil?->bidang_ilmu ?: '—',
