@@ -42,7 +42,7 @@
                 </label>
             </div>
 
-            <div class="overflow-x-auto">
+            <div class="overflow-x-auto px-2 pb-2 sm:px-4">
                 <table data-datatable data-page-length="10" class="w-full text-left text-sm">
                     <thead>
                         <tr>
@@ -83,7 +83,7 @@
                                         {{ strtoupper($jenis) }}
                                     </a>
                                 </td>
-                                <td>
+                                <td class="whitespace-nowrap">
                                     <span class="badge-status {{ $item->statusClasses($jenis) }}">{{ $item->statusLabel($jenis) }}</span>
                                 </td>
                                 <td class="max-w-xs">
@@ -93,10 +93,10 @@
                                     @if ($item->statusJenis($jenis) === 'diajukan')
                                         {{-- Keputusan hanya berlaku untuk berkas pada baris ini. --}}
                                         @php($kunci = $item->id.'-'.$jenis)
-                                        <details class="group text-left">
+                                        <details name="verifikasi-berkas" class="group text-left">
                                             <summary class="btn-small cursor-pointer list-none [&::-webkit-details-marker]:hidden">Verifikasi</summary>
                                             <form method="POST" action="{{ route('verifikasi-berkas.update', ['syaratKhusus' => $item, 'jenis' => $jenis]) }}"
-                                                  class="mt-3 w-64 rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+                                                  class="mt-3 w-64 rounded-xl border border-slate-200 bg-white p-3 text-left shadow-sm">
                                                 @csrf
                                                 @method('PUT')
 

@@ -332,8 +332,8 @@
     @if (auth()->user()->isAdmin())
         {{-- Ajuan DUPAK dari dosen: admin memutuskan setujui / butuh perbaikan / tolak. --}}
         <section id="dupak" class="scroll-mt-24" data-table-card>
-            <div class="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
-                <div class="flex flex-col gap-4 border-b border-slate-100 px-5 py-5 sm:px-6 lg:flex-row lg:items-center lg:justify-between">
+            <div class="section-card overflow-hidden">
+                <div class="flex flex-col gap-3 border-b border-slate-100 px-5 py-4 sm:px-6 lg:flex-row lg:items-center lg:justify-between">
                     <div>
                         <div class="flex flex-wrap items-center gap-2">
                             <h2 class="text-base font-extrabold tracking-tight text-slate-900">Ajuan DUPAK Masuk</h2>
@@ -401,12 +401,14 @@
                                 <tr>
                                     <td>
                                         <div class="flex items-center gap-2.5">
-                                            <span class="flex size-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-[10px] font-bold text-slate-600">
+                                            <span class="flex size-8 shrink-0 items-center justify-center rounded-lg bg-teal-50 text-[10px] font-extrabold text-teal-700 ring-1 ring-teal-100">
                                                 {{ $item->user->initials() }}
                                             </span>
                                             <div class="min-w-0">
                                                 <p class="truncate text-xs font-bold text-slate-700">{{ $item->user->name }}</p>
-                                                <p class="font-mono text-[10px] text-slate-400">{{ $item->user->nidn ?? '—' }}</p>
+                                                <p class="truncate text-[10px] text-slate-400">
+                                                    {{ $item->user->nidn ?? '—' }} · {{ $item->user->program_studi ?? '—' }}
+                                                </p>
                                             </div>
                                         </div>
                                     </td>
@@ -416,11 +418,11 @@
                                     <td data-order="{{ $item->diajukan_at?->timestamp ?? 0 }}" class="whitespace-nowrap">
                                         <span class="text-xs text-slate-500">{{ $item->diajukan_at?->translatedFormat('d M Y') ?? '—' }}</span>
                                     </td>
-                                    <td>
+                                    <td class="whitespace-nowrap">
                                         <span class="badge-status {{ $item->statusClasses() }}">{{ $item->statusLabel() }}</span>
                                     </td>
-                                    <td class="max-w-56">
-                                        <span class="line-clamp-2 text-[11px] leading-relaxed text-slate-500" title="{{ $item->catatan }}">
+                                    <td class="max-w-xs">
+                                        <span class="text-xs leading-relaxed text-slate-600" title="{{ $item->catatan }}">
                                             {{ $item->catatan ?: '—' }}
                                         </span>
                                     </td>
@@ -437,13 +439,7 @@
                             @empty
                                 <tr>
                                     <td colspan="6" class="px-5 py-16 text-center">
-                                        <span class="mx-auto flex size-14 items-center justify-center rounded-2xl bg-slate-50 text-slate-300">
-                                            <svg class="size-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-                                                <path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z" stroke-linejoin="round" />
-                                                <circle cx="12" cy="12" r="3" />
-                                            </svg>
-                                        </span>
-                                        <p class="mt-3 text-sm font-bold text-slate-700">Belum ada ajuan DUPAK</p>
+                                        <p class="text-sm font-bold text-slate-700">Belum ada ajuan DUPAK</p>
                                         <p class="mt-1 text-xs text-slate-400">DUPAK akan tampil di sini setelah dosen mengajukannya.</p>
                                     </td>
                                 </tr>
