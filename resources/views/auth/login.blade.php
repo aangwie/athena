@@ -19,7 +19,7 @@
                     <x-brand-mark class="size-11" />
                     <span>
                         <span class="block text-xl font-extrabold tracking-tight text-white">{{ $namaWeb }}</span>
-                        <span class="block text-[11px] font-medium tracking-[0.18em] text-teal-100/80 uppercase">Jabatan Akademik</span>
+                        <span class="block text-[11px] font-medium tracking-[0.18em] text-teal-100/80 uppercase">Jabatan Akademik Dosen</span>
                     </span>
                 </a>
 
@@ -230,42 +230,6 @@
                             </svg>
                         </button>
                     </form>
-
-                    <div class="mt-7 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                        <div class="mb-3 flex items-center justify-between gap-3">
-                            <p class="text-xs font-bold tracking-wide text-slate-500 uppercase">Akun demo</p>
-                            <span class="rounded-full bg-teal-50 px-2 py-0.5 text-[10px] font-bold tracking-wide text-teal-700 uppercase">Development</span>
-                        </div>
-                        <div class="grid gap-2 sm:grid-cols-2">
-                            <button type="button"
-                                    data-fill-nidn="1987654321"
-                                    data-fill-password="password"
-                                    class="group flex items-center justify-between gap-2 rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-2.5 text-left transition hover:border-teal-300 hover:bg-teal-50">
-                                <span>
-                                    <span class="block text-xs font-bold text-slate-700 group-hover:text-teal-800">Dosen</span>
-                                    <span class="block font-mono text-[11px] text-slate-500">1987654321</span>
-                                </span>
-                                <svg class="size-4 text-slate-300 transition group-hover:text-teal-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                    <path fill-rule="evenodd" d="M3 10a.75.75 0 0 1 .75-.75h10.638L10.23 5.29a.75.75 0 1 1 1.04-1.08l5.5 5.25a.75.75 0 0 1 0 1.08l-5.5 5.25a.75.75 0 1 1-1.04-1.08l4.158-3.96H3.75A.75.75 0 0 1 3 10Z" clip-rule="evenodd" />
-                                </svg>
-                            </button>
-                            <button type="button"
-                                    data-fill-nidn="0000000001"
-                                    data-fill-password="password"
-                                    class="group flex items-center justify-between gap-2 rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-2.5 text-left transition hover:border-teal-300 hover:bg-teal-50">
-                                <span>
-                                    <span class="block text-xs font-bold text-slate-700 group-hover:text-teal-800">Admin</span>
-                                    <span class="block font-mono text-[11px] text-slate-500">0000000001</span>
-                                </span>
-                                <svg class="size-4 text-slate-300 transition group-hover:text-teal-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                    <path fill-rule="evenodd" d="M3 10a.75.75 0 0 1 .75-.75h10.638L10.23 5.29a.75.75 0 1 1 1.04-1.08l5.5 5.25a.75.75 0 0 1 0 1.08l-5.5 5.25a.75.75 0 1 1-1.04-1.08l4.158-3.96H3.75A.75.75 0 0 1 3 10Z" clip-rule="evenodd" />
-                                </svg>
-                            </button>
-                        </div>
-                        <p class="mt-3 text-[11px] leading-relaxed text-slate-400">
-                            Klik salah satu akun untuk mengisi formulir otomatis · password: <span class="font-mono text-slate-500">password</span>
-                        </p>
-                    </div>
 
                     <p class="mt-8 text-center text-[11px] text-slate-400">
                         Dengan masuk, Anda menyetujui kebijakan penggunaan sistem kampus.

@@ -151,25 +151,6 @@ const boot = () => {
         });
     });
 
-    document.querySelectorAll('[data-fill-nidn]').forEach((button) => {
-        button.addEventListener('click', () => {
-            const nidnInput = document.querySelector('#nidn');
-            const passwordInput = document.querySelector('#password');
-
-            if (nidnInput) {
-                nidnInput.value = button.dataset.fillNidn ?? '';
-                nidnInput.dispatchEvent(new Event('input', { bubbles: true }));
-            }
-
-            if (passwordInput) {
-                passwordInput.value = button.dataset.fillPassword ?? 'password';
-                passwordInput.dispatchEvent(new Event('input', { bubbles: true }));
-            }
-
-            nidnInput?.focus();
-        });
-    });
-
     const capsWarning = document.querySelector('[data-caps-warning]');
     const passwordField = document.querySelector('#password');
 
