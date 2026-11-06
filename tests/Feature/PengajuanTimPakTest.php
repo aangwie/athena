@@ -465,6 +465,37 @@ class PengajuanTimPakTest extends TestCase
         $this->assertSame([11], array_values(array_unique($jumlahKolom)));
     }
 
+    public function test_cetak_menggabungkan_identitas_unsur_dan_pengesahan_dalam_satu_tabel(): void
+    {
+        $dosen = $this->makeUser('dosen');
+        $this->makeKegiatan($dosen, ['nilai_baru' => 2]);
+
+        $cetak = $this->actingAs($dosen)
+            ->get('/profil/pengajuan/cetak?tahun=2026&semester=ganjil')
+            ->assertOk()
+            ->getContent();
+
+        // Hanya satu tabel formulir: "Keterangan Perorangan", "Unsur yang Dinilai", dan
+        // kolom penandatangan menyambung tanpa tabel terpisah.
+        $dom = new \DOMDocument();
+        libxml_use_internal_errors(true);
+        $dom->loadHTML($cetak);
+        libxml_clear_errors();
+
+        $tabel = (new \DOMXPath($dom))->query('//table[contains(@class, "tabel-rekap")]');
+        $this->assertCount(1, $tabel);
+        $this->assertCount(1, (new \DOMXPath($dom))->query('//table[contains(@class, "tabel-cetak")]'));
+
+        // Urutan baris: identitas → unsur yang dinilai → pengesahan (penandatangan).
+        $this->assertLessThan(strpos($cetak, 'Unsur yang Dinilai'), strpos($cetak, 'Keterangan Perorangan'));
+        $this->assertLessThan(strpos($cetak, 'Pendapat Tim Penilai'), strpos($cetak, 'Unsur yang Dinilai'));
+
+        // Label bantu tidak ikut tercetak.
+        $this->assertStringNotContainsString('Status pengajuan', $cetak);
+        $this->assertStringNotContainsString('Dinilai pada', $cetak);
+        $this->assertStringNotContainsString('diisi dari entri DUPAK dosen', $cetak);
+    }
+
     public function test_halaman_review_lain_tetap_menampilkan_kolom_link_bukti(): void
     {
         $dosen = $this->makeUser('dosen');

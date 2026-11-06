@@ -21,70 +21,62 @@
     ];
 @endphp
 
-<div class="overflow-x-auto">
-    <table class="tabel-cetak w-full {{ $kolomPenilai ?? false ? 'min-w-[68rem]' : 'min-w-[54rem]' }} border-collapse text-xs">
-        <colgroup>
-            <col style="width: 55%">
-            <col style="width: 45%">
-        </colgroup>
-        <tbody>
-            {{-- Rekap identitas (kiri) + pernyataan & tanda tangan Ketua (kanan). --}}
-            <tr>
-                <td class="{{ $selPengesahan }}">
-                    <dl class="space-y-1">
-                        @foreach ($rekapPengesahan as [$label, $nilai])
-                            <div class="flex gap-2">
-                                <dt class="{{ $labelPengesahan }}">{{ $label }}</dt>
-                                <dd class="{{ $isiPengesahan }}">: {{ $nilai }}</dd>
-                            </div>
-                        @endforeach
-                    </dl>
+{{-- Baris tabel pengesahan menyatu dengan tabel gabungan halaman cetak (11 kolom):
+     kolom kiri 6 kolom, kolom tanda tangan 5 kolom. --}}
+<tr>
+    {{-- Rekap identitas (kiri) + pernyataan & tanda tangan Ketua (kanan). --}}
+    <td colspan="6" class="{{ $selPengesahan }}">
+        <dl class="space-y-1">
+            @foreach ($rekapPengesahan as [$label, $nilai])
+                <div class="flex gap-2">
+                    <dt class="{{ $labelPengesahan }}">{{ $label }}</dt>
+                    <dd class="{{ $isiPengesahan }}">: {{ $nilai }}</dd>
+                </div>
+            @endforeach
+        </dl>
 
-                    <p class="mt-5 leading-relaxed text-slate-700">
-                        Saya menyatakan bahwa Angka kredit telah dihitung dan dokumen pendukung
-                        DUPAK ini telah divalidasi oleh TIM PAK Perguruan Tinggi
-                    </p>
-                </td>
-                <td class="{{ $selPengesahan }}">
-                    <p class="text-right text-slate-700">{{ $kotaTanggalPengesahan }}</p>
-                    <p class="mt-2 text-right font-semibold text-slate-700">Ketua</p>
-                    <div class="h-16"></div>
-                    <p class="text-right font-bold text-slate-800 underline underline-offset-4">
-                        {{ $pimpinan?->name ?? '................' }}
-                    </p>
-                    <p class="text-right text-[11px] text-slate-500">NIDN {{ $pimpinan?->nidn ?? '................' }}</p>
-                </td>
-            </tr>
+        <p class="mt-5 leading-relaxed text-slate-700">
+            Saya menyatakan bahwa Angka kredit telah dihitung dan dokumen pendukung
+            DUPAK ini telah divalidasi oleh TIM PAK Perguruan Tinggi
+        </p>
+    </td>
+    <td colspan="5" class="{{ $selPengesahan }}">
+        <p class="text-right text-slate-700">{{ $kotaTanggalPengesahan }}</p>
+        <p class="mt-2 text-right font-semibold text-slate-700">Ketua</p>
+        <div class="h-16"></div>
+        <p class="text-right font-bold text-slate-800 underline underline-offset-4">
+            {{ $pimpinan?->name ?? '................' }}
+        </p>
+        <p class="text-right text-[11px] text-slate-500">NIDN {{ $pimpinan?->nidn ?? '................' }}</p>
+    </td>
+</tr>
 
-            {{-- Judul pendapat tim penilai: satu baris penuh. --}}
-            <tr>
-                <td colspan="2" class="{{ $kepalaPengesahan }}">Pendapat Tim Penilai Jabatan Angka Kredit :</td>
-            </tr>
+{{-- Judul pendapat tim penilai: satu baris penuh. --}}
+<tr>
+    <td colspan="11" class="{{ $kepalaPengesahan }}">Pendapat Tim Penilai Jabatan Angka Kredit :</td>
+</tr>
 
-            {{-- Hasil penilaian (kiri) + tanda tangan Tim Penilai Pusat (kanan). --}}
-            <tr>
-                <td class="{{ $selPengesahan }}">
-                    <p class="text-slate-700">Telah memenuhi syarat angka kredit untuk kenaikan Jabatan dan Pangkat menjadi :</p>
+{{-- Hasil penilaian (kiri) + tanda tangan Tim Penilai Pusat (kanan). --}}
+<tr>
+    <td colspan="6" class="{{ $selPengesahan }}">
+        <p class="text-slate-700">Telah memenuhi syarat angka kredit untuk kenaikan Jabatan dan Pangkat menjadi :</p>
 
-                    <div class="mt-3 space-y-1">
-                        <div class="flex gap-2">
-                            <span class="{{ $labelPengesahan }}">Jabatan</span>
-                            <span class="{{ $isiPengesahan }}">: {{ $identitas['jabatan_diajukan'] }}</span>
-                        </div>
-                        <div class="flex gap-2">
-                            <span class="{{ $labelPengesahan }}">Pangkat/Gol</span>
-                            <span class="{{ $isiPengesahan }}">: {{ $identitas['pangkat_nama'] }}</span>
-                        </div>
-                    </div>
-                </td>
-                <td class="{{ $selPengesahan }}">
-                    <p class="text-slate-700">................,</p>
-                    <p class="mt-2 font-semibold text-slate-700">Tim Penilai Pusat</p>
-                    <p class="mt-4 text-slate-700">Ketua</p>
-                    <div class="h-16"></div>
-                    <p class="text-slate-700">................................</p>
-                </td>
-            </tr>
-        </tbody>
-    </table>
-</div>
+        <div class="mt-3 space-y-1">
+            <div class="flex gap-2">
+                <span class="{{ $labelPengesahan }}">Jabatan</span>
+                <span class="{{ $isiPengesahan }}">: {{ $identitas['jabatan_diajukan'] }}</span>
+            </div>
+            <div class="flex gap-2">
+                <span class="{{ $labelPengesahan }}">Pangkat/Gol</span>
+                <span class="{{ $isiPengesahan }}">: {{ $identitas['pangkat_nama'] }}</span>
+            </div>
+        </div>
+    </td>
+    <td colspan="5" class="{{ $selPengesahan }}">
+        <p class="text-slate-700">................,</p>
+        <p class="mt-2 font-semibold text-slate-700">Tim Penilai Pusat</p>
+        <p class="mt-4 text-slate-700">Ketua</p>
+        <div class="h-16"></div>
+        <p class="text-slate-700">................................</p>
+    </td>
+</tr>

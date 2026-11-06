@@ -59,20 +59,29 @@
                 </p>
             </header>
 
-            {{-- Identitas dosen pengusul ("Keterangan Perorangan") di atas kolom "Unsur yang Dinilai". --}}
-            @include('profil.pengajuan.partials.identitas')
-
-            <p class="mb-3 text-xs text-slate-500">
-                Status pengajuan: <span class="font-semibold text-slate-700">{{ $pengajuan?->statusLabel() ?? 'Belum diajukan' }}</span>
-                <span class="text-slate-300">·</span>
-                Dinilai pada: <span class="font-semibold text-slate-700">{{ $pengajuan?->dinilai_at?->translatedFormat('d F Y') ?? '—' }}</span>
-            </p>
-
-            {{-- Formulir cetak: ada grup kolom "Tim Penilai" dan tanpa kolom "Link Bukti". --}}
-            @include('profil.pengajuan.partials.review', ['kolomPenilai' => true, 'kolomLinkBukti' => false])
-
-            {{-- Blok pengesahan: rekap identitas, pernyataan Ketua, dan Pendapat Tim Penilai. --}}
-            @include('profil.pengajuan.partials.pengesahan', ['kolomPenilai' => true])
+            {{-- Satu tabel gabungan: "Keterangan Perorangan", "Unsur yang Dinilai", dan kolom
+                 penandatangan. Tiap partial hanya menyumbang barisnya saja, sehingga garis
+                 antar bagian menyambung tanpa jeda. --}}
+            <div class="overflow-x-auto">
+                <table class="tabel-rekap tabel-cetak w-full min-w-[68rem] border-collapse text-xs">
+                    <caption class="sr-only">Formulir DUPAK: keterangan perorangan, unsur yang dinilai, dan pengesahan</caption>
+                    <colgroup>
+                        {{-- Lebar sama dengan rekap DUPAK: 4+3+3+3+27 + (6 x 10) = 100%. --}}
+                        @foreach ([4, 3, 3, 3, 27, 10, 10, 10, 10, 10, 10] as $lebar)
+                            <col style="width: {{ $lebar }}%">
+                        @endforeach
+                    </colgroup>
+                    <thead>
+                        @include('profil.pengajuan.partials.identitas', ['bagian' => 'kepala'])
+                        @include('profil.pengajuan.partials.review', ['kolomPenilai' => true, 'kolomLinkBukti' => false, 'bagian' => 'kepala'])
+                    </thead>
+                    <tbody>
+                        @include('profil.pengajuan.partials.identitas', ['bagian' => 'isi'])
+                        @include('profil.pengajuan.partials.review', ['kolomPenilai' => true, 'kolomLinkBukti' => false, 'bagian' => 'isi'])
+                        @include('profil.pengajuan.partials.pengesahan')
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
     @if (request()->boolean('print'))

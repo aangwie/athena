@@ -155,6 +155,14 @@
 @endphp
 
 
+{{-- Halaman cetak (cetak.blade.php) menyatukan blok ini ke satu tabel bersama "Keterangan
+     Perorangan" dan kolom penandatangan. Parameternya:
+       $bagian = 'semua'  → tabel utuh (halaman review/tim PAK),
+                 'kepala' → hanya baris <thead>,
+                 'isi'    → hanya baris <tbody>. --}}
+@php $bagian = $bagian ?? 'semua'; @endphp
+
+@if ($bagian === 'semua')
 <div class="overflow-x-auto">
     <table class="tabel-rekap w-full {{ $kolomPenilai ? 'min-w-[68rem]' : 'min-w-[54rem]' }} border-collapse text-xs">
         <caption class="sr-only">Rekap unsur, sub unsur, dan butir kegiatan DUPAK</caption>
@@ -173,9 +181,15 @@
             @endforeach
         </colgroup>
         <thead>
+@endif
+
+@if ($bagian !== 'isi')
             <tr>
                 <th scope="col" rowspan="4" class="{{ $kepala }} w-12 align-middle">No</th>
-                <th scope="col" colspan="{{ $totalAngkaKredit + 4 }}" class="{{ $kepala }}">Unsur yang Dinilai</th>
+                {{-- Judul grup dirata-kirikan agar duduk tepat di atas kolom "Unsur, Sub Unsur,
+                     dan Butir Kegiatan" (baris pertamanya: PENDIDIKAN (BIDANG A)), bukan
+                     melayang di tengah kolom angka kredit. --}}
+                <th scope="col" colspan="{{ $totalAngkaKredit + 4 }}" class="{{ $kepala }}" style="text-align: left">Unsur yang Dinilai</th>
             </tr>
             <tr>
                 <th scope="col" rowspan="3" colspan="4" class="{{ $kepala }} align-middle">Unsur, Sub Unsur, dan Butir Kegiatan</th>
@@ -200,9 +214,14 @@
                     <th scope="col" class="{{ $kepala }}">Jumlah</th>
                 @endif
             </tr>
-        </thead>
+@endif
 
+@if ($bagian === 'semua')
+        </thead>
         <tbody>
+@endif
+
+@if ($bagian !== 'kepala')
             @foreach ($baris as $r)
                 <tr @class([
                     'bg-slate-50' => $r['tingkat'] === 0,
@@ -304,17 +323,19 @@
                     @endif
                 </tr>
             @endforeach
+@endif
+
+@if ($bagian === 'semua')
         </tbody>
     </table>
 </div>
+@endif
 
-<p class="mt-3 text-[11px] leading-relaxed text-slate-400">
-    @if ($kolomPenilai)
-        Kolom <span class="font-semibold">Instansi Pengusul</span> diisi dari entri DUPAK dosen; kolom
-        <span class="font-semibold">Tim Penilai</span> disediakan kosong untuk diisi manual oleh penilai.
-    @else
+@unless ($kolomPenilai)
+    {{-- Catatan hanya untuk halaman non-cetak: halaman cetak memakai kolom Tim Penilai. --}}
+    <p class="mt-3 text-[11px] leading-relaxed text-slate-400">
         Kolom <span class="font-semibold">Baru</span> diisi oleh TIM PAK saat menilai usulan; baris
         <span class="font-semibold">Jumlah</span> di setiap bidang dan <span class="font-semibold">Jumlah Total</span>
         di paling bawah dihitung otomatis dari nilai tersebut.
-    @endif
-</p>
+    </p>
+@endunless

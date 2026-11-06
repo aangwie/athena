@@ -93,6 +93,9 @@
                                 : route('dashboard').'#dupak';
                             // Sudah punya jabatan akademik: lanjut DUPAK. Belum punya: masih di tahap IKD.
                             $punyaJabatanAkademik = filled($user->jabatan_fungsional);
+                            // Menu Usulan SKP muncul bila dosen ditugaskan sebagai Pejabat Penilai SKP.
+                            $punyaUsulanSkp = $user->isDosen()
+                                && \App\Models\Skp::query()->where('pejabat_penilai_id', $user->id)->exists();
                         @endphp
                         @if ($user->isDosen() ? $punyaJabatanAkademik : $user->isAdmin())
                             <a href="{{ $riwayatUrl }}" title="Riwayat DUPAK"
@@ -124,6 +127,17 @@
                                     <path d="M12 4v16" stroke-linecap="round" />
                                 </svg>
                                 <span class="sidebar-label">Riwayat Karya Tulis</span>
+                            </a>
+                        @endif
+                        @if ($punyaUsulanSkp)
+                            <a href="{{ route('skp-usulan.index') }}" title="Usulan SKP"
+                               @class(['sidebar-link', 'sidebar-link-active' => request()->routeIs('skp-usulan.*')])>
+                                <svg class="size-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                    <path d="M9 5H6.5A1.5 1.5 0 0 0 5 6.5v11A1.5 1.5 0 0 0 6.5 19h11a1.5 1.5 0 0 0 1.5-1.5v-11A1.5 1.5 0 0 0 17.5 5H15" stroke-linecap="round" />
+                                    <rect x="9" y="3" width="6" height="4" rx="1.5" />
+                                    <path d="m9 13 2 2 4-4" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                                <span class="sidebar-label">Usulan SKP</span>
                             </a>
                         @endif
                     </div>
@@ -202,6 +216,14 @@
                                     <path d="M9 12.5h7M9 16h4.5" stroke-linecap="round" />
                                 </svg>
                                 <span class="sidebar-label">Surat</span>
+                            </a>
+                            <a href="{{ route('skp.index') }}" title="SKP" @class(['sidebar-link', 'sidebar-link-active' => request()->routeIs('skp.*')])>
+                                <svg class="size-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                    <path d="M9 5H6.5A1.5 1.5 0 0 0 5 6.5v11A1.5 1.5 0 0 0 6.5 19h11a1.5 1.5 0 0 0 1.5-1.5v-11A1.5 1.5 0 0 0 17.5 5H15" stroke-linecap="round" />
+                                    <rect x="9" y="3" width="6" height="4" rx="1.5" />
+                                    <path d="m9 13 2 2 4-4" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                                <span class="sidebar-label">SKP</span>
                             </a>
                             <a href="{{ route('data-dosen.index') }}" title="Data Dosen" @class(['sidebar-link', 'sidebar-link-active' => request()->routeIs('data-dosen.*')])>
                                 <svg class="size-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">

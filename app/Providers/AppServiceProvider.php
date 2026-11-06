@@ -24,7 +24,7 @@ class AppServiceProvider extends ServiceProvider
     {
         // Nama web dari halaman Pengaturan dipakai sidebar, judul halaman, dan footer.
         View::composer(
-            ['layouts.app', 'layouts.auth', 'auth.login', 'dashboard', 'profil.pengajuan.cetak'],
+            ['layouts.app', 'layouts.auth', 'auth.login', 'dashboard', 'profil.pengajuan.cetak', 'skp.cetak'],
             fn ($view) => $view->with('namaWeb', Pengaturan::namaWeb()),
         );
 

@@ -18,44 +18,48 @@
     ];
 @endphp
 
-<div class="mb-3 flex flex-wrap items-end justify-between gap-x-6 gap-y-1 text-xs text-slate-700">
-    <p><span class="font-bold">INSTANSI :</span> {{ $instansi?->nama_instansi ?: '—' }}</p>
-    <p class="sm:text-right">
-        <span class="font-bold">MASA PENILAIAN :</span>
-        {{ $masaPenilaian?->label() ?? '—' }}
-    </p>
-</div>
+{{-- Baris "Keterangan Perorangan" menempel langsung ke tabel gabungan halaman cetak
+     (11 kolom): nomor 1 kolom, label 5 kolom, isi 5 kolom.
+     $bagian = 'kepala' (hanya baris <thead>) atau 'isi' (hanya baris <tbody>). --}}
+@php $bagianIdentitas = $bagian ?? 'semua'; @endphp
 
-<div class="overflow-x-auto">
-    <table class="w-full border-collapse text-xs">
-        <thead>
+@if ($bagianIdentitas !== 'isi')
+    {{-- Instansi & masa penilaian menjadi baris pembuka tabel (bukan div terpisah) agar
+         formulir cetak tampil sebagai satu tabel utuh. --}}
+    <tr>
+        <td colspan="6" class="{{ $selIdentitas }} text-xs">
+            <span class="font-bold">INSTANSI :</span> {{ $instansi?->nama_instansi ?: '—' }}
+        </td>
+        <td colspan="5" class="{{ $selIdentitas }} text-right text-xs">
+            <span class="font-bold">MASA PENILAIAN :</span> {{ $masaPenilaian?->label() ?? '—' }}
+        </td>
+    </tr>
+
+    <tr>
+        <th scope="col" colspan="11" class="{{ $kepalaIdentitas }}">Keterangan Perorangan</th>
+    </tr>
+@endif
+
+@if ($bagianIdentitas !== 'kepala')
+    @foreach ($barisIdentitas as $no => $item)
+        <tr>
+            <td class="{{ $selIdentitas }} text-center align-middle font-semibold text-slate-600">{{ $no }}</td>
+            <td colspan="5" class="{{ $selIdentitas }} font-semibold text-slate-700">{{ $item[0] }}</td>
+            <td colspan="5" class="{{ $selIdentitas }} text-slate-800">{{ $item[1] }}</td>
+        </tr>
+
+        @if ($no === 6)
+            {{-- Rincian jabatan akademik: jurusan/prodi dan bidang ilmu. --}}
             <tr>
-                <th scope="col" class="{{ $kepalaIdentitas }} w-14">No</th>
-                <th scope="col" colspan="2" class="{{ $kepalaIdentitas }}">Keterangan Perorangan</th>
+                <td class="{{ $selIdentitas }} text-center align-middle text-slate-600">a.</td>
+                <td colspan="5" class="{{ $selIdentitas }} pl-6 font-semibold text-slate-700">Jurusan/Program Studi</td>
+                <td colspan="5" class="{{ $selIdentitas }} text-slate-800">{{ $identitas['jurusan_prodi'] }}</td>
             </tr>
-        </thead>
-        <tbody>
-            @foreach ($barisIdentitas as $no => $item)
-                <tr>
-                    <td class="{{ $selIdentitas }} w-14 text-center align-middle font-semibold text-slate-600">{{ $no }}</td>
-                    <td class="{{ $selIdentitas }} w-72 font-semibold text-slate-700">{{ $item[0] }}</td>
-                    <td class="{{ $selIdentitas }} text-slate-800">{{ $item[1] }}</td>
-                </tr>
-
-                @if ($no === 6)
-                    {{-- Rincian jabatan akademik: jurusan/prodi dan bidang ilmu. --}}
-                    <tr>
-                        <td class="{{ $selIdentitas }} w-14 text-center align-middle text-slate-600">a.</td>
-                        <td class="{{ $selIdentitas }} pl-6 font-semibold text-slate-700">Jurusan/Program Studi</td>
-                        <td class="{{ $selIdentitas }} text-slate-800">{{ $identitas['jurusan_prodi'] }}</td>
-                    </tr>
-                    <tr>
-                        <td class="{{ $selIdentitas }} w-14 text-center align-middle text-slate-600">b.</td>
-                        <td class="{{ $selIdentitas }} pl-6 font-semibold text-slate-700">Bidang Ilmu</td>
-                        <td class="{{ $selIdentitas }} text-slate-800">{{ $identitas['bidang_ilmu'] }}</td>
-                    </tr>
-                @endif
-            @endforeach
-        </tbody>
-    </table>
-</div>
+            <tr>
+                <td class="{{ $selIdentitas }} text-center align-middle text-slate-600">b.</td>
+                <td colspan="5" class="{{ $selIdentitas }} pl-6 font-semibold text-slate-700">Bidang Ilmu</td>
+                <td colspan="5" class="{{ $selIdentitas }} text-slate-800">{{ $identitas['bidang_ilmu'] }}</td>
+            </tr>
+        @endif
+    @endforeach
+@endif

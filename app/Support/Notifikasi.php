@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\PengajuanDupak;
+use App\Models\Skp;
 use App\Models\SyaratKhusus;
 use App\Models\User;
 use Illuminate\Support\Collection;
@@ -72,7 +73,25 @@ class Notifikasi
                 'waktu' => $row->updated_at,
             ]);
 
-        return $dupak->concat($berkas);
+        $skp = Skp::query()
+            ->with(['dosen', 'pejabatPenilai'])
+            ->whereNotNull('nilai_orientasi')
+            ->whereNotNull('nilai_integritas')
+            ->whereNotNull('nilai_komitmen')
+            ->whereNotNull('nilai_disiplin')
+            ->whereNotNull('nilai_kerjasama')
+            ->whereNotNull('nilai_kepemimpinan')
+            ->latest('updated_at')
+            ->limit(self::MAKS)
+            ->get()
+            ->map(fn (Skp $row) => [
+                'judul' => 'Nilai perilaku kerja SKP diperbarui',
+                'keterangan' => ($row->dosen?->name ?? '—').' · '.$row->periodeLabel().' · '.($row->pejabatPenilai?->name ?? '—'),
+                'url' => route('skp.index'),
+                'waktu' => $row->updated_at,
+            ]);
+
+        return $dupak->concat($berkas)->concat($skp);
     }
 
     /**
@@ -129,7 +148,20 @@ class Notifikasi
                 'waktu' => $row->updated_at,
             ]);
 
-        return $dupak->concat($berkas);
+        $skp = Skp::query()
+            ->with(['dosen'])
+            ->where('pejabat_penilai_id', $user->id)
+            ->latest('created_at')
+            ->limit(self::MAKS)
+            ->get()
+            ->map(fn (Skp $row) => [
+                'judul' => 'Usulan SKP untuk dinilai',
+                'keterangan' => ($row->dosen?->name ?? '—').' · '.$row->periodeLabel(),
+                'url' => route('skp-usulan.index'),
+                'waktu' => $row->created_at,
+            ]);
+
+        return $dupak->concat($berkas)->concat($skp);
     }
 
     /**

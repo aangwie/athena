@@ -21,6 +21,8 @@ use App\Http\Controllers\PengaturanController;
 use App\Http\Controllers\ProfilDosenController;
 use App\Http\Controllers\RiwayatPekerjaanController;
 use App\Http\Controllers\RiwayatPendidikanController;
+use App\Http\Controllers\SkpController;
+use App\Http\Controllers\SkpUsulanController;
 use App\Http\Controllers\SuratController;
 use App\Http\Controllers\WhatsAppController;
 use Illuminate\Support\Facades\Auth;
@@ -147,6 +149,11 @@ Route::middleware('auth')->group(function () {
         Route::delete('/riwayat-pekerjaan/angka-kredit/{riwayatAngkaKredit}', [RiwayatPekerjaanController::class, 'destroyAngkaKredit'])->name('pekerjaan.angka-kredit.destroy');
     });
 
+    Route::middleware('dosen')->prefix('skp-usulan')->name('skp-usulan.')->group(function () {
+        Route::get('/', [SkpUsulanController::class, 'index'])->name('index');
+        Route::put('/{skp}', [SkpUsulanController::class, 'update'])->name('update');
+    });
+
     Route::middleware('admin')->prefix('verifikasi-dupak')->name('verifikasi-dupak.')->group(function () {
         Route::get('/{pengajuan}', [PengajuanDupakController::class, 'verifikasi'])->name('show');
         Route::put('/{pengajuan}', [PengajuanDupakController::class, 'putuskan'])->name('update');
@@ -184,6 +191,14 @@ Route::middleware('auth')->group(function () {
         Route::put('/pengantar/{pengantar}', [SuratController::class, 'updatePengantar'])->name('pengantar.update');
         Route::delete('/pengantar/{pengantar}', [SuratController::class, 'destroyPengantar'])->name('pengantar.destroy');
         Route::get('/pengantar/{pengantar}/cetak', [SuratController::class, 'cetakPengantar'])->name('pengantar.cetak');
+    });
+
+    Route::middleware('admin')->prefix('skp')->name('skp.')->group(function () {
+        Route::get('/', [SkpController::class, 'index'])->name('index');
+        Route::get('/{skp}/cetak', [SkpController::class, 'cetak'])->name('cetak');
+        Route::post('/', [SkpController::class, 'store'])->name('store');
+        Route::put('/{skp}', [SkpController::class, 'update'])->name('update');
+        Route::delete('/{skp}', [SkpController::class, 'destroy'])->name('destroy');
     });
 
     Route::middleware('tim_pak')->prefix('tim-pak')->name('tim-pak.')->group(function () {

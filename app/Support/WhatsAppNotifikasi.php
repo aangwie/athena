@@ -4,6 +4,7 @@ namespace App\Support;
 
 use App\Models\KegiatanDupak;
 use App\Models\PengajuanDupak;
+use App\Models\Skp;
 use App\Models\SyaratKhusus;
 use App\Models\User;
 use Illuminate\Support\Collection;
@@ -136,6 +137,38 @@ class WhatsAppNotifikasi
         }
 
         self::kirimKe(collect([$dosen]), 'Keputusan Berkas '.$label, $pesan);
+    }
+
+    /**
+     * Admin membuat SKP: pejabat penilai diberi tahu ada usulan yang harus dinilai.
+     */
+    public static function skpMasuk(Skp $skp): void
+    {
+        $pejabat = $skp->pejabatPenilai;
+
+        if ($pejabat === null) {
+            return;
+        }
+
+        self::kirimKe(
+            collect([$pejabat]),
+            'Usulan SKP',
+            'Anda ditugaskan sebagai Pejabat Penilai untuk '.($skp->dosen?->name ?? '—')
+                .' periode '.$skp->periodeLabel().'. Silakan isi nilai perilaku kerja pada menu Usulan SKP.',
+        );
+    }
+
+    /**
+     * Pejabat penilai mengisi nilai perilaku kerja: semua admin diberi tahu.
+     */
+    public static function skpDinilai(Skp $skp): void
+    {
+        self::kirimKe(
+            User::berRole(['admin']),
+            'Nilai Perilaku Kerja SKP',
+            'Pejabat penilai '.($skp->pejabatPenilai?->name ?? '—')
+                .' telah mengisi nilai perilaku kerja untuk '.($skp->dosen?->name ?? '—').' periode '.$skp->periodeLabel().'.',
+        );
     }
 
     /**
