@@ -13,6 +13,7 @@ class SuratPaktaIntegritas extends Model
     protected $fillable = [
         'user_id',
         'tanggal_pakta',
+        'nomor_validasi',
         'karya_tulis_ids',
     ];
 

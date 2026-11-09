@@ -20,11 +20,8 @@ use App\Models\SuratPengantar;
 use App\Models\SuratPernyataanPimpinan;
 use App\Models\TimKomite;
 use App\Models\User;
-use App\Support\SuratPengantarPdf;
-use App\Support\SuratPernyataanPimpinanPdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
@@ -202,6 +199,32 @@ class SuratController extends Controller
         ]);
     }
 
+    /**
+     * Lembar validasi karya ilmiah siap cetak: tabel identitas karya (jurnal/prosiding)
+     * yang divalidasi, dengan format surat tersendiri.
+     */
+    public function cetakValidasiPaktaIntegritas(SuratPaktaIntegritas $pakta): View
+    {
+        $pakta->load(['dosen' => [
+            'profilDosen',
+            'riwayatKepangkatan.kepangkatan',
+            'riwayatJabatanStruktural',
+            'riwayatPendidikan',
+            'karyaTulis',
+        ]]);
+
+        return view('surat.pakta-integritas.validasi', [
+            'pakta' => $pakta,
+            'instansi' => Instansi::query()->first(),
+            // Tempat pada baris tanda tangan mengikuti kota instansi.
+            'kota' => Instansi::query()->value('kota'),
+            'identitas' => $this->identitasDosen($pakta->dosen),
+            // Ketua instansi sebagai penanda tangan lembar validasi.
+            'ketua' => $this->identitas($this->ketua()),
+            'karya' => $pakta->karyaTerpilih(),
+        ]);
+    }
+
     public function storeBapSenat(SuratBapSenatRequest $request): RedirectResponse
     {
         SuratBapSenat::query()->create($this->dataBap($request));
@@ -285,32 +308,21 @@ class SuratController extends Controller
     }
 
     /**
-     * Surat pengantar siap cetak: pribadi (blok identitas) atau kolektif (tabel dosen).
+     * Surat pengantar siap cetak: halaman pratinjau A4 (HTML) bentuk pribadi maupun
+     * kolektif, dengan pilihan margin sebelum dicetak.
      */
-    public function cetakPengantar(SuratPengantar $pengantar): Response
+    public function cetakPengantar(SuratPengantar $pengantar): View
     {
-        $pdf = new SuratPengantarPdf(
-            Instansi::query()->first(),
-            $pengantar,
-            $pengantar->dosenList()
-                ->map(function (User $dosen): array {
-                    $identitas = $this->identitasDosen($dosen);
-
-                    return [
-                        'nama' => $identitas['nama'],
-                        'nidn' => $identitas['nidn'],
-                        'nuptk' => $identitas['nuptk'],
-                        'jabatan' => $identitas['jabatan'],
-                    ];
-                })
+        return view('surat.pengantar.cetak', [
+            'pengantar' => $pengantar,
+            'instansi' => Instansi::query()->first(),
+            // Tempat pada baris tanda tangan mengikuti kota instansi.
+            'kota' => Instansi::query()->value('kota'),
+            'dosen' => $pengantar->dosenList()
+                ->map(fn (User $dosen): array => $this->identitasDosen($dosen))
                 ->all(),
-            $this->identitas($this->ketua()),
-        );
-        $pdf->buat();
-
-        return response($pdf->isi(), 200, [
-            'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="'.$pdf->namaBerkas().'"',
+            // Penanda tangan surat pengantar: pimpinan berjabatan Ketua/Rektor.
+            'pimpinan' => $this->identitas($this->ketua()),
         ]);
     }
 
@@ -372,21 +384,21 @@ class SuratController extends Controller
     /**
      * Surat siap cetak: PDF A4 (FPDF) yang langsung tampil di peramban.
      */
-    public function cetakPernyataanPimpinan(SuratPernyataanPimpinan $pernyataan): Response
+    /**
+     * Surat pernyataan pimpinan siap cetak: halaman pratinjau A4 (HTML) dengan
+     * pilihan margin sebelum dicetak.
+     */
+    public function cetakPernyataanPimpinan(SuratPernyataanPimpinan $pernyataan): View
     {
         $pernyataan->load(['pimpinan.jabatanStruktural', 'pimpinan.user', 'dosen']);
 
-        $pdf = new SuratPernyataanPimpinanPdf(
-            Instansi::query()->first(),
-            $pernyataan,
-            $this->identitas($pernyataan->pimpinan?->user, $pernyataan->pimpinan?->jabatanStruktural?->nama),
-            $this->identitas($pernyataan->dosen),
-        );
-        $pdf->buat();
-
-        return response($pdf->isi(), 200, [
-            'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="'.$pdf->namaBerkas().'"',
+        return view('surat.pernyataan-pimpinan.cetak', [
+            'pernyataan' => $pernyataan,
+            'instansi' => Instansi::query()->first(),
+            // Tempat pada baris tanda tangan mengikuti kota instansi.
+            'kota' => Instansi::query()->value('kota'),
+            'pimpinan' => $this->identitas($pernyataan->pimpinan?->user, $pernyataan->pimpinan?->jabatanStruktural?->nama),
+            'dosen' => $this->identitas($pernyataan->dosen),
         ]);
     }
 
@@ -411,6 +423,7 @@ class SuratController extends Controller
         return [
             'user_id' => $data['dosen_id'],
             'tanggal_pakta' => Carbon::createFromFormat('d-m-Y', $data['tanggal_pakta'])->toDateString(),
+            'nomor_validasi' => $data['nomor_validasi'] ?? null,
             'karya_tulis_ids' => array_map('intval', $data['karya_tulis_ids'] ?? []),
         ];
     }

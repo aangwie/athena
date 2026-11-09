@@ -69,6 +69,22 @@
                 @endif
             </p>
         </div>
+
+        <div class="sm:col-span-2">
+            <label for="nomor_validasi" class="form-label">
+                Nomor Validasi Surat
+            </label>
+            <input type="text" id="nomor_validasi" name="nomor_validasi" maxlength="150"
+                   value="{{ old('nomor_validasi', $paktaEdit?->nomor_validasi) }}"
+                   placeholder="Contoh: 750/STKIP PGRI PACITAN/KL/TX/2025"
+                   autocomplete="off"
+                   @class(['form-input', 'border-rose-300 bg-rose-50/40' => $errors->has('nomor_validasi')])>
+            @error('nomor_validasi') <p class="form-error">{{ $message }}</p> @enderror
+
+            <p class="mt-1.5 text-[11px] text-slate-400">
+                Dipakai sebagai nomor pada lembar validasi karya ilmiah (opsional).
+            </p>
+        </div>
     </div>
 
     <div class="mt-5 border-t border-slate-100 pt-4" data-karya-picker
@@ -165,15 +181,18 @@
                         </td>
                         <td>
                             <div class="flex items-center justify-end gap-1">
-                                <a href="{{ route('surat.pakta-integritas.cetak', $pakta) }}"
-                                   target="_blank" rel="noopener" title="Print" aria-label="Print"
-                                   class="inline-flex items-center justify-center rounded-lg p-2 text-slate-500 transition hover:bg-teal-50 hover:text-teal-700">
+                                {{-- Pilih jenis cetak (Pernyataan/Validasi) lewat dialog SweetAlert2. --}}
+                                <button type="button" title="Cetak" aria-label="Cetak"
+                                        data-cetak-pakta
+                                        data-cetak-pernyataan="{{ route('surat.pakta-integritas.cetak', $pakta) }}"
+                                        data-cetak-validasi="{{ route('surat.pakta-integritas.validasi', $pakta) }}"
+                                        class="inline-flex items-center justify-center rounded-lg p-2 text-slate-500 transition hover:bg-teal-50 hover:text-teal-700">
                                     <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
                                         <path d="M7 9V4h10v5" stroke-linejoin="round" />
                                         <rect x="4" y="9" width="16" height="7" rx="2" />
                                         <path d="M7 14h10v5.5H7z" stroke-linejoin="round" />
                                     </svg>
-                                </a>
+                                </button>
                                 <a href="{{ route('surat.index', ['edit_pakta' => $pakta->id]) }}#pakta-integritas"
                                    title="Edit" aria-label="Edit"
                                    class="inline-flex items-center justify-center rounded-lg p-2 text-slate-500 transition hover:bg-teal-50 hover:text-teal-700">

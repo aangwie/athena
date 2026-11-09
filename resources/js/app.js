@@ -467,6 +467,35 @@ const boot = () => {
         });
     });
 
+    // Pakta integritas: pilih jenis cetak (Pernyataan atau Validasi) lewat dialog SweetAlert2.
+    document.querySelectorAll('[data-cetak-pakta]').forEach((button) => {
+        button.addEventListener('click', () => {
+            const pernyataan = button.dataset.cetakPernyataan;
+            const validasi = button.dataset.cetakValidasi;
+
+            Swal.fire({
+                title: 'Pilih jenis cetak',
+                text: 'Pilih dokumen yang ingin dicetak untuk pakta integritas ini.',
+                icon: 'question',
+                showDenyButton: true,
+                showCancelButton: true,
+                confirmButtonText: 'Pernyataan',
+                denyButtonText: 'Validasi',
+                cancelButtonText: 'Batal',
+                confirmButtonColor: '#0d9488',
+                denyButtonColor: '#4f46e5',
+                cancelButtonColor: '#64748b',
+                reverseButtons: true,
+            }).then((result) => {
+                if (result.isConfirmed && pernyataan) {
+                    window.open(pernyataan, '_blank', 'noopener');
+                } else if (result.isDenied && validasi) {
+                    window.open(validasi, '_blank', 'noopener');
+                }
+            });
+        });
+    });
+
     const sidebar = document.querySelector('[data-sidebar]');
     const sidebarOverlay = document.querySelector('[data-sidebar-overlay]');
 
@@ -744,6 +773,41 @@ const boot = () => {
         select.addEventListener('change', sync);
         sync();
     });
+
+    // Riwayat karya tulis: bidang jurnal/prosiding tampil mengikuti jenis karya ilmiah terpilih.
+    const karyaJenis = document.querySelector('#karya_ilmiah');
+
+    if (karyaJenis) {
+        const jurnalBox = document.querySelector('[data-grup-jurnal]');
+        const prosidingBox = document.querySelector('[data-grup-prosiding]');
+        const jenisJurnal = JSON.parse(karyaJenis.dataset.karyaJurnal || '[]');
+        const jenisProsiding = karyaJenis.dataset.karyaProsiding || '';
+
+        // Input pada grup tersembunyi dinonaktifkan (dan tidak wajib) agar tidak
+        // ikut tervalidasi/terkirim; grup yang tampil dikembalikan aktif & wajib.
+        const setGrup = (box, tampil) => {
+            if (!box) {
+                return;
+            }
+
+            box.classList.toggle('hidden', !tampil);
+
+            box.querySelectorAll('input, select, textarea').forEach((el) => {
+                el.disabled = !tampil;
+                el.required = tampil && el.dataset.wajib !== undefined;
+            });
+        };
+
+        const syncKaryaJenis = () => {
+            const jenis = karyaJenis.value;
+
+            setGrup(jurnalBox, jenisJurnal.includes(jenis));
+            setGrup(prosidingBox, jenis === jenisProsiding);
+        };
+
+        karyaJenis.addEventListener('change', syncKaryaJenis);
+        syncKaryaJenis();
+    }
 
     // Select dengan pencarian: input [data-select-filter="#id-select"] menyaring opsi select tujuannya.
     document.querySelectorAll('[data-select-filter]').forEach((input) => {

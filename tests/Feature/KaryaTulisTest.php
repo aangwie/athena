@@ -32,6 +32,8 @@ class KaryaTulisTest extends TestCase
             'karya_ilmiah' => 'Jurnal Nasional Terakreditasi Kemendiktisaintek (1,2,3,4,5,6)',
             'judul' => 'Penerapan Augmented Reality pada Pembelajaran Pemrograman Dasar',
             'link_bukti' => 'https://drive.google.com/file/d/1AbCdEfGhIjKlMnOpQrStUvWxYz/view?usp=sharing',
+            'nama_jurnal' => 'Jurnal Teknologi Pendidikan',
+            'url_jurnal' => 'https://jurnal.example.org/index.php/jtp',
         ], $overrides);
     }
 
@@ -116,6 +118,132 @@ class KaryaTulisTest extends TestCase
             ->assertSessionHasErrors('karya_ilmiah');
 
         $this->assertDatabaseCount('karya_tulis', 0);
+    }
+
+    public function test_jurnal_fields_are_required_and_saved_for_jurnal_types(): void
+    {
+        $dosen = $this->makeDosen();
+
+        // Bidang jurnal (nama jurnal, alamat web, & ISSN opsional) tampil pada formulir.
+        $this->actingAs($dosen)
+            ->get('/profil/riwayat-karya-tulis')
+            ->assertOk()
+            ->assertSee('Nama Jurnal')
+            ->assertSee('Alamat Web Jurnal')
+            ->assertSee('id="issn_jurnal"', false)
+            // Grup bidang toggle (nama atribut grup beda dari select agar tidak bentrok).
+            ->assertSee('data-grup-jurnal', false)
+            ->assertSee('data-grup-prosiding', false)
+            ->assertSee('data-karya-jurnal', false)
+            ->assertSee('data-karya-prosiding', false)
+            ->assertSee('data-karya-jurnal-input', false);
+
+        // Ketiga jenis jurnal menyertakan nama jurnal & alamat web jurnal.
+        foreach (KaryaTulis::JENIS_JURNAL as $jenis) {
+            $this->actingAs($dosen)
+                ->post('/profil/riwayat-karya-tulis', $this->payload(['karya_ilmiah' => $jenis]))
+                ->assertSessionHasNoErrors();
+        }
+
+        $this->assertSame(3, KaryaTulis::query()->count());
+
+        // Menghilangkan nama jurnal / alamat web jurnal ditolak untuk jenis jurnal.
+        $this->actingAs($dosen)
+            ->from('/profil/riwayat-karya-tulis')
+            ->post('/profil/riwayat-karya-tulis', $this->payload([
+                'nama_jurnal' => '',
+                'url_jurnal' => 'bukan-url',
+            ]))
+            ->assertSessionHasErrors(['nama_jurnal', 'url_jurnal']);
+    }
+
+    public function test_prosiding_fields_are_required_and_saved_for_prosiding_type(): void
+    {
+        $dosen = $this->makeDosen();
+
+        $this->actingAs($dosen)
+            ->get('/profil/riwayat-karya-tulis')
+            ->assertOk()
+            ->assertSee('Nama Prosiding')
+            ->assertSee('ISSN')
+            ->assertSee('URL Prosiding')
+            ->assertSee('URL Plagiasi');
+
+        $this->actingAs($dosen)
+            ->post('/profil/riwayat-karya-tulis', $this->payload([
+                'karya_ilmiah' => KaryaTulis::JENIS_PROSIDING,
+                'nama_prosiding' => 'Prosiding Seminar Nasional Informatika',
+                'issn' => '2686-1234',
+                'url_prosiding' => 'https://prosiding.example.org/sni',
+                'url_plagiasi' => 'https://drive.google.com/file/d/PlagiasiId/view?usp=sharing',
+            ]))
+            ->assertRedirect(route('profil.karya-tulis.index'))
+            ->assertSessionHasNoErrors();
+
+        $karya = KaryaTulis::firstOrFail();
+        $this->assertTrue($karya->isProsiding());
+        $this->assertFalse($karya->isJurnal());
+        $this->assertSame('Prosiding Seminar Nasional Informatika', $karya->nama_prosiding);
+        $this->assertSame('2686-1234', $karya->issn);
+        $this->assertSame('https://prosiding.example.org/sni', $karya->url_prosiding);
+        // Bidang jurnal dikosongkan karena jenisnya prosiding.
+        $this->assertNull($karya->nama_jurnal);
+        $this->assertNull($karya->url_jurnal);
+
+        // Bidang prosiding wajib saat jenis prosiding dipilih — kecuali ISSN (opsional).
+        $this->actingAs($dosen)
+            ->from('/profil/riwayat-karya-tulis')
+            ->post('/profil/riwayat-karya-tulis', $this->payload([
+                'karya_ilmiah' => KaryaTulis::JENIS_PROSIDING,
+                'nama_prosiding' => '',
+                'issn' => '',
+                'url_prosiding' => '',
+                'url_plagiasi' => '',
+            ]))
+            ->assertSessionHasErrors(['nama_prosiding', 'url_prosiding', 'url_plagiasi'])
+            ->assertSessionDoesntHaveErrors('issn');
+    }
+
+    public function test_issn_is_optional_for_jurnal_and_prosiding(): void
+    {
+        $dosen = $this->makeDosen();
+
+        // Jurnal: ISSN opsional (dikosongkan tetap tersimpan).
+        $this->actingAs($dosen)
+            ->post('/profil/riwayat-karya-tulis', $this->payload(['issn' => '']))
+            ->assertSessionHasNoErrors();
+
+        $jurnal = KaryaTulis::firstOrFail();
+        $this->assertTrue($jurnal->isJurnal());
+        $this->assertNull($jurnal->issn);
+
+        // Jurnal: ISSN boleh diisi dan tersimpan.
+        $this->actingAs($dosen)
+            ->put(route('profil.karya-tulis.update', $jurnal), $this->payload(['issn' => '2302-9999']))
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame('2302-9999', $jurnal->refresh()->issn);
+
+        // Bidang ISSN tampil di grup jurnal maupun prosiding.
+        $this->actingAs($dosen)
+            ->get('/profil/riwayat-karya-tulis')
+            ->assertOk()
+            ->assertSee('id="issn_jurnal"', false)
+            ->assertSee('id="issn"', false);
+
+        // Prosiding: ISSN opsional (dikosongkan tetap tersimpan dengan bidang prosiding lain).
+        $this->actingAs($dosen)
+            ->post('/profil/riwayat-karya-tulis', $this->payload([
+                'karya_ilmiah' => KaryaTulis::JENIS_PROSIDING,
+                'nama_prosiding' => 'Prosiding Nasional',
+                'issn' => '',
+                'url_prosiding' => 'https://prosiding.example.org/x',
+                'url_plagiasi' => 'https://drive.google.com/file/d/PlagId/view?usp=sharing',
+            ]))
+            ->assertSessionHasNoErrors();
+
+        $prosiding = KaryaTulis::query()->where('karya_ilmiah', KaryaTulis::JENIS_PROSIDING)->firstOrFail();
+        $this->assertNull($prosiding->issn);
     }
 
     public function test_dosen_cannot_touch_other_dosen_karya_tulis(): void

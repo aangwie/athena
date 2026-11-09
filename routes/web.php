@@ -176,6 +176,7 @@ Route::middleware('auth')->group(function () {
         Route::put('/pakta-integritas/{pakta}', [SuratController::class, 'updatePaktaIntegritas'])->name('pakta-integritas.update');
         Route::delete('/pakta-integritas/{pakta}', [SuratController::class, 'destroyPaktaIntegritas'])->name('pakta-integritas.destroy');
         Route::get('/pakta-integritas/{pakta}/cetak', [SuratController::class, 'cetakPaktaIntegritas'])->name('pakta-integritas.cetak');
+        Route::get('/pakta-integritas/{pakta}/validasi', [SuratController::class, 'cetakValidasiPaktaIntegritas'])->name('pakta-integritas.validasi');
 
         Route::post('/bap-senat', [SuratController::class, 'storeBapSenat'])->name('bap-senat.store');
         Route::put('/bap-senat/{bap}', [SuratController::class, 'updateBapSenat'])->name('bap-senat.update');

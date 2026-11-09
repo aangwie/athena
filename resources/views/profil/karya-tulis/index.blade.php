@@ -7,6 +7,10 @@
 @section('content')
     @php
         $isEdit = $editItem !== null;
+        // Jenis terpilih: prioritaskan input lama (validasi gagal), lalu item edit.
+        $jenisTerpilih = old('karya_ilmiah', $editItem?->karya_ilmiah);
+        $isJurnal = in_array($jenisTerpilih, $jenisJurnal, true);
+        $isProsiding = $jenisTerpilih === $jenisProsiding;
     @endphp
 
     <div class="mx-auto max-w-5xl">
@@ -77,6 +81,8 @@
                             <label for="karya_ilmiah" class="form-label">Karya Ilmiah <span class="text-rose-500">*</span></label>
                             <select id="karya_ilmiah" name="karya_ilmiah" required
                                     data-select-search="Cari jenis karya ilmiah…"
+                                    data-karya-jurnal="{{ json_encode($jenisJurnal, JSON_UNESCAPED_SLASHES) }}"
+                                    data-karya-prosiding="{{ $jenisProsiding }}"
                                     @class(['form-select', 'border-rose-300 bg-rose-50/40' => $errors->has('karya_ilmiah')])>
                                 <option value="">Pilih jenis karya ilmiah</option>
                                 @foreach ($jenisList as $jenis)
@@ -98,29 +104,87 @@
                     </div>
 
                     <div>
-                        <label for="link_bukti" class="form-label">Link Bukti Google Drive <span class="text-rose-500">*</span></label>
-                        <input type="url" id="link_bukti" name="link_bukti" value="{{ old('link_bukti', $editItem?->link_bukti) }}"
-                               placeholder="https://drive.google.com/file/d/…/view" data-link-input inputmode="url" required
-                               @class(['form-input', 'border-rose-300 bg-rose-50/40' => $errors->has('link_bukti')])>
-                        @error('link_bukti') <p class="form-error">{{ $message }}</p> @enderror
+                        @include('profil.karya-tulis.partials.input-link', [
+                            'name' => 'link_bukti',
+                            'label' => 'Link Bukti Google Drive',
+                            'value' => $editItem?->link_bukti,
+                            'placeholder' => 'https://drive.google.com/file/d/…/view',
+                            'required' => true,
+                            'hint' => 'Pastikan akses berkas di Google Drive disetel "Anyone with the link" agar tautan dapat dibuka.',
+                        ])
+                    </div>
 
-                        <div data-link-preview class="mt-2 hidden items-center gap-2.5 rounded-xl border border-teal-100 bg-teal-50/60 px-3 py-2">
-                            <span class="flex size-8 shrink-0 items-center justify-center rounded-lg bg-white text-teal-600 shadow-sm ring-1 ring-teal-100">
-                                <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                                    <path d="M10.5 13.5a3.5 3.5 0 0 0 5 0l3-3a3.54 3.54 0 0 0-5-5l-1.2 1.2" stroke-linecap="round" stroke-linejoin="round" />
-                                    <path d="M13.5 10.5a3.5 3.5 0 0 0-5 0l-3 3a3.54 3.54 0 0 0 5 5l1.2-1.2" stroke-linecap="round" stroke-linejoin="round" />
-                                </svg>
-                            </span>
-                            <div class="min-w-0">
-                                <p data-link-host class="text-[11px] font-bold text-teal-800"></p>
-                                <a data-link-url href="#" target="_blank" rel="noopener noreferrer"
-                                   class="block truncate text-[11px] text-teal-600 underline underline-offset-2"></a>
-                            </div>
+                    {{-- Bidang tambahan saat jenis karya berupa jurnal. --}}
+                    <div @class(['grid gap-5 sm:grid-cols-2', 'hidden' => ! $isJurnal]) data-grup-jurnal>
+                        <div>
+                            <label for="nama_jurnal" class="form-label">Nama Jurnal <span class="text-rose-500">*</span></label>
+                            <input type="text" id="nama_jurnal" name="nama_jurnal"
+                                   value="{{ old('nama_jurnal', $editItem?->nama_jurnal) }}"
+                                   placeholder="Nama jurnal tempat karya diterbitkan" maxlength="255" data-karya-jurnal-input data-wajib
+                                   @required($isJurnal) @disabled(! $isJurnal)
+                                   @class(['form-input', 'border-rose-300 bg-rose-50/40' => $errors->has('nama_jurnal')])>
+                            @error('nama_jurnal') <p class="form-error">{{ $message }}</p> @enderror
                         </div>
-                        <p data-link-invalid class="form-error hidden" role="alert">Link belum valid, sertakan http:// atau https://.</p>
-                        <p class="mt-1.5 text-[11px] leading-relaxed text-slate-400">
-                            Pastikan akses berkas di Google Drive disetel "Anyone with the link" agar tautan dapat dibuka.
-                        </p>
+
+                        @include('profil.karya-tulis.partials.input-link', [
+                            'name' => 'url_jurnal',
+                            'label' => 'Alamat Web Jurnal',
+                            'value' => $editItem?->url_jurnal,
+                            'placeholder' => 'https://jurnal.example.org/index.php/…',
+                            'required' => $isJurnal,
+                            'wajib' => true,
+                            'disabled' => ! $isJurnal,
+                        ])
+
+                        {{-- ISSN opsional: boleh diisi atau dikosongkan. --}}
+                        <div>
+                            <label for="issn_jurnal" class="form-label">ISSN <span class="text-[11px] font-medium text-slate-400">(opsional)</span></label>
+                            <input type="text" id="issn_jurnal" name="issn" value="{{ old('issn', $editItem?->issn) }}"
+                                   placeholder="Contoh: 2686-1234" maxlength="50" @disabled(! $isJurnal)
+                                   @class(['form-input', 'border-rose-300 bg-rose-50/40' => $errors->has('issn')])>
+                            @error('issn') <p class="form-error">{{ $message }}</p> @enderror
+                        </div>
+                    </div>
+
+                    {{-- Bidang tambahan saat jenis karya berupa prosiding internasional bereputasi. --}}
+                    <div @class(['grid gap-5 sm:grid-cols-2', 'hidden' => ! $isProsiding]) data-grup-prosiding>
+                        <div>
+                            <label for="nama_prosiding" class="form-label">Nama Prosiding <span class="text-rose-500">*</span></label>
+                            <input type="text" id="nama_prosiding" name="nama_prosiding"
+                                   value="{{ old('nama_prosiding', $editItem?->nama_prosiding) }}"
+                                   placeholder="Nama prosiding/seminar" maxlength="255" data-karya-prosiding-input data-wajib
+                                   @required($isProsiding) @disabled(! $isProsiding)
+                                   @class(['form-input', 'border-rose-300 bg-rose-50/40' => $errors->has('nama_prosiding')])>
+                            @error('nama_prosiding') <p class="form-error">{{ $message }}</p> @enderror
+                        </div>
+
+                        <div>
+                            <label for="issn" class="form-label">ISSN <span class="text-[11px] font-medium text-slate-400">(opsional)</span></label>
+                            <input type="text" id="issn" name="issn" value="{{ old('issn', $editItem?->issn) }}"
+                                   placeholder="Contoh: 2686-1234" maxlength="50" data-karya-prosiding-input @disabled(! $isProsiding)
+                                   @class(['form-input', 'border-rose-300 bg-rose-50/40' => $errors->has('issn')])>
+                            @error('issn') <p class="form-error">{{ $message }}</p> @enderror
+                        </div>
+
+                        @include('profil.karya-tulis.partials.input-link', [
+                            'name' => 'url_prosiding',
+                            'label' => 'URL Prosiding',
+                            'value' => $editItem?->url_prosiding,
+                            'placeholder' => 'https://prosiding.example.org/…',
+                            'required' => $isProsiding,
+                            'wajib' => true,
+                            'disabled' => ! $isProsiding,
+                        ])
+
+                        @include('profil.karya-tulis.partials.input-link', [
+                            'name' => 'url_plagiasi',
+                            'label' => 'URL Plagiasi',
+                            'value' => $editItem?->url_plagiasi,
+                            'placeholder' => 'https://drive.google.com/file/d/…/view',
+                            'required' => $isProsiding,
+                            'wajib' => true,
+                            'disabled' => ! $isProsiding,
+                        ])
                     </div>
                 </div>
 

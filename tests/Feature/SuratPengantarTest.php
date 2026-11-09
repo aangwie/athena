@@ -227,41 +227,42 @@ class SuratPengantarTest extends TestCase
 
         $response = $this->actingAs($this->makeAdmin())
             ->get(route('surat.pengantar.cetak', $pengantar))
-            ->assertOk()
-            ->assertHeader('Content-Type', 'application/pdf');
+            ->assertOk();
 
-        $this->assertStringContainsString(
-            'inline; filename="surat-pengantar-esti-nur-qorimah-mpd.pdf"',
-            (string) $response->headers->get('Content-Disposition'),
-        );
-
-        $teks = $this->teksPdf($response->getContent());
+        $html = $response->getContent();
 
         // Kop surat sama seperti surat lain.
-        $this->assertStringContainsString('PERKUMPULAN PENYELENGGARA LEMBAGA PENDIDIKAN', $teks);
-        $this->assertStringContainsString('PERGURUAN TINGGI PGRI PACITAN', $teks);
+        $this->assertStringContainsString('Perkumpulan Penyelenggara Lembaga Pendidikan', $html);
+        $this->assertStringContainsString('Perguruan Tinggi PGRI Pacitan', $html);
         // Kepala surat & tujuan.
-        $this->assertStringContainsString('613/STKIP PGRI/KP/III/2026', $teks);
-        $this->assertStringContainsString('1 berkas', $teks);
-        $this->assertStringContainsString('Usulan Jabatan Akademik', $teks);
+        $this->assertStringContainsString('613/STKIP PGRI/KP/III/2026', $html);
+        $this->assertStringContainsString('1 berkas', $html);
+        $this->assertStringContainsString('Usulan Jabatan Akademik', $html);
         // Blok tujuan: "Kepada. Yth. <nama>" / "di" / "<kota tujuan>".
-        $this->assertStringContainsString('Kepada. Yth. Kepala LLDIKTI Wilayah VII Jawa Timur', $teks);
-        $this->assertStringContainsString('Surabaya', $teks);
+        $this->assertStringContainsString('Kepada. Yth. Kepala LLDIKTI Wilayah VII Jawa Timur', $html);
+        $this->assertStringContainsString('Surabaya', $html);
         // Badan surat pribadi: blok identitas, bukan tabel.
-        $this->assertStringContainsString('Bersama ini kami kirimkan berkas usulan Jabatan Akademik Dosen', $teks);
-        $this->assertStringContainsString('NIDN / NUPTK', $teks);
-        $this->assertStringContainsString('Jabatan Akademik', $teks);
-        $this->assertStringContainsString('Esti Nur Qorimah, M.Pd.', $teks);
-        $this->assertStringContainsString('0722059901', $teks);
-        $this->assertStringContainsString('Tenaga Pengajar', $teks);
+        $this->assertStringContainsString('Bersama ini kami kirimkan berkas usulan Jabatan Akademik Dosen', $html);
+        $this->assertStringContainsString('NIDN / NUPTK', $html);
+        $this->assertStringContainsString('Jabatan Akademik', $html);
+        $this->assertStringContainsString('Esti Nur Qorimah, M.Pd.', $html);
+        $this->assertStringContainsString('0722059901', $html);
+        $this->assertStringContainsString('Tenaga Pengajar', $html);
         // Baris jabatan yang diusulkan: di bawah Jabatan Akademik.
-        $this->assertStringContainsString('Diusulkan', $teks);
-        $this->assertStringContainsString('Lektor Kepala', $teks);
-        $this->assertStringNotContainsString('Adapun kelengkapan data dosen di atas', $teks);
+        $this->assertStringContainsString('Diusulkan', $html);
+        $this->assertStringContainsString('Lektor Kepala', $html);
+        $this->assertStringNotContainsString('Adapun kelengkapan data dosen di atas', $html);
         // Tanda tangan ketua instansi.
-        $this->assertStringContainsString('Pacitan, 10 Maret 2026', $teks);
-        $this->assertStringContainsString($ketua->name, $teks);
-        $this->assertStringContainsString('NIDN. 0708098001', $teks);
+        $this->assertStringContainsString('Pacitan, 10 Maret 2026', $html);
+        $this->assertStringContainsString($ketua->name, $html);
+        $this->assertStringContainsString('NIDN. 0708098001', $html);
+
+        // Pilihan margin sebelum cetak, default 1,5 cm semua sisi.
+        $this->assertStringContainsString('id="margin-atas"', $html);
+        $this->assertStringContainsString('value="1.5"', $html);
+        $this->assertStringContainsString('@page { size: A4 portrait; margin: 1.5cm; }', $html);
+        // Margin tiap halaman ditulis JS supaya mengikuti pilihan pengguna.
+        $this->assertStringContainsString('cetak-ukuran', $html);
     }
 
     public function test_kolektif_pengantar_is_printed_with_dosen_table(): void
@@ -287,26 +288,26 @@ class SuratPengantarTest extends TestCase
 
         $response = $this->actingAs($this->makeAdmin())
             ->get(route('surat.pengantar.cetak', $pengantar))
-            ->assertOk()
-            ->assertHeader('Content-Type', 'application/pdf');
+            ->assertOk();
 
-        $this->assertStringContainsString(
-            'inline; filename="surat-pengantar-kolektif-2-dosen.pdf"',
-            (string) $response->headers->get('Content-Disposition'),
-        );
-
-        $teks = $this->teksPdf($response->getContent());
+        $html = $response->getContent();
 
         // Badan surat kolektif: tabel dosen.
-        $this->assertStringContainsString('Bersama ini kami kirimkan data dosen', $teks);
-        $this->assertStringContainsString('NUPTK', $teks);
-        $this->assertStringContainsString('Adapun kelengkapan data dosen di atas, sebagaimana terlampir.', $teks);
-        $this->assertStringContainsString('Welly Novitasari, M.Pd.', $teks);
-        $this->assertStringContainsString('Wira Dimuksa, M.Kom.', $teks);
-        $this->assertStringContainsString('0727119102', $teks);
-        $this->assertStringContainsString('0703058901', $teks);
+        $this->assertStringContainsString('Bersama ini kami kirimkan data dosen', $html);
+        $this->assertStringContainsString('NUPTK', $html);
+        $this->assertStringContainsString('Adapun kelengkapan data dosen di atas, sebagaimana terlampir.', $html);
+        $this->assertStringContainsString('Welly Novitasari, M.Pd.', $html);
+        $this->assertStringContainsString('Wira Dimuksa, M.Kom.', $html);
+        $this->assertStringContainsString('0727119102', $html);
+        $this->assertStringContainsString('0703058901', $html);
         // Bukan bentuk pribadi.
-        $this->assertStringNotContainsString('Bersama ini kami kirimkan berkas usulan Jabatan Akademik Dosen', $teks);
+        $this->assertStringNotContainsString('Bersama ini kami kirimkan berkas usulan Jabatan Akademik Dosen', $html);
+
+        // Pilihan margin sebelum cetak, default 1,5 cm semua sisi.
+        $this->assertStringContainsString('id="margin-atas"', $html);
+        $this->assertStringContainsString('value="1.5"', $html);
+        $this->assertStringContainsString('@page { size: A4 portrait; margin: 1.5cm; }', $html);
+        $this->assertStringContainsString('cetak-ukuran', $html);
     }
 
     public function test_dosen_cannot_manage_pengantar(): void
