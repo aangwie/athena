@@ -234,7 +234,7 @@ class SuratBapSenatTest extends TestCase
         $this->assertDatabaseMissing('surat_bap_senat', ['id' => $bap->id]);
     }
 
-    public function test_admin_can_print_bap_senat_as_two_page_a4_pdf(): void
+    public function test_admin_can_open_bap_senat_print_preview_with_two_pages(): void
     {
         Instansi::create([
             'nama_instansi' => 'Universitas Athena',
@@ -255,55 +255,49 @@ class SuratBapSenatTest extends TestCase
             'anggota_senat_ids' => [$ketua->user_id, $anggota->user_id],
         ]);
 
-        $response = $this->actingAs($this->makeUser('admin'))
+        $html = $this->actingAs($this->makeUser('admin'))
             ->get(route('surat.bap-senat.cetak', $bap))
             ->assertOk()
-            ->assertHeader('Content-Type', 'application/pdf');
+            ->getContent();
 
-        $isi = $response->getContent();
+        // Pilihan halaman sebelum cetak: halaman 1 (berita acara) & halaman 2 (daftar hadir).
+        $this->assertStringContainsString('Halaman 1 — Berita Acara', $html);
+        $this->assertStringContainsString('Halaman 2 — Daftar Hadir', $html);
+        $this->assertSame(2, substr_count($html, 'class="cetak-halaman'));
 
-        $this->assertStringStartsWith('%PDF-', $isi);
-        // A4 portrait (595.28 x 841.89 pt) sesuai dokumentasi FPDF.
-        $this->assertStringContainsString('/MediaBox [0 0 595.28 841.89]', $isi);
-        // Berita acara + daftar hadir rapat = dua halaman.
-        $this->assertStringContainsString('/Count 2', $isi);
-        $this->assertStringContainsString('inline; filename="bap-senat-dr-budi-santoso-mpd.pdf"', (string) $response->headers->get('Content-Disposition'));
+        // Pilihan margin sebelum cetak, default 1,5 cm semua sisi.
+        $this->assertStringContainsString('id="margin-atas"', $html);
+        $this->assertStringContainsString('value="1.5"', $html);
+        $this->assertStringContainsString('@page { size: A4 portrait; margin: 1.5cm; }', $html);
+        // Margin tiap halaman ditulis JS supaya mengikuti pilihan pengguna.
+        $this->assertStringContainsString('cetak-ukuran', $html);
 
-        // Nama badan penyelenggara tampil di atas nama institusi pada kop.
-        $teks = $this->teksPdf($isi);
+        // Nama badan penyelenggara tampil di atas nama institusi pada kop (dua halaman).
+        $this->assertSame(2, substr_count($html, 'Perkumpulan Penyelenggara Lembaga Pendidikan'));
+        $this->assertSame(2, substr_count($html, 'Perguruan Tinggi PGRI Pacitan'));
 
-        $this->assertStringContainsString('PERKUMPULAN PENYELENGGARA LEMBAGA PENDIDIKAN', $teks);
-        $this->assertStringContainsString('PERGURUAN TINGGI PGRI PACITAN', $teks);
+        // Berita acara (halaman 1).
+        $this->assertStringContainsString('Persetujuan Senat Akademik', $html);
+        $this->assertStringContainsString('NOMOR: 011/BAP-SENAT/X/2026', $html);
+        $this->assertStringContainsString('Sistem Informasi', $html);
+        // Tanda tangan hanya untuk Ketua Senat.
+        $this->assertStringContainsString('Ketua Senat', $html);
+        $this->assertStringContainsString('Dr. Budi Santoso, M.Pd.', $html);
+
+        // Daftar hadir (halaman 2) memuat waktu, tempat, materi, dan tabel kehadiran.
+        $this->assertStringContainsString('DAFTAR HADIR RAPAT', $html);
+        $this->assertStringContainsString('Ruang Rapat Senat Lt. 2', $html);
+        $this->assertStringContainsString('Pemberian pertimbangan kenaikan jabatan akademik dosen', $html);
+        $this->assertStringContainsString('Rina Wijaya, M.Kom.', $html);
+
         // Tanggal penanda tangan: "Kota, DD Bulan YYYY".
-        $this->assertStringContainsString('Bandung, 31 Oktober 2026', $teks);
-        // Nama penanda tangan dicetak apa adanya sesuai database (tidak dipaksa kapital).
-        $this->assertStringContainsString('Dr. Budi Santoso, M.Pd.', $teks);
-        $this->assertStringNotContainsString('DR. BUDI SANTOSO', $teks);
-        $this->assertLessThan(
-            mb_strpos($teks, 'UNIVERSITAS ATHENA'),
-            mb_strpos($teks, 'PERGURUAN TINGGI PGRI PACITAN'),
-        );
+        $this->assertStringContainsString('Bandung, 31 Oktober 2026', $html);
 
-        // Tanda tangan hanya untuk Ketua Senat: kolom sekretaris & daftar anggota
-        // senat tidak lagi dicetak di halaman 1.
-        $this->assertStringContainsString('Ketua Senat', $teks);
-        $this->assertStringNotContainsString('Sekretaris', $teks);
-        $this->assertStringNotContainsString('Anggota Senat', $teks);
+        // Nama penanda tangan apa adanya sesuai database (tidak dipaksa kapital).
+        $this->assertStringNotContainsString('DR. BUDI SANTOSO', $html);
 
-        // Halaman 2 (daftar hadir) memakai kop yang sama dengan halaman 1.
-        $this->assertSame(2, substr_count($teks, 'PERGURUAN TINGGI PGRI PACITAN'));
-        $this->assertGreaterThan(
-            mb_strrpos($teks, 'PERGURUAN TINGGI PGRI PACITAN'),
-            mb_strpos($teks, 'DAFTAR HADIR RAPAT'),
-        );
-
-        // Tempat pelaksanaan & materi rapat tercetak pada halaman 2.
-        $this->assertStringContainsString('Ruang Rapat Senat Lt. 2', $teks);
-        $this->assertStringContainsString('Pemberian pertimbangan kenaikan jabatan akademik dosen', $teks);
-        $this->assertGreaterThan(
-            mb_strpos($teks, 'DAFTAR HADIR RAPAT'),
-            mb_strpos($teks, 'Ruang Rapat Senat Lt. 2'),
-        );
+        // Baris tabel tidak terpotong di tengah halaman.
+        $this->assertStringContainsString('.cetak-tabel tr { break-inside: avoid; }', $html);
     }
 
     public function test_dosen_cannot_manage_bap_senat(): void

@@ -369,7 +369,7 @@ class SuratTest extends TestCase
         $this->assertSame('2026-11-01', $pakta->refresh()->tanggal_pakta->toDateString());
     }
 
-    public function test_admin_can_print_pakta_integritas_as_pdf_letter(): void
+    public function test_admin_can_open_pakta_integritas_print_preview(): void
     {
         Instansi::create(['nama_instansi' => 'Universitas Athena', 'kota' => 'Bandung']);
 
@@ -388,20 +388,23 @@ class SuratTest extends TestCase
             ],
         ]);
 
-        $response = $this->actingAs($this->makeUser('admin'))
+        $this->actingAs($this->makeUser('admin'))
             ->get(route('surat.pakta-integritas.cetak', $pakta))
             ->assertOk()
-            ->assertHeader('Content-Type', 'application/pdf');
-
-        $isi = $response->getContent();
-
-        $this->assertStringStartsWith('%PDF-', $isi);
-        // A4 portrait (595.28 x 841.89 pt) sesuai dokumentasi FPDF.
-        $this->assertStringContainsString('/MediaBox [0 0 595.28 841.89]', $isi);
-        $this->assertStringContainsString('inline; filename="surat-pakta-integritas-dr-ayu-lestari-mkom.pdf"', (string) $response->headers->get('Content-Disposition'));
-
-        // Tanggal penanda tangan: "Kota, DD Bulan YYYY".
-        $this->assertStringContainsString('Bandung, 31 Oktober 2026', $this->teksPdf($isi));
+            ->assertSee('Surat Pernyataan Pakta Integritas')
+            ->assertSee('Dr. Ayu Lestari, M.Kom.')
+            ->assertSee('Rekayasa Perangkat Lunak')
+            // Tanggal penanda tangan: "Kota, DD Bulan YYYY".
+            ->assertSee('Bandung, 31 Oktober 2026')
+            // Pilihan margin sebelum cetak, default 1,5 cm semua sisi.
+            ->assertSee('id="margin-atas"', false)
+            ->assertSee('value="1.5"', false)
+            ->assertSee('@page { size: A4 portrait; margin: 1.5cm; }')
+            // Margin tiap halaman ditulis JS supaya mengikuti pilihan pengguna.
+            ->assertSee('cetak-ukuran')
+            // Baris tabel & blok tanda tangan tidak boleh terpotong di tengah halaman.
+            ->assertSee('.cetak-tabel tr { break-inside: avoid; }')
+            ->assertSee('.cetak-tanda-tangan { break-inside: avoid; }');
     }
 
     private function makeKarya(User $dosen, string $judul, string $jenis = 'Buku'): KaryaTulis
@@ -482,16 +485,13 @@ class SuratTest extends TestCase
             'karya_tulis_ids' => [$dipilih->id],
         ]);
 
-        $isi = $this->actingAs($this->makeUser('admin'))
+        $html = $this->actingAs($this->makeUser('admin'))
             ->get(route('surat.pakta-integritas.cetak', $pakta))
             ->assertOk()
             ->getContent();
 
-        // FPDF menekan stream dengan zlib; buka dulu agar teks surat bisa diperiksa.
-        $teks = $this->teksPdf($isi);
-
-        $this->assertStringContainsString('Karya Dipilih', $teks);
-        $this->assertStringNotContainsString('Karya Dilewati', $teks);
+        $this->assertStringContainsString('Karya Dipilih', $html);
+        $this->assertStringNotContainsString('Karya Dilewati', $html);
     }
 
     public function test_dosen_cannot_manage_pakta_integritas(): void

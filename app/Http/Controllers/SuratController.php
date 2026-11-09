@@ -21,8 +21,6 @@ use App\Models\SuratPernyataanPimpinan;
 use App\Models\TimKomite;
 use App\Models\User;
 use App\Support\SuratBakiPdf;
-use App\Support\SuratBapSenatPdf;
-use App\Support\SuratPaktaIntegritasPdf;
 use App\Support\SuratPengantarPdf;
 use App\Support\SuratPernyataanPimpinanPdf;
 use Illuminate\Http\RedirectResponse;
@@ -183,9 +181,10 @@ class SuratController extends Controller
     }
 
     /**
-     * Pakta integritas siap cetak: PDF A4 (FPDF) yang langsung tampil di peramban.
+     * Pakta integritas siap cetak: halaman pratinjau A4 (HTML) yang marginnya dapat
+     * disesuaikan sebelum dicetak lewat dialog cetak peramban — mengikuti formulir SKP.
      */
-    public function cetakPaktaIntegritas(SuratPaktaIntegritas $pakta): Response
+    public function cetakPaktaIntegritas(SuratPaktaIntegritas $pakta): View
     {
         $pakta->load(['dosen' => [
             'profilDosen',
@@ -195,19 +194,12 @@ class SuratController extends Controller
             'karyaTulis',
         ]]);
 
-        $identitas = $this->identitasDosen($pakta->dosen);
-
-        $pdf = new SuratPaktaIntegritasPdf(
-            Instansi::query()->first(),
-            $pakta,
-            $identitas,
-            $pakta->karyaTerpilih(),
-        );
-        $pdf->buat();
-
-        return response($pdf->isi(), 200, [
-            'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="'.$pdf->namaBerkas().'"',
+        return view('surat.pakta-integritas.cetak', [
+            'pakta' => $pakta,
+            // Tempat pada baris tanda tangan mengikuti kota instansi.
+            'kota' => Instansi::query()->value('kota'),
+            'identitas' => $this->identitasDosen($pakta->dosen),
+            'karya' => $pakta->karyaTerpilih(),
         ]);
     }
 
@@ -244,24 +236,22 @@ class SuratController extends Controller
     /**
      * BAP senat siap cetak: PDF A4 (FPDF) berisi berita acara + daftar hadir rapat.
      */
-    public function cetakBapSenat(SuratBapSenat $bap): Response
+    public function cetakBapSenat(SuratBapSenat $bap): View
     {
         $bap->load('dosen');
 
         $senat = Senat::query()->with('user')->get();
 
-        $pdf = new SuratBapSenatPdf(
-            Instansi::query()->first(),
-            $bap,
-            $this->identitasDosen($bap->dosen),
-            $bap->anggotaSenat(),
-            $senat->firstWhere('jabatan', 'ketua'),
-        );
-        $pdf->buat();
-
-        return response($pdf->isi(), 200, [
-            'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="'.$pdf->namaBerkas().'"',
+        // Halaman pratinjau A4 (HTML): berita acara (halaman 1) dan daftar hadir
+        // (halaman 2) dipisah, dengan pilihan halaman & margin sebelum dicetak.
+        return view('surat.bap-senat.cetak', [
+            'bap' => $bap,
+            'instansi' => Instansi::query()->first(),
+            // Tempat pada baris tanda tangan mengikuti kota instansi.
+            'kota' => Instansi::query()->value('kota'),
+            'identitas' => $this->identitasDosen($bap->dosen),
+            'anggota' => $bap->anggotaSenat(),
+            'ketua' => $senat->firstWhere('jabatan', 'ketua'),
         ]);
     }
 
