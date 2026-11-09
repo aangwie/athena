@@ -63,7 +63,7 @@
                     <div class="px-5 py-4 sm:px-6">
                         <p class="rounded-lg bg-slate-50 px-3 py-2 text-[11px] leading-relaxed text-slate-500">
                             Ketentuan kategori: <span class="font-semibold text-slate-700">≥91 Sangat Baik · 76–90 Baik · 61–75 Cukup · ≤60 Kurang</span>.
-                            Jumlah, rata-rata, dan nilai perilaku kerja dihitung otomatis.
+                            Jumlah dan nilai perilaku kerja (rata-rata nilai) dihitung otomatis.
                         </p>
                     </div>
 
@@ -117,7 +117,6 @@
                                 <th scope="col">Prodi</th>
                                 <th scope="col">Jangka Waktu</th>
                                 <th scope="col">Jumlah</th>
-                                <th scope="col">Rata-Rata</th>
                                 <th scope="col">Nilai Perilaku Kerja</th>
                                 <th scope="col" class="no-sort text-right">Aksi</th>
                             </tr>
@@ -135,10 +134,10 @@
                                         <span class="badge-status bg-slate-50 text-slate-600 ring-slate-200">{{ $item->periodeLabel() }}</span>
                                     </td>
                                     <td class="px-5 py-3 font-mono text-slate-700">{{ $fmt($item->jumlahNilai()) }}</td>
-                                    <td class="px-5 py-3 font-mono text-slate-700">{{ $fmt($item->rataRataNilai()) }}</td>
                                     <td class="px-5 py-3">
                                         @if ($item->sudahDinilai())
-                                            <span class="badge-status bg-teal-50 text-teal-700 ring-teal-200">{{ $fmt($item->nilaiPerilakuKerja()) }}</span>
+                                            {{-- Nilai perilaku kerja = rata-rata nilai keenam unsur. --}}
+                                            <span class="badge-status bg-teal-50 text-teal-700 ring-teal-200">{{ $fmt($item->rataRataNilai()) }}</span>
                                         @else
                                             <span class="badge-status bg-amber-50 text-amber-700 ring-amber-200">Belum dinilai</span>
                                         @endif
@@ -146,20 +145,20 @@
 <td class="px-5 py-3">
                                         <div class="flex items-center justify-end gap-1">
                                             <a href="{{ route('skp-usulan.index', ['edit' => $item->id]) }}#form-nilai"
-                                               title="Edit Nilai" aria-label="Edit Nilai"
+                                               title="Input Nilai" aria-label="Input Nilai"
                                                class="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-teal-700 transition hover:bg-teal-50">
                                                 <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
                                                     <path d="M4 20h4.2L19 9.2a2.1 2.1 0 0 0-3-3L5.2 17 4 20Z" stroke-linejoin="round" />
                                                     <path d="m13.8 7.4 2.8 2.8" stroke-linecap="round" />
                                                 </svg>
-                                                Edit Nilai
+                                                 Input Nilai
                                             </a>
                                         </div>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="8" class="px-5 py-16 text-center">
+                                    <td colspan="7" class="px-5 py-16 text-center">
                                         <span class="mx-auto flex size-14 items-center justify-center rounded-2xl bg-slate-50 text-slate-300">
                                             <svg class="size-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
                                                 <path d="M9 5H6.5A1.5 1.5 0 0 0 5 6.5v11A1.5 1.5 0 0 0 6.5 19h11a1.5 1.5 0 0 0 1.5-1.5v-11A1.5 1.5 0 0 0 17.5 5H15" stroke-linecap="round" />
@@ -181,7 +180,7 @@
                         <svg class="size-3.5 text-teal-500" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                             <path fill-rule="evenodd" d="M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0Zm-7-4a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM9 9a.75.75 0 0 0 0 1.5h.25v3h-.25a.75.75 0 0 0 0 1.5h2a.75.75 0 0 0 0-1.5h-.25v-3.75A.75.75 0 0 0 10.25 9H9Z" clip-rule="evenodd" />
                         </svg>
-                        Nilai perilaku kerja = rata-rata nilai × 40%.
+                        Nilai perilaku kerja = rata-rata nilai keenam unsur.
                     </p>
                     <p>Kategori otomatis dari nilai angka.</p>
                 </div>

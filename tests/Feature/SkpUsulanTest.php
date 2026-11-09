@@ -88,7 +88,8 @@ class SkpUsulanTest extends TestCase
             ->assertOk()
             ->assertSee('Usulan SKP')
             ->assertSee('Edit Nilai')
-            ->assertSee('Nilai Perilaku Kerja');
+            ->assertSee('Nilai Perilaku Kerja')
+            ->assertDontSee('Rata-Rata');
     }
 
     public function test_dosen_non_pejabat_tidak_melihat_menu(): void
@@ -112,9 +113,16 @@ class SkpUsulanTest extends TestCase
         $skp = $skp->fresh();
         $this->assertSame(513, $skp->jumlahNilai());
         $this->assertEquals(85.5, $skp->rataRataNilai());
-        $this->assertEquals(34.2, $skp->nilaiPerilakuKerja());
+        // Nilai perilaku kerja sama dengan rata-rata nilai.
+        $this->assertEquals(85.5, $skp->nilaiPerilakuKerja());
         $this->assertSame('Sangat Baik', $skp->kategoriNilai($skp->nilai_disiplin));
         $this->assertSame('Cukup', $skp->kategoriNilai($skp->nilai_kerjasama));
+
+        $this->actingAs($pejabat)
+            ->get(route('skp-usulan.index'))
+            ->assertOk()
+            ->assertSee('85,5')
+            ->assertDontSee('Rata-Rata');
     }
 
     public function test_nilai_wajib_diantara_0_sampai_100(): void

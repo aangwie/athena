@@ -118,13 +118,11 @@ class Skp extends Model
     }
 
     /**
-     * Nilai perilaku kerja = rata-rata nilai × 40%.
+     * Nilai perilaku kerja sama dengan rata-rata nilai keenam unsur.
      */
     public function nilaiPerilakuKerja(): ?float
     {
-        $rata = $this->rataRataNilai();
-
-        return $rata === null ? null : round($rata * 0.4, 2);
+        return $this->rataRataNilai();
     }
 
     /**
