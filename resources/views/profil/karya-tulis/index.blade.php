@@ -168,7 +168,7 @@
                 </div>
             </div>
 
-            <div class="overflow-x-auto">
+            <div class="overflow-x-auto p-2 sm:p-4">
                 <table data-datatable data-row-numbers data-page-length="10" class="w-full text-left text-sm">
                     <thead>
                         <tr>

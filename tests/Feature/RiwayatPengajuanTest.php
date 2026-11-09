@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Instansi;
 use App\Models\KegiatanDupak;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -198,6 +199,43 @@ class RiwayatPengajuanTest extends TestCase
             ->get(route('profil.pengajuan.cetak', ['tahun' => 2026, 'semester' => 'ganjil', 'print' => 1]))
             ->assertOk()
             ->assertSee('window.addEventListener', false);
+    }
+
+    public function test_halaman_cetak_dupak_menampilkan_blok_menyetujui_kepala_lldikti(): void
+    {
+        Instansi::create([
+            'nama_instansi' => 'Universitas Athena Nusantara',
+            'kota' => 'Bandung',
+            'wilayah_lldikti' => 'VII',
+            'nama_pimpinan_lldikti' => 'Prof. Dr. Ayah Sawitri, S.E., M.M.',
+            'nip_pimpinan_lldikti' => '196704192005012001',
+        ]);
+
+        $dosen = $this->makeDosen();
+        $this->makeKegiatan($dosen, 4);
+
+        $this->actingAs($dosen)
+            ->get(route('profil.pengajuan.cetak', ['tahun' => 2026, 'semester' => 'ganjil']))
+            ->assertOk()
+            ->assertSee('Menyetujui,')
+            ->assertSee('Kepala LLDIKTI Wilayah VII')
+            ->assertSee('Prof. Dr. Ayah Sawitri, S.E., M.M.')
+            ->assertSee('NIP. 196704192005012001');
+    }
+
+    public function test_halaman_cetak_dupak_memakai_a4_dengan_margin_1_5_cm_dan_pilihan_orientasi(): void
+    {
+        $dosen = $this->makeDosen();
+        $this->makeKegiatan($dosen, 4);
+
+        $this->actingAs($dosen)
+            ->get(route('profil.pengajuan.cetak', ['tahun' => 2026, 'semester' => 'ganjil']))
+            ->assertOk()
+            ->assertSee('@page { size: A4')   // ukuran kertas A4
+            ->assertSee('margin: 0')          // margin halaman digambar sendiri lewat padding
+            ->assertSee('padding: 1.5cm')     // margin cetak 1,5 cm atas/bawah/kiri/kanan
+            ->assertSee('cetak-orientasi')    // pilihan portrait/landscape sebelum cetak
+            ->assertSee('cetakDupak');
     }
 
     public function test_perbaikan_dan_ajukan_ulang_nonaktif_setelah_dupak_disetujui(): void

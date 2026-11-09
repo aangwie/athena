@@ -48,6 +48,9 @@ class InstansiTest extends TestCase
             'nomor_sk_operasional' => 'SK-MENDIKBUD/001/2026',
             'alamat' => 'Jl. Pendidikan No. 1, Bandung',
             'kota' => 'Bandung',
+            'wilayah_lldikti' => 'VII',
+            'nama_pimpinan_lldikti' => 'Prof. Dr. Ayah Sawitri, S.E., M.M.',
+            'nip_pimpinan_lldikti' => '196704192005012001',
             'no_telp' => '(022) 1234567',
             'website' => 'https://athena.ac.id',
         ], $overrides);
@@ -93,6 +96,9 @@ class InstansiTest extends TestCase
             ->assertSee('No. Telp')
             ->assertSee('Website')
             ->assertSee('Logo Instansi')
+            ->assertSee('Wilayah LLDIKTI')
+            ->assertSee('Nama Pimpinan')
+            ->assertSee('NIP Pimpinan')
             ->assertSee('Pejabat Struktural');
     }
 
@@ -111,6 +117,9 @@ class InstansiTest extends TestCase
         $this->assertSame('Universitas Athena Nusantara', $instansi->nama_instansi);
         $this->assertSame('SK-MENDIKBUD/001/2026', $instansi->nomor_sk_operasional);
         $this->assertSame('(022) 1234567', $instansi->no_telp);
+        $this->assertSame('VII', $instansi->wilayah_lldikti);
+        $this->assertSame('Prof. Dr. Ayah Sawitri, S.E., M.M.', $instansi->nama_pimpinan_lldikti);
+        $this->assertSame('196704192005012001', $instansi->nip_pimpinan_lldikti);
         $this->assertStringStartsWith('data:image/png;base64,', $instansi->logo_base64);
         $this->assertNotFalse(base64_decode(substr($instansi->logo_base64, strlen('data:image/png;base64,')), true));
     }

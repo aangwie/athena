@@ -167,6 +167,47 @@
                 </div>
             </section>
 
+            {{-- Identitas LLDIKTI --}}
+            <section class="section-card">
+                <div class="section-heading">
+                    <span class="section-number">03</span>
+                    <div>
+                        <h3 class="text-sm font-extrabold text-slate-800">LLDIKTI</h3>
+                        <p class="mt-0.5 text-xs text-slate-400">Pejabat LLDIKTI yang menyetujui DUPAK dosen.</p>
+                    </div>
+                </div>
+
+                <div class="grid gap-5 px-5 py-5 sm:grid-cols-2 sm:px-6">
+                    <div>
+                        <label for="wilayah_lldikti" class="form-label">Wilayah LLDIKTI <span class="font-normal text-slate-400">(opsional)</span></label>
+                        <input type="text" id="wilayah_lldikti" name="wilayah_lldikti" maxlength="50"
+                               value="{{ old('wilayah_lldikti', $instansi->wilayah_lldikti) }}"
+                               placeholder="Contoh: VII"
+                               @class(['form-input', 'border-rose-300 bg-rose-50/40' => $errors->has('wilayah_lldikti')])>
+                        @error('wilayah_lldikti') <p class="form-error">{{ $message }}</p> @enderror
+                        <p class="mt-1.5 text-[11px] text-slate-400">Dicetak sebagai &ldquo;Kepala LLDIKTI Wilayah &hellip;&rdquo;.</p>
+                    </div>
+
+                    <div>
+                        <label for="nama_pimpinan_lldikti" class="form-label">Nama Pimpinan <span class="font-normal text-slate-400">(opsional)</span></label>
+                        <input type="text" id="nama_pimpinan_lldikti" name="nama_pimpinan_lldikti" maxlength="150"
+                               value="{{ old('nama_pimpinan_lldikti', $instansi->nama_pimpinan_lldikti) }}"
+                               placeholder="Contoh: Prof. Dr. Ayah Sawitri, S.E., M.M."
+                               @class(['form-input', 'border-rose-300 bg-rose-50/40' => $errors->has('nama_pimpinan_lldikti')])>
+                        @error('nama_pimpinan_lldikti') <p class="form-error">{{ $message }}</p> @enderror
+                    </div>
+
+                    <div class="sm:col-span-2">
+                        <label for="nip_pimpinan_lldikti" class="form-label">NIP Pimpinan <span class="font-normal text-slate-400">(opsional)</span></label>
+                        <input type="text" id="nip_pimpinan_lldikti" name="nip_pimpinan_lldikti" maxlength="30" inputmode="numeric"
+                               value="{{ old('nip_pimpinan_lldikti', $instansi->nip_pimpinan_lldikti) }}"
+                               placeholder="Contoh: 196704192005012001"
+                               @class(['form-input', 'border-rose-300 bg-rose-50/40' => $errors->has('nip_pimpinan_lldikti')])>
+                        @error('nip_pimpinan_lldikti') <p class="form-error">{{ $message }}</p> @enderror
+                    </div>
+                </div>
+            </section>
+
             <div class="flex flex-col-reverse gap-3 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:px-6">
                 <p class="flex items-center gap-2 text-[11px] text-slate-400">
                     <svg class="size-4 shrink-0 text-teal-500" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
