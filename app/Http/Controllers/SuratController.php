@@ -20,7 +20,6 @@ use App\Models\SuratPengantar;
 use App\Models\SuratPernyataanPimpinan;
 use App\Models\TimKomite;
 use App\Models\User;
-use App\Support\SuratBakiPdf;
 use App\Support\SuratPengantarPdf;
 use App\Support\SuratPernyataanPimpinanPdf;
 use Illuminate\Http\RedirectResponse;
@@ -346,9 +345,10 @@ class SuratController extends Controller
     }
 
     /**
-     * BAKI siap cetak: berita acara tim komite + daftar hadir (PDF A4, FPDF).
+     * BAKI siap cetak: halaman pratinjau A4 (HTML) berisi berita acara (halaman 1)
+     * dan daftar hadir (halaman 2), dengan pilihan halaman & margin sebelum dicetak.
      */
-    public function cetakBaki(SuratBaki $baki): Response
+    public function cetakBaki(SuratBaki $baki): View
     {
         $baki->load('bapSenat.dosen');
 
@@ -358,18 +358,14 @@ class SuratController extends Controller
             ->sortBy(fn (TimKomite $item) => [array_search($item->jabatan, array_keys(TimKomite::JABATAN)), $item->user?->name ?? ''])
             ->values();
 
-        $pdf = new SuratBakiPdf(
-            Instansi::query()->first(),
-            $baki,
-            $this->identitasDosen($baki->bapSenat?->dosen),
-            $timKomite,
-            $timKomite->firstWhere('jabatan', 'ketua'),
-        );
-        $pdf->buat();
-
-        return response($pdf->isi(), 200, [
-            'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="'.$pdf->namaBerkas().'"',
+        return view('surat.baki.cetak', [
+            'baki' => $baki,
+            'instansi' => Instansi::query()->first(),
+            // Tempat pada baris tanda tangan mengikuti kota instansi.
+            'kota' => Instansi::query()->value('kota'),
+            'identitas' => $this->identitasDosen($baki->bapSenat?->dosen),
+            'anggota' => $timKomite,
+            'ketua' => $timKomite->firstWhere('jabatan', 'ketua'),
         ]);
     }
 
@@ -452,6 +448,7 @@ class SuratController extends Controller
             'nomor_surat' => $data['nomor_surat'],
             'surat_bap_senat_id' => $data['surat_bap_senat_id'],
             'tanggal_surat' => Carbon::createFromFormat('d-m-Y', $data['tanggal_surat'])->toDateString(),
+            'tempat_pelaksanaan' => $data['tempat_pelaksanaan'],
         ];
     }
 

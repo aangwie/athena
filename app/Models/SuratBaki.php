@@ -13,6 +13,7 @@ class SuratBaki extends Model
         'nomor_surat',
         'surat_bap_senat_id',
         'tanggal_surat',
+        'tempat_pelaksanaan',
     ];
 
     protected function casts(): array

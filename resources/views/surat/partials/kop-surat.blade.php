@@ -1,4 +1,4 @@
-{{-- Kop surat BAP Senat: logo instansi, nama badan penyelenggara, nama instansi, kontak. --}}
+{{-- Kop surat bersama (BAP Senat & BAKI): logo instansi, nama badan penyelenggara, nama instansi, kontak. --}}
 <div class="flex items-center gap-3">
     @if ($instansi?->logo_base64)
         <img src="{{ $instansi->logoDataUri() }}" alt="Logo {{ $instansi->nama_instansi }}"

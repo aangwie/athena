@@ -56,6 +56,7 @@ class SuratBakiTest extends TestCase
             'nomor_surat' => $nomor,
             'surat_bap_senat_id' => $bap->id,
             'tanggal_surat' => '2026-11-01',
+            'tempat_pelaksanaan' => 'Ruang Rapat Tim Komite Lt. 2',
         ]);
     }
 
@@ -92,6 +93,7 @@ class SuratBakiTest extends TestCase
                 'nomor_surat' => '001/BAKI/X/2026',
                 'surat_bap_senat_id' => $bap->id,
                 'tanggal_surat' => '01-11-2026',
+                'tempat_pelaksanaan' => 'Ruang Rapat Tim Komite Lt. 2',
             ])
             ->assertRedirect(route('surat.index').'#baki')
             ->assertSessionHas('status', 'BAKI berhasil disimpan.');
@@ -101,6 +103,7 @@ class SuratBakiTest extends TestCase
         $this->assertSame('001/BAKI/X/2026', $baki->nomor_surat);
         $this->assertSame($bap->id, $baki->surat_bap_senat_id);
         $this->assertSame('2026-11-01', $baki->tanggal_surat->toDateString());
+        $this->assertSame('Ruang Rapat Tim Komite Lt. 2', $baki->tempat_pelaksanaan);
         $this->assertSame('Dr. Ayu Lestari, M.Kom.', $baki->bapSenat?->dosen?->name);
 
         $this->actingAs($admin)
@@ -108,6 +111,7 @@ class SuratBakiTest extends TestCase
                 'nomor_surat' => '002/BAKI/XI/2026',
                 'surat_bap_senat_id' => $bap->id,
                 'tanggal_surat' => '02-11-2026',
+                'tempat_pelaksanaan' => 'Ruang Sidang Utama',
             ])
             ->assertRedirect(route('surat.index').'#baki')
             ->assertSessionHas('status', 'BAKI berhasil diperbarui.');
@@ -116,6 +120,7 @@ class SuratBakiTest extends TestCase
 
         $this->assertSame('002/BAKI/XI/2026', $baki->nomor_surat);
         $this->assertSame('2026-11-02', $baki->tanggal_surat->toDateString());
+        $this->assertSame('Ruang Sidang Utama', $baki->tempat_pelaksanaan);
     }
 
     public function test_baki_table_lists_no_nama_dosen_tanggal_and_actions(): void
@@ -148,6 +153,7 @@ class SuratBakiTest extends TestCase
             ->assertSee(route('surat.baki.update', $baki), false)
             ->assertSee('value="009/BAKI/X/2026"', false)
             ->assertSee('value="01-11-2026"', false)
+            ->assertSee('value="Ruang Rapat Tim Komite Lt. 2"', false)
             ->assertSee('Ubah BAKI nomor');
     }
 
@@ -160,8 +166,9 @@ class SuratBakiTest extends TestCase
                 'nomor_surat' => '',
                 'surat_bap_senat_id' => 9999,
                 'tanggal_surat' => '01/11/2026',
+                'tempat_pelaksanaan' => '',
             ])
-            ->assertSessionHasErrors(['nomor_surat', 'surat_bap_senat_id', 'tanggal_surat']);
+            ->assertSessionHasErrors(['nomor_surat', 'surat_bap_senat_id', 'tanggal_surat', 'tempat_pelaksanaan']);
 
         $this->assertDatabaseCount('surat_baki', 0);
     }
@@ -178,7 +185,7 @@ class SuratBakiTest extends TestCase
         $this->assertDatabaseMissing('surat_baki', ['id' => $baki->id]);
     }
 
-    public function test_admin_can_print_baki_as_two_page_a4_pdf(): void
+    public function test_admin_can_open_baki_print_preview_with_two_pages(): void
     {
         Instansi::create([
             'nama_instansi' => 'Universitas Athena',
@@ -201,37 +208,55 @@ class SuratBakiTest extends TestCase
             'jabatan' => 'anggota',
         ]);
 
-        $response = $this->actingAs($this->makeUser('admin'))
+        $html = $this->actingAs($this->makeUser('admin'))
             ->get(route('surat.baki.cetak', $baki))
             ->assertOk()
-            ->assertHeader('Content-Type', 'application/pdf');
+            ->getContent();
 
-        $isi = $response->getContent();
+        // Pilihan halaman sebelum cetak: halaman 1 (berita acara) & halaman 2 (daftar hadir).
+        $this->assertStringContainsString('Halaman 1 — Berita Acara', $html);
+        $this->assertStringContainsString('Halaman 2 — Daftar Hadir', $html);
+        $this->assertSame(2, substr_count($html, 'class="cetak-halaman'));
 
-        $this->assertStringStartsWith('%PDF-', $isi);
-        // A4 portrait (595.28 x 841.89 pt) sesuai dokumentasi FPDF.
-        $this->assertStringContainsString('/MediaBox [0 0 595.28 841.89]', $isi);
-        // Berita acara + daftar hadir = dua halaman.
-        $this->assertStringContainsString('/Count 2', $isi);
-        $this->assertStringContainsString('inline; filename="berita-acara-tim-komite-dr-ayu-lestari-mkom.pdf"', (string) $response->headers->get('Content-Disposition'));
+        // Pilihan margin sebelum cetak, default 1,5 cm semua sisi.
+        $this->assertStringContainsString('id="margin-atas"', $html);
+        $this->assertStringContainsString('value="1.5"', $html);
+        $this->assertStringContainsString('@page { size: A4 portrait; margin: 1.5cm; }', $html);
+        // Margin tiap halaman ditulis JS supaya mengikuti pilihan pengguna.
+        $this->assertStringContainsString('cetak-ukuran', $html);
 
-        $teks = $this->teksPdf($isi);
+        // Kop surat (nama badan penyelenggara) tampil di kedua halaman.
+        $this->assertSame(2, substr_count($html, 'Perkumpulan Penyelenggara Lembaga Pendidikan'));
+        $this->assertSame(2, substr_count($html, 'Perguruan Tinggi PGRI Pacitan'));
 
-        $this->assertStringContainsString('BERITA ACARA PERSETUJUAN', $teks);
-        $this->assertStringContainsString('TIM KOMITE INTEGRITAS AKADEMIK', $teks);
-        $this->assertStringContainsString('001/BAKI/X/2026', $teks);
-        $this->assertStringContainsString('007/BAP-SENAT/X/2026', $teks);
-        $this->assertStringContainsString('007/BAP-SENAT/X/2026 tanggal 31', $teks);
-        $this->assertStringContainsString('Oktober 2026', $teks);
-        $this->assertStringContainsString('DAFTAR HADIR RAPAT TIM KOMITE INTEGRITAS AKADEMIK', $teks);
-        $this->assertStringContainsString('Bandung, 1 November 2026', $teks);
-        $this->assertStringContainsString('Dr. Hendra Wijaya, M.Pd.', $teks);
-        $this->assertStringContainsString('Sari Puspita, M.Kom.', $teks);
-        // Nama yang sudah kapital di database tetap kapital (tidak diubah), begitu pula sebaliknya.
-        $this->assertStringContainsString('RINA WIJAYA, M.KOM.', $teks);
-        $this->assertStringNotContainsString('DR. HENDRA WIJAYA', $teks);
-        $this->assertStringContainsString('Ketua', $teks);
-        $this->assertStringContainsString('Anggota', $teks);
+        // Berita acara (halaman 1).
+        $this->assertStringContainsString('Berita Acara Persetujuan', $html);
+        $this->assertStringContainsString('Tim Komite Integritas Akademik', $html);
+        $this->assertStringContainsString('NOMOR: 001/BAKI/X/2026', $html);
+        $this->assertStringContainsString('007/BAP-SENAT/X/2026', $html);
+        $this->assertStringContainsString('31 Oktober 2026', $html);
+        $this->assertStringContainsString('Sistem Informasi', $html);
+        $this->assertStringContainsString('Ketua Tim', $html);
+        $this->assertStringContainsString('Dr. Hendra Wijaya, M.Pd.', $html);
+
+        // Daftar hadir (halaman 2) memuat waktu, tempat, materi, dan tabel kehadiran.
+        $this->assertStringContainsString('DAFTAR HADIR RAPAT TIM KOMITE INTEGRITAS AKADEMIK', $html);
+        $this->assertStringContainsString('Tempat pelaksanaan', $html);
+        // Tempat pelaksanaan dari isian form tampil di halaman 2 (menggantikan titik-titik).
+        $this->assertStringContainsString('Ruang Rapat Tim Komite Lt. 2', $html);
+        $this->assertStringNotContainsString(str_repeat('.', 55), $html);
+        $this->assertStringContainsString('Pemberian pertimbangan/persetujuan kenaikan jabatan akademik dosen', $html);
+        $this->assertStringContainsString('Sari Puspita, M.Kom.', $html);
+
+        // Tanggal penanda tangan: "Kota, DD Bulan YYYY".
+        $this->assertStringContainsString('Bandung, 1 November 2026', $html);
+
+        // Nama yang sudah kapital di database tetap kapital, penanda tangan tidak dipaksa kapital.
+        $this->assertStringContainsString('RINA WIJAYA, M.KOM.', $html);
+        $this->assertStringNotContainsString('DR. HENDRA WIJAYA', $html);
+
+        // Baris tabel tidak terpotong di tengah halaman.
+        $this->assertStringContainsString('.cetak-tabel tr { break-inside: avoid; }', $html);
     }
 
     public function test_dosen_cannot_manage_baki(): void

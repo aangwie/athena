@@ -77,6 +77,19 @@
             @error('tanggal_surat') <p class="form-error">{{ $message }}</p> @enderror
             <p class="mt-1.5 text-[11px] text-slate-400">Format tanggal: DD-MM-YYYY.</p>
         </div>
+
+        <div>
+            <label for="baki_tempat_pelaksanaan" class="form-label">
+                Tempat Pelaksanaan <span class="text-rose-500">*</span>
+            </label>
+            <input type="text" id="baki_tempat_pelaksanaan" name="tempat_pelaksanaan" required maxlength="150"
+                   value="{{ old('tempat_pelaksanaan', $bakiEdit?->tempat_pelaksanaan) }}"
+                   placeholder="Contoh: Ruang Rapat Tim Komite Lt. 2"
+                   autocomplete="off"
+                   @class(['form-input', 'border-rose-300 bg-rose-50/40' => $errors->has('tempat_pelaksanaan')])>
+            @error('tempat_pelaksanaan') <p class="form-error">{{ $message }}</p> @enderror
+            <p class="mt-1.5 text-[11px] text-slate-400">Dicetak pada daftar hadir rapat (halaman 2).</p>
+        </div>
     </div>
 
     <p class="mt-4 rounded-lg border border-teal-100 bg-teal-50/60 px-3 py-2 text-[11px] leading-relaxed text-teal-700">

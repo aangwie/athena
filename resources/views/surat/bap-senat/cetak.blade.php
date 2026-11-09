@@ -110,7 +110,7 @@
 
             {{-- Halaman 1: Berita Acara Persetujuan Senat Akademik. --}}
             <section class="cetak-halaman" data-halaman="1">
-                @include('surat.bap-senat.partials.kop')
+                @include('surat.partials.kop-surat')
 
                 <header class="mt-3 text-center">
                     <h1 class="text-[13px] font-bold uppercase underline">Berita Acara</h1>
@@ -193,7 +193,7 @@
 
             {{-- Halaman 2: Daftar Hadir Rapat Persetujuan Senat Akademik. --}}
             <section class="cetak-halaman cetak-pisah" data-halaman="2">
-                @include('surat.bap-senat.partials.kop')
+                @include('surat.partials.kop-surat')
 
                 <header class="mt-3 text-center">
                     <h1 class="text-[13px] font-bold">DAFTAR HADIR RAPAT</h1>

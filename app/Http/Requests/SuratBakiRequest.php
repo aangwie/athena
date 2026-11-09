@@ -46,6 +46,7 @@ class SuratBakiRequest extends FormRequest
                 Rule::exists('surat_bap_senat', 'id'),
             ],
             'tanggal_surat' => ['required', 'date_format:d-m-Y'],
+            'tempat_pelaksanaan' => ['required', 'string', 'max:150'],
         ];
     }
 
@@ -60,6 +61,7 @@ class SuratBakiRequest extends FormRequest
             'nomor_surat' => 'nomor surat',
             'surat_bap_senat_id' => 'nama dosen yang diusulkan senat',
             'tanggal_surat' => 'tanggal surat',
+            'tempat_pelaksanaan' => 'tempat pelaksanaan',
         ];
     }
 
@@ -77,6 +79,7 @@ class SuratBakiRequest extends FormRequest
             'surat_bap_senat_id.exists' => 'Usulan senat yang dipilih tidak valid.',
             'tanggal_surat.required' => 'Tanggal surat wajib diisi.',
             'tanggal_surat.date_format' => 'Tanggal surat harus berformat DD-MM-YYYY.',
+            'tempat_pelaksanaan.required' => 'Tempat pelaksanaan wajib diisi.',
         ];
     }
 }
