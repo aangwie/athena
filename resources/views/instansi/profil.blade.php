@@ -192,7 +192,7 @@
                         <label for="nama_pimpinan_lldikti" class="form-label">Nama Pimpinan <span class="font-normal text-slate-400">(opsional)</span></label>
                         <input type="text" id="nama_pimpinan_lldikti" name="nama_pimpinan_lldikti" maxlength="150"
                                value="{{ old('nama_pimpinan_lldikti', $instansi->nama_pimpinan_lldikti) }}"
-                               placeholder="Contoh: Prof. Dr. Ayah Sawitri, S.E., M.M."
+                               placeholder="Contoh: Prof. Dr. Dyah Sawitri, S.E., M.M."
                                @class(['form-input', 'border-rose-300 bg-rose-50/40' => $errors->has('nama_pimpinan_lldikti')])>
                         @error('nama_pimpinan_lldikti') <p class="form-error">{{ $message }}</p> @enderror
                     </div>
