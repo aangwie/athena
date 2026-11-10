@@ -47,6 +47,7 @@ class Skp extends Model
         'keputusan_keberatan',
         'tanggal_keputusan',
         'disetujui_atasan_pada',
+        'tanggal_diterima',
     ];
 
     protected function casts(): array
@@ -66,6 +67,7 @@ class Skp extends Model
             'tanggal_tanggapan' => 'date',
             'tanggal_keputusan' => 'date',
             'disetujui_atasan_pada' => 'date',
+            'tanggal_diterima' => 'date',
         ];
     }
 

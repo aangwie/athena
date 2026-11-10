@@ -89,7 +89,10 @@ class SkpController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        $skp = Skp::query()->create($this->validatedData($request));
+        // Tanggal simpan dicatat otomatis dan tercetak pada blok 10 halaman cetak SKP.
+        $skp = Skp::query()->create($this->validatedData($request) + [
+            'tanggal_diterima' => now()->toDateString(),
+        ]);
 
         WhatsAppNotifikasi::skpMasuk($skp);
 

@@ -331,6 +331,7 @@ class SkpAtasanTest extends TestCase
             'keputusan_keberatan' => 'Keberatan ditolak, nilai dipertahankan.',
             'tanggal_keputusan' => '2026-11-13',
             'disetujui_atasan_pada' => '2026-11-14',
+            'tanggal_diterima' => '2026-11-01',
         ]);
 
         $this->actingAs($this->makeUser('admin'))
@@ -340,8 +341,8 @@ class SkpAtasanTest extends TestCase
             ->assertSee('7. KEPUTUSAN ATASAN PEJABAT')
             ->assertSee('Keberatan ditolak, nilai dipertahankan.')
             ->assertSee('Tanggal, 13 November 2026')
-            // Blok 10: tanggal persetujuan dosen yang dinilai.
-            ->assertSee('10. DITERIMA TANGGAL, 10 November 2026')
+            // Blok 10: tanggal SKP disimpan admin (diterima dosen yang dinilai).
+            ->assertSee('10. DITERIMA TANGGAL, 1 November 2026')
             // Blok 11: tanggal persetujuan atasan pejabat penilai.
             ->assertSee('11. DITERIMA TANGGAL, 14 November 2026');
     }

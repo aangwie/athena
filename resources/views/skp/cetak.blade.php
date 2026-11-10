@@ -264,8 +264,8 @@
 
             {{-- Halaman 3: blok 9–11. Stempel dan tanda tangan dibubuhkan manual;
                  nama & NIP di dasar kotak supaya ada ruang tanda tangan di atasnya.
-                 Tanggal blok 9 = Tanggal Penilaian, blok 10 = persetujuan dosen,
-                 blok 11 = persetujuan atasan pejabat penilai. --}}
+                 Tanggal blok 9 = Tanggal Penilaian, blok 10 = tanggal SKP disimpan admin
+                 (diterima dosen yang dinilai), blok 11 = persetujuan atasan pejabat penilai. --}}
             <section class="cetak-halaman">
                 <div class="cetak-isi">
                     <table class="cetak-tabel w-full border-collapse border border-slate-900 text-[11px]">
@@ -273,15 +273,15 @@
                         <tbody>
                             @foreach ([
                                 ['9. DIBUAT TANGGAL,', 'PEJABAT PENILAI', $pejabat, 'justify-end text-right', $skp->tanggal_penilaian],
-                                ['10. DITERIMA TANGGAL,', 'DOSEN YANG DINILAI', $dinilai, 'justify-start text-left', $skp->disetujui_pada],
+                                ['10. DITERIMA TANGGAL,', 'DOSEN YANG DINILAI', $dinilai, 'justify-start text-left', $skp->tanggal_diterima ?? $skp->created_at],
                                 ['11. DITERIMA TANGGAL,', 'ATASAN PEJABAT PENILAI', $atasan, 'justify-end text-right', $skp->disetujui_atasan_pada],
                             ] as [$tanggal, $pihak, $data, $posisi, $tanggalPenilaian])
                                 <tr>
                                     <td class="border border-slate-900 p-0 align-top">
                                         <div class="flex px-3 py-2 {{ $posisi }}">
                                             <div class="w-1/2">
-                                                {{-- Blok 9 memakai Tanggal Penilaian dari halaman Usulan SKP;
-                                                     blok 10–11 tetap diisi manual. --}}
+                                                {{-- Blok 9 = Tanggal Penilaian, blok 10 = tanggal simpan SKP,
+                                                     blok 11 = persetujuan atasan; kosong berarti titik-titik. --}}
                                                 <p class="font-bold">{{ $tanggal }} {{ $tanggalPenilaian === null ? '............................' : $bulan($tanggalPenilaian) }}</p>
                                                 <p class="font-bold uppercase">{{ $pihak }}</p>
 

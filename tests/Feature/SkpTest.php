@@ -90,6 +90,34 @@ class SkpTest extends TestCase
         $skp = Skp::query()->first();
         $this->assertSame('2026-01-01', $skp->periode_mulai->toDateString());
         $this->assertSame('2026-06-01', $skp->periode_akhir->toDateString());
+        // Tanggal simpan dicatat otomatis saat admin menekan Simpan.
+        $this->assertSame(now()->toDateString(), $skp->tanggal_diterima->toDateString());
+    }
+
+    public function test_tanggal_simpan_skp_tercetak_pada_blok_10(): void
+    {
+        $admin = $this->makeUser('admin');
+
+        $this->actingAs($admin)->post(route('skp.store'), $this->payload());
+        $skp = Skp::query()->first();
+
+        // Tanggal simpan tercetak pada blok 10 (diterima dosen yang dinilai).
+        $this->actingAs($admin)
+            ->get(route('skp.cetak', $skp))
+            ->assertOk()
+            ->assertSee('10. DITERIMA TANGGAL, '.now()->locale('id')->translatedFormat('j F Y'));
+
+        // Mengubah data SKP tidak mengubah tanggal simpan.
+        $this->travel(3)->days();
+
+        $this->actingAs($admin)
+            ->put(route('skp.update', $skp), $this->payload(['bulan_akhir' => 12]))
+            ->assertRedirect(route('skp.index').'#form-skp');
+
+        $this->assertSame(
+            now()->subDays(3)->toDateString(),
+            $skp->fresh()->tanggal_diterima->toDateString(),
+        );
     }
 
     public function test_admin_can_update_and_delete_skp(): void
@@ -172,8 +200,9 @@ class SkpTest extends TestCase
             ->assertSee('cetak-ruang-ttd')   // ruang tanda tangan blok 9–11 tidak boleh kolaps
             // Blok 9 memakai Tanggal Penilaian dari halaman Usulan SKP.
             ->assertSee('9. DIBUAT TANGGAL, 5 November 2026')
-            // Blok 10–11 tetap diisi manual (titik-titik).
-            ->assertSee('10. DITERIMA TANGGAL, ............................')
+            // Blok 10 memakai tanggal simpan SKP oleh admin (dicatat otomatis saat Simpan).
+            ->assertSee('10. DITERIMA TANGGAL, '.now()->locale('id')->translatedFormat('j F Y'))
+            // Blok 11 tetap diisi manual (titik-titik).
             ->assertSee('11. DITERIMA TANGGAL, ............................')
             ->assertSee('cetak-orientasi')   // pilihan portrait/landscape sebelum cetak
             ->assertSee('@page { size: A4')
