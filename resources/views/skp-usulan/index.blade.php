@@ -63,7 +63,7 @@
 
                     <div class="px-5 py-4 sm:px-6">
                         <p class="rounded-lg bg-slate-50 px-3 py-2 text-[11px] leading-relaxed text-slate-500">
-                            Ketentuan kategori: <span class="font-semibold text-slate-700">≥91 Sangat Baik · 76–90 Baik · 61–75 Cukup · ≤60 Kurang</span>.
+                            Ketentuan kategori: <span class="font-semibold text-slate-700">≥86 Sangat Baik · 71–85 Baik · 56–70 Cukup · ≤55 Kurang</span>.
                             Jumlah dan nilai perilaku kerja (rata-rata nilai) dihitung otomatis.
                         </p>
                     </div>

@@ -209,9 +209,9 @@ class Skp extends Model
         }
 
         return match (true) {
-            $nilai >= 91 => 'Sangat Baik',
-            $nilai >= 76 => 'Baik',
-            $nilai >= 61 => 'Cukup',
+            $nilai >= 86 => 'Sangat Baik',
+            $nilai >= 71 => 'Baik',
+            $nilai >= 56 => 'Cukup',
             default => 'Kurang',
         };
     }

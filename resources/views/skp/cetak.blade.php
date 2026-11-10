@@ -51,9 +51,9 @@
         ];
         $baris = [
             'nama' => 'N a m a',
-            'nip' => 'N I P',
+            'nip' => 'N I D N',
             'pangkat' => 'Pangkat, Golongan ruang, TMT',
-            'jabatan' => 'Jabatan/Pekerjaan',
+            'jabatan' => 'Jabatan',
             'unit' => 'Unit Organisasi',
         ];
 

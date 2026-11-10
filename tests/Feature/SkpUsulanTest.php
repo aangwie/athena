@@ -117,7 +117,7 @@ class SkpUsulanTest extends TestCase
         // Nilai perilaku kerja sama dengan rata-rata nilai.
         $this->assertEquals(85.5, $skp->nilaiPerilakuKerja());
         $this->assertSame('Sangat Baik', $skp->kategoriNilai($skp->nilai_disiplin));
-        $this->assertSame('Cukup', $skp->kategoriNilai($skp->nilai_kerjasama));
+        $this->assertSame('Baik', $skp->kategoriNilai($skp->nilai_kerjasama));
         // Tanggal penilaian tersimpan sebagai tanggal (dicetak di blok 9 SKP).
         $this->assertSame('2026-11-05', $skp->tanggal_penilaian->toDateString());
 
@@ -126,6 +126,22 @@ class SkpUsulanTest extends TestCase
             ->assertOk()
             ->assertSee('85,5')
             ->assertDontSee('Rata-Rata');
+    }
+
+    public function test_kategori_nilai_memakai_ambang_baru(): void
+    {
+        $skp = $this->makeSkp($this->makeUser('dosen'));
+
+        // Ambang: ≥86 Sangat Baik · 71–85 Baik · 56–70 Cukup · ≤55 Kurang.
+        $this->assertSame('Sangat Baik', $skp->kategoriNilai(100));
+        $this->assertSame('Sangat Baik', $skp->kategoriNilai(86));
+        $this->assertSame('Baik', $skp->kategoriNilai(85));
+        $this->assertSame('Baik', $skp->kategoriNilai(71));
+        $this->assertSame('Cukup', $skp->kategoriNilai(70));
+        $this->assertSame('Cukup', $skp->kategoriNilai(56));
+        $this->assertSame('Kurang', $skp->kategoriNilai(55));
+        $this->assertSame('Kurang', $skp->kategoriNilai(0));
+        $this->assertSame('—', $skp->kategoriNilai(null));
     }
 
     public function test_form_menampilkan_input_tanggal_penilaian(): void
