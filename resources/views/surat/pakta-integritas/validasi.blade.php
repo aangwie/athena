@@ -8,7 +8,10 @@
     @vite(['resources/css/app.css'])
 
     @php
-        $kotaTanggal = ($kota ?: '…').', '.($pakta->tanggal_pakta?->locale('id')->translatedFormat('j F Y') ?? '……');
+        // Tanggal pengesahan pada baris "Kota, tanggal": isian Tanggal Pengesahan Validasi,
+        // atau tanggal pakta bila belum diisi (perilaku sebelumnya).
+        $tanggalPengesahan = $pakta->tanggal_validasi ?? $pakta->tanggal_pakta;
+        $kotaTanggal = ($kota ?: '…').', '.($tanggalPengesahan?->locale('id')->translatedFormat('j F Y') ?? '……');
         $nomorValidasi = trim((string) $pakta->nomor_validasi) ?: str_repeat('.', 30);
 
         // Identitas ketua & dosen pada blok surat (label, nilai, TMT opsional).

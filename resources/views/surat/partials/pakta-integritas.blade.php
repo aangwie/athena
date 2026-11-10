@@ -58,19 +58,19 @@
             </label>
             <input type="text" id="tanggal_pakta" name="tanggal_pakta" required
                    value="{{ old('tanggal_pakta', $paktaEdit?->tanggal_pakta?->format('d-m-Y')) }}" placeholder="DD-MM-YYYY"
-                   maxlength="10" inputmode="numeric" autocomplete="off" data-date-mask
+                   maxlength="10" inputmode="numeric" autocomplete="off" data-date-mask data-date-picker
                    @class(['form-input', 'border-rose-300 bg-rose-50/40' => $errors->has('tanggal_pakta')])>
             @error('tanggal_pakta') <p class="form-error">{{ $message }}</p> @enderror
 
             <p class="mt-1.5 text-[11px] text-slate-400">
-                Format tanggal: DD-MM-YYYY. Tempat: {{ $kota ?: 'belum diisi' }}
+                Pilih lewat kalender atau ketik format DD-MM-YYYY. Tempat: {{ $kota ?: 'belum diisi' }}
                 @if (! $kota)
                     — <a href="{{ route('instansi.profil.edit') }}" class="font-bold underline">atur kota instansi</a>.
                 @endif
             </p>
         </div>
 
-        <div class="sm:col-span-2">
+        <div>
             <label for="nomor_validasi" class="form-label">
                 Nomor Validasi Surat
             </label>
@@ -83,6 +83,22 @@
 
             <p class="mt-1.5 text-[11px] text-slate-400">
                 Dipakai sebagai nomor pada lembar validasi karya ilmiah (opsional).
+            </p>
+        </div>
+
+        <div>
+            <label for="tanggal_validasi" class="form-label">
+                Tanggal Pengesahan Validasi
+            </label>
+            <input type="text" id="tanggal_validasi" name="tanggal_validasi"
+                   value="{{ old('tanggal_validasi', $paktaEdit?->tanggal_validasi?->format('d-m-Y')) }}" placeholder="DD-MM-YYYY"
+                   maxlength="10" inputmode="numeric" autocomplete="off" data-date-mask data-date-picker
+                   @class(['form-input', 'border-rose-300 bg-rose-50/40' => $errors->has('tanggal_validasi')])>
+            @error('tanggal_validasi') <p class="form-error">{{ $message }}</p> @enderror
+
+            <p class="mt-1.5 text-[11px] text-slate-400">
+                Pilih lewat kalender atau ketik format DD-MM-YYYY. Tampil sebagai
+                &ldquo;{{ $kota ?: 'Kota' }}, tanggal&rdquo; pada lembar validasi; kosong berarti memakai tanggal pakta.
             </p>
         </div>
     </div>

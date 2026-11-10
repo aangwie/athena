@@ -153,6 +153,7 @@ class SkpTest extends TestCase
             'nilai_disiplin' => 82,
             'nilai_kerjasama' => 83,
             'nilai_kepemimpinan' => 84,
+            'tanggal_penilaian' => '2026-11-05',
         ]);
 
         $respon = $this->actingAs($admin)->get(route('skp.cetak', $skp));
@@ -169,6 +170,11 @@ class SkpTest extends TestCase
             ->assertDontSee('x 60%')
             ->assertDontSee('Nilai Perilaku Kerja')
             ->assertSee('cetak-ruang-ttd')   // ruang tanda tangan blok 9–11 tidak boleh kolaps
+            // Blok 9 memakai Tanggal Penilaian dari halaman Usulan SKP.
+            ->assertSee('9. DIBUAT TANGGAL, 5 November 2026')
+            // Blok 10–11 tetap diisi manual (titik-titik).
+            ->assertSee('10. DITERIMA TANGGAL, ............................')
+            ->assertSee('11. DITERIMA TANGGAL, ............................')
             ->assertSee('cetak-orientasi')   // pilihan portrait/landscape sebelum cetak
             ->assertSee('@page { size: A4')
             ->assertSee('margin: 0')         // margin halaman digambar sendiri lewat padding
@@ -177,6 +183,19 @@ class SkpTest extends TestCase
         // Tiga section = tiga halaman A4; section ke-2 dan ke-3 dipaksa mulai halaman baru.
         $this->assertSame(3, substr_count($respon->getContent(), 'class="cetak-halaman"'));
         $respon->assertSee('.cetak-halaman + .cetak-halaman { break-before: page; }');
+    }
+
+    public function test_cetak_skp_tanpa_tanggal_penilaian_menampilkan_titik_titik(): void
+    {
+        $admin = $this->makeUser('admin');
+
+        $this->actingAs($admin)->post(route('skp.store'), $this->payload());
+
+        // SKP yang belum diisi tanggal penilaian tetap bisa dicetak (blok 9 berisi titik-titik).
+        $this->actingAs($admin)
+            ->get(route('skp.cetak', Skp::query()->first()))
+            ->assertOk()
+            ->assertSee('9. DIBUAT TANGGAL, ............................');
     }
 
     public function test_dosen_cannot_open_halaman_cetak_skp(): void

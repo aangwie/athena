@@ -19,7 +19,8 @@
                 </span>
                 <h2 class="text-xl font-extrabold tracking-tight text-slate-900 sm:text-2xl">Usulan SKP</h2>
                 <p class="mt-1.5 max-w-2xl text-sm leading-relaxed text-slate-500">
-                    Daftar dosen yang perlu Anda nilai perilaku kerjanya sebagai Pejabat Penilai SKP.
+                    Daftar dosen yang perlu Anda nilai perilaku kerjanya sebagai Pejabat Penilai SKP, atau yang menunggu
+                    keputusan keberatan dan persetujuan Anda sebagai Atasan Pejabat Penilai.
                 </p>
             </div>
         </div>
@@ -78,6 +79,24 @@
                                 @error('nilai_'.$kunci) <p class="form-error">{{ $message }}</p> @enderror
                             </div>
                         @endforeach
+                    </div>
+
+                    {{-- Tanggal penilaian: tercetak pada blok 9 ("DIBUAT TANGGAL, ...") halaman cetak SKP. --}}
+                    <div class="border-t border-slate-100 px-5 py-5 sm:px-6">
+                        <label for="tanggal_penilaian" class="form-label">
+                            Tanggal Penilaian <span class="text-rose-500">*</span>
+                        </label>
+                        <input type="text" id="tanggal_penilaian" name="tanggal_penilaian" required
+                               value="{{ old('tanggal_penilaian', $editSkp?->tanggal_penilaian?->format('d-m-Y')) }}"
+                               placeholder="DD-MM-YYYY"
+                               maxlength="10" inputmode="numeric" autocomplete="off" data-date-mask data-date-picker
+                               @class(['form-input', 'border-rose-300 bg-rose-50/40' => $errors->has('tanggal_penilaian')])>
+                        @error('tanggal_penilaian') <p class="form-error">{{ $message }}</p> @enderror
+
+                        <p class="mt-1.5 text-[11px] text-slate-400">
+                            Pilih lewat kalender atau ketik format DD-MM-YYYY. Tampil pada blok 9 halaman cetak SKP
+                            (&ldquo;DIBUAT TANGGAL, ...&rdquo;).
+                        </p>
                     </div>
 
                     <div class="flex flex-col-reverse gap-3 border-t border-slate-100 px-5 py-4 sm:flex-row sm:items-center sm:justify-end sm:px-6">
@@ -143,16 +162,84 @@
                                         @endif
                                     </td>
 <td class="px-5 py-3">
-                                        <div class="flex items-center justify-end gap-1">
-                                            <a href="{{ route('skp-usulan.index', ['edit' => $item->id]) }}#form-nilai"
-                                               title="Input Nilai" aria-label="Input Nilai"
-                                               class="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-teal-700 transition hover:bg-teal-50">
-                                                <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                                                    <path d="M4 20h4.2L19 9.2a2.1 2.1 0 0 0-3-3L5.2 17 4 20Z" stroke-linejoin="round" />
-                                                    <path d="m13.8 7.4 2.8 2.8" stroke-linecap="round" />
-                                                </svg>
-                                                 Input Nilai
-                                            </a>
+                                        <div class="flex flex-wrap items-center justify-end gap-1">
+                                            @if ($item->atasan_penilai_id === auth()->id())
+                                                {{-- Aksi Atasan Pejabat Penilai: keputusan keberatan (opsional) + persetujuan. --}}
+                                                @if ($item->sudahDisetujuiAtasan())
+                                                    <span class="badge-status bg-emerald-50 text-emerald-700 ring-emerald-200">
+                                                        <svg class="size-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                                            <path fill-rule="evenodd" d="M16.7 5.3a1 1 0 0 1 0 1.4l-7.2 7.3a1 1 0 0 1-1.4 0L4.3 10.3a1 1 0 0 1 1.4-1.4l3.1 3 6.5-6.6a1 1 0 0 1 1.4 0Z" clip-rule="evenodd" />
+                                                        </svg>
+                                                        Disetujui
+                                                    </span>
+                                                    <p class="text-[11px] text-slate-400">
+                                                        {{ $item->disetujui_atasan_pada?->locale('id')->translatedFormat('j F Y') }}
+                                                    </p>
+                                                @elseif (! $item->sudahDisetujui())
+                                                    <span class="text-xs text-slate-400">Menunggu persetujuan dosen</span>
+                                                @else
+                                                    {{-- Keputusan atas keberatan hanya bila keberatan sudah ditinjau
+                                                         pejabat penilai dan dosen sudah menyetujui (opsional). --}}
+                                                    @if ($item->bolehKeputusanKeberatan())
+                                                        <a href="{{ route('skp-usulan.keputusan.edit', $item) }}"
+                                                           title="Keputusan atas Keberatan" aria-label="Keputusan atas Keberatan"
+                                                           class="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-indigo-700 transition hover:bg-indigo-50">
+                                                            <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                                                <path d="M6 4.5h9l4 4V19.5H6V4.5Z" stroke-linejoin="round" />
+                                                                <path d="m9 13 2 2 4-4" stroke-linecap="round" stroke-linejoin="round" />
+                                                            </svg>
+                                                            {{ $item->sudahDiputuskanAtasan() ? 'Ubah Keputusan' : 'Keputusan atas Keberatan' }}
+                                                        </a>
+                                                    @endif
+
+                                                    {{-- Persetujuan atasan: tanggal persetujuan tercetak pada blok 11 SKP. --}}
+                                                    <form method="POST" action="{{ route('skp-usulan.setujui-atasan', $item) }}"
+                                                          class="flex items-center gap-1">
+                                                        @csrf
+                                                        <input type="text" name="tanggal_persetujuan" required
+                                                               value="{{ old('tanggal_persetujuan', now()->format('d-m-Y')) }}"
+                                                               placeholder="DD-MM-YYYY" aria-label="Tanggal persetujuan"
+                                                               maxlength="10" inputmode="numeric" autocomplete="off"
+                                                               data-date-mask data-date-picker
+                                                               class="form-input w-32 px-2 py-1.5 text-xs">
+                                                        <button type="submit"
+                                                                class="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-teal-700 transition hover:bg-teal-50">
+                                                            <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                                                <path d="m5 12.5 4.5 4.5L19 7.5" stroke-linecap="round" stroke-linejoin="round" />
+                                                            </svg>
+                                                            Setujui
+                                                        </button>
+                                                    </form>
+                                                @endif
+                                            @else
+                                                {{-- Tanggapan keberatan hanya tampil bila dosen mengajukan keberatan. --}}
+                                                @if ($item->mengajukanKeberatan() && ! $item->sudahDisetujui())
+                                                    <a href="{{ route('skp-usulan.tanggapan.edit', $item) }}"
+                                                       title="Tanggapan Keberatan" aria-label="Tanggapan Keberatan"
+                                                       class="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-amber-700 transition hover:bg-amber-50">
+                                                        <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                                            <path d="M4.5 5.5h15v10h-9L6 19v-3.5H4.5v-10Z" stroke-linejoin="round" />
+                                                            <path d="M8 9h8M8 12h5" stroke-linecap="round" />
+                                                        </svg>
+                                                        {{ $item->sudahDitanggapi() ? 'Ubah Tanggapan' : 'Tanggapan Keberatan' }}
+                                                    </a>
+                                                @endif
+
+                                                {{-- Nilai terkunci setelah dosen menyetujui; terbuka lagi bila persetujuan dibatalkan. --}}
+                                                @if (! $item->sudahDisetujui())
+                                                    <a href="{{ route('skp-usulan.index', ['edit' => $item->id]) }}#form-nilai"
+                                                       title="Input Nilai" aria-label="Input Nilai"
+                                                       class="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-teal-700 transition hover:bg-teal-50">
+                                                        <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                                            <path d="M4 20h4.2L19 9.2a2.1 2.1 0 0 0-3-3L5.2 17 4 20Z" stroke-linejoin="round" />
+                                                            <path d="m13.8 7.4 2.8 2.8" stroke-linecap="round" />
+                                                        </svg>
+                                                         Input Nilai
+                                                    </a>
+                                                @else
+                                                    <span class="badge-status bg-emerald-50 text-emerald-700 ring-emerald-200">Disetujui dosen</span>
+                                                @endif
+                                            @endif
                                         </div>
                                     </td>
                                 </tr>

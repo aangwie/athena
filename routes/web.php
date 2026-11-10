@@ -22,6 +22,7 @@ use App\Http\Controllers\ProfilDosenController;
 use App\Http\Controllers\RiwayatPekerjaanController;
 use App\Http\Controllers\RiwayatPendidikanController;
 use App\Http\Controllers\SkpController;
+use App\Http\Controllers\SkpDosenController;
 use App\Http\Controllers\SkpUsulanController;
 use App\Http\Controllers\SuratController;
 use App\Http\Controllers\WhatsAppController;
@@ -151,7 +152,22 @@ Route::middleware('auth')->group(function () {
 
     Route::middleware('dosen')->prefix('skp-usulan')->name('skp-usulan.')->group(function () {
         Route::get('/', [SkpUsulanController::class, 'index'])->name('index');
+        Route::get('/{skp}/tanggapan', [SkpUsulanController::class, 'tanggapan'])->name('tanggapan.edit');
+        Route::put('/{skp}/tanggapan', [SkpUsulanController::class, 'simpanTanggapan'])->name('tanggapan.update');
+        // Atasan pejabat penilai: keputusan atas keberatan (opsional) & persetujuan.
+        Route::get('/{skp}/keputusan', [SkpUsulanController::class, 'keputusan'])->name('keputusan.edit');
+        Route::put('/{skp}/keputusan', [SkpUsulanController::class, 'simpanKeputusan'])->name('keputusan.update');
+        Route::post('/{skp}/setujui-atasan', [SkpUsulanController::class, 'setujuiAtasan'])->name('setujui-atasan');
         Route::put('/{skp}', [SkpUsulanController::class, 'update'])->name('update');
+    });
+
+    // Penilaian SKP milik dosen yang dinilai: daftar, ajuan keberatan, dan persetujuan.
+    Route::middleware('dosen')->prefix('skp-dosen')->name('skp-dosen.')->group(function () {
+        Route::get('/', [SkpDosenController::class, 'index'])->name('index');
+        Route::get('/{skp}/keberatan', [SkpDosenController::class, 'keberatan'])->name('keberatan.edit');
+        Route::put('/{skp}/keberatan', [SkpDosenController::class, 'simpanKeberatan'])->name('keberatan.update');
+        Route::post('/{skp}/setujui', [SkpDosenController::class, 'setujui'])->name('setujui');
+        Route::post('/{skp}/batal-setujui', [SkpDosenController::class, 'batalSetujui'])->name('batal-setujui');
     });
 
     Route::middleware('admin')->prefix('verifikasi-dupak')->name('verifikasi-dupak.')->group(function () {

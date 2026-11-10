@@ -7,11 +7,13 @@
 @section('content')
     @php
         // Kunci dipakai untuk hash URL (#pakta-integritas); tab tanpa isi menampilkan placeholder.
+        // Urutan array = urutan tab dari kiri ke kanan.
         $surat = [
-            'pernyataan-pimpinan' => 'Pernyataan Pimpinan',
-            'pakta-integritas' => 'Pakta Integritas',
             'bap-senat' => 'BAP Senat',
             'baki' => 'BAKI',
+            'dokmas-jaka' => 'Dokmas Jaka',
+            'pakta-integritas' => 'Pakta Integritas',
+            'pernyataan-pimpinan' => 'Surat Pernyataan',
             'surat-pengantar' => 'Surat Pengantar',
         ];
     @endphp
@@ -49,27 +51,29 @@
                      data-tab-panel="{{ $key }}" tabindex="0"
                      @class(['p-5 sm:p-6', 'hidden' => ! $loop->first])>
                     <h3 class="text-base font-extrabold tracking-tight text-slate-900">{{ $label }}</h3>
-                    {{-- Rantai @if/@elseif (bukan @continue): penutup </div> panel tetap dirender. --}}
-                    @if ($key === 'pakta-integritas')
-                        @include('surat.partials.pakta-integritas')
-                    @elseif ($key === 'bap-senat')
+                    {{-- Rantai @if/@elseif (bukan @continue): penutup </div> panel tetap dirender.
+                         Urutan cabang mengikuti urutan tab; cabang @else terakhir = Surat Pernyataan
+                         (kunci pernyataan-pimpinan dipertahankan agar hash & redirect lama tetap jalan). --}}
+                    @if ($key === 'bap-senat')
                         @include('surat.partials.bap-senat')
                     @elseif ($key === 'baki')
                         @include('surat.partials.baki')
-                    @elseif ($key === 'surat-pengantar')
-                        @include('surat.partials.pengantar')
-                    @elseif ($key !== 'pernyataan-pimpinan')
+                    @elseif ($key === 'dokmas-jaka')
+                        {{-- Tab baru: isi Dokumen Formasi Jabatan Akademik Dosen menyusul. --}}
                         <p class="mt-1 max-w-2xl text-sm leading-relaxed text-slate-500">
-                            Dokumen {{ $label }} untuk kelengkapan usulan jabatan akademik dosen.
+                            Dokumen Formasi Jabatan Akademik Dosen untuk kelengkapan usulan jabatan akademik dosen.
                         </p>
 
                         <div class="mt-5 rounded-xl border border-dashed border-slate-200 bg-slate-50/60 px-4 py-10 text-center">
                             <p class="text-sm font-bold text-slate-700">Belum ada isi</p>
                             <p class="mt-1 text-xs leading-relaxed text-slate-400">
-                                Isi dokumen {{ $label }} akan ditambahkan di sini.
+                                Isi Dokmas Jaka (Dokumen Formasi Jabatan Akademik Dosen) akan ditambahkan di sini.
                             </p>
                         </div>
-
+                    @elseif ($key === 'pakta-integritas')
+                        @include('surat.partials.pakta-integritas')
+                    @elseif ($key === 'surat-pengantar')
+                        @include('surat.partials.pengantar')
                     @else
                     <p class="mt-1 max-w-2xl text-sm leading-relaxed text-slate-500">
                         @if ($pernyataanEdit)
@@ -154,10 +158,10 @@
                                 </label>
                                 <input type="text" id="tanggal_surat" name="tanggal_surat" required
                                        value="{{ old('tanggal_surat', $pernyataanEdit?->tanggal_surat?->format('d-m-Y')) }}" placeholder="DD-MM-YYYY"
-                                       maxlength="10" inputmode="numeric" autocomplete="off" data-date-mask
+                                       maxlength="10" inputmode="numeric" autocomplete="off" data-date-mask data-date-picker
                                        @class(['form-input', 'border-rose-300 bg-rose-50/40' => $errors->has('tanggal_surat')])>
                                 @error('tanggal_surat') <p class="form-error">{{ $message }}</p> @enderror
-                                <p class="mt-1.5 text-[11px] text-slate-400">Format tanggal: DD-MM-YYYY.</p>
+                                <p class="mt-1.5 text-[11px] text-slate-400">Pilih lewat kalender atau ketik format DD-MM-YYYY.</p>
                             </div>
 
                             <div>

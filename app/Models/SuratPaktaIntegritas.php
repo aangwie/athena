@@ -14,6 +14,7 @@ class SuratPaktaIntegritas extends Model
         'user_id',
         'tanggal_pakta',
         'nomor_validasi',
+        'tanggal_validasi',
         'karya_tulis_ids',
     ];
 
@@ -21,6 +22,7 @@ class SuratPaktaIntegritas extends Model
     {
         return [
             'tanggal_pakta' => 'date',
+            'tanggal_validasi' => 'date',
             'karya_tulis_ids' => 'array',
         ];
     }

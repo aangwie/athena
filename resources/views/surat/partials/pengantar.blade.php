@@ -53,10 +53,10 @@
             </label>
             <input type="text" id="tanggal_surat" name="tanggal_surat" required
                    value="{{ old('tanggal_surat', $pengantarEdit?->tanggal_surat?->format('d-m-Y')) }}" placeholder="DD-MM-YYYY"
-                   maxlength="10" inputmode="numeric" autocomplete="off" data-date-mask
+                   maxlength="10" inputmode="numeric" autocomplete="off" data-date-mask data-date-picker
                    @class(['form-input', 'border-rose-300 bg-rose-50/40' => $errors->has('tanggal_surat')])>
             @error('tanggal_surat') <p class="form-error">{{ $message }}</p> @enderror
-            <p class="mt-1.5 text-[11px] text-slate-400">Format tanggal: DD-MM-YYYY.</p>
+            <p class="mt-1.5 text-[11px] text-slate-400">Pilih lewat kalender atau ketik format DD-MM-YYYY.</p>
         </div>
 
         <div>

@@ -70,6 +70,7 @@ class SkpUsulanTest extends TestCase
             'nilai_disiplin' => 95,
             'nilai_kerjasama' => 75,
             'nilai_kepemimpinan' => 88,
+            'tanggal_penilaian' => '05-11-2026',
         ], $overrides);
     }
 
@@ -117,12 +118,62 @@ class SkpUsulanTest extends TestCase
         $this->assertEquals(85.5, $skp->nilaiPerilakuKerja());
         $this->assertSame('Sangat Baik', $skp->kategoriNilai($skp->nilai_disiplin));
         $this->assertSame('Cukup', $skp->kategoriNilai($skp->nilai_kerjasama));
+        // Tanggal penilaian tersimpan sebagai tanggal (dicetak di blok 9 SKP).
+        $this->assertSame('2026-11-05', $skp->tanggal_penilaian->toDateString());
 
         $this->actingAs($pejabat)
             ->get(route('skp-usulan.index'))
             ->assertOk()
             ->assertSee('85,5')
             ->assertDontSee('Rata-Rata');
+    }
+
+    public function test_form_menampilkan_input_tanggal_penilaian(): void
+    {
+        $pejabat = $this->makeUser('dosen');
+        $skp = $this->makeSkp($pejabat);
+        $skp->update([
+            'nilai_orientasi' => 90,
+            'nilai_integritas' => 80,
+            'nilai_komitmen' => 85,
+            'nilai_disiplin' => 95,
+            'nilai_kerjasama' => 75,
+            'nilai_kepemimpinan' => 88,
+            'tanggal_penilaian' => '2026-11-05',
+        ]);
+
+        $this->actingAs($pejabat)
+            ->get(route('skp-usulan.index', ['edit' => $skp->id]))
+            ->assertOk()
+            ->assertSee('Tanggal Penilaian')
+            ->assertSee('name="tanggal_penilaian"', false)
+            // Date picker DD-MM-YYYY dengan nilai lama terisi otomatis.
+            ->assertSee('data-date-picker', false)
+            ->assertSee('data-date-mask', false)
+            ->assertSee('value="05-11-2026"', false);
+    }
+
+    public function test_tanggal_penilaian_wajib_dan_harus_format_dd_mm_yyyy(): void
+    {
+        $pejabat = $this->makeUser('dosen');
+        $skp = $this->makeSkp($pejabat);
+
+        // Kosong ditolak.
+        $payload = $this->nilaiPayload();
+        unset($payload['tanggal_penilaian']);
+
+        $this->actingAs($pejabat)
+            ->from(route('skp-usulan.index'))
+            ->put(route('skp-usulan.update', $skp), $payload)
+            ->assertSessionHasErrors(['tanggal_penilaian' => 'Tanggal penilaian wajib diisi.']);
+
+        // Format YYYY-MM-DD ditolak.
+        $this->actingAs($pejabat)
+            ->from(route('skp-usulan.index'))
+            ->put(route('skp-usulan.update', $skp), $this->nilaiPayload(['tanggal_penilaian' => '2026-11-05']))
+            ->assertSessionHasErrors(['tanggal_penilaian' => 'Tanggal penilaian harus berformat DD-MM-YYYY.']);
+
+        $this->assertNull($skp->fresh()->tanggal_penilaian);
     }
 
     public function test_nilai_wajib_diantara_0_sampai_100(): void
@@ -147,5 +198,154 @@ class SkpUsulanTest extends TestCase
         $this->actingAs($pejabatB)
             ->put(route('skp-usulan.update', $skp), $this->nilaiPayload())
             ->assertForbidden();
+    }
+
+    public function test_tombol_tanggapan_keberatan_hanya_tampil_bila_ada_ajuan_keberatan(): void
+    {
+        $pejabat = $this->makeUser('dosen');
+        $skpTanpa = $this->makeSkp($pejabat);
+        $skpDengan = $this->makeSkp($pejabat);
+        $skpDengan->update([
+            'keberatan' => 'Nilai unsur kerjasama kurang tepat.',
+            'tanggal_keberatan' => '2026-11-07',
+        ]);
+
+        // Tanpa ajuan keberatan: tombol Tanggapan Keberatan tidak dirender.
+        $this->actingAs($pejabat)
+            ->get(route('skp-usulan.index'))
+            ->assertOk()
+            ->assertDontSee(route('skp-usulan.tanggapan.edit', $skpTanpa), false)
+            // Dengan ajuan keberatan: tombol tersedia.
+            ->assertSee(route('skp-usulan.tanggapan.edit', $skpDengan), false)
+            ->assertSee('Tanggapan Keberatan');
+
+        // Halaman tanggapan untuk SKP tanpa keberatan tidak tersedia.
+        $this->actingAs($pejabat)
+            ->get(route('skp-usulan.tanggapan.edit', $skpTanpa))
+            ->assertNotFound();
+    }
+
+    public function test_pejabat_dapat_mengisi_tanggapan_keberatan_dan_tanggal(): void
+    {
+        $pejabat = $this->makeUser('dosen');
+        $skp = $this->makeSkp($pejabat);
+        $skp->update([
+            'keberatan' => 'Nilai unsur kerjasama kurang tepat.',
+            'tanggal_keberatan' => '2026-11-07',
+        ]);
+
+        $this->actingAs($pejabat)
+            ->get(route('skp-usulan.tanggapan.edit', $skp))
+            ->assertOk()
+            ->assertSee('Tanggapan Keberatan SKP')
+            ->assertSee('Nilai unsur kerjasama kurang tepat.')
+            ->assertSee('name="tanggapan_keberatan"', false)
+            ->assertSee('name="tanggal_tanggapan"', false)
+            ->assertSee('data-date-picker', false)
+            ->assertSee('DD-MM-YYYY');
+
+        $this->actingAs($pejabat)
+            ->put(route('skp-usulan.tanggapan.update', $skp), [
+                'tanggapan_keberatan' => 'Nilai sudah sesuai hasil verifikasi tim penilai.',
+                'tanggal_tanggapan' => '10-11-2026',
+            ])
+            ->assertRedirect(route('skp-usulan.index'))
+            ->assertSessionHas('status', 'Tanggapan keberatan berhasil disimpan.');
+
+        $skp->refresh();
+
+        $this->assertSame('Nilai sudah sesuai hasil verifikasi tim penilai.', $skp->tanggapan_keberatan);
+        $this->assertSame('2026-11-10', $skp->tanggal_tanggapan->toDateString());
+        $this->assertTrue($skp->sudahDitanggapi());
+
+        // Tombol pada daftar berubah menjadi "Ubah Tanggapan".
+        $this->actingAs($pejabat)
+            ->get(route('skp-usulan.index'))
+            ->assertOk()
+            ->assertSee('Ubah Tanggapan');
+    }
+
+    public function test_tanggapan_wajib_diisi_dan_format_tanggal_dd_mm_yyyy(): void
+    {
+        $pejabat = $this->makeUser('dosen');
+        $skp = $this->makeSkp($pejabat);
+        $skp->update(['keberatan' => 'Nilai kurang tepat.', 'tanggal_keberatan' => '2026-11-07']);
+
+        $this->actingAs($pejabat)
+            ->from(route('skp-usulan.tanggapan.edit', $skp))
+            ->put(route('skp-usulan.tanggapan.update', $skp), [])
+            ->assertSessionHasErrors([
+                'tanggapan_keberatan' => 'Tanggapan keberatan wajib diisi.',
+                'tanggal_tanggapan' => 'Tanggal tanggapan wajib diisi.',
+            ]);
+
+        $this->actingAs($pejabat)
+            ->from(route('skp-usulan.tanggapan.edit', $skp))
+            ->put(route('skp-usulan.tanggapan.update', $skp), [
+                'tanggapan_keberatan' => 'Sudah sesuai.',
+                'tanggal_tanggapan' => '2026-11-10',
+            ])
+            ->assertSessionHasErrors([
+                'tanggal_tanggapan' => 'Tanggal tanggapan harus berformat DD-MM-YYYY.',
+            ]);
+
+        $skp->refresh();
+
+        $this->assertNull($skp->tanggapan_keberatan);
+        $this->assertNull($skp->tanggal_tanggapan);
+    }
+
+    public function test_pejabat_lain_tidak_bisa_menanggapi_keberatan(): void
+    {
+        $pejabatA = $this->makeUser('dosen');
+        $pejabatB = $this->makeUser('dosen');
+        $skp = $this->makeSkp($pejabatA);
+        $skp->update(['keberatan' => 'Nilai kurang tepat.', 'tanggal_keberatan' => '2026-11-07']);
+
+        $this->actingAs($pejabatB)
+            ->get(route('skp-usulan.tanggapan.edit', $skp))
+            ->assertForbidden();
+
+        $this->actingAs($pejabatB)
+            ->put(route('skp-usulan.tanggapan.update', $skp), [
+                'tanggapan_keberatan' => 'Mencoba menanggapi SKP pejabat lain.',
+                'tanggal_tanggapan' => '10-11-2026',
+            ])
+            ->assertForbidden();
+
+        $this->assertNull($skp->fresh()->tanggapan_keberatan);
+    }
+
+    public function test_tanggapan_tercetak_pada_blok_6_halaman_cetak_skp(): void
+    {
+        $admin = $this->makeUser('admin');
+        $pejabat = $this->makeUser('dosen');
+        $skp = $this->makeSkp($pejabat);
+        $skp->update([
+            'keberatan' => 'Nilai unsur kerjasama kurang tepat.',
+            'tanggal_keberatan' => '2026-11-07',
+            'tanggapan_keberatan' => 'Nilai sudah sesuai hasil verifikasi tim penilai.',
+            'tanggal_tanggapan' => '2026-11-10',
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('skp.cetak', $skp))
+            ->assertOk()
+            ->assertSee('6. TANGGAPAN PEJABAT PENILAI')
+            ->assertSee('ATAS KEBERATAN')
+            ->assertSee('Nilai sudah sesuai hasil verifikasi tim penilai.')
+            ->assertSee('Tanggal, 10 November 2026');
+    }
+
+    public function test_blok_6_tetap_kosong_tanpa_tanggapan(): void
+    {
+        $pejabat = $this->makeUser('dosen');
+        $skp = $this->makeSkp($pejabat);
+
+        $this->actingAs($this->makeUser('admin'))
+            ->get(route('skp.cetak', $skp))
+            ->assertOk()
+            ->assertSee('6. TANGGAPAN PEJABAT PENILAI')
+            ->assertSee('Tanggal, ............................');
     }
 }

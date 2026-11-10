@@ -55,6 +55,11 @@ class SuratPaktaIntegritasRequest extends FormRequest
                 'string',
                 'max:150',
             ],
+            // Tanggal pengesahan pada lembar validasi (baris "Kota, tanggal").
+            'tanggal_validasi' => [
+                'nullable',
+                'date_format:d-m-Y',
+            ],
             'karya_tulis_ids' => [
                 'nullable',
                 'array',
@@ -80,6 +85,7 @@ class SuratPaktaIntegritasRequest extends FormRequest
             'dosen_id' => 'nama dosen',
             'tanggal_pakta' => 'tanggal pakta',
             'nomor_validasi' => 'nomor validasi surat',
+            'tanggal_validasi' => 'tanggal pengesahan validasi',
             'karya_tulis_ids' => 'karya ilmiah',
         ];
     }
@@ -97,6 +103,7 @@ class SuratPaktaIntegritasRequest extends FormRequest
             'tanggal_pakta.required' => 'Tanggal pakta wajib diisi.',
             'tanggal_pakta.date_format' => 'Tanggal pakta harus berformat DD-MM-YYYY.',
             'nomor_validasi.max' => 'Nomor validasi surat maksimal 150 karakter.',
+            'tanggal_validasi.date_format' => 'Tanggal pengesahan validasi harus berformat DD-MM-YYYY.',
             'karya_tulis_ids.*.exists' => 'Karya ilmiah yang dipilih bukan milik dosen ini.',
         ];
     }

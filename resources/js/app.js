@@ -641,6 +641,9 @@ const boot = () => {
         });
     });
 
+    // Date picker DD-MM-YYYY (vanilla JS): lihat siapkanDatePicker() di akhir berkas.
+    document.querySelectorAll('[data-date-picker]').forEach((input, indeks) => siapkanDatePicker(input, indeks));
+
     // Pakta integritas: centang karya ilmiah milik dosen yang dipilih (data dari <script data-karya-data>).
     document.querySelectorAll('[data-karya-picker]').forEach((picker) => {
         const dosen = document.querySelector(picker.dataset.dosenTarget);
@@ -1351,3 +1354,332 @@ function siapkanDropdownCari(select, indeks) {
     gambarChips();
     gambarList();
 }
+
+/**
+ * Date picker (vanilla JS, tanpa dependensi) dengan keluaran DD-MM-YYYY.
+ *
+ * Input teks asli tetap dipakai (name/id/required/disabled dan validasi server date_format:d-m-Y
+ * tidak berubah), lalu ditambah tombol kalender dan panel pemilih tanggal. Nilai yang dikirim ke
+ * server selalu DD-MM-YYYY, termasuk saat tanggal dipilih lewat kalender.
+ *
+ * @param {HTMLInputElement} input
+ * @param {number} indeks
+ */
+function siapkanDatePicker(input, indeks) {
+    const NAMA_BULAN = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+    const NAMA_HARI = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
+    const idPanel = `dp-panel-${indeks}-${Math.random().toString(36).slice(2, 8)}`;
+    const dua = (angka) => String(angka).padStart(2, '0');
+
+    // Date -> "DD-MM-YYYY", format yang dipakai input sekaligus validasi server.
+    const formatNilai = (tanggal) => `${dua(tanggal.getDate())}-${dua(tanggal.getMonth() + 1)}-${tanggal.getFullYear()}`;
+
+    // "DD-MM-YYYY" -> Date, atau null bila belum lengkap / tanggalnya tidak ada (mis. 31-02-2026).
+    const bacaNilai = (teks) => {
+        const cocok = /^(\d{2})-(\d{2})-(\d{4})$/.exec(String(teks).trim());
+
+        if (!cocok) {
+            return null;
+        }
+
+        const hari = Number(cocok[1]);
+        const bulan = Number(cocok[2]) - 1;
+        const tanggal = new Date(Number(cocok[3]), bulan, hari);
+
+        return tanggal.getDate() === hari && tanggal.getMonth() === bulan ? tanggal : null;
+    };
+
+    const samaHari = (a, b) => b !== null && a.getFullYear() === b.getFullYear()
+        && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+
+    const hariIni = () => {
+        const sekarang = new Date();
+
+        return new Date(sekarang.getFullYear(), sekarang.getMonth(), sekarang.getDate());
+    };
+
+    // Input dibungkus agar tombol kalender bisa ditempatkan di dalam sisi kanan input.
+    const wrap = document.createElement('div');
+    wrap.className = 'dp';
+    input.parentNode.insertBefore(wrap, input);
+    wrap.append(input);
+
+    input.classList.add('dp-input');
+    input.setAttribute('autocomplete', 'off');
+    input.setAttribute('aria-haspopup', 'dialog');
+    input.setAttribute('aria-controls', idPanel);
+
+    const trigger = document.createElement('button');
+    trigger.type = 'button';
+    trigger.className = 'dp-trigger';
+    trigger.setAttribute('aria-label', 'Buka kalender');
+    trigger.setAttribute('aria-controls', idPanel);
+    trigger.setAttribute('aria-expanded', 'false');
+    trigger.innerHTML = '<svg class="dp-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" '
+        + 'stroke-width="1.8" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5" />'
+        + '<path d="M3.5 9.5h17M8.5 3v4M15.5 3v4" stroke-linecap="round" /></svg>';
+    wrap.append(trigger);
+
+    const panel = document.createElement('div');
+    panel.className = 'dp-panel';
+    panel.id = idPanel;
+    panel.hidden = true;
+    panel.setAttribute('role', 'dialog');
+    panel.setAttribute('aria-label', 'Pilih tanggal');
+
+    const head = document.createElement('div');
+    head.className = 'dp-head';
+
+    const tombolNav = (arah, label, simbol) => {
+        const tombol = document.createElement('button');
+        tombol.type = 'button';
+        tombol.className = 'dp-nav';
+        tombol.dataset.arah = arah;
+        tombol.setAttribute('aria-label', label);
+        tombol.innerHTML = simbol;
+
+        return tombol;
+    };
+
+    const prevTahun = tombolNav('-12', 'Tahun sebelumnya', '&laquo;');
+    const prevBulan = tombolNav('-1', 'Bulan sebelumnya', '&lsaquo;');
+    const nextBulan = tombolNav('1', 'Bulan berikutnya', '&rsaquo;');
+    const nextTahun = tombolNav('12', 'Tahun berikutnya', '&raquo;');
+
+    const label = document.createElement('span');
+    label.className = 'dp-label';
+    label.setAttribute('aria-live', 'polite');
+
+    head.append(prevTahun, prevBulan, label, nextBulan, nextTahun);
+
+    const minggu = document.createElement('div');
+    minggu.className = 'dp-week';
+    minggu.append(...NAMA_HARI.map((hari) => {
+        const sel = document.createElement('span');
+        sel.textContent = hari;
+
+        return sel;
+    }));
+
+    const grid = document.createElement('div');
+    grid.className = 'dp-grid';
+
+    const kaki = document.createElement('div');
+    kaki.className = 'dp-foot';
+
+    const tombolIni = document.createElement('button');
+    tombolIni.type = 'button';
+    tombolIni.className = 'dp-today';
+    tombolIni.textContent = 'Hari ini';
+    kaki.append(tombolIni);
+
+    panel.append(head, minggu, grid, kaki);
+
+    // Panel ditempel di <body> memakai posisi fixed agar tidak terpotong overflow induk.
+    document.body.append(panel);
+
+    // Bulan yang ditampilkan (selalu tanggal 1) dan tanggal yang disorot navigasi keyboard.
+    let tampil = new Date(hariIni().getFullYear(), hariIni().getMonth(), 1);
+    let sorot = hariIni();
+
+    const gambar = () => {
+        label.textContent = `${NAMA_BULAN[tampil.getMonth()]} ${tampil.getFullYear()}`;
+
+        const terpilih = bacaNilai(input.value);
+        // Senin sebagai awal pekan: getDay() 0 = Minggu, jadi digeser 6.
+        const offset = (new Date(tampil.getFullYear(), tampil.getMonth(), 1).getDay() + 6) % 7;
+        const mulai = new Date(tampil.getFullYear(), tampil.getMonth(), 1 - offset);
+        const tombol = [];
+
+        // 6 baris × 7 hari agar tinggi panel tetap saat berpindah bulan.
+        for (let i = 0; i < 42; i += 1) {
+            const tanggal = new Date(mulai.getFullYear(), mulai.getMonth(), mulai.getDate() + i);
+            const sel = document.createElement('button');
+            sel.type = 'button';
+            sel.className = 'dp-day';
+            sel.textContent = tanggal.getDate();
+            sel.dataset.tanggal = formatNilai(tanggal);
+            sel.tabIndex = -1;
+            sel.setAttribute('aria-pressed', String(samaHari(tanggal, terpilih)));
+            sel.setAttribute('aria-label', tanggal.toLocaleDateString('id-ID', {
+                weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+            }));
+
+            if (tanggal.getMonth() !== tampil.getMonth()) {
+                sel.classList.add('dp-day-luar');
+            }
+
+            if (samaHari(tanggal, terpilih)) {
+                sel.classList.add('dp-day-terpilih');
+            }
+
+            if (samaHari(tanggal, hariIni())) {
+                sel.classList.add('dp-day-ini');
+            }
+
+            if (samaHari(tanggal, sorot)) {
+                sel.classList.add('dp-day-sorot');
+            }
+
+            sel.addEventListener('click', () => pilih(tanggal));
+            tombol.push(sel);
+        }
+
+        grid.replaceChildren(...tombol);
+    };
+
+    // Panel fixed: posisinya dihitung dari input; bila ruang bawah sempit dibuka ke atas.
+    const posisi = () => {
+        if (panel.hidden) {
+            return;
+        }
+
+        const kotak = wrap.getBoundingClientRect();
+        const lebar = panel.offsetWidth;
+        const tinggi = panel.offsetHeight;
+        const ruangBawah = window.innerHeight - kotak.bottom;
+
+        panel.style.left = `${Math.max(8, Math.min(kotak.left, window.innerWidth - lebar - 8))}px`;
+        panel.style.top = ruangBawah < tinggi + 12 && kotak.top > ruangBawah
+            ? `${Math.max(8, kotak.top - tinggi - 6)}px`
+            : `${Math.min(kotak.bottom + 6, Math.max(8, window.innerHeight - tinggi - 8))}px`;
+    };
+
+    // Nilai input ditulis DD-MM-YYYY lalu event input/change dipicu agar masker dan skrip lain ikut.
+    const pilih = (tanggal) => {
+        input.value = formatNilai(tanggal);
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+        tutup(true);
+    };
+
+    const buka = () => {
+        if (input.disabled || input.readOnly || !panel.hidden) {
+            return;
+        }
+
+        const terpilih = bacaNilai(input.value);
+        const acuan = terpilih ?? hariIni();
+
+        tampil = new Date(acuan.getFullYear(), acuan.getMonth(), 1);
+        sorot = acuan;
+
+        panel.hidden = false;
+        trigger.setAttribute('aria-expanded', 'true');
+        gambar();
+        posisi();
+
+        // Fokus ke tanggal tersorot agar navigasi panah keyboard langsung bekerja.
+        grid.querySelector('.dp-day-sorot')?.focus({ preventScroll: true });
+
+        window.addEventListener('scroll', posisi, true);
+        window.addEventListener('resize', posisi);
+    };
+
+    const tutup = (kembaliKeInput = false) => {
+        if (panel.hidden) {
+            return;
+        }
+
+        panel.hidden = true;
+        trigger.setAttribute('aria-expanded', 'false');
+        window.removeEventListener('scroll', posisi, true);
+        window.removeEventListener('resize', posisi);
+
+        if (kembaliKeInput) {
+            input.focus({ preventScroll: true });
+        }
+    };
+
+    // Pindah bulan/tahun: sorotan tetap pada tanggal yang sama, dibatasi akhir bulan tujuan.
+    const geser = (langkah) => {
+        tampil = new Date(tampil.getFullYear(), tampil.getMonth() + langkah, 1);
+
+        const hariMaks = new Date(tampil.getFullYear(), tampil.getMonth() + 1, 0).getDate();
+        sorot = new Date(tampil.getFullYear(), tampil.getMonth(), Math.min(sorot.getDate(), hariMaks));
+
+        gambar();
+        grid.querySelector('.dp-day-sorot')?.focus({ preventScroll: true });
+        posisi();
+    };
+
+    [prevTahun, prevBulan, nextBulan, nextTahun].forEach((tombol) => {
+        tombol.addEventListener('click', () => geser(Number(tombol.dataset.arah)));
+    });
+
+    tombolIni.addEventListener('click', () => pilih(hariIni()));
+
+    trigger.addEventListener('click', () => (panel.hidden ? buka() : tutup(true)));
+    input.addEventListener('keydown', (event) => {
+        if (event.key === 'ArrowDown') {
+            event.preventDefault();
+            buka();
+        } else if (event.key === 'Escape') {
+            tutup();
+        }
+    });
+
+    // Navigasi keyboard di panel: panah pindah hari/pekan, PageUp/PageDown pindah bulan,
+    // Escape menutup. Enter/Spasi memilih lewat aktivasi tombol bawaan.
+    panel.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+            event.preventDefault();
+            tutup(true);
+
+            return;
+        }
+
+        if (event.key === 'PageUp' || event.key === 'PageDown') {
+            event.preventDefault();
+            geser(event.key === 'PageUp' ? -1 : 1);
+
+            return;
+        }
+
+        const langkah = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -7, ArrowDown: 7 }[event.key];
+
+        if (langkah === undefined) {
+            return;
+        }
+
+        event.preventDefault();
+
+        const berikut = new Date(sorot.getFullYear(), sorot.getMonth(), sorot.getDate() + langkah);
+        sorot = berikut;
+
+        if (berikut.getMonth() !== tampil.getMonth() || berikut.getFullYear() !== tampil.getFullYear()) {
+            tampil = new Date(berikut.getFullYear(), berikut.getMonth(), 1);
+        }
+
+        gambar();
+        grid.querySelector('.dp-day-sorot')?.focus({ preventScroll: true });
+        posisi();
+    });
+
+    // Klik di luar komponen menutup panel. composedPath() dipakai karena tombol tanggal
+    // sudah terlepas dari DOM (grid digambar ulang) saat event sampai ke document.
+    document.addEventListener('click', (event) => {
+        const jalur = typeof event.composedPath === 'function' ? event.composedPath() : [];
+
+        if (jalur.includes(panel) || jalur.includes(wrap) || wrap.contains(event.target) || panel.contains(event.target)) {
+            return;
+        }
+
+        tutup();
+    });
+
+    // Isian wajib yang kosong: buka kalender sebagai umpan balik, seperti dropdown pencarian.
+    const form = input.closest('form');
+
+    if (form) {
+        form.addEventListener('submit', (event) => {
+            if (input.required && !input.disabled && input.value.trim() === '' && !event.defaultPrevented) {
+                event.preventDefault();
+                buka();
+            }
+        });
+    }
+
+    trigger.disabled = input.disabled;
+}
+

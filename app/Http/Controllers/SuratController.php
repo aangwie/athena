@@ -424,6 +424,10 @@ class SuratController extends Controller
             'user_id' => $data['dosen_id'],
             'tanggal_pakta' => Carbon::createFromFormat('d-m-Y', $data['tanggal_pakta'])->toDateString(),
             'nomor_validasi' => $data['nomor_validasi'] ?? null,
+            // Kosong berarti lembar validasi memakai tanggal pakta (perilaku sebelumnya).
+            'tanggal_validasi' => filled($data['tanggal_validasi'] ?? null)
+                ? Carbon::createFromFormat('d-m-Y', $data['tanggal_validasi'])->toDateString()
+                : null,
             'karya_tulis_ids' => array_map('intval', $data['karya_tulis_ids'] ?? []),
         ];
     }

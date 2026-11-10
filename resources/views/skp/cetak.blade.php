@@ -179,7 +179,8 @@
                         </tbody>
                     </table>
 
-                    {{-- Blok 5: halaman 1. Ruang keberatan dosen yang dinilai (diisi manual). --}}
+                    {{-- Blok 5: halaman 1. Keberatan dosen yang dinilai — terisi otomatis bila
+                         dosen mengajukan keberatan lewat menu SKP-Dosen, selain itu tetap kosong. --}}
                     <table class="cetak-tabel w-full border-collapse border border-t-0 border-slate-900 text-[11px]">
                         <caption class="sr-only">Keberatan dari dosen yang dinilai</caption>
                         <tbody>
@@ -190,8 +191,14 @@
                                         <div>
                                             <p class="font-bold uppercase">5. KEBERATAN DARI DOSEN</p>
                                             <p class="font-bold uppercase">YANG DINILAI (APABILA ADA)</p>
+
+                                            @if (filled($skp->keberatan))
+                                                <p class="mt-1 text-justify">{{ $skp->keberatan }}</p>
+                                            @endif
                                         </div>
-                                        <p class="text-center font-bold">Tanggal, ............................</p>
+                                        <p class="text-center font-bold">
+                                            Tanggal, {{ $skp->tanggal_keberatan?->locale('id')->translatedFormat('j F Y') ?? '............................' }}
+                                        </p>
                                     </div>
                                 </td>
                             </tr>
@@ -201,29 +208,47 @@
                 </div>
             </section>
 
-            {{-- Halaman 2: blok 6–8. Tanggapan, keputusan, dan rekomendasi (diisi manual). --}}
+            {{-- Halaman 2: blok 6–8. Blok 6 terisi otomatis dari tanggapan pejabat penilai
+                 (menu Usulan SKP); blok 7–8 tetap diisi manual. --}}
             <section class="cetak-halaman">
                 <div class="cetak-isi">
                     <table class="cetak-tabel w-full border-collapse border border-slate-900 text-[11px]">
                         <caption class="sr-only">Tanggapan, keputusan, dan rekomendasi</caption>
                         <tbody>
-                            @foreach ([
-                                '6. TANGGAPAN PEJABAT PENILAI|ATAS KEBERATAN',
-                                '7. KEPUTUSAN ATASAN PEJABAT|PENILAI ATAS KEBERATAN',
-                            ] as $judul)
-                                <tr>
-                                    <td class="border border-slate-900 p-0 align-top">
-                                        <div class="cetak-kotak flex flex-col justify-between px-2 py-1.5">
-                                            <div>
-                                                @foreach (explode('|', $judul) as $barisJudul)
-                                                    <p class="font-bold uppercase">{{ $barisJudul }}</p>
-                                                @endforeach
-                                            </div>
-                                            <p class="text-center font-bold">Tanggal, ............................</p>
+                            <tr>
+                                <td class="border border-slate-900 p-0 align-top">
+                                    <div class="cetak-kotak flex flex-col justify-between px-2 py-1.5">
+                                        <div>
+                                            <p class="font-bold uppercase">6. TANGGAPAN PEJABAT PENILAI</p>
+                                            <p class="font-bold uppercase">ATAS KEBERATAN</p>
+
+                                            @if (filled($skp->tanggapan_keberatan))
+                                                <p class="mt-1 text-justify">{{ $skp->tanggapan_keberatan }}</p>
+                                            @endif
                                         </div>
-                                    </td>
-                                </tr>
-                            @endforeach
+                                        <p class="text-center font-bold">
+                                            Tanggal, {{ $skp->tanggal_tanggapan?->locale('id')->translatedFormat('j F Y') ?? '............................' }}
+                                        </p>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="border border-slate-900 p-0 align-top">
+                                    <div class="cetak-kotak flex flex-col justify-between px-2 py-1.5">
+                                        <div>
+                                            <p class="font-bold uppercase">7. KEPUTUSAN ATASAN PEJABAT</p>
+                                            <p class="font-bold uppercase">PENILAI ATAS KEBERATAN</p>
+
+                                            @if (filled($skp->keputusan_keberatan))
+                                                <p class="mt-1 text-justify">{{ $skp->keputusan_keberatan }}</p>
+                                            @endif
+                                        </div>
+                                        <p class="text-center font-bold">
+                                            Tanggal, {{ $skp->tanggal_keputusan?->locale('id')->translatedFormat('j F Y') ?? '............................' }}
+                                        </p>
+                                    </div>
+                                </td>
+                            </tr>
                             <tr>
                                 {{-- Judul di atas, ruang kosong di bawah untuk catatan rekomendasi. --}}
                                 <td class="border border-slate-900 p-0 align-top">
@@ -238,22 +263,26 @@
             </section>
 
             {{-- Halaman 3: blok 9–11. Stempel dan tanda tangan dibubuhkan manual;
-                 nama & NIP di dasar kotak supaya ada ruang tanda tangan di atasnya. --}}
+                 nama & NIP di dasar kotak supaya ada ruang tanda tangan di atasnya.
+                 Tanggal blok 9 = Tanggal Penilaian, blok 10 = persetujuan dosen,
+                 blok 11 = persetujuan atasan pejabat penilai. --}}
             <section class="cetak-halaman">
                 <div class="cetak-isi">
                     <table class="cetak-tabel w-full border-collapse border border-slate-900 text-[11px]">
                         <caption class="sr-only">Pengesahan pejabat penilai, dosen yang dinilai, dan atasan pejabat penilai</caption>
                         <tbody>
                             @foreach ([
-                                ['9. DIBUAT TANGGAL,', 'PEJABAT PENILAI', $pejabat, 'justify-end text-right'],
-                                ['10. DITERIMA TANGGAL,', 'DOSEN YANG DINILAI', $dinilai, 'justify-start text-left'],
-                                ['11. DITERIMA TANGGAL,', 'ATASAN PEJABAT PENILAI', $atasan, 'justify-end text-right'],
-                            ] as [$tanggal, $pihak, $data, $posisi])
+                                ['9. DIBUAT TANGGAL,', 'PEJABAT PENILAI', $pejabat, 'justify-end text-right', $skp->tanggal_penilaian],
+                                ['10. DITERIMA TANGGAL,', 'DOSEN YANG DINILAI', $dinilai, 'justify-start text-left', $skp->disetujui_pada],
+                                ['11. DITERIMA TANGGAL,', 'ATASAN PEJABAT PENILAI', $atasan, 'justify-end text-right', $skp->disetujui_atasan_pada],
+                            ] as [$tanggal, $pihak, $data, $posisi, $tanggalPenilaian])
                                 <tr>
                                     <td class="border border-slate-900 p-0 align-top">
                                         <div class="flex px-3 py-2 {{ $posisi }}">
                                             <div class="w-1/2">
-                                                <p class="font-bold">{{ $tanggal }} ............................</p>
+                                                {{-- Blok 9 memakai Tanggal Penilaian dari halaman Usulan SKP;
+                                                     blok 10–11 tetap diisi manual. --}}
+                                                <p class="font-bold">{{ $tanggal }} {{ $tanggalPenilaian === null ? '............................' : $bulan($tanggalPenilaian) }}</p>
                                                 <p class="font-bold uppercase">{{ $pihak }}</p>
 
                                                 {{-- Ruang tanda tangan + stempel antara label jabatan dan nama. --}}

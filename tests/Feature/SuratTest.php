@@ -41,24 +41,57 @@ class SuratTest extends TestCase
         ]);
     }
 
-    public function test_admin_can_open_surat_page_with_five_tabs(): void
+    public function test_admin_can_open_surat_page_with_six_tabs_in_order(): void
     {
-        $response = $this->actingAs($this->makeUser('admin'))
+        $html = $this->actingAs($this->makeUser('admin'))
             ->get(route('surat.index'))
             ->assertOk()
-            ->assertSee('Surat');
+            ->assertSee('Surat')
+            ->assertSee('Dokmas Jaka')
+            ->assertSee('Dokumen Formasi Jabatan Akademik Dosen')
+            ->getContent();
+
+        // Tab kiri ke kanan: BAP Senat, BAKI, Dokmas Jaka, Pakta Integritas, Surat Pernyataan,
+        // Surat Pengantar.
+        libxml_use_internal_errors(true);
+
+        $dom = new \DOMDocument;
+        $dom->loadHTML($html);
+
+        $xpath = new \DOMXPath($dom);
+        $tab = [];
+
+        foreach ($xpath->query('//*[@data-tab-target]') as $tombol) {
+            $tab[] = $tombol->getAttribute('data-tab-target');
+        }
+
+        $this->assertSame([
+            'bap-senat',
+            'baki',
+            'dokmas-jaka',
+            'pakta-integritas',
+            'pernyataan-pimpinan',
+            'surat-pengantar',
+        ], $tab);
 
         foreach ([
-            'pernyataan-pimpinan' => 'Pernyataan Pimpinan',
-            'pakta-integritas' => 'Pakta Integritas',
             'bap-senat' => 'BAP Senat',
             'baki' => 'BAKI',
+            'dokmas-jaka' => 'Dokmas Jaka',
+            'pakta-integritas' => 'Pakta Integritas',
+            'pernyataan-pimpinan' => 'Surat Pernyataan',
             'surat-pengantar' => 'Surat Pengantar',
         ] as $key => $label) {
-            $response->assertSee('data-tab-target="'.$key.'"', false)
-                ->assertSee('data-tab-panel="'.$key.'"', false)
-                ->assertSee($label);
+            $this->assertSame(
+                $label,
+                trim($xpath->evaluate('string(//*[@data-tab-target="'.$key.'"]//span[last()])')),
+                'Label tab '.$key.' tidak sesuai urutan baru.',
+            );
+            $this->assertCount(1, $xpath->query('//*[@data-tab-panel="'.$key.'"]'), 'Panel tab '.$key.' tidak ditemukan.');
         }
+
+        // Tab pertama (BAP Senat) aktif secara default.
+        $this->assertSame('true', $xpath->evaluate('string(//*[@data-tab-target="bap-senat"]/@aria-selected)'));
     }
 
     public function test_tab_panels_are_not_nested_inside_each_other(): void
@@ -77,7 +110,7 @@ class SuratTest extends TestCase
 
         $panels = (new \DOMXPath($dom))->query('//*[@data-tab-panel]');
 
-        $this->assertCount(5, $panels);
+        $this->assertCount(6, $panels);
 
         foreach ($panels as $panel) {
             $this->assertSame(
@@ -85,6 +118,34 @@ class SuratTest extends TestCase
                 $panel->parentNode->nodeName,
                 'Panel '.$panel->getAttribute('data-tab-panel').' bersarang di dalam panel lain.',
             );
+        }
+    }
+
+    public function test_setiap_tab_surat_pakai_date_picker_dd_mm_yyyy(): void
+    {
+        $html = $this->actingAs($this->makeUser('admin'))
+            ->get(route('surat.index'))
+            ->assertOk()
+            ->getContent();
+
+        libxml_use_internal_errors(true);
+
+        $dom = new \DOMDocument;
+        $dom->loadHTML($html);
+
+        $xpath = new \DOMXPath($dom);
+
+        // Setiap tab punya input tanggal ber-date picker + masker dengan keluaran DD-MM-YYYY.
+        // Pakta integritas kini punya dua: Tanggal Pakta dan Tanggal Pengesahan Validasi.
+        foreach (['bap-senat', 'baki', 'pakta-integritas', 'pernyataan-pimpinan', 'surat-pengantar'] as $key) {
+            $input = $xpath->query('//*[@data-tab-panel="'.$key.'"]//input[@data-date-picker]');
+
+            $this->assertGreaterThanOrEqual(1, $input->count(), 'Tab '.$key.' harus punya input tanggal ber-date picker.');
+
+            foreach ($input as $item) {
+                $this->assertSame('DD-MM-YYYY', $item->getAttribute('placeholder'));
+                $this->assertTrue($item->hasAttribute('data-date-mask'), 'Tab '.$key.' tetap memakai masker DD-MM-YYYY.');
+            }
         }
     }
 
@@ -100,6 +161,7 @@ class SuratTest extends TestCase
             ->assertSee('data-select-search="Cari nama pimpinan…"', false)
             ->assertSee('data-select-search="Cari nama dosen…"', false)
             ->assertSee('data-date-mask', false)
+            ->assertSee('data-date-picker', false)
             ->assertSee('data-datatable', false)
             ->assertSee('Simpan');
     }
@@ -307,12 +369,13 @@ class SuratTest extends TestCase
         $this->assertDatabaseCount('surat_pernyataan_pimpinan', 1);
     }
 
-    private function makePakta(User $dosen, string $tanggal = '2026-10-31', ?string $nomorValidasi = null): SuratPaktaIntegritas
+    private function makePakta(User $dosen, string $tanggal = '2026-10-31', ?string $nomorValidasi = null, ?string $tanggalValidasi = null): SuratPaktaIntegritas
     {
         return SuratPaktaIntegritas::query()->create([
             'user_id' => $dosen->id,
             'tanggal_pakta' => $tanggal,
             'nomor_validasi' => $nomorValidasi,
+            'tanggal_validasi' => $tanggalValidasi,
         ]);
     }
 
@@ -328,12 +391,16 @@ class SuratTest extends TestCase
             ->assertSee('Nama Dosen')
             ->assertSee('Tanggal Pakta')
             ->assertSee('DD-MM-YYYY')
+            ->assertSee('data-date-picker', false)
             ->assertSee('data-select-search="Cari nama dosen…"', false)
             ->assertSee('Tempat dan Tanggal Pakta')
             ->assertSee('Bandung, 31-10-2026')
             // Input nomor validasi surat (dipakai pada lembar validasi).
             ->assertSee('Nomor Validasi Surat')
             ->assertSee('name="nomor_validasi"', false)
+            // Input tanggal pengesahan validasi (baris "Kota, tanggal" pada lembar validasi).
+            ->assertSee('Tanggal Pengesahan Validasi')
+            ->assertSee('name="tanggal_validasi"', false)
             // Tombol cetak memicu pilihan Pernyataan/Validasi (data-* untuk SweetAlert2).
             ->assertSee('aria-label="Cetak"', false)
             ->assertSee('data-cetak-pakta', false)
@@ -355,6 +422,7 @@ class SuratTest extends TestCase
                 'dosen_id' => $dosen->id,
                 'tanggal_pakta' => '31-10-2026',
                 'nomor_validasi' => '750/STKIP PGRI PACITAN/KL/TX/2025',
+                'tanggal_validasi' => '05-11-2026',
             ])
             ->assertRedirect(route('surat.index').'#pakta-integritas')
             ->assertSessionHas('status', 'Pakta integritas berhasil disimpan.');
@@ -364,12 +432,14 @@ class SuratTest extends TestCase
         $this->assertSame($dosen->id, $pakta->user_id);
         $this->assertSame('2026-10-31', $pakta->tanggal_pakta->toDateString());
         $this->assertSame('750/STKIP PGRI PACITAN/KL/TX/2025', $pakta->nomor_validasi);
+        $this->assertSame('2026-11-05', $pakta->tanggal_validasi->toDateString());
 
         $this->actingAs($admin)
             ->put(route('surat.pakta-integritas.update', $pakta), [
                 'dosen_id' => $dosen->id,
                 'tanggal_pakta' => '01-11-2026',
                 'nomor_validasi' => '751/STKIP PGRI PACITAN/KL/TX/2025',
+                'tanggal_validasi' => '10-11-2026',
             ])
             ->assertRedirect(route('surat.index').'#pakta-integritas')
             ->assertSessionHas('status', 'Pakta integritas berhasil diperbarui.');
@@ -378,6 +448,56 @@ class SuratTest extends TestCase
 
         $this->assertSame('2026-11-01', $pakta->tanggal_pakta->toDateString());
         $this->assertSame('751/STKIP PGRI PACITAN/KL/TX/2025', $pakta->nomor_validasi);
+        $this->assertSame('2026-11-10', $pakta->tanggal_validasi->toDateString());
+    }
+
+    public function test_tanggal_pengesahan_validasi_boleh_kosong_dan_harus_format_dd_mm_yyyy(): void
+    {
+        $dosen = $this->makeUser('dosen');
+        $admin = $this->makeUser('admin');
+
+        // Opsional: tanpa tanggal pengesahan validasi tetap tersimpan (null).
+        $this->actingAs($admin)
+            ->post(route('surat.pakta-integritas.store'), [
+                'dosen_id' => $dosen->id,
+                'tanggal_pakta' => '31-10-2026',
+            ])
+            ->assertRedirect(route('surat.index').'#pakta-integritas')
+            ->assertSessionHasNoErrors();
+
+        $this->assertNull(SuratPaktaIntegritas::query()->sole()->tanggal_validasi);
+
+        // Format salah (YYYY-MM-DD) ditolak dengan pesan DD-MM-YYYY.
+        $this->actingAs($admin)
+            ->post(route('surat.pakta-integritas.store'), [
+                'dosen_id' => $dosen->id,
+                'tanggal_pakta' => '31-10-2026',
+                'tanggal_validasi' => '2026-11-05',
+            ])
+            ->assertSessionHasErrors([
+                'tanggal_validasi' => 'Tanggal pengesahan validasi harus berformat DD-MM-YYYY.',
+            ]);
+
+        $this->assertDatabaseCount('surat_pakta_integritas', 1);
+    }
+
+    public function test_edit_pakta_integritas_prefills_tanggal_pengesahan_validasi(): void
+    {
+        Instansi::create(['nama_instansi' => 'Universitas Athena', 'kota' => 'Bandung']);
+
+        $pakta = $this->makePakta(
+            $this->makeUser('dosen'),
+            '2026-10-31',
+            '750/STKIP PGRI PACITAN/KL/TX/2025',
+            '2026-11-05',
+        );
+
+        $this->actingAs($this->makeUser('admin'))
+            ->get(route('surat.index', ['edit_pakta' => $pakta->id]))
+            ->assertOk()
+            // Tanggal pengesahan validasi tampil DD-MM-YYYY pada mode ubah.
+            ->assertSee('id="tanggal_validasi"', false)
+            ->assertSee('value="05-11-2026"', false);
     }
 
     public function test_admin_can_open_pakta_integritas_print_preview(): void
@@ -425,7 +545,7 @@ class SuratTest extends TestCase
         $dosen = $this->makeUser('dosen');
         // Ketua instansi sebagai penanda tangan lembar validasi.
         $this->makePimpinan();
-        $pakta = $this->makePakta($dosen, '2026-10-31', '750/STKIP PGRI PACITAN/KL/TX/2025');
+        $pakta = $this->makePakta($dosen, '2026-10-31', '750/STKIP PGRI PACITAN/KL/TX/2025', '2026-11-05');
 
         // Karya berupa jurnal: identitas memuat nama jurnal, web jurnal, dan URL dokumen.
         $dosen->karyaTulis()->create([
@@ -478,14 +598,29 @@ class SuratTest extends TestCase
             // Paragraf penutup & tautan berwarna saat dicetak.
             ->assertSee('memenuhi syarat kaidah ilmiah, norma akademik, dan norma hukum')
             ->assertSee('cetak-tautan', false)
-            // Tanggal penanda tangan: "Kota, DD Bulan YYYY" + tanda tangan Ketua.
-            ->assertSee('Bandung, 31 Oktober 2026')
+            // Tanggal pengesahan validasi (isian form), bukan tanggal pakta.
+            ->assertSee('Bandung, 5 November 2026')
+            ->assertDontSee('Bandung, 31 Oktober 2026')
             ->assertSee('Ketua,')
             // Pilihan margin sebelum cetak, default 1,5 cm semua sisi.
             ->assertSee('id="margin-atas"', false)
             ->assertSee('value="1.5"', false)
             ->assertSee('@page { size: A4 portrait; margin: 1.5cm; }')
             ->assertSee('cetak-ukuran');
+    }
+
+    public function test_validasi_tanpa_tanggal_pengesahan_memakai_tanggal_pakta(): void
+    {
+        Instansi::create(['nama_instansi' => 'Universitas Athena', 'kota' => 'Bandung']);
+        $this->makePimpinan();
+
+        // Pakta lama tanpa tanggal pengesahan validasi tetap mencetak tanggal pakta.
+        $pakta = $this->makePakta($this->makeUser('dosen'), '2026-12-24');
+
+        $this->actingAs($this->makeUser('admin'))
+            ->get(route('surat.pakta-integritas.validasi', $pakta))
+            ->assertOk()
+            ->assertSee('Bandung, 24 Desember 2026');
     }
 
     public function test_dosen_cannot_open_pakta_integritas_validasi_preview(): void

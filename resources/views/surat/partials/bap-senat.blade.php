@@ -48,10 +48,10 @@
             </label>
             <input type="text" id="tanggal_bap" name="tanggal_bap" required
                    value="{{ old('tanggal_bap', $bapEdit?->tanggal_bap?->format('d-m-Y')) }}" placeholder="DD-MM-YYYY"
-                   maxlength="10" inputmode="numeric" autocomplete="off" data-date-mask
+                   maxlength="10" inputmode="numeric" autocomplete="off" data-date-mask data-date-picker
                    @class(['form-input', 'border-rose-300 bg-rose-50/40' => $errors->has('tanggal_bap')])>
             @error('tanggal_bap') <p class="form-error">{{ $message }}</p> @enderror
-            <p class="mt-1.5 text-[11px] text-slate-400">Format tanggal: DD-MM-YYYY.</p>
+            <p class="mt-1.5 text-[11px] text-slate-400">Pilih lewat kalender atau ketik format DD-MM-YYYY.</p>
         </div>
 
         <div>

@@ -38,6 +38,15 @@ class Skp extends Model
         'nilai_disiplin',
         'nilai_kerjasama',
         'nilai_kepemimpinan',
+        'tanggal_penilaian',
+        'keberatan',
+        'tanggal_keberatan',
+        'disetujui_pada',
+        'tanggapan_keberatan',
+        'tanggal_tanggapan',
+        'keputusan_keberatan',
+        'tanggal_keputusan',
+        'disetujui_atasan_pada',
     ];
 
     protected function casts(): array
@@ -51,6 +60,12 @@ class Skp extends Model
             'nilai_disiplin' => 'integer',
             'nilai_kerjasama' => 'integer',
             'nilai_kepemimpinan' => 'integer',
+            'tanggal_penilaian' => 'date',
+            'tanggal_keberatan' => 'date',
+            'disetujui_pada' => 'date',
+            'tanggal_tanggapan' => 'date',
+            'tanggal_keputusan' => 'date',
+            'disetujui_atasan_pada' => 'date',
         ];
     }
 
@@ -123,6 +138,63 @@ class Skp extends Model
     public function nilaiPerilakuKerja(): ?float
     {
         return $this->rataRataNilai();
+    }
+
+    /**
+     * Dosen yang dinilai sudah menyetujui hasil penilaian.
+     */
+    public function sudahDisetujui(): bool
+    {
+        return $this->disetujui_pada !== null;
+    }
+
+    /**
+     * Dosen yang dinilai sudah mengajukan keberatan (isi dan/atau tanggal ajuan).
+     */
+    public function mengajukanKeberatan(): bool
+    {
+        return filled($this->keberatan) || $this->tanggal_keberatan !== null;
+    }
+
+    /**
+     * Pejabat penilai sudah menanggapi keberatan dosen.
+     */
+    public function sudahDitanggapi(): bool
+    {
+        return filled($this->tanggapan_keberatan) || $this->tanggal_tanggapan !== null;
+    }
+
+    /**
+     * Atasan pejabat penilai sudah menyetujui hasil penilaian.
+     */
+    public function sudahDisetujuiAtasan(): bool
+    {
+        return $this->disetujui_atasan_pada !== null;
+    }
+
+    /**
+     * Keputusan atas keberatan hanya relevan bila dosen mengajukan keberatan,
+     * pejabat penilai sudah meninjau ulang (menanggapi), dan dosen sudah menyetujui.
+     */
+    public function bolehKeputusanKeberatan(): bool
+    {
+        return $this->mengajukanKeberatan() && $this->sudahDitanggapi() && $this->sudahDisetujui();
+    }
+
+    /**
+     * Atasan pejabat penilai sudah memutuskan keberatan dosen.
+     */
+    public function sudahDiputuskanAtasan(): bool
+    {
+        return filled($this->keputusan_keberatan) || $this->tanggal_keputusan !== null;
+    }
+
+    /**
+     * Persetujuan dosen masih bisa dibatalkan selama atasan penilai belum menyetujui.
+     */
+    public function bolehBatalPersetujuan(): bool
+    {
+        return $this->sudahDisetujui() && ! $this->sudahDisetujuiAtasan();
     }
 
     /**

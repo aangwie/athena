@@ -75,6 +75,7 @@ class SuratBakiTest extends TestCase
             ->assertSee('DD-MM-YYYY')
             ->assertSee('data-select-search="Cari nama dosen…"', false)
             ->assertSee('data-date-mask', false)
+            ->assertSee('data-date-picker', false)
             ->assertSee('Daftar BAKI')
             ->assertSee('data-datatable', false)
             ->assertSee('Dr. Ayu Lestari, M.Kom.')

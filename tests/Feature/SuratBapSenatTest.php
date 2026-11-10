@@ -56,6 +56,7 @@ class SuratBapSenatTest extends TestCase
             ->assertSee('Nomor BAP')
             ->assertSee('Tanggal')
             ->assertSee('DD-MM-YYYY')
+            ->assertSee('data-date-picker', false)
             ->assertSee('Nama Dosen')
             ->assertSee('Bidang Keilmuan')
             ->assertSee('Prosentase Proporsi Penelitian')

@@ -90,6 +90,7 @@ class SkpNotifikasiTest extends TestCase
             'nilai_disiplin' => 95,
             'nilai_kerjasama' => 75,
             'nilai_kepemimpinan' => 88,
+            'tanggal_penilaian' => '05-11-2026',
         ];
     }
 
@@ -178,5 +179,116 @@ class SkpNotifikasiTest extends TestCase
         $this->assertCount(2, $terkirim);
 
         Http::assertSent(fn ($request) => str_contains($request['message'], 'Nilai Perilaku Kerja SKP'));
+    }
+
+    public function test_lonceng_pejabat_menampilkan_ajuan_keberatan_skp(): void
+    {
+        $pejabat = $this->makeUser('dosen');
+        $skp = $this->makeSkp($pejabat);
+        $skp->update(['keberatan' => 'Nilai kurang tepat.', 'tanggal_keberatan' => '2026-11-07']);
+
+        $daftar = Notifikasi::untuk($pejabat->fresh());
+        $item = $daftar->firstWhere('judul', 'Ajuan keberatan SKP masuk');
+
+        $this->assertNotNull($item);
+        $this->assertSame(
+            $skp->dosen->name.' · '.$skp->periodeLabel().' · diajukan 7 November 2026',
+            $item['keterangan'],
+        );
+        // Selama belum ditanggapi, notifikasi langsung menuju form tanggapan.
+        $this->assertSame(route('skp-usulan.tanggapan.edit', $skp), $item['url']);
+
+        // Tampil juga pada lonceng navbar (dashboard).
+        $this->actingAs($pejabat)
+            ->get('/dashboard')
+            ->assertOk()
+            ->assertSee('Ajuan keberatan SKP masuk');
+    }
+
+    public function test_lonceng_dosen_menampilkan_tanggapan_keberatan(): void
+    {
+        $pejabat = $this->makeUser('dosen');
+        $skp = $this->makeSkp($pejabat);
+        $skp->update(['keberatan' => 'Nilai kurang tepat.', 'tanggal_keberatan' => '2026-11-07']);
+
+        // Sebelum ditanggapi: dosen yang dinilai belum menerima notifikasi tanggapan.
+        $this->assertNotContains(
+            'Tanggapan keberatan SKP',
+            Notifikasi::untuk($skp->dosen->fresh())->pluck('judul')->all(),
+        );
+
+        $skp->update([
+            'tanggapan_keberatan' => 'Nilai sudah sesuai hasil verifikasi.',
+            'tanggal_tanggapan' => '2026-11-10',
+        ]);
+
+        $item = Notifikasi::untuk($skp->dosen->fresh())->firstWhere('judul', 'Tanggapan keberatan SKP');
+
+        $this->assertNotNull($item);
+        $this->assertStringContainsString('ditanggapi 10 November 2026', $item['keterangan']);
+        $this->assertSame(route('skp-dosen.index'), $item['url']);
+    }
+
+    public function test_lonceng_pejabat_menampilkan_persetujuan_dosen(): void
+    {
+        $pejabat = $this->makeUser('dosen');
+        $skp = $this->makeSkp($pejabat);
+
+        // Belum disetujui: notifikasi persetujuan tidak muncul.
+        $this->assertNotContains(
+            'Penilaian SKP disetujui dosen',
+            Notifikasi::untuk($pejabat->fresh())->pluck('judul')->all(),
+        );
+
+        $skp->update(['disetujui_pada' => '2026-11-10']);
+
+        $item = Notifikasi::untuk($pejabat->fresh())->firstWhere('judul', 'Penilaian SKP disetujui dosen');
+
+        $this->assertNotNull($item);
+        $this->assertStringContainsString('disetujui 10 November 2026', $item['keterangan']);
+        $this->assertSame(route('skp-usulan.index'), $item['url']);
+    }
+
+    public function test_lonceng_admin_menampilkan_keberatan_tanggapan_dan_persetujuan(): void
+    {
+        $admin = $this->makeUser('admin');
+        $pejabat = $this->makeUser('dosen');
+        $skp = $this->makeSkp($pejabat, $this->nilaiPayload());
+
+        // Tanpa ajuan: ketiga notifikasi SKP tersebut tidak muncul.
+        $judulAwal = Notifikasi::untuk($admin->fresh())->pluck('judul')->all();
+
+        foreach (['Ajuan keberatan SKP', 'Tanggapan keberatan SKP', 'Persetujuan penilaian SKP'] as $judul) {
+            $this->assertNotContains($judul, $judulAwal);
+        }
+
+        $skp->update([
+            'keberatan' => 'Nilai kurang tepat.',
+            'tanggal_keberatan' => '2026-11-07',
+            'tanggapan_keberatan' => 'Nilai sudah sesuai.',
+            'tanggal_tanggapan' => '2026-11-10',
+            'disetujui_pada' => '2026-11-11',
+        ]);
+
+        $daftar = Notifikasi::untuk($admin->fresh());
+        $judul = $daftar->pluck('judul')->all();
+
+        $this->assertContains('Ajuan keberatan SKP', $judul);
+        $this->assertContains('Tanggapan keberatan SKP', $judul);
+        $this->assertContains('Persetujuan penilaian SKP', $judul);
+
+        $this->assertStringContainsString(
+            'diajukan 7 November 2026',
+            $daftar->firstWhere('judul', 'Ajuan keberatan SKP')['keterangan'],
+        );
+        $this->assertStringContainsString(
+            'disetujui 11 November 2026',
+            $daftar->firstWhere('judul', 'Persetujuan penilaian SKP')['keterangan'],
+        );
+
+        // Semua notifikasi SKP pada admin menuju halaman daftar SKP.
+        foreach (['Ajuan keberatan SKP', 'Tanggapan keberatan SKP', 'Persetujuan penilaian SKP'] as $nama) {
+            $this->assertSame(route('skp.index'), $daftar->firstWhere('judul', $nama)['url']);
+        }
     }
 }

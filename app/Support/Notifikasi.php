@@ -91,7 +91,32 @@ class Notifikasi
                 'waktu' => $row->updated_at,
             ]);
 
-        return $dupak->concat($berkas)->concat($skp);
+        // Keberatan dosen, tanggapan pejabat penilai, dan persetujuan dosen ikut dipantau admin.
+        $keberatan = self::skpDenganKeberatan()
+            ->map(fn (Skp $row) => [
+                'judul' => 'Ajuan keberatan SKP',
+                'keterangan' => ($row->dosen?->name ?? '—').' · '.$row->periodeLabel().' · diajukan '.self::tanggal($row->tanggal_keberatan),
+                'url' => route('skp.index'),
+                'waktu' => $row->updated_at,
+            ]);
+
+        $tanggapan = self::skpDenganTanggapan()
+            ->map(fn (Skp $row) => [
+                'judul' => 'Tanggapan keberatan SKP',
+                'keterangan' => ($row->dosen?->name ?? '—').' · '.$row->periodeLabel().' · ditanggapi '.self::tanggal($row->tanggal_tanggapan),
+                'url' => route('skp.index'),
+                'waktu' => $row->updated_at,
+            ]);
+
+        $persetujuan = self::skpDisetujui()
+            ->map(fn (Skp $row) => [
+                'judul' => 'Persetujuan penilaian SKP',
+                'keterangan' => ($row->dosen?->name ?? '—').' · '.$row->periodeLabel().' · disetujui '.self::tanggal($row->disetujui_pada),
+                'url' => route('skp.index'),
+                'waktu' => $row->updated_at,
+            ]);
+
+        return $dupak->concat($berkas)->concat($skp)->concat($keberatan)->concat($tanggapan)->concat($persetujuan);
     }
 
     /**
@@ -161,7 +186,107 @@ class Notifikasi
                 'waktu' => $row->created_at,
             ]);
 
-        return $dupak->concat($berkas)->concat($skp);
+        // Pejabat penilai: dosen yang dinilai mengajukan keberatan atas nilainya.
+        $keberatan = self::skpDenganKeberatan(fn ($query) => $query->where('pejabat_penilai_id', $user->id))
+            ->map(fn (Skp $row) => [
+                'judul' => 'Ajuan keberatan SKP masuk',
+                'keterangan' => ($row->dosen?->name ?? '—').' · '.$row->periodeLabel().' · diajukan '.self::tanggal($row->tanggal_keberatan),
+                // Langsung menuju form tanggapan selama belum ditanggapi.
+                'url' => $row->sudahDitanggapi()
+                    ? route('skp-usulan.index')
+                    : route('skp-usulan.tanggapan.edit', $row),
+                'waktu' => $row->updated_at,
+            ]);
+
+        // Pejabat penilai: dosen menyetujui hasil penilaian.
+        $persetujuan = self::skpDisetujui(fn ($query) => $query->where('pejabat_penilai_id', $user->id))
+            ->map(fn (Skp $row) => [
+                'judul' => 'Penilaian SKP disetujui dosen',
+                'keterangan' => ($row->dosen?->name ?? '—').' · '.$row->periodeLabel().' · disetujui '.self::tanggal($row->disetujui_pada),
+                'url' => route('skp-usulan.index'),
+                'waktu' => $row->updated_at,
+            ]);
+
+        // Dosen yang dinilai: pejabat penilai menanggapi keberatan yang diajukan.
+        $tanggapan = self::skpDenganTanggapan(fn ($query) => $query->where('dosen_id', $user->id))
+            ->map(fn (Skp $row) => [
+                'judul' => 'Tanggapan keberatan SKP',
+                'keterangan' => $row->periodeLabel().' · ditanggapi '.self::tanggal($row->tanggal_tanggapan),
+                'url' => route('skp-dosen.index'),
+                'waktu' => $row->updated_at,
+            ]);
+
+        return $dupak->concat($berkas)->concat($skp)->concat($keberatan)->concat($persetujuan)->concat($tanggapan);
+    }
+
+    /**
+     * SKP yang dosennya sudah mengajukan keberatan, terbaru lebih dulu.
+     *
+     * @param  (callable(\Illuminate\Database\Eloquent\Builder<Skp>): void)|null  $saring
+     * @return Collection<int, Skp>
+     */
+    private static function skpDenganKeberatan(?callable $saring = null): Collection
+    {
+        return self::skpDenganSyarat(
+            fn ($query) => $query->whereNotNull('keberatan')->orWhereNotNull('tanggal_keberatan'),
+            $saring,
+        );
+    }
+
+    /**
+     * SKP yang keberatannya sudah ditanggapi pejabat penilai, terbaru lebih dulu.
+     *
+     * @param  (callable(\Illuminate\Database\Eloquent\Builder<Skp>): void)|null  $saring
+     * @return Collection<int, Skp>
+     */
+    private static function skpDenganTanggapan(?callable $saring = null): Collection
+    {
+        return self::skpDenganSyarat(
+            fn ($query) => $query->whereNotNull('tanggapan_keberatan')->orWhereNotNull('tanggal_tanggapan'),
+            $saring,
+        );
+    }
+
+    /**
+     * SKP yang sudah disetujui dosen yang dinilai, terbaru lebih dulu.
+     *
+     * @param  (callable(\Illuminate\Database\Eloquent\Builder<Skp>): void)|null  $saring
+     * @return Collection<int, Skp>
+     */
+    private static function skpDisetujui(?callable $saring = null): Collection
+    {
+        return self::skpDenganSyarat(fn ($query) => $query->whereNotNull('disetujui_pada'), $saring);
+    }
+
+    /**
+     * Query dasar notifikasi SKP (dosen + pejabat penilai) dengan saringan tambahan.
+     *
+     * @param  callable(\Illuminate\Database\Eloquent\Builder<Skp>): void  $syarat
+     * @param  (callable(\Illuminate\Database\Eloquent\Builder<Skp>): void)|null  $saring
+     * @return Collection<int, Skp>
+     */
+    private static function skpDenganSyarat(callable $syarat, ?callable $saring = null): Collection
+    {
+        $query = Skp::query()
+            ->with(['dosen', 'pejabatPenilai'])
+            ->where($syarat);
+
+        if ($saring !== null) {
+            $saring($query);
+        }
+
+        return $query
+            ->latest('updated_at')
+            ->limit(self::MAKS)
+            ->get();
+    }
+
+    /**
+     * Tanggal Indonesia untuk keterangan notifikasi (mis. "7 November 2026").
+     */
+    private static function tanggal(?\Illuminate\Support\Carbon $tanggal): string
+    {
+        return $tanggal?->locale('id')->translatedFormat('j F Y') ?? '—';
     }
 
     /**

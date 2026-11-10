@@ -73,6 +73,7 @@ class SuratPengantarTest extends TestCase
             ->assertSee('Lampiran')
             ->assertSee('Perihal')
             ->assertSee('Tanggal Surat')
+            ->assertSee('data-date-picker', false)
             // Kota tujuan surat: baris ketiga blok tujuan.
             ->assertSee('Kota Tujuan Surat')
             ->assertSee('name="kota_tujuan"', false)

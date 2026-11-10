@@ -210,6 +210,25 @@
     .sd-chip-remove {
         @apply flex size-4 shrink-0 cursor-pointer items-center justify-center rounded text-base leading-none text-teal-500 transition hover:bg-teal-100 hover:text-teal-800;
     }
+
+    /* ----------------------------------------------------------------------
+       Date picker (komponen .dp) — input tanggal dengan kalender DD-MM-YYYY
+       ---------------------------------------------------------------------- */
+    .dp {
+        @apply relative w-full;
+    }
+
+    .dp-input {
+        @apply pr-11;
+    }
+
+    .dp-trigger {
+        @apply absolute top-1/2 right-2 flex size-8 -translate-y-1/2 cursor-pointer items-center justify-center rounded-lg text-slate-400 transition hover:bg-teal-50 hover:text-teal-700 focus-visible:ring-4 focus-visible:ring-teal-500/20 disabled:cursor-not-allowed disabled:opacity-60;
+    }
+
+    .dp-icon {
+        @apply size-4;
+    }
 }
 
 /* Panel dropdown sengaja di luar @layer components: panel ditempel di <body>
@@ -289,6 +308,136 @@
     font-size: 0.75rem;
     color: #94a3b8;
     text-align: center;
+}
+
+/* Panel kalender sengaja di luar @layer components: panel ditempel di <body>
+   sehingga tidak boleh terpengaruh selector bersarang induk formulir. */
+.dp-panel {
+    position: fixed;
+    z-index: 60;
+    width: 17.5rem;
+    max-width: calc(100vw - 1rem);
+    overflow: hidden;
+    border-radius: 0.9rem;
+    border: 1px solid #e2e8f0;
+    background: #fff;
+    box-shadow: 0 18px 45px -24px rgb(15 23 42 / 0.45);
+}
+
+.dp-panel[hidden] {
+    display: none;
+}
+
+.dp-head {
+    display: flex;
+    align-items: center;
+    gap: 0.2rem;
+    border-bottom: 1px solid #f1f5f9;
+    padding: 0.45rem 0.55rem;
+}
+
+.dp-label {
+    flex: 1;
+    text-align: center;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.dp-nav {
+    display: flex;
+    width: 1.75rem;
+    height: 1.75rem;
+    flex-shrink: 0;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    line-height: 1;
+    color: #64748b;
+    transition: background-color 0.15s, color 0.15s;
+}
+
+.dp-nav:hover {
+    background: #f0fdfa;
+    color: #0f766e;
+}
+
+.dp-week {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    padding: 0.4rem 0.5rem 0;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    color: #94a3b8;
+    text-align: center;
+}
+
+.dp-grid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 0.15rem;
+    padding: 0.35rem 0.5rem 0.5rem;
+}
+
+.dp-day {
+    display: flex;
+    aspect-ratio: 1;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.55rem;
+    font-size: 0.8125rem;
+    color: #334155;
+    transition: background-color 0.15s, color 0.15s;
+}
+
+.dp-day:hover {
+    background: #f0fdfa;
+    color: #0f766e;
+}
+
+.dp-day-luar {
+    color: #cbd5e1;
+}
+
+.dp-day-ini {
+    font-weight: 700;
+    color: #0f766e;
+    box-shadow: inset 0 0 0 1px #99f6e4;
+}
+
+.dp-day-terpilih {
+    background: #0d9488;
+    font-weight: 700;
+    color: #fff;
+}
+
+.dp-day-terpilih:hover {
+    background: #0f766e;
+    color: #fff;
+}
+
+.dp-foot {
+    display: flex;
+    justify-content: flex-end;
+    border-top: 1px solid #f1f5f9;
+    padding: 0.4rem 0.55rem;
+}
+
+.dp-today {
+    cursor: pointer;
+    border-radius: 0.5rem;
+    padding: 0.3rem 0.6rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #0f766e;
+    transition: background-color 0.15s;
+}
+
+.dp-today:hover {
+    background: #f0fdfa;
 }
 
 /* --------------------------------------------------------------------------
