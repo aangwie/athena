@@ -178,6 +178,7 @@ Route::middleware('auth')->group(function () {
     Route::middleware('admin')->prefix('verifikasi-berkas')->name('verifikasi-berkas.')->group(function () {
         Route::get('/', [PengajuanDosenController::class, 'verifikasiSyaratKhusus'])->name('index');
         Route::put('/{syaratKhusus}/berkas/{jenis}', [PengajuanDosenController::class, 'putuskanSyaratKhusus'])->name('update');
+        Route::delete('/{syaratKhusus}/berkas/{jenis}', [PengajuanDosenController::class, 'hapusSyaratKhusus'])->name('destroy');
         Route::get('/{syaratKhusus}/berkas/{jenis}', [PengajuanDosenController::class, 'berkasVerifikasi'])->name('berkas');
     });
 

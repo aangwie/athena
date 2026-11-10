@@ -21,7 +21,10 @@
             <div class="flex flex-col gap-3 border-b border-slate-100 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
                 <div>
                     <h3 class="text-sm font-extrabold tracking-tight text-slate-900">Berkas Masuk</h3>
-                    <p class="mt-0.5 text-xs leading-relaxed text-slate-500">Satu baris per file; keputusan pada satu baris hanya berlaku untuk berkas tersebut.</p>
+                    <p class="mt-0.5 text-xs leading-relaxed text-slate-500">
+                        Satu baris per file; keputusan pada satu baris hanya berlaku untuk berkas tersebut.
+                        Ikon perisai untuk memverifikasi, ikon tempat sampah untuk menghapus berkas yang belum diverifikasi.
+                    </p>
                 </div>
 
                 <label class="relative block sm:w-64">
@@ -90,35 +93,63 @@
                                     <span class="text-xs leading-relaxed text-slate-600">{{ $item->catatanJenis($jenis) ?: '—' }}</span>
                                 </td>
                                 <td class="text-right">
-                                    @if ($item->statusJenis($jenis) === 'diajukan')
-                                        {{-- Keputusan hanya berlaku untuk berkas pada baris ini. --}}
-                                        @php($kunci = $item->id.'-'.$jenis)
-                                        <details name="verifikasi-berkas" class="group text-left">
-                                            <summary class="btn-small cursor-pointer list-none [&::-webkit-details-marker]:hidden">Verifikasi</summary>
-                                            <form method="POST" action="{{ route('verifikasi-berkas.update', ['syaratKhusus' => $item, 'jenis' => $jenis]) }}"
-                                                  class="mt-3 w-64 rounded-xl border border-slate-200 bg-white p-3 text-left shadow-sm">
+                                    <div class="flex items-start justify-end gap-1">
+                                        @if ($item->statusJenis($jenis) === 'diajukan')
+                                            {{-- Keputusan hanya berlaku untuk berkas pada baris ini. --}}
+                                            @php($kunci = $item->id.'-'.$jenis)
+                                            <details name="verifikasi-berkas" class="group text-left">
+                                                {{-- Tombol ikon perisai: panel keputusan terbuka di bawah baris. --}}
+                                                <summary title="Verifikasi" aria-label="Verifikasi berkas {{ strtoupper($jenis) }}"
+                                                         class="inline-flex cursor-pointer list-none items-center justify-center rounded-lg p-2 text-slate-500 transition hover:bg-teal-50 hover:text-teal-700 group-open:bg-teal-50 group-open:text-teal-700 [&::-webkit-details-marker]:hidden">
+                                                    <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                                        <path d="M9 12.5 11 14.5 15.5 10" stroke-linecap="round" stroke-linejoin="round" />
+                                                        <path d="M12 3.5 5.5 6v5.2c0 4.2 2.8 7.9 6.5 9.3 3.7-1.4 6.5-5.1 6.5-9.3V6L12 3.5Z" stroke-linejoin="round" />
+                                                    </svg>
+                                                </summary>
+                                                <form method="POST" action="{{ route('verifikasi-berkas.update', ['syaratKhusus' => $item, 'jenis' => $jenis]) }}"
+                                                      class="mt-3 w-64 rounded-xl border border-slate-200 bg-white p-3 text-left shadow-sm">
+                                                    @csrf
+                                                    @method('PUT')
+
+                                                    <label for="keputusan-{{ $kunci }}" class="form-label">Keputusan</label>
+                                                    <select id="keputusan-{{ $kunci }}" name="keputusan" class="form-select" data-select-search="Cari keputusan…">
+                                                        <option value="diterima">Diterima</option>
+                                                        <option value="ditolak">Ditolak</option>
+                                                    </select>
+
+                                                    <label for="catatan-{{ $kunci }}" class="form-label mt-3">Catatan</label>
+                                                    <textarea id="catatan-{{ $kunci }}" name="catatan" rows="3" class="form-input"
+                                                              placeholder="Wajib diisi saat menolak berkas...">{{ old('catatan') }}</textarea>
+                                                    @error('catatan')
+                                                        <p class="form-error">{{ $message }}</p>
+                                                    @enderror
+
+                                                    <button type="submit" class="btn-primary mt-3 w-auto px-4 py-2 text-xs">Simpan</button>
+                                                </form>
+                                            </details>
+                                        @endif
+
+                                        {{-- Hapus berkas: hanya selama berkas belum diverifikasi admin.
+                                             Berkas yang sudah diterima/ditolak tidak boleh dihapus lagi. --}}
+                                        @unless ($item->sudahDiverifikasi($jenis))
+                                            <form method="POST" action="{{ route('verifikasi-berkas.destroy', ['syaratKhusus' => $item, 'jenis' => $jenis]) }}"
+                                                  data-confirm="Berkas {{ strtoupper($jenis) }} milik {{ $item->user->name }} akan dihapus dan dosen pengusul harus mengunggah ulang. Lanjutkan?"
+                                                  data-confirm-title="Hapus berkas {{ strtoupper($jenis) }}?">
                                                 @csrf
-                                                @method('PUT')
-
-                                                <label for="keputusan-{{ $kunci }}" class="form-label">Keputusan</label>
-                                                <select id="keputusan-{{ $kunci }}" name="keputusan" class="form-select" data-select-search="Cari keputusan…">
-                                                    <option value="diterima">Diterima</option>
-                                                    <option value="ditolak">Ditolak</option>
-                                                </select>
-
-                                                <label for="catatan-{{ $kunci }}" class="form-label mt-3">Catatan</label>
-                                                <textarea id="catatan-{{ $kunci }}" name="catatan" rows="3" class="form-input"
-                                                          placeholder="Wajib diisi saat menolak berkas...">{{ old('catatan') }}</textarea>
-                                                @error('catatan')
-                                                    <p class="form-error">{{ $message }}</p>
-                                                @enderror
-
-                                                <button type="submit" class="btn-primary mt-3 w-auto px-4 py-2 text-xs">Simpan</button>
+                                                @method('DELETE')
+                                                <button type="submit" title="Hapus" aria-label="Hapus berkas {{ strtoupper($jenis) }}"
+                                                        class="inline-flex items-center justify-center rounded-lg p-2 text-slate-400 transition hover:bg-rose-50 hover:text-rose-600">
+                                                    <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                                        <path d="M4.5 7h15M9.5 7V5.5A1.5 1.5 0 0 1 11 4h2a1.5 1.5 0 0 1 1.5 1.5V7M6.5 7l.8 12A1.5 1.5 0 0 0 8.8 20.5h6.4a1.5 1.5 0 0 0 1.5-1.4l.8-12" stroke-linecap="round" stroke-linejoin="round" />
+                                                    </svg>
+                                                </button>
                                             </form>
-                                        </details>
-                                    @else
-                                        <span class="text-[11px] text-slate-300">—</span>
-                                    @endif
+                                        @endunless
+
+                                        @if ($item->sudahDiverifikasi($jenis))
+                                            <span class="text-[11px] text-slate-300">—</span>
+                                        @endif
+                                    </div>
                                 </td>
                             </tr>
                             @endforeach

@@ -48,7 +48,7 @@ class SuratBapSenatRequest extends FormRequest
                     fn ($query) => $query->where('role', 'dosen')->where('is_active', true),
                 ),
             ],
-            'bidang_keilmuan' => ['required', 'string', 'max:255'],
+            'bidang_keilmuan' => ['required', 'string', 'max:255', Rule::in($this->bidangKeilmuanDiizinkan())],
             'prosentase_penelitian' => ['required', 'integer', 'between:0,100'],
             'tempat_pelaksanaan' => ['required', 'string', 'max:150'],
             'materi_rapat' => ['required', 'string', 'max:255'],
@@ -56,6 +56,24 @@ class SuratBapSenatRequest extends FormRequest
             // Anggota rapat hanya boleh diambil dari daftar senat instansi.
             'anggota_senat_ids.*' => ['integer', 'distinct', Rule::exists('senat', 'user_id')],
         ];
+    }
+
+    /**
+     * Bidang keilmuan yang boleh dipilih: daftar rumpun pada model, ditambah nilai
+     * lama milik BAP yang sedang diubah agar data lama tetap dapat disunting.
+     *
+     * @return list<string>
+     */
+    private function bidangKeilmuanDiizinkan(): array
+    {
+        $daftar = SuratBapSenat::bidangKeilmuanList();
+        $bap = $this->route('bap');
+
+        if ($bap instanceof SuratBapSenat && filled($bap->bidang_keilmuan)) {
+            $daftar[] = $bap->bidang_keilmuan;
+        }
+
+        return array_values(array_unique($daftar));
     }
 
     /**
@@ -90,7 +108,8 @@ class SuratBapSenatRequest extends FormRequest
             'tanggal_bap.date_format' => 'Tanggal harus berformat DD-MM-YYYY.',
             'dosen_id.required' => 'Nama dosen wajib dipilih.',
             'dosen_id.exists' => 'Nama dosen harus dosen aktif.',
-            'bidang_keilmuan.required' => 'Bidang keilmuan wajib diisi.',
+            'bidang_keilmuan.required' => 'Bidang keilmuan wajib dipilih.',
+            'bidang_keilmuan.in' => 'Bidang keilmuan tidak valid, pilih dari daftar yang tersedia.',
             'prosentase_penelitian.required' => 'Prosentase proporsi penelitian wajib diisi.',
             'prosentase_penelitian.between' => 'Prosentase proporsi penelitian harus 0 sampai 100.',
             'tempat_pelaksanaan.required' => 'Tempat pelaksanaan wajib diisi.',

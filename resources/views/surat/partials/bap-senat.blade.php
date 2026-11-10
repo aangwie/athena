@@ -1,3 +1,14 @@
+@php
+    // Bidang keilmuan dikelompokkan per rumpun ilmu (optgroup pada dropdown).
+    $bidangMap = \App\Models\SuratBapSenat::bidangKeilmuanOptions();
+    $bidangForm = (string) old('bidang_keilmuan', $bapEdit?->bidang_keilmuan);
+
+    // Bidang dari data lama yang belum ada pada daftar tetap ditampilkan agar tidak hilang.
+    if ($bidangForm !== '' && \App\Models\SuratBapSenat::rumpunBidangKeilmuan($bidangForm) === null) {
+        $bidangMap[\App\Models\SuratBapSenat::RUMPUN_LAINNYA] = [$bidangForm => $bidangForm];
+    }
+@endphp
+
 <p class="mt-1 max-w-2xl text-sm leading-relaxed text-slate-500">
     @if ($bapEdit)
         Ubah berita acara persetujuan senat nomor <span class="font-semibold text-slate-700">{{ $bapEdit->nomor_bap }}</span>.
@@ -81,11 +92,21 @@
             <label for="bidang_keilmuan" class="form-label">
                 Bidang Keilmuan <span class="text-rose-500">*</span>
             </label>
-            <input type="text" id="bidang_keilmuan" name="bidang_keilmuan" required maxlength="255"
-                   value="{{ old('bidang_keilmuan', $bapEdit?->bidang_keilmuan) }}" placeholder="Contoh: Sistem Informasi"
-                   autocomplete="off"
-                   @class(['form-input', 'border-rose-300 bg-rose-50/40' => $errors->has('bidang_keilmuan')])>
+            {{-- Daftar dikelompokkan per rumpun ilmu memakai <optgroup> (dropdown + sub). --}}
+            <select id="bidang_keilmuan" name="bidang_keilmuan" required
+                    data-select-search="Cari bidang atau rumpun ilmu…"
+                    @class(['form-select', 'border-rose-300 bg-rose-50/40' => $errors->has('bidang_keilmuan')])>
+                <option value="">Pilih bidang keilmuan</option>
+                @foreach ($bidangMap as $rumpun => $daftar)
+                    <optgroup label="{{ $rumpun }}">
+                        @foreach ($daftar as $nama => $label)
+                            <option value="{{ $nama }}" @selected($bidangForm === $nama)>{{ $label }}</option>
+                        @endforeach
+                    </optgroup>
+                @endforeach
+            </select>
             @error('bidang_keilmuan') <p class="form-error">{{ $message }}</p> @enderror
+            <p class="mt-1.5 text-[11px] text-slate-400">Dikelompokkan per rumpun ilmu A–D beserta kodenya.</p>
         </div>
 
         <div>

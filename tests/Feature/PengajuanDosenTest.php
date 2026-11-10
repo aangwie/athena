@@ -475,7 +475,7 @@ class PengajuanDosenTest extends TestCase
             ->assertSee('Menunggu verifikasi')
             ->assertSee('data-table-search', false)
             ->assertSee('data-table-card', false)
-            ->assertSee('Verifikasi');
+            ->assertSee('title="Verifikasi"', false);
 
         // Catatan wajib saat menolak.
         $this->actingAs($admin)
@@ -568,10 +568,12 @@ class PengajuanDosenTest extends TestCase
         $syaratKhusus = SyaratKhusus::query()->firstOrFail();
         $this->actingAs($dosen)->post(route('profil.pengajuan.syarat-khusus.ajukan', $syaratKhusus));
 
-        // Satu ajuan = 2 baris file, keduanya punya aksi Verifikasi.
+        // Satu ajuan = 2 baris file, keduanya punya aksi Verifikasi berupa ikon.
         $html = $this->actingAs($admin)->get('/verifikasi-berkas')->assertOk()->getContent();
-        $this->assertSame(2, substr_count($html, '>Verifikasi</summary>'));
+        $this->assertSame(2, substr_count($html, 'aria-label="Verifikasi berkas '));
         $this->assertSame(2, substr_count($html, 'name="keputusan"'));
+        // Tombol verifikasi memakai ikon, bukan teks, agar kolom Aksi tetap ringkas.
+        $this->assertStringNotContainsString('>Verifikasi</summary>', $html);
 
         // Setelah satu berkas diputuskan, aksi verifikasi hanya hilang di baris tersebut.
         $this->actingAs($admin)->put(
@@ -580,7 +582,7 @@ class PengajuanDosenTest extends TestCase
         );
 
         $html = $this->actingAs($admin)->get('/verifikasi-berkas')->assertOk()->getContent();
-        $this->assertSame(1, substr_count($html, '>Verifikasi</summary>'));
+        $this->assertSame(1, substr_count($html, 'aria-label="Verifikasi berkas '));
         $this->assertSame(1, substr_count($html, 'name="keputusan"'));
 
         // Setelah kedua berkas diputuskan, tidak ada lagi aksi verifikasi.
@@ -590,7 +592,7 @@ class PengajuanDosenTest extends TestCase
         );
 
         $html = $this->actingAs($admin)->get('/verifikasi-berkas')->assertOk()->getContent();
-        $this->assertSame(0, substr_count($html, '>Verifikasi</summary>'));
+        $this->assertSame(0, substr_count($html, 'aria-label="Verifikasi berkas '));
         $this->assertSame(0, substr_count($html, 'name="keputusan"'));
     }
 
@@ -623,7 +625,7 @@ class PengajuanDosenTest extends TestCase
         $this->assertSame('diajukan', $syaratKhusus->status);
 
         $html = $this->actingAs($admin)->get('/verifikasi-berkas')->assertOk()->getContent();
-        $this->assertSame(1, substr_count($html, '>Verifikasi</summary>'));
+        $this->assertSame(1, substr_count($html, 'aria-label="Verifikasi berkas '));
         $this->assertSame(1, substr_count($html, 'name="keputusan"'));
 
         $this->actingAs($admin)
@@ -680,6 +682,135 @@ class PengajuanDosenTest extends TestCase
         Storage::disk('local')->assertExists($syaratKhusus->ikd_path);
         $this->assertNotContains($syaratKhusus->bkd_path, $lama);
         $this->assertSame('draf', $syaratKhusus->status);
+    }
+
+    public function test_admin_dapat_menghapus_berkas_dan_dosen_dapat_mengunggah_ulang(): void
+    {
+        Storage::fake('local');
+
+        $dosen = $this->makeUser('dosen');
+
+        $this->actingAs($dosen)->post('/profil/pengajuan/syarat-khusus', [
+            'tahun' => 2026,
+            'semester' => 'ganjil',
+            'bkd' => UploadedFile::fake()->create('bkd.pdf', 300, 'application/pdf'),
+            'ikd' => UploadedFile::fake()->create('ikd.pdf', 300, 'application/pdf'),
+        ])->assertSessionHasNoErrors();
+
+        $syaratKhusus = SyaratKhusus::query()->firstOrFail();
+        $this->actingAs($dosen)->post(route('profil.pengajuan.syarat-khusus.ajukan', $syaratKhusus));
+
+        $pathBkd = $syaratKhusus->fresh()->bkd_path;
+        $admin = $this->makeUser('admin');
+
+        // Setiap baris berkas punya aksi hapus dengan konfirmasi SweetAlert.
+        $this->actingAs($admin)
+            ->get('/verifikasi-berkas')
+            ->assertOk()
+            ->assertSee(route('verifikasi-berkas.destroy', ['syaratKhusus' => $syaratKhusus, 'jenis' => 'bkd']), false)
+            ->assertSee('data-confirm-title="Hapus berkas BKD?"', false);
+
+        $this->actingAs($admin)
+            ->delete(route('verifikasi-berkas.destroy', ['syaratKhusus' => $syaratKhusus, 'jenis' => 'bkd']))
+            ->assertRedirect(route('verifikasi-berkas.index'))
+            ->assertSessionHas('status');
+
+        $syaratKhusus->refresh();
+
+        Storage::disk('local')->assertMissing($pathBkd);
+        $this->assertNull($syaratKhusus->bkd_path);
+        $this->assertSame('ditolak', $syaratKhusus->bkd_status);
+        $this->assertSame('Berkas dihapus admin. Silakan unggah ulang berkas BKD.', $syaratKhusus->bkd_catatan);
+        // Menghapus BKD tidak menyentuh berkas IKD.
+        Storage::disk('local')->assertExists($syaratKhusus->ikd_path);
+        $this->assertSame('diajukan', $syaratKhusus->ikd_status);
+
+        // Baris BKD hilang dari tabel berkas masuk, baris IKD tetap ada.
+        $html = $this->actingAs($admin)->get('/verifikasi-berkas')->assertOk()->getContent();
+        $this->assertSame(0, substr_count($html, 'aria-label="Hapus berkas BKD"'));
+        $this->assertSame(1, substr_count($html, 'aria-label="Hapus berkas IKD"'));
+        $this->assertSame(1, substr_count($html, 'aria-label="Verifikasi berkas '));
+
+        // Dosen melihat catatan penghapusan dan formulir unggah ulang terbuka.
+        $this->actingAs($dosen)
+            ->get('/profil/pengajuan/syarat-khusus?tahun=2026&semester=ganjil')
+            ->assertOk()
+            ->assertSee('Berkas ditolak admin')
+            ->assertSee('Berkas dihapus admin. Silakan unggah ulang berkas BKD.')
+            ->assertSee('Simpan Berkas');
+
+        // Riwayat IKD tetap menampilkan berkas yang dihapus beserta catatan admin.
+        $this->actingAs($dosen)
+            ->get(route('profil.pengajuan.riwayat-ikd'))
+            ->assertOk()
+            ->assertSee('Berkas dihapus admin. Silakan unggah ulang berkas BKD.');
+
+        // Menghapus berkas yang sudah tidak ada tidak mengubah apa pun.
+        $this->actingAs($admin)
+            ->delete(route('verifikasi-berkas.destroy', ['syaratKhusus' => $syaratKhusus, 'jenis' => 'bkd']))
+            ->assertRedirect(route('verifikasi-berkas.index'))
+            ->assertSessionHas('error');
+
+        $this->assertSame('ditolak', $syaratKhusus->fresh()->bkd_status);
+    }
+
+    public function test_tombol_hapus_hilang_setelah_berkas_diverifikasi(): void
+    {
+        Storage::fake('local');
+
+        $dosen = $this->makeUser('dosen');
+
+        $this->actingAs($dosen)->post('/profil/pengajuan/syarat-khusus', [
+            'tahun' => 2026,
+            'semester' => 'ganjil',
+            'bkd' => UploadedFile::fake()->create('bkd.pdf', 300, 'application/pdf'),
+            'ikd' => UploadedFile::fake()->create('ikd.pdf', 300, 'application/pdf'),
+        ])->assertSessionHasNoErrors();
+
+        $syaratKhusus = SyaratKhusus::query()->firstOrFail();
+        $this->actingAs($dosen)->post(route('profil.pengajuan.syarat-khusus.ajukan', $syaratKhusus));
+
+        $admin = $this->makeUser('admin');
+
+        // Selama belum diverifikasi, kedua baris punya tombol hapus.
+        $html = $this->actingAs($admin)->get('/verifikasi-berkas')->assertOk()->getContent();
+        $this->assertSame(1, substr_count($html, 'aria-label="Hapus berkas BKD"'));
+        $this->assertSame(1, substr_count($html, 'aria-label="Hapus berkas IKD"'));
+
+        // BKD diterima: tombol hapus di baris BKD hilang, baris IKD tidak terpengaruh.
+        $this->actingAs($admin)->put(
+            route('verifikasi-berkas.update', ['syaratKhusus' => $syaratKhusus, 'jenis' => 'bkd']),
+            ['keputusan' => 'diterima'],
+        );
+
+        $html = $this->actingAs($admin)->get('/verifikasi-berkas')->assertOk()->getContent();
+        $this->assertSame(0, substr_count($html, 'aria-label="Hapus berkas BKD"'));
+        $this->assertSame(1, substr_count($html, 'aria-label="Hapus berkas IKD"'));
+
+        // IKD ditolak: tombol hapus juga hilang karena berkas sudah diputuskan.
+        $this->actingAs($admin)->put(
+            route('verifikasi-berkas.update', ['syaratKhusus' => $syaratKhusus, 'jenis' => 'ikd']),
+            ['keputusan' => 'ditolak', 'catatan' => 'Scan IKD terpotong.'],
+        );
+
+        $html = $this->actingAs($admin)->get('/verifikasi-berkas')->assertOk()->getContent();
+        $this->assertSame(0, substr_count($html, 'aria-label="Hapus berkas BKD"'));
+        $this->assertSame(0, substr_count($html, 'aria-label="Hapus berkas IKD"'));
+        // Baris tetap tampil lengkap dengan statusnya, hanya aksinya yang kosong.
+        $this->assertSame(0, substr_count($html, 'aria-label="Verifikasi berkas '));
+        $this->assertStringContainsString('Diterima', $html);
+        $this->assertStringContainsString('Scan IKD terpotong.', $html);
+
+        // Permintaan langsung pun ditolak: berkas yang sudah diverifikasi tidak bisa dihapus.
+        $pathBkd = $syaratKhusus->fresh()->bkd_path;
+
+        $this->actingAs($admin)
+            ->delete(route('verifikasi-berkas.destroy', ['syaratKhusus' => $syaratKhusus, 'jenis' => 'bkd']))
+            ->assertRedirect(route('verifikasi-berkas.index'))
+            ->assertSessionHas('error');
+
+        Storage::disk('local')->assertExists($pathBkd);
+        $this->assertSame('diterima', $syaratKhusus->fresh()->bkd_status);
     }
 
     public function test_dosen_tidak_dapat_mengajukan_berkas_dosen_lain(): void

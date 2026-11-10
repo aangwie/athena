@@ -91,6 +91,48 @@ class NotifikasiTest extends TestCase
         ], $judul);
     }
 
+    public function test_lonceng_dosen_menampilkan_berkas_ditolak_dan_dihapus_admin(): void
+    {
+        $dosen = $this->makeUser('dosen');
+
+        // Ditolak admin: berkas masih tersimpan, dosen cukup memperbaiki.
+        SyaratKhusus::create([
+            'user_id' => $dosen->id,
+            'tahun' => 2026,
+            'semester' => 'ganjil',
+            'bkd_path' => 'syarat-khusus/2026/ganjil/bkd.pdf',
+            'bkd_status' => 'ditolak',
+            'bkd_catatan' => 'Scan BKD buram, unggah ulang.',
+            'ikd_status' => 'draf',
+        ]);
+
+        // Dihapus admin: berkas sudah tidak ada, dosen harus unggah ulang.
+        SyaratKhusus::create([
+            'user_id' => $dosen->id,
+            'tahun' => 2026,
+            'semester' => 'genap',
+            'bkd_status' => 'draf',
+            'ikd_status' => 'ditolak',
+            'ikd_catatan' => 'Berkas dihapus admin. Silakan unggah ulang berkas IKD.',
+        ]);
+
+        $notifikasi = Notifikasi::untuk($dosen->fresh());
+
+        $this->assertSame([
+            'Berkas BKD ditolak',
+            'Berkas IKD dihapus admin',
+        ], $notifikasi->pluck('judul')->sort()->values()->all());
+
+        $this->assertStringContainsString(
+            'Scan BKD buram, unggah ulang.',
+            $notifikasi->firstWhere('judul', 'Berkas BKD ditolak')['keterangan'],
+        );
+        $this->assertStringContainsString(
+            'unggah ulang berkas IKD',
+            $notifikasi->firstWhere('judul', 'Berkas IKD dihapus admin')['keterangan'],
+        );
+    }
+
     public function test_membuka_notifikasi_menghapus_tanda_merah_lonceng(): void
     {
         $dosen = $this->makeUser('dosen');

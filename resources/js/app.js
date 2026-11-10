@@ -1181,34 +1181,65 @@ function siapkanDropdownCari(select, indeks) {
         }));
     };
 
+    // Kelompok <optgroup> asli ditampilkan sebagai judul di atas opsinya (dropdown bertingkat).
+    const grupOpsi = (option) => (option.parentElement instanceof HTMLOptGroupElement ? option.parentElement : null);
+
+    // Opsi cocok bila labelnya atau nama kelompoknya memuat kata kunci.
+    const cocok = (option, kata) => kata === ''
+        || option.textContent.toLowerCase().includes(kata)
+        || (grupOpsi(option)?.label.toLowerCase().includes(kata) ?? false);
+
+    const barisOpsi = (option) => {
+        const baris = document.createElement('div');
+        baris.className = 'sd-option' + (option.selected ? ' sd-option-active' : '');
+        baris.setAttribute('role', 'option');
+        baris.setAttribute('aria-selected', String(option.selected));
+
+        const label = document.createElement('span');
+        label.className = 'sd-option-label';
+        label.textContent = option.textContent.trim();
+
+        const tick = document.createElement('svg');
+        tick.className = 'sd-option-tick' + (option.selected ? '' : ' sd-option-tick-off');
+        tick.setAttribute('viewBox', '0 0 20 20');
+        tick.setAttribute('fill', 'currentColor');
+        tick.setAttribute('aria-hidden', 'true');
+        tick.innerHTML = '<path fill-rule="evenodd" d="M16.7 5.3a1 1 0 0 1 0 1.4l-7.2 7.3a1 1 0 0 1-1.4 0L4.3 10.3a1 1 0 0 1 1.4-1.4l3.1 3 6.5-6.6a1 1 0 0 1 1.4 0Z" clip-rule="evenodd" />';
+
+        baris.append(label, tick);
+        baris.addEventListener('click', () => pilih(option));
+
+        return baris;
+    };
+
     const gambarList = () => {
         const kata = cari.value.trim().toLowerCase();
         // Opsi kosong & opsi dinonaktifkan (mis. kuota jabatan sudah terisi) tidak ikut ditampilkan.
         const tampil = Array.from(select.options)
-            .filter((option) => option.value !== '' && !option.disabled && option.textContent.toLowerCase().includes(kata));
+            .filter((option) => option.value !== '' && !option.disabled && cocok(option, kata));
 
-        list.replaceChildren(...tampil.map((option) => {
-            const baris = document.createElement('div');
-            baris.className = 'sd-option' + (option.selected ? ' sd-option-active' : '');
-            baris.setAttribute('role', 'option');
-            baris.setAttribute('aria-selected', String(option.selected));
+        const baris = [];
+        let grupTerakhir = null;
 
-            const label = document.createElement('span');
-            label.className = 'sd-option-label';
-            label.textContent = option.textContent.trim();
+        tampil.forEach((option) => {
+            const grup = grupOpsi(option)?.label ?? '';
 
-            const tick = document.createElement('svg');
-            tick.className = 'sd-option-tick' + (option.selected ? '' : ' sd-option-tick-off');
-            tick.setAttribute('viewBox', '0 0 20 20');
-            tick.setAttribute('fill', 'currentColor');
-            tick.setAttribute('aria-hidden', 'true');
-            tick.innerHTML = '<path fill-rule="evenodd" d="M16.7 5.3a1 1 0 0 1 0 1.4l-7.2 7.3a1 1 0 0 1-1.4 0L4.3 10.3a1 1 0 0 1 1.4-1.4l3.1 3 6.5-6.6a1 1 0 0 1 1.4 0Z" clip-rule="evenodd" />';
+            // Judul kelompok hanya dicetak sekali, tepat sebelum opsi pertamanya.
+            if (grup !== grupTerakhir) {
+                grupTerakhir = grup;
 
-            baris.append(label, tick);
-            baris.addEventListener('click', () => pilih(option));
+                if (grup !== '') {
+                    const judul = document.createElement('p');
+                    judul.className = 'sd-group';
+                    judul.textContent = grup;
+                    baris.push(judul);
+                }
+            }
 
-            return baris;
-        }));
+            baris.push(barisOpsi(option));
+        });
+
+        list.replaceChildren(...baris);
 
         kosong.hidden = tampil.length > 0;
     };

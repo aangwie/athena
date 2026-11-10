@@ -417,6 +417,52 @@ class PengajuanDosenController extends Controller
     }
 
     /**
+     * Hapus satu berkas syarat khusus (BKD/IKD) yang masuk ke admin.
+     *
+     * Berkas fisik dihapus lalu status berkas dikembalikan ke dosen pengusul
+     * sebagai "ditolak" beserta catatan, sehingga dosen dapat mengunggah ulang
+     * berkasnya. Dosen juga menerima notifikasi WhatsApp atas penghapusan ini.
+     *
+     * Hanya berkas yang belum diputuskan admin (belum diverifikasi) yang boleh
+     * dihapus; berkas yang sudah diterima/ditolak ditolak dengan pesan error.
+     */
+    public function hapusSyaratKhusus(SyaratKhusus $syaratKhusus, string $jenis): RedirectResponse
+    {
+        abort_unless(array_key_exists($jenis, self::SYARAT_KHUSUS), 404);
+
+        $label = strtoupper($jenis);
+        $path = $syaratKhusus->{$jenis.'_path'};
+
+        if ($path === null) {
+            return redirect()
+                ->route('verifikasi-berkas.index')
+                ->with('error', 'Berkas '.$label.' '.$syaratKhusus->user->name.' sudah tidak ada.');
+        }
+
+        // Berkas yang sudah diputuskan tidak boleh dihapus lagi oleh admin.
+        if ($syaratKhusus->sudahDiverifikasi($jenis)) {
+            return redirect()
+                ->route('verifikasi-berkas.index')
+                ->with('error', 'Berkas '.$label.' '.$syaratKhusus->user->name.' sudah diverifikasi, tidak dapat dihapus.');
+        }
+
+        Storage::disk('local')->delete($path);
+
+        $syaratKhusus->{$jenis.'_path'} = null;
+        $syaratKhusus->putuskan(
+            $jenis,
+            'ditolak',
+            'Berkas dihapus admin. Silakan unggah ulang berkas '.$label.'.',
+        );
+
+        WhatsAppNotifikasi::berkasDihapus($syaratKhusus, $jenis);
+
+        return redirect()
+            ->route('verifikasi-berkas.index')
+            ->with('status', 'Berkas '.$label.' '.$syaratKhusus->user->name.' berhasil dihapus. Dosen pengusul dapat mengunggah ulang berkas.');
+    }
+
+    /**
      * Berkas syarat khusus untuk admin: tanpa batasan pemilik.
      */
     public function berkasVerifikasi(SyaratKhusus $syaratKhusus, string $jenis): StreamedResponse

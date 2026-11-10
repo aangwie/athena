@@ -6,6 +6,8 @@ use App\Models\PengajuanDupak;
 use App\Models\Skp;
 use App\Models\SyaratKhusus;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
 /**
@@ -23,7 +25,7 @@ class Notifikasi
     /**
      * Notifikasi untuk role yang sedang aktif, terbaru lebih dulu.
      *
-     * @return Collection<int, array{judul: string, keterangan: string, url: string, waktu: \Illuminate\Support\Carbon, baru: bool}>
+     * @return Collection<int, array{judul: string, keterangan: string, url: string, waktu: Carbon, baru: bool}>
      */
     public static function untuk(User $user): Collection
     {
@@ -162,16 +164,13 @@ class Notifikasi
 
         $berkas = SyaratKhusus::query()
             ->where('user_id', $user->id)
-            ->where(fn ($query) => $query->where('bkd_status', 'diterima')->orWhere('ikd_status', 'diterima'))
+            ->where(fn ($query) => $query
+                ->whereIn('bkd_status', ['diterima', 'ditolak'])
+                ->orWhereIn('ikd_status', ['diterima', 'ditolak']))
             ->latest('updated_at')
             ->limit(self::MAKS)
             ->get()
-            ->map(fn (SyaratKhusus $row) => [
-                'judul' => 'Berkas '.self::jenisBerkas($row, 'diterima').' diterima',
-                'keterangan' => $row->periodeLabel().' · '.$row->statusLabel(),
-                'url' => route('profil.pengajuan.riwayat-ikd'),
-                'waktu' => $row->updated_at,
-            ]);
+            ->flatMap(fn (SyaratKhusus $row) => self::notifikasiBerkas($row));
 
         $skp = Skp::query()
             ->with(['dosen'])
@@ -220,9 +219,55 @@ class Notifikasi
     }
 
     /**
+     * Notifikasi dosen untuk satu baris berkas syarat khusus.
+     *
+     * Berkas yang diterima digabung per periode ("BKD & IKD diterima") seperti
+     * sebelumnya, sedangkan berkas yang ditolak atau dihapus admin dipecah per
+     * jenis supaya dosen tahu berkas mana yang harus diunggah ulang.
+     *
+     * @return Collection<int, array{judul: string, keterangan: string, url: string, waktu: Carbon}>
+     */
+    private static function notifikasiBerkas(SyaratKhusus $row): Collection
+    {
+        $daftar = collect();
+
+        $diterima = self::jenisBerkas($row, 'diterima');
+
+        if ($diterima !== '') {
+            $daftar->push([
+                'judul' => 'Berkas '.$diterima.' diterima',
+                'keterangan' => $row->periodeLabel().' · '.$row->statusLabel(),
+                'url' => route('profil.pengajuan.riwayat-ikd'),
+                'waktu' => $row->updated_at,
+            ]);
+        }
+
+        foreach (SyaratKhusus::JENIS as $jenis) {
+            if ($row->statusJenis($jenis) !== 'ditolak') {
+                continue;
+            }
+
+            $label = strtoupper($jenis);
+            // Path kosong berarti berkas sudah dihapus admin, bukan sekadar ditolak.
+            $dihapus = $row->{$jenis.'_path'} === null;
+            $catatan = $row->catatanJenis($jenis);
+
+            $daftar->push([
+                'judul' => 'Berkas '.$label.($dihapus ? ' dihapus admin' : ' ditolak'),
+                'keterangan' => $row->periodeLabel().' · '.$row->statusLabel($jenis)
+                    .(filled($catatan) ? ' · '.$catatan : ''),
+                'url' => route('profil.pengajuan.riwayat-ikd'),
+                'waktu' => $row->updated_at,
+            ]);
+        }
+
+        return $daftar;
+    }
+
+    /**
      * SKP yang dosennya sudah mengajukan keberatan, terbaru lebih dulu.
      *
-     * @param  (callable(\Illuminate\Database\Eloquent\Builder<Skp>): void)|null  $saring
+     * @param  (callable(Builder<Skp>): void)|null  $saring
      * @return Collection<int, Skp>
      */
     private static function skpDenganKeberatan(?callable $saring = null): Collection
@@ -236,7 +281,7 @@ class Notifikasi
     /**
      * SKP yang keberatannya sudah ditanggapi pejabat penilai, terbaru lebih dulu.
      *
-     * @param  (callable(\Illuminate\Database\Eloquent\Builder<Skp>): void)|null  $saring
+     * @param  (callable(Builder<Skp>): void)|null  $saring
      * @return Collection<int, Skp>
      */
     private static function skpDenganTanggapan(?callable $saring = null): Collection
@@ -250,7 +295,7 @@ class Notifikasi
     /**
      * SKP yang sudah disetujui dosen yang dinilai, terbaru lebih dulu.
      *
-     * @param  (callable(\Illuminate\Database\Eloquent\Builder<Skp>): void)|null  $saring
+     * @param  (callable(Builder<Skp>): void)|null  $saring
      * @return Collection<int, Skp>
      */
     private static function skpDisetujui(?callable $saring = null): Collection
@@ -261,8 +306,8 @@ class Notifikasi
     /**
      * Query dasar notifikasi SKP (dosen + pejabat penilai) dengan saringan tambahan.
      *
-     * @param  callable(\Illuminate\Database\Eloquent\Builder<Skp>): void  $syarat
-     * @param  (callable(\Illuminate\Database\Eloquent\Builder<Skp>): void)|null  $saring
+     * @param  callable(Builder<Skp>): void  $syarat
+     * @param  (callable(Builder<Skp>): void)|null  $saring
      * @return Collection<int, Skp>
      */
     private static function skpDenganSyarat(callable $syarat, ?callable $saring = null): Collection
@@ -284,7 +329,7 @@ class Notifikasi
     /**
      * Tanggal Indonesia untuk keterangan notifikasi (mis. "7 November 2026").
      */
-    private static function tanggal(?\Illuminate\Support\Carbon $tanggal): string
+    private static function tanggal(?Carbon $tanggal): string
     {
         return $tanggal?->locale('id')->translatedFormat('j F Y') ?? '—';
     }

@@ -4,6 +4,7 @@ namespace App\Support;
 
 use App\Models\KegiatanDupak;
 use App\Models\PengajuanDupak;
+use App\Models\Pengaturan;
 use App\Models\Skp;
 use App\Models\SyaratKhusus;
 use App\Models\User;
@@ -140,6 +141,28 @@ class WhatsAppNotifikasi
     }
 
     /**
+     * Admin menghapus satu berkas syarat khusus (BKD/IKD): dosen pengusul
+     * diberi tahu agar mengunggah ulang berkasnya.
+     */
+    public static function berkasDihapus(SyaratKhusus $syaratKhusus, string $jenis): void
+    {
+        $dosen = $syaratKhusus->user;
+
+        if ($dosen === null) {
+            return;
+        }
+
+        $label = strtoupper($jenis);
+
+        self::kirimKe(
+            collect([$dosen]),
+            'Berkas '.$label.' Dihapus Admin',
+            'Berkas '.$label.' Anda periode '.$syaratKhusus->periodeLabel()
+                .' dihapus admin. Silakan unggah ulang berkas melalui menu Indikator Kinerja Dosen.',
+        );
+    }
+
+    /**
      * Admin membuat SKP: pejabat penilai diberi tahu ada usulan yang harus dinilai.
      */
     public static function skpMasuk(Skp $skp): void
@@ -263,6 +286,6 @@ class WhatsAppNotifikasi
 
     private static function namaWeb(): string
     {
-        return \App\Models\Pengaturan::namaWeb();
+        return Pengaturan::namaWeb();
     }
 }

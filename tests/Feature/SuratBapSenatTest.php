@@ -59,6 +59,17 @@ class SuratBapSenatTest extends TestCase
             ->assertSee('data-date-picker', false)
             ->assertSee('Nama Dosen')
             ->assertSee('Bidang Keilmuan')
+            ->assertSee('name="bidang_keilmuan"', false)
+            ->assertSee('data-select-search="Cari bidang atau rumpun ilmu…"', false)
+            // Bidang keilmuan dikelompokkan per rumpun memakai <optgroup> (dropdown + sub).
+            ->assertSee('<optgroup label="A. Komputer &amp; Teknologi">', false)
+            ->assertSee('<optgroup label="B. Bahasa &amp; Linguistik">', false)
+            ->assertSee('<optgroup label="C. Pendidikan &amp; Keguruan">', false)
+            ->assertSee('<optgroup label="D. Humaniora, Sosial &amp; Keagamaan">', false)
+            ->assertSee('APLIKASI PERANGKAT LUNAK SITUS (20.101.1003)')
+            ->assertSee('PENDIDIKAN BAHASA INGGRIS (50.132.1020)')
+            ->assertSee('PENDIDIKAN MATEMATIKA (50.132.1057)')
+            ->assertSee('KEAGAMAAN (60.101.1001)')
             ->assertSee('Prosentase Proporsi Penelitian')
             ->assertSee('Tempat Pelaksanaan')
             ->assertSee('name="tempat_pelaksanaan"', false)
@@ -84,7 +95,7 @@ class SuratBapSenatTest extends TestCase
                 'nomor_bap' => '001/BAP-SENAT/X/2026',
                 'tanggal_bap' => '31-10-2026',
                 'dosen_id' => $dosen->id,
-                'bidang_keilmuan' => 'Sistem Informasi',
+                'bidang_keilmuan' => 'APLIKASI PERANGKAT LUNAK SITUS',
                 'prosentase_penelitian' => 25,
                 'tempat_pelaksanaan' => 'Ruang Rapat Senat Lt. 2',
                 'materi_rapat' => 'Pemberian pertimbangan kenaikan jabatan akademik dosen',
@@ -98,6 +109,7 @@ class SuratBapSenatTest extends TestCase
         $this->assertSame('001/BAP-SENAT/X/2026', $bap->nomor_bap);
         $this->assertSame('2026-10-31', $bap->tanggal_bap->toDateString());
         $this->assertSame($dosen->id, $bap->user_id);
+        $this->assertSame('APLIKASI PERANGKAT LUNAK SITUS', $bap->bidang_keilmuan);
         $this->assertSame(25, $bap->prosentase_penelitian);
         $this->assertSame('Ruang Rapat Senat Lt. 2', $bap->tempat_pelaksanaan);
         $this->assertSame('Pemberian pertimbangan kenaikan jabatan akademik dosen', $bap->materi_rapat);
@@ -108,7 +120,7 @@ class SuratBapSenatTest extends TestCase
                 'nomor_bap' => '002/BAP-SENAT/XI/2026',
                 'tanggal_bap' => '01-11-2026',
                 'dosen_id' => $dosen->id,
-                'bidang_keilmuan' => 'Rekayasa Perangkat Lunak',
+                'bidang_keilmuan' => 'TEKNIK JARINGAN KOMPUTER',
                 'prosentase_penelitian' => 40,
                 'tempat_pelaksanaan' => 'Aula Kampus',
                 'materi_rapat' => 'Pembahasan usulan jabatan akademik',
@@ -121,6 +133,7 @@ class SuratBapSenatTest extends TestCase
 
         $this->assertSame('002/BAP-SENAT/XI/2026', $bap->nomor_bap);
         $this->assertSame('2026-11-01', $bap->tanggal_bap->toDateString());
+        $this->assertSame('TEKNIK JARINGAN KOMPUTER', $bap->bidang_keilmuan);
         $this->assertSame(40, $bap->prosentase_penelitian);
         $this->assertSame('Aula Kampus', $bap->tempat_pelaksanaan);
         $this->assertSame('Pembahasan usulan jabatan akademik', $bap->materi_rapat);
@@ -176,7 +189,47 @@ class SuratBapSenatTest extends TestCase
             ->assertSee('value="009/BAP-SENAT/X/2026"', false)
             ->assertSee('value="31-10-2026"', false)
             ->assertSee('value="Ruang Rapat Senat Lt. 2"', false)
-            ->assertSee('value="Pemberian pertimbangan kenaikan jabatan akademik"', false);
+            ->assertSee('value="Pemberian pertimbangan kenaikan jabatan akademik"', false)
+            // Bidang di luar daftar rumpun tetap tampil pada dropdown sebagai data lama.
+            ->assertSee('<optgroup label="Lainnya (data lama)">', false)
+            ->assertSee('value="Sistem Informasi" selected', false);
+    }
+
+    public function test_bap_senat_lama_tetap_dapat_diperbarui_tanpa_mengubah_bidang(): void
+    {
+        [$dosen, $ketua] = $this->makeSenat();
+
+        // Bidang di luar daftar rumpun (data lama) tetap diterima saat BAP diubah,
+        // sehingga perubahan isian lain tidak terhalang validasi.
+        $bap = SuratBapSenat::create([
+            'nomor_bap' => '008/BAP-SENAT/X/2026',
+            'tanggal_bap' => '2026-10-31',
+            'user_id' => $dosen->id,
+            'bidang_keilmuan' => 'Sistem Informasi',
+            'prosentase_penelitian' => 30,
+            'tempat_pelaksanaan' => 'Ruang Rapat Senat Lt. 2',
+            'materi_rapat' => 'Pemberian pertimbangan kenaikan jabatan akademik',
+            'anggota_senat_ids' => [$ketua->user_id],
+        ]);
+
+        $this->actingAs($this->makeUser('admin'))
+            ->put(route('surat.bap-senat.update', $bap), [
+                'nomor_bap' => '008/BAP-SENAT/X/2026',
+                'tanggal_bap' => '31-10-2026',
+                'dosen_id' => $dosen->id,
+                'bidang_keilmuan' => 'Sistem Informasi',
+                'prosentase_penelitian' => 45,
+                'tempat_pelaksanaan' => 'Ruang Rapat Senat Lt. 2',
+                'materi_rapat' => 'Pemberian pertimbangan kenaikan jabatan akademik',
+                'anggota_senat_ids' => [$ketua->user_id],
+            ])
+            ->assertRedirect(route('surat.index').'#bap-senat')
+            ->assertSessionHasNoErrors();
+
+        $bap->refresh();
+
+        $this->assertSame('Sistem Informasi', $bap->bidang_keilmuan);
+        $this->assertSame(45, $bap->prosentase_penelitian);
     }
 
     public function test_bap_senat_rejects_invalid_input(): void
@@ -203,13 +256,27 @@ class SuratBapSenatTest extends TestCase
                 'nomor_bap' => '003/BAP-SENAT/X/2026',
                 'tanggal_bap' => '31-10-2026',
                 'dosen_id' => $dosen->id,
-                'bidang_keilmuan' => 'Sistem Informasi',
+                'bidang_keilmuan' => 'APLIKASI PERANGKAT LUNAK SITUS',
                 'prosentase_penelitian' => 20,
                 'tempat_pelaksanaan' => 'Ruang Rapat Senat',
                 'materi_rapat' => 'Pemberian pertimbangan kenaikan jabatan akademik',
                 'anggota_senat_ids' => [],
             ])
             ->assertSessionHasErrors('anggota_senat_ids');
+
+        // Bidang keilmuan di luar daftar rumpun tidak boleh disimpan.
+        $this->actingAs($admin)
+            ->post(route('surat.bap-senat.store'), [
+                'nomor_bap' => '004/BAP-SENAT/X/2026',
+                'tanggal_bap' => '31-10-2026',
+                'dosen_id' => $dosen->id,
+                'bidang_keilmuan' => 'Sistem Informasi',
+                'prosentase_penelitian' => 20,
+                'tempat_pelaksanaan' => 'Ruang Rapat Senat',
+                'materi_rapat' => 'Pemberian pertimbangan kenaikan jabatan akademik',
+                'anggota_senat_ids' => [$dosen->id],
+            ])
+            ->assertSessionHasErrors('bidang_keilmuan');
 
         $this->assertDatabaseCount('surat_bap_senat', 0);
     }

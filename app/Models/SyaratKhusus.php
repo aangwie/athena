@@ -87,6 +87,15 @@ class SyaratKhusus extends Model
         ));
     }
 
+    /**
+     * Berkas sudah diputuskan admin (diterima/ditolak), sehingga tidak bisa
+     * diverifikasi maupun dihapus lagi.
+     */
+    public function sudahDiverifikasi(string $jenis): bool
+    {
+        return in_array($this->statusJenis($jenis), ['diterima', 'ditolak'], true);
+    }
+
     public function catatanJenis(string $jenis): ?string
     {
         return $this->{$jenis.'_catatan'};

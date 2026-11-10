@@ -2,13 +2,13 @@
 
 namespace Tests\Feature;
 
-use App\Models\PengajuanDupak;
 use App\Models\Pengaturan;
 use App\Models\SyaratKhusus;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class WhatsAppNotifikasiTest extends TestCase
@@ -275,6 +275,33 @@ class WhatsAppNotifikasiTest extends TestCase
         $this->assertSame([$this->normalisasi('0812-0000-0012')], $this->nomorTerkirim());
         Http::assertSent(fn ($request) => str_contains($request['message'], 'Keputusan Berkas BKD')
             && str_contains($request['message'], 'Scan BKD kurang jelas.'));
+    }
+
+    public function test_admin_menghapus_berkas_mengirim_whatsapp_ke_dosen(): void
+    {
+        $this->fakeGateway();
+        Storage::fake('local');
+
+        $dosen = $this->makeUser('dosen', '1', '0812-0000-0013');
+
+        $syaratKhusus = SyaratKhusus::create([
+            'user_id' => $dosen->id,
+            'tahun' => 2026,
+            'semester' => 'ganjil',
+            'bkd_path' => 'syarat-khusus/2026/ganjil/bkd.pdf',
+            'bkd_status' => 'diajukan',
+            'ikd_status' => 'draf',
+        ]);
+
+        Storage::disk('local')->put($syaratKhusus->bkd_path, 'pdf');
+
+        $this->actingAs($this->makeUser('admin', '1'))
+            ->delete(route('verifikasi-berkas.destroy', ['syaratKhusus' => $syaratKhusus, 'jenis' => 'bkd']))
+            ->assertSessionHas('status');
+
+        $this->assertSame([$this->normalisasi('0812-0000-0013')], $this->nomorTerkirim());
+        Http::assertSent(fn ($request) => str_contains($request['message'], 'Berkas BKD Dihapus Admin')
+            && str_contains($request['message'], 'unggah ulang'));
     }
 
     public function test_tidak_mengirim_bila_nomor_penerima_kosong(): void
