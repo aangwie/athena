@@ -813,6 +813,120 @@ class PengajuanDosenTest extends TestCase
         $this->assertSame('diterima', $syaratKhusus->fresh()->bkd_status);
     }
 
+    public function test_admin_dapat_membatalkan_persetujuan_berkas_dan_dosen_dapat_memperbaiki(): void
+    {
+        Storage::fake('local');
+
+        $dosen = $this->makeUser('dosen');
+        $admin = $this->makeUser('admin');
+
+        $this->actingAs($dosen)->post('/profil/pengajuan/syarat-khusus', [
+            'tahun' => 2026,
+            'semester' => 'ganjil',
+            'bkd' => UploadedFile::fake()->create('bkd.pdf', 300, 'application/pdf'),
+            'ikd' => UploadedFile::fake()->create('ikd.pdf', 300, 'application/pdf'),
+        ])->assertSessionHasNoErrors();
+
+        $syaratKhusus = SyaratKhusus::query()->firstOrFail();
+        $this->actingAs($dosen)->post(route('profil.pengajuan.syarat-khusus.ajukan', $syaratKhusus));
+
+        $this->actingAs($admin)->put(
+            route('verifikasi-berkas.update', ['syaratKhusus' => $syaratKhusus, 'jenis' => 'bkd']),
+            ['keputusan' => 'diterima'],
+        );
+
+        $pathBkd = $syaratKhusus->fresh()->bkd_path;
+
+        // Berkas yang sudah diterima menampilkan aksi pembatalan persetujuan.
+        $this->actingAs($admin)
+            ->get('/verifikasi-berkas')
+            ->assertOk()
+            ->assertSee(route('verifikasi-berkas.batalkan', ['syaratKhusus' => $syaratKhusus, 'jenis' => 'bkd']), false)
+            ->assertSee('aria-label="Batalkan persetujuan berkas BKD"', false)
+            ->assertSee('data-confirm-title="Batalkan persetujuan BKD?"', false)
+            // IKD masih menunggu verifikasi: aksinya tetap verifikasi, bukan pembatalan.
+            ->assertDontSee('aria-label="Batalkan persetujuan berkas IKD"', false);
+
+        $this->actingAs($admin)
+            ->put(route('verifikasi-berkas.batalkan', ['syaratKhusus' => $syaratKhusus, 'jenis' => 'bkd']))
+            ->assertRedirect(route('verifikasi-berkas.index'))
+            ->assertSessionHas('status');
+
+        $syaratKhusus->refresh();
+
+        // Berkas kembali ke dosen sebagai "ditolak" beserta catatan; file tetap tersimpan.
+        $this->assertSame('ditolak', $syaratKhusus->bkd_status);
+        $this->assertSame('Persetujuan dibatalkan admin. Silakan periksa dan unggah ulang berkas BKD.', $syaratKhusus->bkd_catatan);
+        $this->assertSame('ditolak', $syaratKhusus->status);
+        Storage::disk('local')->assertExists($pathBkd);
+
+        // Aksi pembatalan hilang karena berkas tidak lagi diterima.
+        $html = $this->actingAs($admin)->get('/verifikasi-berkas')->assertOk()->getContent();
+        $this->assertSame(0, substr_count($html, 'aria-label="Batalkan persetujuan berkas '));
+
+        // Dosen melihat catatan pembatalan dan formulir unggah ulang terbuka kembali.
+        $this->actingAs($dosen)
+            ->get('/profil/pengajuan/syarat-khusus?tahun=2026&semester=ganjil')
+            ->assertOk()
+            ->assertSee('Berkas ditolak admin')
+            ->assertSee('Persetujuan dibatalkan admin. Silakan periksa dan unggah ulang berkas BKD.')
+            ->assertSee('Simpan Berkas');
+
+        // Dosen dapat mengajukan ulang berkas setelah diperbaiki.
+        $this->actingAs($dosen)->post(route('profil.pengajuan.syarat-khusus.ajukan', $syaratKhusus));
+
+        $this->assertSame('diajukan', $syaratKhusus->fresh()->bkd_status);
+    }
+
+    public function test_pembatalan_persetujuan_hanya_untuk_berkas_yang_sudah_diterima(): void
+    {
+        Storage::fake('local');
+
+        $dosen = $this->makeUser('dosen');
+        $admin = $this->makeUser('admin');
+
+        $this->actingAs($dosen)->post('/profil/pengajuan/syarat-khusus', [
+            'tahun' => 2026,
+            'semester' => 'ganjil',
+            'bkd' => UploadedFile::fake()->create('bkd.pdf', 300, 'application/pdf'),
+            'ikd' => UploadedFile::fake()->create('ikd.pdf', 300, 'application/pdf'),
+        ])->assertSessionHasNoErrors();
+
+        $syaratKhusus = SyaratKhusus::query()->firstOrFail();
+        $this->actingAs($dosen)->post(route('profil.pengajuan.syarat-khusus.ajukan', $syaratKhusus));
+
+        // Berkas yang masih menunggu verifikasi belum bisa dibatalkan persetujuannya.
+        $this->actingAs($admin)
+            ->put(route('verifikasi-berkas.batalkan', ['syaratKhusus' => $syaratKhusus, 'jenis' => 'bkd']))
+            ->assertRedirect(route('verifikasi-berkas.index'))
+            ->assertSessionHas('error');
+
+        $this->assertSame('diajukan', $syaratKhusus->fresh()->bkd_status);
+
+        // Berkas yang sudah ditolak pun tidak bisa dibatalkan.
+        $this->actingAs($admin)->put(
+            route('verifikasi-berkas.update', ['syaratKhusus' => $syaratKhusus, 'jenis' => 'ikd']),
+            ['keputusan' => 'ditolak', 'catatan' => 'Scan IKD terpotong.'],
+        );
+
+        $this->actingAs($admin)
+            ->put(route('verifikasi-berkas.batalkan', ['syaratKhusus' => $syaratKhusus, 'jenis' => 'ikd']))
+            ->assertSessionHas('error');
+
+        $this->assertSame('ditolak', $syaratKhusus->fresh()->ikd_status);
+        $this->assertSame('Scan IKD terpotong.', $syaratKhusus->fresh()->ikd_catatan);
+
+        // Jenis berkas di luar BKD/IKD tidak dikenali.
+        $this->actingAs($admin)
+            ->put(route('verifikasi-berkas.batalkan', ['syaratKhusus' => $syaratKhusus, 'jenis' => 'lain']))
+            ->assertNotFound();
+
+        // Hanya admin yang boleh membatalkan persetujuan.
+        $this->actingAs($dosen)
+            ->put(route('verifikasi-berkas.batalkan', ['syaratKhusus' => $syaratKhusus, 'jenis' => 'bkd']))
+            ->assertForbidden();
+    }
+
     public function test_dosen_tidak_dapat_mengajukan_berkas_dosen_lain(): void
     {
         Storage::fake('local');

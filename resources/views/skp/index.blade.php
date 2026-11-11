@@ -8,11 +8,12 @@
     @php
         $isEdit = $editSkp !== null;
 
-        // Nilai jangka waktu untuk mode ubah / pengisian ulang setelah validasi gagal.
-        $bulanMulaiLama = old('bulan_mulai', $editSkp?->periode_mulai?->month);
-        $tahunMulaiLama = old('tahun_mulai', $editSkp?->periode_mulai?->year);
-        $bulanAkhirLama = old('bulan_akhir', $editSkp?->periode_akhir?->month);
-        $tahunAkhirLama = old('tahun_akhir', $editSkp?->periode_akhir?->year);
+        // Nilai jangka waktu (ISO Y-m-d) untuk mode ubah / pengisian ulang setelah validasi gagal.
+        $periodeMulaiLama = old('periode_mulai', $editSkp?->periode_mulai?->format('Y-m-d'));
+        $periodeAkhirLama = old('periode_akhir', $editSkp?->periode_akhir?->format('Y-m-d'));
+
+        // Tampilan date picker, misalnya "01 Januari 2025".
+        $labelTanggal = fn ($iso) => \App\Models\Skp::labelTanggal($iso);
     @endphp
 
     <div class="mx-auto max-w-6xl">
@@ -130,63 +131,27 @@
                     </div>
 
                     <div>
-                        <span class="form-label">Jangka Waktu Penilaian (Mulai) <span class="text-rose-500">*</span></span>
-                        <div class="mt-1 grid grid-cols-2 gap-3">
-                            <div>
-                                <label for="bulan_mulai" class="sr-only">Bulan mulai</label>
-                                <select id="bulan_mulai" name="bulan_mulai" required
-                                        data-select-search="Cari bulan…"
-                                        @class(['form-select', 'border-rose-300 bg-rose-50/40' => $errors->has('bulan_mulai')])>
-                                    <option value="">Bulan</option>
-                                    @foreach ($bulanList as $nilai => $nama)
-                                        <option value="{{ $nilai }}" @selected(old('bulan_mulai', $bulanMulaiLama) == $nilai)>{{ $nama }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div>
-                                <label for="tahun_mulai" class="sr-only">Tahun mulai</label>
-                                <select id="tahun_mulai" name="tahun_mulai" required
-                                        data-select-search="Cari tahun…"
-                                        @class(['form-select', 'border-rose-300 bg-rose-50/40' => $errors->has('tahun_mulai')])>
-                                    <option value="">Tahun</option>
-                                    @foreach ($tahunList as $tahun)
-                                        <option value="{{ $tahun }}" @selected(old('tahun_mulai', $tahunMulaiLama) == $tahun)>{{ $tahun }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        </div>
-                        @error('bulan_mulai') <p class="form-error">{{ $message }}</p> @enderror
-                        @error('tahun_mulai') <p class="form-error">{{ $message }}</p> @enderror
+                        <label for="periode_mulai" class="form-label">Jangka Waktu Penilaian (Mulai) <span class="text-rose-500">*</span></label>
+                        <input type="text" id="periode_mulai" name="periode_mulai" required readonly
+                               value="{{ $labelTanggal($periodeMulaiLama) }}"
+                               data-date-value="{{ $periodeMulaiLama }}"
+                               data-date-picker="long"
+                               placeholder="01 Januari 2025" autocomplete="off"
+                               @class(['form-input', 'border-rose-300 bg-rose-50/40' => $errors->has('periode_mulai')])>
+                        <p class="mt-1 text-xs text-slate-400">Klik ikon kalender untuk memilih tanggal mulai penilaian.</p>
+                        @error('periode_mulai') <p class="form-error">{{ $message }}</p> @enderror
                     </div>
 
                     <div>
-                        <span class="form-label">Jangka Waktu Penilaian (Akhir) <span class="text-rose-500">*</span></span>
-                        <div class="mt-1 grid grid-cols-2 gap-3">
-                            <div>
-                                <label for="bulan_akhir" class="sr-only">Bulan akhir</label>
-                                <select id="bulan_akhir" name="bulan_akhir" required
-                                        data-select-search="Cari bulan…"
-                                        @class(['form-select', 'border-rose-300 bg-rose-50/40' => $errors->has('bulan_akhir')])>
-                                    <option value="">Bulan</option>
-                                    @foreach ($bulanList as $nilai => $nama)
-                                        <option value="{{ $nilai }}" @selected(old('bulan_akhir', $bulanAkhirLama) == $nilai)>{{ $nama }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div>
-                                <label for="tahun_akhir" class="sr-only">Tahun akhir</label>
-                                <select id="tahun_akhir" name="tahun_akhir" required
-                                        data-select-search="Cari tahun…"
-                                        @class(['form-select', 'border-rose-300 bg-rose-50/40' => $errors->has('tahun_akhir')])>
-                                    <option value="">Tahun</option>
-                                    @foreach ($tahunList as $tahun)
-                                        <option value="{{ $tahun }}" @selected(old('tahun_akhir', $tahunAkhirLama) == $tahun)>{{ $tahun }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        </div>
-                        @error('bulan_akhir') <p class="form-error">{{ $message }}</p> @enderror
-                        @error('tahun_akhir') <p class="form-error">{{ $message }}</p> @enderror
+                        <label for="periode_akhir" class="form-label">Jangka Waktu Penilaian (Akhir) <span class="text-rose-500">*</span></label>
+                        <input type="text" id="periode_akhir" name="periode_akhir" required readonly
+                               value="{{ $labelTanggal($periodeAkhirLama) }}"
+                               data-date-value="{{ $periodeAkhirLama }}"
+                               data-date-picker="long"
+                               placeholder="01 Januari 2025" autocomplete="off"
+                               @class(['form-input', 'border-rose-300 bg-rose-50/40' => $errors->has('periode_akhir')])>
+                        <p class="mt-1 text-xs text-slate-400">Klik ikon kalender untuk memilih tanggal akhir penilaian.</p>
+                        @error('periode_akhir') <p class="form-error">{{ $message }}</p> @enderror
                     </div>
                 </div>
 

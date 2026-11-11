@@ -417,6 +417,42 @@ class PengajuanDosenController extends Controller
     }
 
     /**
+     * Batalkan persetujuan admin atas satu berkas syarat khusus (BKD/IKD).
+     *
+     * Berkas yang sudah "diterima" dikembalikan ke dosen pengusul sebagai
+     * "ditolak" beserta catatan, sehingga dosen dapat memperbaiki lalu
+     * mengajukan ulang berkasnya. Berkas fisik tidak dihapus dan dosen juga
+     * menerima notifikasi WhatsApp atas pembatalan ini.
+     *
+     * Hanya berkas yang sudah diterima admin yang dapat dibatalkan; berkas yang
+     * masih menunggu verifikasi atau sudah ditolak ditolak dengan pesan error.
+     */
+    public function batalkanSyaratKhusus(SyaratKhusus $syaratKhusus, string $jenis): RedirectResponse
+    {
+        abort_unless(array_key_exists($jenis, self::SYARAT_KHUSUS), 404);
+
+        $label = strtoupper($jenis);
+
+        if ($syaratKhusus->statusJenis($jenis) !== 'diterima') {
+            return redirect()
+                ->route('verifikasi-berkas.index')
+                ->with('error', 'Berkas '.$label.' '.$syaratKhusus->user->name.' belum disetujui, persetujuan tidak dapat dibatalkan.');
+        }
+
+        $syaratKhusus->putuskan(
+            $jenis,
+            'ditolak',
+            'Persetujuan dibatalkan admin. Silakan periksa dan unggah ulang berkas '.$label.'.',
+        );
+
+        WhatsAppNotifikasi::berkasDibatalkan($syaratKhusus, $jenis);
+
+        return redirect()
+            ->route('verifikasi-berkas.index')
+            ->with('status', 'Persetujuan berkas '.$label.' '.$syaratKhusus->user->name.' dibatalkan. Dosen pengusul dapat memperbaiki dan mengajukan ulang berkas.');
+    }
+
+    /**
      * Hapus satu berkas syarat khusus (BKD/IKD) yang masuk ke admin.
      *
      * Berkas fisik dihapus lalu status berkas dikembalikan ke dosen pengusul

@@ -149,10 +149,8 @@ class SkpNotifikasiTest extends TestCase
                 'pejabat_penilai_id' => $pejabat->id,
                 'atasan_penilai_id' => $atasan->id,
                 'prodi_id' => $this->makeProdi()->id,
-                'bulan_mulai' => 1,
-                'tahun_mulai' => 2026,
-                'bulan_akhir' => 6,
-                'tahun_akhir' => 2026,
+                'periode_mulai' => '2026-01-01',
+                'periode_akhir' => '2026-06-01',
             ])
             ->assertRedirect(route('skp.index'));
 

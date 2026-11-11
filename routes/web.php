@@ -178,6 +178,8 @@ Route::middleware('auth')->group(function () {
     Route::middleware('admin')->prefix('verifikasi-berkas')->name('verifikasi-berkas.')->group(function () {
         Route::get('/', [PengajuanDosenController::class, 'verifikasiSyaratKhusus'])->name('index');
         Route::put('/{syaratKhusus}/berkas/{jenis}', [PengajuanDosenController::class, 'putuskanSyaratKhusus'])->name('update');
+        // Pembatalan persetujuan: berkas kembali ke dosen agar dapat diperbaiki dan diajukan ulang.
+        Route::put('/{syaratKhusus}/berkas/{jenis}/batalkan', [PengajuanDosenController::class, 'batalkanSyaratKhusus'])->name('batalkan');
         Route::delete('/{syaratKhusus}/berkas/{jenis}', [PengajuanDosenController::class, 'hapusSyaratKhusus'])->name('destroy');
         Route::get('/{syaratKhusus}/berkas/{jenis}', [PengajuanDosenController::class, 'berkasVerifikasi'])->name('berkas');
     });

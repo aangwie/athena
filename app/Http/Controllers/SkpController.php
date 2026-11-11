@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Instansi;
-use App\Models\MasaPenilaian;
 use App\Models\Prodi;
 use App\Models\Skp;
 use App\Models\StrukturInstansi;
@@ -44,8 +43,6 @@ class SkpController extends Controller
                 ->get(),
             'penilaiList' => $penilaiList,
             'prodiList' => Prodi::query()->orderBy('nama_prodi')->get(),
-            'bulanList' => MasaPenilaian::BULAN,
-            'tahunList' => range((int) now()->year - 1, (int) now()->year + 2),
         ]);
     }
 
@@ -121,7 +118,7 @@ class SkpController extends Controller
     }
 
     /**
-     * Baris identitas blok 1–3 formulir cetak: nama, NIP, pangkat/golongan/TMT, jabatan, unit.
+     * Baris identitas blok 1–3 formulir cetak: nama, NIDN, pangkat/golongan/TMT, jabatan, unit.
      *
      * @return array<string, string>
      */
@@ -131,7 +128,7 @@ class SkpController extends Controller
 
         return [
             'nama' => $user?->name ?? '—',
-            'nip' => $user?->nidn ?? '—',
+            'nidn' => $user?->nidn ?? '—',
             'pangkat' => collect([$pangkat?->pangkatLabel(), $pangkat?->tmtLabel()])
                 ->filter(fn ($nilai) => filled($nilai) && $nilai !== '—')
                 ->implode(' / ') ?: '—',
@@ -156,10 +153,8 @@ class SkpController extends Controller
             'pejabat_penilai_id' => ['required', 'integer', Rule::exists('struktur_instansi', 'user_id')],
             'atasan_penilai_id' => ['required', 'integer', Rule::exists('struktur_instansi', 'user_id')],
             'prodi_id' => ['required', 'integer', Rule::exists('prodi', 'id')],
-            'bulan_mulai' => ['required', 'integer', 'between:1,12'],
-            'tahun_mulai' => ['required', 'integer'],
-            'bulan_akhir' => ['required', 'integer', 'between:1,12'],
-            'tahun_akhir' => ['required', 'integer'],
+            'periode_mulai' => ['required', 'date_format:Y-m-d'],
+            'periode_akhir' => ['required', 'date_format:Y-m-d'],
         ], [
             'dosen_id.required' => 'Dosen yang dinilai wajib dipilih.',
             'dosen_id.exists' => 'Dosen tidak ditemukan atau sudah tidak aktif.',
@@ -169,18 +164,19 @@ class SkpController extends Controller
             'atasan_penilai_id.exists' => 'Atasan penilai harus dosen yang memiliki jabatan struktural.',
             'prodi_id.required' => 'Prodi wajib dipilih.',
             'prodi_id.exists' => 'Prodi tidak ditemukan.',
-            'bulan_mulai.required' => 'Bulan mulai wajib dipilih.',
-            'tahun_mulai.required' => 'Tahun mulai wajib dipilih.',
-            'bulan_akhir.required' => 'Bulan akhir wajib dipilih.',
-            'tahun_akhir.required' => 'Tahun akhir wajib dipilih.',
+            'periode_mulai.required' => 'Tanggal mulai jangka waktu penilaian wajib dipilih.',
+            'periode_mulai.date_format' => 'Format tanggal mulai jangka waktu penilaian tidak dikenali.',
+            'periode_akhir.required' => 'Tanggal akhir jangka waktu penilaian wajib dipilih.',
+            'periode_akhir.date_format' => 'Format tanggal akhir jangka waktu penilaian tidak dikenali.',
         ]);
 
-        $mulai = Carbon::createFromDate((int) $data['tahun_mulai'], (int) $data['bulan_mulai'], 1);
-        $akhir = Carbon::createFromDate((int) $data['tahun_akhir'], (int) $data['bulan_akhir'], 1);
+        // Date picker SKP mengirim tanggal lengkap (Y-m-d) dari input hidden.
+        $mulai = Carbon::createFromFormat('Y-m-d', $data['periode_mulai'])->startOfDay();
+        $akhir = Carbon::createFromFormat('Y-m-d', $data['periode_akhir'])->startOfDay();
 
         if ($akhir->lt($mulai)) {
             throw ValidationException::withMessages([
-                'bulan_akhir' => 'Jangka waktu akhir tidak boleh mendahului jangka waktu mulai.',
+                'periode_akhir' => 'Jangka waktu akhir tidak boleh mendahului jangka waktu mulai.',
             ]);
         }
 

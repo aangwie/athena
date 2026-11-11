@@ -641,7 +641,7 @@ const boot = () => {
         });
     });
 
-    // Date picker DD-MM-YYYY (vanilla JS): lihat siapkanDatePicker() di akhir berkas.
+    // Date picker (vanilla JS, tanpa dependensi): lihat siapkanDatePicker() di akhir berkas.
     document.querySelectorAll('[data-date-picker]').forEach((input, indeks) => siapkanDatePicker(input, indeks));
 
     // Pakta integritas: centang karya ilmiah milik dosen yang dipilih (data dari <script data-karya-data>).
@@ -1393,6 +1393,10 @@ function siapkanDropdownCari(select, indeks) {
  * tidak berubah), lalu ditambah tombol kalender dan panel pemilih tanggal. Nilai yang dikirim ke
  * server selalu DD-MM-YYYY, termasuk saat tanggal dipilih lewat kalender.
  *
+ * Mode khusus `data-date-picker="long"`: input teks hanya menampilkan tanggal panjang
+ * ("01 Januari 2025") dan nilai yang dikirim ke server adalah input hidden bernama sama
+ * dalam format Y-m-d (atribut `data-date-value`). Dipakai formulir SKP.
+ *
  * @param {HTMLInputElement} input
  * @param {number} indeks
  */
@@ -1402,8 +1406,28 @@ function siapkanDatePicker(input, indeks) {
     const idPanel = `dp-panel-${indeks}-${Math.random().toString(36).slice(2, 8)}`;
     const dua = (angka) => String(angka).padStart(2, '0');
 
-    // Date -> "DD-MM-YYYY", format yang dipakai input sekaligus validasi server.
-    const formatNilai = (tanggal) => `${dua(tanggal.getDate())}-${dua(tanggal.getMonth() + 1)}-${tanggal.getFullYear()}`;
+    // Mode "long" (data-date-picker="long"): input teks menampilkan "01 Januari 2025",
+    // sedangkan nilai yang dikirim ke server disimpan pada input hidden bernama sama
+    // dalam format Y-m-d. Dipakai formulir SKP yang membutuhkan tanggal lengkap.
+    const modePanjang = input.dataset.datePicker === 'long';
+    let tersembunyi = null;
+
+    if (modePanjang) {
+        tersembunyi = document.createElement('input');
+        tersembunyi.type = 'hidden';
+        tersembunyi.name = input.name;
+        tersembunyi.value = input.dataset.dateValue ?? '';
+        input.removeAttribute('name');
+        input.parentNode.insertBefore(tersembunyi, input);
+    }
+
+    // Date -> "01 Januari 2025" (mode long) atau "DD-MM-YYYY" (mode biasa).
+    const formatNilai = (tanggal) => (modePanjang
+        ? `${dua(tanggal.getDate())} ${NAMA_BULAN[tanggal.getMonth()]} ${tanggal.getFullYear()}`
+        : `${dua(tanggal.getDate())}-${dua(tanggal.getMonth() + 1)}-${tanggal.getFullYear()}`);
+
+    // Date -> "YYYY-MM-DD", nilai yang dikirim lewat input hidden pada mode long.
+    const formatIso = (tanggal) => `${tanggal.getFullYear()}-${dua(tanggal.getMonth() + 1)}-${dua(tanggal.getDate())}`;
 
     // "DD-MM-YYYY" -> Date, atau null bila belum lengkap / tanggalnya tidak ada (mis. 31-02-2026).
     const bacaNilai = (teks) => {
@@ -1419,6 +1443,32 @@ function siapkanDatePicker(input, indeks) {
 
         return tanggal.getDate() === hari && tanggal.getMonth() === bulan ? tanggal : null;
     };
+
+    // "YYYY-MM-DD" -> Date, atau null bila kosong / tanggalnya tidak ada (mis. 31-02-2026).
+    const bacaIso = (teks) => {
+        const cocok = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(teks).trim());
+
+        if (!cocok) {
+            return null;
+        }
+
+        const tanggal = new Date(Number(cocok[1]), Number(cocok[2]) - 1, Number(cocok[3]));
+
+        return tanggal.getFullYear() === Number(cocok[1])
+            && tanggal.getMonth() === Number(cocok[2]) - 1
+            && tanggal.getDate() === Number(cocok[3])
+            ? tanggal
+            : null;
+    };
+
+    // Tanggal aktif: mode long membaca nilai hidden (Y-m-d), mode biasa membaca teks input.
+    const nilaiTerpilih = () => (modePanjang ? bacaIso(tersembunyi.value) : bacaNilai(input.value));
+
+    // Tampilan awal mode long selalu diturunkan dari nilai hidden agar teks dan nilai kiriman selaras.
+    if (modePanjang) {
+        const awal = nilaiTerpilih();
+        input.value = awal === null ? '' : formatNilai(awal);
+    }
 
     const samaHari = (a, b) => b !== null && a.getFullYear() === b.getFullYear()
         && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
@@ -1516,7 +1566,7 @@ function siapkanDatePicker(input, indeks) {
     const gambar = () => {
         label.textContent = `${NAMA_BULAN[tampil.getMonth()]} ${tampil.getFullYear()}`;
 
-        const terpilih = bacaNilai(input.value);
+        const terpilih = nilaiTerpilih();
         // Senin sebagai awal pekan: getDay() 0 = Minggu, jadi digeser 6.
         const offset = (new Date(tampil.getFullYear(), tampil.getMonth(), 1).getDay() + 6) % 7;
         const mulai = new Date(tampil.getFullYear(), tampil.getMonth(), 1 - offset);
@@ -1576,20 +1626,28 @@ function siapkanDatePicker(input, indeks) {
             : `${Math.min(kotak.bottom + 6, Math.max(8, window.innerHeight - tinggi - 8))}px`;
     };
 
-    // Nilai input ditulis DD-MM-YYYY lalu event input/change dipicu agar masker dan skrip lain ikut.
+    // Nilai input ditulis sesuai mode (tanggal panjang atau DD-MM-YYYY) lalu event input/change
+    // dipicu agar skrip lain ikut. Mode long juga menyegarkan nilai hidden Y-m-d.
     const pilih = (tanggal) => {
         input.value = formatNilai(tanggal);
+
+        if (tersembunyi !== null) {
+            tersembunyi.value = formatIso(tanggal);
+            tersembunyi.dispatchEvent(new Event('input', { bubbles: true }));
+            tersembunyi.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+
         input.dispatchEvent(new Event('input', { bubbles: true }));
         input.dispatchEvent(new Event('change', { bubbles: true }));
         tutup(true);
     };
 
     const buka = () => {
-        if (input.disabled || input.readOnly || !panel.hidden) {
+        if (input.disabled || !panel.hidden) {
             return;
         }
 
-        const terpilih = bacaNilai(input.value);
+        const terpilih = nilaiTerpilih();
         const acuan = terpilih ?? hariIni();
 
         tampil = new Date(acuan.getFullYear(), acuan.getMonth(), 1);
@@ -1641,6 +1699,13 @@ function siapkanDatePicker(input, indeks) {
     tombolIni.addEventListener('click', () => pilih(hariIni()));
 
     trigger.addEventListener('click', () => (panel.hidden ? buka() : tutup(true)));
+
+    // Mode long memakai input read-only (nilai asli ada di hidden), jadi klik pada
+    // kotak input juga membuka kalender agar tetap mudah dipakai.
+    if (input.readOnly) {
+        input.addEventListener('click', () => buka());
+    }
+
     input.addEventListener('keydown', (event) => {
         if (event.key === 'ArrowDown') {
             event.preventDefault();
@@ -1704,7 +1769,10 @@ function siapkanDatePicker(input, indeks) {
 
     if (form) {
         form.addEventListener('submit', (event) => {
-            if (input.required && !input.disabled && input.value.trim() === '' && !event.defaultPrevented) {
+            // Mode long mengirim nilai lewat input hidden, mode biasa lewat teks input.
+            const kosong = modePanjang ? tersembunyi.value.trim() === '' : input.value.trim() === '';
+
+            if (input.required && !input.disabled && kosong && !event.defaultPrevented) {
                 event.preventDefault();
                 buka();
             }
@@ -1712,5 +1780,9 @@ function siapkanDatePicker(input, indeks) {
     }
 
     trigger.disabled = input.disabled;
+
+    if (tersembunyi !== null) {
+        tersembunyi.disabled = input.disabled;
+    }
 }
 

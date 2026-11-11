@@ -23,7 +23,8 @@
                     <h3 class="text-sm font-extrabold tracking-tight text-slate-900">Berkas Masuk</h3>
                     <p class="mt-0.5 text-xs leading-relaxed text-slate-500">
                         Satu baris per file; keputusan pada satu baris hanya berlaku untuk berkas tersebut.
-                        Ikon perisai untuk memverifikasi, ikon tempat sampah untuk menghapus berkas yang belum diverifikasi.
+                        Ikon perisai untuk memverifikasi, ikon tempat sampah untuk menghapus berkas yang belum diverifikasi,
+                        dan ikon panah kembali untuk membatalkan persetujuan agar dosen dapat memperbaiki berkasnya.
                     </p>
                 </div>
 
@@ -127,6 +128,22 @@
                                                     <button type="submit" class="btn-primary mt-3 w-auto px-4 py-2 text-xs">Simpan</button>
                                                 </form>
                                             </details>
+                                        @elseif ($item->statusJenis($jenis) === 'diterima')
+                                            {{-- Pembatalan persetujuan: berkas dikembalikan ke dosen agar dapat diperbaiki
+                                                 dan diajukan ulang. Berkas fisik tetap tersimpan. --}}
+                                            <form method="POST" action="{{ route('verifikasi-berkas.batalkan', ['syaratKhusus' => $item, 'jenis' => $jenis]) }}"
+                                                  data-confirm="Persetujuan berkas {{ strtoupper($jenis) }} milik {{ $item->user->name }} akan dibatalkan sehingga dosen pengusul dapat memperbaiki dan mengajukan ulang berkasnya. Lanjutkan?"
+                                                  data-confirm-title="Batalkan persetujuan {{ strtoupper($jenis) }}?">
+                                                @csrf
+                                                @method('PUT')
+                                                <button type="submit" title="Batalkan persetujuan" aria-label="Batalkan persetujuan berkas {{ strtoupper($jenis) }}"
+                                                        class="inline-flex items-center justify-center rounded-lg p-2 text-slate-400 transition hover:bg-amber-50 hover:text-amber-600">
+                                                    <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                                        <path d="M9 14.5 4.5 10 9 5.5" stroke-linecap="round" stroke-linejoin="round" />
+                                                        <path d="M4.5 10h9.75a5.75 5.75 0 0 1 0 11.5H9" stroke-linecap="round" stroke-linejoin="round" />
+                                                    </svg>
+                                                </button>
+                                            </form>
                                         @endif
 
                                         {{-- Hapus berkas: hanya selama berkas belum diverifikasi admin.
@@ -146,7 +163,7 @@
                                             </form>
                                         @endunless
 
-                                        @if ($item->sudahDiverifikasi($jenis))
+                                        @if ($item->statusJenis($jenis) === 'ditolak')
                                             <span class="text-[11px] text-slate-300">—</span>
                                         @endif
                                     </div>

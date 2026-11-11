@@ -92,18 +92,36 @@ class Skp extends Model
     }
 
     /**
-     * Rentang penilaian, misalnya "Januari 2026 s.d. Desember 2026".
+     * Rentang penilaian, misalnya "01 Januari 2026 s.d. 30 Juni 2026".
      */
     public function periodeLabel(): string
     {
-        return $this->bulanTahun($this->periode_mulai).' s.d. '.$this->bulanTahun($this->periode_akhir);
+        return $this->tanggalPanjang($this->periode_mulai).' s.d. '.$this->tanggalPanjang($this->periode_akhir);
     }
 
-    private function bulanTahun(?Carbon $tanggal): string
+    /**
+     * Label tanggal panjang dari nilai ISO (Y-m-d), misalnya "01 Januari 2025".
+     * Dipakai date picker formulir SKP yang menampilkan tanggal lengkap.
+     */
+    public static function labelTanggal(?string $tanggal): string
+    {
+        if (blank($tanggal)) {
+            return '';
+        }
+
+        try {
+            return Carbon::createFromFormat('Y-m-d', $tanggal)->locale('id')->translatedFormat('d F Y');
+        } catch (\Throwable) {
+            // Nilai lama/tidak dikenal cukup ditampilkan kosong agar formulir tetap bisa dibuka.
+            return '';
+        }
+    }
+
+    private function tanggalPanjang(?Carbon $tanggal): string
     {
         return $tanggal === null
             ? '—'
-            : $tanggal->locale('id')->translatedFormat('F Y');
+            : $tanggal->locale('id')->translatedFormat('d F Y');
     }
 
     /**

@@ -58,10 +58,8 @@ class SkpTest extends TestCase
             'pejabat_penilai_id' => $this->makePejabat('Rektor')->user_id,
             'atasan_penilai_id' => $this->makePejabat('Dekan')->user_id,
             'prodi_id' => $this->makeProdi()->id,
-            'bulan_mulai' => 1,
-            'tahun_mulai' => 2026,
-            'bulan_akhir' => 6,
-            'tahun_akhir' => 2026,
+            'periode_mulai' => '2026-01-01',
+            'periode_akhir' => '2026-06-01',
         ], $overrides);
     }
 
@@ -77,6 +75,27 @@ class SkpTest extends TestCase
             ->assertSee('Jangka Waktu Penilaian')
             ->assertSee('Prodi Dosen yang Dinilai')
             ->assertSee('data-datatable', false);
+    }
+
+    public function test_form_skp_memakai_date_picker_tanggal_lengkap(): void
+    {
+        $admin = $this->makeUser('admin');
+
+        $this->actingAs($admin)->post(route('skp.store'), $this->payload());
+        $skp = Skp::query()->first();
+
+        // Jangka waktu penilaian memakai date picker: input menampilkan "01 Januari 2026",
+        // sedangkan nilai Y-m-d dikirim ke server lewat input hidden (data-date-value).
+        $this->actingAs($admin)
+            ->get(route('skp.index', ['edit' => $skp->id]))
+            ->assertOk()
+            ->assertSee('Jangka Waktu Penilaian (Mulai)')
+            ->assertSee('Jangka Waktu Penilaian (Akhir)')
+            ->assertSee('data-date-picker="long"', false)
+            ->assertSee('data-date-value="2026-01-01"', false)
+            ->assertSee('data-date-value="2026-06-01"', false)
+            ->assertSee('value="01 Januari 2026"', false)
+            ->assertSee('value="01 Juni 2026"', false);
     }
 
     public function test_admin_can_create_skp(): void
@@ -111,7 +130,7 @@ class SkpTest extends TestCase
         $this->travel(3)->days();
 
         $this->actingAs($admin)
-            ->put(route('skp.update', $skp), $this->payload(['bulan_akhir' => 12]))
+            ->put(route('skp.update', $skp), $this->payload(['periode_akhir' => '2026-12-01']))
             ->assertRedirect(route('skp.index').'#form-skp');
 
         $this->assertSame(
@@ -128,7 +147,7 @@ class SkpTest extends TestCase
         $skp = Skp::query()->first();
 
         $this->actingAs($admin)
-            ->put(route('skp.update', $skp), $this->payload(['bulan_akhir' => 12, 'tahun_akhir' => 2026]))
+            ->put(route('skp.update', $skp), $this->payload(['periode_akhir' => '2026-12-01']))
             ->assertRedirect(route('skp.index').'#form-skp')
             ->assertSessionHas('status', 'Data SKP berhasil diperbarui.');
 
@@ -145,8 +164,8 @@ class SkpTest extends TestCase
     {
         $this->actingAs($this->makeUser('admin'))
             ->from(route('skp.index'))
-            ->post(route('skp.store'), $this->payload(['bulan_akhir' => 12, 'tahun_akhir' => 2025]))
-            ->assertSessionHasErrors('bulan_akhir');
+            ->post(route('skp.store'), $this->payload(['periode_akhir' => '2025-12-01']))
+            ->assertSessionHasErrors('periode_akhir');
 
         $this->assertDatabaseCount('skp', 0);
     }
@@ -208,6 +227,12 @@ class SkpTest extends TestCase
             ->assertSee('@page { size: A4')
             ->assertSee('margin: 0')         // margin halaman digambar sendiri lewat padding
             ->assertSee('.cetak-halaman { padding: 2cm');
+
+        // Seluruh formulir memakai Times New Roman dan identitas ditulis sebagai NIDN (bukan NIP).
+        $respon->assertSee("font-family: 'Times New Roman', Times, serif", false)
+            ->assertSee('NIDN. '.$skp->dosen->nidn, false)
+            ->assertDontSee('NIP.', false)
+            ->assertDontSee('font-sans', false);
 
         // Tiga section = tiga halaman A4; section ke-2 dan ke-3 dipaksa mulai halaman baru.
         $this->assertSame(3, substr_count($respon->getContent(), 'class="cetak-halaman"'));

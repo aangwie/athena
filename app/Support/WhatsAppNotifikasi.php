@@ -141,6 +141,28 @@ class WhatsAppNotifikasi
     }
 
     /**
+     * Admin membatalkan persetujuan satu berkas syarat khusus (BKD/IKD):
+     * dosen pengusul diberi tahu agar memperbaiki lalu mengajukan ulang.
+     */
+    public static function berkasDibatalkan(SyaratKhusus $syaratKhusus, string $jenis): void
+    {
+        $dosen = $syaratKhusus->user;
+
+        if ($dosen === null) {
+            return;
+        }
+
+        $label = strtoupper($jenis);
+
+        self::kirimKe(
+            collect([$dosen]),
+            'Persetujuan Berkas '.$label.' Dibatalkan',
+            'Persetujuan berkas '.$label.' Anda periode '.$syaratKhusus->periodeLabel()
+                .' dibatalkan admin. Silakan perbaiki lalu ajukan ulang berkas melalui menu Indikator Kinerja Dosen.',
+        );
+    }
+
+    /**
      * Admin menghapus satu berkas syarat khusus (BKD/IKD): dosen pengusul
      * diberi tahu agar mengunggah ulang berkasnya.
      */

@@ -14,6 +14,16 @@
         /* Tinggi kotak blok 5–8 (ruang isian manual). */
         .cetak-kotak { height: 6cm; }
 
+        /* Seluruh teks formulir (layar maupun hasil cetak) memakai Times New Roman.
+           Ditulis eksplisit termasuk kontrol formulir agar tidak kembali ke font tema. */
+        body,
+        body button,
+        body input,
+        body select,
+        body textarea {
+            font-family: 'Times New Roman', Times, serif;
+        }
+
         @media print {
             /* Margin halaman sengaja 0: margin 2 cm digambar sendiri lewat padding .cetak-halaman,
                karena @page { margin } diabaikan peramban saat dialog cetak memakai "Margins: None". */
@@ -41,7 +51,7 @@
     <style id="cetak-ukuran"></style>
 
 </head>
-<body class="min-h-screen bg-slate-100 p-4 font-sans text-slate-900 sm:p-8">
+<body class="min-h-screen bg-slate-100 p-4 text-slate-900 sm:p-8">
     @php
         $bulan = fn ($tanggal) => $tanggal?->locale('id')->translatedFormat('j F Y') ?? '……';
         $blok = [
@@ -51,7 +61,7 @@
         ];
         $baris = [
             'nama' => 'N a m a',
-            'nip' => 'N I D N',
+            'nidn' => 'N I D N',
             'pangkat' => 'Pangkat, Golongan ruang, TMT',
             'jabatan' => 'Jabatan',
             'unit' => 'Unit Organisasi',
@@ -263,7 +273,7 @@
             </section>
 
             {{-- Halaman 3: blok 9–11. Stempel dan tanda tangan dibubuhkan manual;
-                 nama & NIP di dasar kotak supaya ada ruang tanda tangan di atasnya.
+                 nama & NIDN di dasar kotak supaya ada ruang tanda tangan di atasnya.
                  Tanggal blok 9 = Tanggal Penilaian, blok 10 = tanggal SKP disimpan admin
                  (diterima dosen yang dinilai), blok 11 = persetujuan atasan pejabat penilai. --}}
             <section class="cetak-halaman">
@@ -289,7 +299,7 @@
                                                 <div class="cetak-ruang-ttd" aria-hidden="true"></div>
 
                                                 <p class="font-bold underline">{{ $data['nama'] }}</p>
-                                                <p>NIP. {{ $data['nip'] }}</p>
+                                                <p>NIDN. {{ $data['nidn'] }}</p>
                                             </div>
                                         </div>
                                     </td>

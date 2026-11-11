@@ -277,6 +277,30 @@ class WhatsAppNotifikasiTest extends TestCase
             && str_contains($request['message'], 'Scan BKD kurang jelas.'));
     }
 
+    public function test_admin_membatalkan_persetujuan_berkas_mengirim_whatsapp_ke_dosen(): void
+    {
+        $this->fakeGateway();
+
+        $dosen = $this->makeUser('dosen', '1', '0812-0000-0014');
+
+        $syaratKhusus = SyaratKhusus::create([
+            'user_id' => $dosen->id,
+            'tahun' => 2026,
+            'semester' => 'ganjil',
+            'bkd_path' => 'syarat-khusus/2026/ganjil/bkd.pdf',
+            'bkd_status' => 'diterima',
+            'ikd_status' => 'draf',
+        ]);
+
+        $this->actingAs($this->makeUser('admin', '1'))
+            ->put(route('verifikasi-berkas.batalkan', ['syaratKhusus' => $syaratKhusus, 'jenis' => 'bkd']))
+            ->assertSessionHas('status');
+
+        $this->assertSame([$this->normalisasi('0812-0000-0014')], $this->nomorTerkirim());
+        Http::assertSent(fn ($request) => str_contains($request['message'], 'Persetujuan Berkas BKD Dibatalkan')
+            && str_contains($request['message'], 'ajukan ulang'));
+    }
+
     public function test_admin_menghapus_berkas_mengirim_whatsapp_ke_dosen(): void
     {
         $this->fakeGateway();
