@@ -19,6 +19,7 @@ class Instansi extends Model
         'no_telp',
         'website',
         'logo_base64',
+        'logo_senat_base64',
     ];
 
     /**
@@ -48,5 +49,13 @@ class Instansi extends Model
     public function logoDataUri(): ?string
     {
         return $this->logo_base64 ?: null;
+    }
+
+    /**
+     * Data URI logo senat yang siap dipakai sebagai atribut src gambar.
+     */
+    public function logoSenatDataUri(): ?string
+    {
+        return $this->logo_senat_base64 ?: null;
     }
 }

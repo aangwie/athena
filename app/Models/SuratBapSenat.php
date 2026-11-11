@@ -121,7 +121,8 @@ class SuratBapSenat extends Model
     }
 
     /**
-     * Anggota senat yang tercatat hadir pada rapat, urut nama.
+     * Anggota senat yang tercatat hadir pada rapat, urut jabatan
+     * (Ketua, Sekretaris, Anggota) lalu nama.
      *
      * @return Collection<int, Senat>
      */
@@ -131,7 +132,7 @@ class SuratBapSenat extends Model
             ->with('user')
             ->whereIn('user_id', $this->anggota_senat_ids ?? [])
             ->get()
-            ->sortBy(fn (Senat $item) => $item->user?->name ?? '')
+            ->sortBy(fn (Senat $item) => [$item->urutanJabatan(), $item->user?->name ?? ''])
             ->values();
     }
 }

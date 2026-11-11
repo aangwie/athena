@@ -308,6 +308,8 @@ class SuratBapSenatTest extends TestCase
             'nama_instansi' => 'Universitas Athena',
             'kota' => 'Bandung',
             'alamat' => 'Jl. Jenderal Sudirman 1',
+            'logo_base64' => 'data:image/png;base64,logo-instansi',
+            'logo_senat_base64' => 'data:image/png;base64,logo-senat',
         ]);
 
         [$dosen, $ketua, $anggota] = $this->makeSenat();
@@ -344,6 +346,18 @@ class SuratBapSenatTest extends TestCase
         $this->assertSame(2, substr_count($html, 'Perkumpulan Penyelenggara Lembaga Pendidikan'));
         $this->assertSame(2, substr_count($html, 'Perguruan Tinggi PGRI Pacitan'));
 
+        // Kop dokumen senat: kata "Senat Akademik" mendahului nama instansi (dua halaman).
+        $this->assertSame(2, substr_count($html, 'Senat Akademik Universitas Athena'));
+
+        // Kop dokumen senat memakai logo senat (bukan logo instansi).
+        $this->assertSame(2, substr_count($html, 'data:image/png;base64,logo-senat'));
+        $this->assertStringNotContainsString('data:image/png;base64,logo-instansi', $html);
+
+        // Seluruh naskah BAP senat memakai huruf Times New Roman, bukan font aplikasi.
+        $this->assertStringContainsString('body { font-family: Times New Roman, Times, serif; }', $html);
+        $this->assertStringNotContainsString('font-sans', $html);
+        $this->assertSame(2, substr_count($html, 'style="font-family: Times New Roman, Times, serif;"'));
+
         // Berita acara (halaman 1).
         $this->assertStringContainsString('Persetujuan Senat Akademik', $html);
         $this->assertStringContainsString('NOMOR: 011/BAP-SENAT/X/2026', $html);
@@ -366,6 +380,82 @@ class SuratBapSenatTest extends TestCase
 
         // Baris tabel tidak terpotong di tengah halaman.
         $this->assertStringContainsString('.cetak-tabel tr { break-inside: avoid; }', $html);
+    }
+
+    public function test_kop_bap_senat_falls_back_to_instansi_logo_when_senat_logo_is_empty(): void
+    {
+        Instansi::create([
+            'nama_instansi' => 'Universitas Athena',
+            'kota' => 'Bandung',
+            'logo_base64' => 'data:image/png;base64,logo-instansi',
+        ]);
+
+        [$dosen, $ketua] = $this->makeSenat();
+
+        $bap = SuratBapSenat::create([
+            'nomor_bap' => '014/BAP-SENAT/X/2026',
+            'tanggal_bap' => '2026-10-31',
+            'user_id' => $dosen->id,
+            'bidang_keilmuan' => 'Sistem Informasi',
+            'prosentase_penelitian' => 25,
+            'anggota_senat_ids' => [$ketua->user_id],
+        ]);
+
+        $html = $this->actingAs($this->makeUser('admin'))
+            ->get(route('surat.bap-senat.cetak', $bap))
+            ->assertOk()
+            ->getContent();
+
+        // Logo senat belum diunggah: kop tetap memakai logo instansi agar tidak kosong.
+        $this->assertSame(2, substr_count($html, 'data:image/png;base64,logo-instansi'));
+        $this->assertStringNotContainsString('logo-senat', $html);
+        // Huruf Times New Roman tetap berlaku untuk seluruh naskah.
+        $this->assertStringContainsString('body { font-family: Times New Roman, Times, serif; }', $html);
+        $this->assertSame(2, substr_count($html, 'style="font-family: Times New Roman, Times, serif;"'));
+    }
+
+    public function test_daftar_hadir_bap_senat_urut_ketua_sekretaris_anggota(): void
+    {
+        Instansi::create(['nama_instansi' => 'Universitas Athena', 'kota' => 'Bandung']);
+
+        [$dosen, $ketua, $anggota] = $this->makeSenat();
+
+        $sekretaris = $this->makeUser('dosen', '198505052010011003', 'Dra. Sari Puspita, M.Si.');
+        Senat::create(['user_id' => $sekretaris->id, 'jabatan' => 'sekretaris']);
+
+        // Urutan pilih sengaja diacak dan namanya tidak berurutan abjad
+        // (Budi, Rina, Sari): tabel cetak tetap diurutkan per jabatan.
+        $bap = SuratBapSenat::create([
+            'nomor_bap' => '015/BAP-SENAT/X/2026',
+            'tanggal_bap' => '2026-10-31',
+            'user_id' => $dosen->id,
+            'bidang_keilmuan' => 'Sistem Informasi',
+            'prosentase_penelitian' => 20,
+            'anggota_senat_ids' => [$anggota->user_id, $sekretaris->id, $ketua->user_id],
+        ]);
+
+        $this->assertSame(
+            ['ketua', 'sekretaris', 'anggota'],
+            $bap->anggotaSenat()->pluck('jabatan')->all(),
+        );
+
+        $html = $this->actingAs($this->makeUser('admin'))
+            ->get(route('surat.bap-senat.cetak', $bap))
+            ->assertOk()
+            ->getContent();
+
+        // Tabel daftar hadir (halaman 2) mengikuti urutan jabatan tersebut.
+        $tabel = substr($html, (int) strpos($html, 'DAFTAR HADIR RAPAT'));
+
+        $posisiKetua = strpos($tabel, 'Dr. Budi Santoso, M.Pd.');
+        $posisiSekretaris = strpos($tabel, 'Dra. Sari Puspita, M.Si.');
+        $posisiAnggota = strpos($tabel, 'Rina Wijaya, M.Kom.');
+
+        $this->assertNotFalse($posisiKetua);
+        $this->assertNotFalse($posisiSekretaris);
+        $this->assertNotFalse($posisiAnggota);
+        $this->assertTrue($posisiKetua < $posisiSekretaris, 'Baris Ketua harus di atas Sekretaris.');
+        $this->assertTrue($posisiSekretaris < $posisiAnggota, 'Baris Sekretaris harus di atas Anggota.');
     }
 
     public function test_dosen_cannot_manage_bap_senat(): void

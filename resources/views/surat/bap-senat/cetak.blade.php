@@ -17,6 +17,9 @@
     @endphp
 
     <style>
+        /* Seluruh naskah BAP senat (layar maupun cetak) memakai huruf Times New Roman. */
+        body { font-family: Times New Roman, Times, serif; }
+
         /* Cetak ke PDF lewat dialog cetak peramban (A4 portrait), mengikuti formulir SKP. */
         /* Margin awal 1,5 cm semua sisi; JS memperbarui nilainya sebelum dicetak. */
         :root { --cetak-margin: 1.5cm; }
@@ -63,7 +66,7 @@
     {{-- Diisi JavaScript sebelum window.print() agar margin tiap halaman ikut menyesuaikan. --}}
     <style id="cetak-ukuran"></style>
 </head>
-<body class="min-h-screen bg-slate-100 p-4 font-sans text-slate-900 sm:p-8">
+<body class="min-h-screen bg-slate-100 p-4 text-slate-900 sm:p-8">
     <div class="cetak-lembar mx-auto max-w-4xl">
         <div class="cetak-aksi mb-4 flex flex-wrap items-end justify-between gap-3">
             <a href="{{ route('surat.index') }}#bap-senat" class="btn-secondary">
@@ -110,7 +113,7 @@
 
             {{-- Halaman 1: Berita Acara Persetujuan Senat Akademik. --}}
             <section class="cetak-halaman" data-halaman="1">
-                @include('surat.partials.kop-surat')
+                @include('surat.partials.kop-surat', ['senatAkademik' => true])
 
                 <header class="mt-3 text-center">
                     <h1 class="text-[13px] font-bold uppercase underline">Berita Acara</h1>
@@ -193,7 +196,7 @@
 
             {{-- Halaman 2: Daftar Hadir Rapat Persetujuan Senat Akademik. --}}
             <section class="cetak-halaman cetak-pisah" data-halaman="2">
-                @include('surat.partials.kop-surat')
+                @include('surat.partials.kop-surat', ['senatAkademik' => true])
 
                 <header class="mt-3 text-center">
                     <h1 class="text-[13px] font-bold">DAFTAR HADIR RAPAT</h1>

@@ -192,6 +192,8 @@ class SuratBakiTest extends TestCase
             'nama_instansi' => 'Universitas Athena',
             'kota' => 'Bandung',
             'alamat' => 'Jl. Jenderal Sudirman 1',
+            'logo_base64' => 'data:image/png;base64,logo-instansi',
+            'logo_senat_base64' => 'data:image/png;base64,logo-senat',
         ]);
 
         $dosen = $this->makeUser('dosen');
@@ -229,6 +231,14 @@ class SuratBakiTest extends TestCase
         // Kop surat (nama badan penyelenggara) tampil di kedua halaman.
         $this->assertSame(2, substr_count($html, 'Perkumpulan Penyelenggara Lembaga Pendidikan'));
         $this->assertSame(2, substr_count($html, 'Perguruan Tinggi PGRI Pacitan'));
+
+        // Kop BAKI tidak memakai awalan "Senat Akademik" (khusus dokumen BAP Senat).
+        $this->assertStringNotContainsString('Senat Akademik', $html);
+
+        // Kop BAKI tetap memakai logo instansi dan font aplikasi, bukan logo senat/Times New Roman.
+        $this->assertSame(2, substr_count($html, 'data:image/png;base64,logo-instansi'));
+        $this->assertStringNotContainsString('logo-senat', $html);
+        $this->assertStringNotContainsString('Times New Roman', $html);
 
         // Berita acara (halaman 1).
         $this->assertStringContainsString('Berita Acara Persetujuan', $html);

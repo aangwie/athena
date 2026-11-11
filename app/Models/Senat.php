@@ -34,4 +34,15 @@ class Senat extends Model
     {
         return self::JABATAN[$this->jabatan] ?? '—';
     }
+
+    /**
+     * Urutan tampil jabatan: Ketua, Sekretaris, lalu Anggota.
+     *
+     * Dipakai bersama oleh daftar senat di layar maupun tabel daftar hadir
+     * pada dokumen cetak agar urutannya selalu sama.
+     */
+    public function urutanJabatan(): int
+    {
+        return (int) array_search($this->jabatan, array_keys(self::JABATAN), true);
+    }
 }

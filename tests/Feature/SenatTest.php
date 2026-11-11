@@ -2,9 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Models\Instansi;
 use App\Models\Senat;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
@@ -213,6 +215,111 @@ class SenatTest extends TestCase
             ->assertSessionHasNoErrors();
 
         $this->assertDatabaseHas('senat', ['user_id' => $lain->id, 'jabatan' => 'ketua']);
+    }
+
+    public function test_senat_page_shows_logo_upload_form(): void
+    {
+        $this->actingAs($this->makeAdmin())
+            ->get('/instansi/senat')
+            ->assertOk()
+            ->assertSee('Logo Senat')
+            ->assertSee('Berkas Logo Senat')
+            ->assertSee('Simpan Logo Senat')
+            ->assertSee(route('instansi.senat.logo'), false)
+            ->assertSee('enctype="multipart/form-data"', false);
+    }
+
+    public function test_admin_can_upload_logo_senat_as_base64(): void
+    {
+        $admin = $this->makeAdmin();
+        $logo = UploadedFile::fake()->image('logo-senat.png', 240, 240)->size(120);
+
+        $this->actingAs($admin)
+            ->post(route('instansi.senat.logo'), ['logo_senat' => $logo])
+            ->assertRedirect(route('instansi.senat.index'))
+            ->assertSessionHasNoErrors()
+            ->assertSessionHas('status', 'Logo senat berhasil disimpan.');
+
+        $instansi = Instansi::firstOrFail();
+
+        $this->assertStringStartsWith('data:image/png;base64,', $instansi->logo_senat_base64);
+        $this->assertNotFalse(base64_decode(substr($instansi->logo_senat_base64, strlen('data:image/png;base64,')), true));
+
+        // Logo yang tersimpan tampil sebagai pratinjau pada halaman senat.
+        $this->actingAs($admin)
+            ->get('/instansi/senat')
+            ->assertOk()
+            ->assertSee('src="'.$instansi->logoSenatDataUri().'"', false);
+    }
+
+    public function test_replacing_logo_senat_updates_the_stored_base64(): void
+    {
+        $admin = $this->makeAdmin();
+
+        Instansi::create([
+            'nama_instansi' => 'Universitas Athena Nusantara',
+            'logo_base64' => 'data:image/png;base64,logo-instansi',
+        ]);
+
+        $this->actingAs($admin)->post(route('instansi.senat.logo'), [
+            'logo_senat' => UploadedFile::fake()->image('logo-senat.png', 120, 120)->size(100),
+        ])->assertSessionHasNoErrors();
+
+        $oldLogo = Instansi::firstOrFail()->logo_senat_base64;
+
+        $this->actingAs($admin)->post(route('instansi.senat.logo'), [
+            'logo_senat' => UploadedFile::fake()->image('logo-senat-baru.png', 80, 80)->size(80),
+        ])->assertSessionHasNoErrors();
+
+        $instansi = Instansi::firstOrFail();
+
+        $this->assertNotSame($oldLogo, $instansi->logo_senat_base64);
+        $this->assertStringStartsWith('data:image/png;base64,', $instansi->logo_senat_base64);
+
+        // Logo instansi dan identitas instansi tidak ikut berubah.
+        $this->assertSame('Universitas Athena Nusantara', $instansi->nama_instansi);
+        $this->assertSame('data:image/png;base64,logo-instansi', $instansi->logo_base64);
+    }
+
+    public function test_logo_senat_must_be_an_image_and_not_exceed_500_kb(): void
+    {
+        $admin = $this->makeAdmin();
+
+        $this->actingAs($admin)
+            ->from('/instansi/senat')
+            ->post(route('instansi.senat.logo'), [
+                'logo_senat' => UploadedFile::fake()->create('logo-senat.pdf', 100, 'application/pdf'),
+            ])
+            ->assertSessionHasErrors('logo_senat');
+
+        $this->actingAs($admin)
+            ->from('/instansi/senat')
+            ->post(route('instansi.senat.logo'), [
+                'logo_senat' => UploadedFile::fake()->image('logo-senat.png', 100, 100)->size(501),
+            ])
+            ->assertSessionHasErrors('logo_senat');
+
+        $this->actingAs($admin)
+            ->from('/instansi/senat')
+            ->post(route('instansi.senat.logo'), [])
+            ->assertSessionHasErrors([
+                'logo_senat' => 'Logo senat wajib diunggah.',
+            ]);
+
+        $this->assertDatabaseCount('instansi', 0);
+    }
+
+    public function test_non_admin_cannot_upload_logo_senat(): void
+    {
+        $dosen = $this->makeDosen();
+
+        $this->actingAs($dosen)
+            ->post(route('instansi.senat.logo'), [
+                'logo_senat' => UploadedFile::fake()->image('logo-senat.png'),
+            ])
+            ->assertForbidden();
+
+        $this->assertDatabaseCount('instansi', 0);
     }
 
     public function test_non_admin_cannot_manage_senat(): void

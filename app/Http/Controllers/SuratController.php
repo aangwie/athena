@@ -5,8 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Requests\SuratBakiRequest;
 use App\Http\Requests\SuratBapSenatRequest;
 use App\Http\Requests\SuratPaktaIntegritasRequest;
-use App\Http\Requests\SuratPernyataanPimpinanRequest;
 use App\Http\Requests\SuratPengantarRequest;
+use App\Http\Requests\SuratPernyataanPimpinanRequest;
 use App\Models\Instansi;
 use App\Models\JabatanFungsional;
 use App\Models\KaryaTulis;
@@ -90,7 +90,7 @@ class SuratController extends Controller
             'senatList' => Senat::query()
                 ->with('user')
                 ->get()
-                ->sortBy(fn (Senat $item) => [array_search($item->jabatan, array_keys(Senat::JABATAN)), $item->user?->name ?? ''])
+                ->sortBy(fn (Senat $item) => [$item->urutanJabatan(), $item->user?->name ?? ''])
                 ->values(),
             // Tempat pada pakta integritas mengikuti kota instansi.
             'kota' => Instansi::query()->value('kota'),

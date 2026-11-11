@@ -254,6 +254,7 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/senat', [SenatController::class, 'index'])->name('senat.index');
         Route::post('/senat', [SenatController::class, 'store'])->name('senat.store');
+        Route::post('/senat/logo', [SenatController::class, 'simpanLogo'])->name('senat.logo');
         Route::put('/senat/{senat}', [SenatController::class, 'update'])->name('senat.update');
         Route::delete('/senat/{senat}', [SenatController::class, 'destroy'])->name('senat.destroy');
 

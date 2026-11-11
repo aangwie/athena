@@ -243,5 +243,74 @@
                 </div>
             </div>
         </section>
+
+        {{-- Logo senat: identitas visual senat yang diunggah administrator. --}}
+        <section class="section-card mt-5" data-image-field>
+            <div class="section-heading">
+                <span class="section-number">02</span>
+                <div>
+                    <h3 class="text-sm font-extrabold text-slate-800">Logo Senat</h3>
+                    <p class="mt-0.5 text-xs text-slate-400">Unggah logo resmi senat dalam format gambar.</p>
+                </div>
+            </div>
+
+            <form method="POST" action="{{ route('instansi.senat.logo') }}" enctype="multipart/form-data">
+                @csrf
+
+                <div class="flex flex-col gap-4 px-5 py-5 sm:flex-row sm:items-start sm:px-6">
+                    <div class="flex size-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
+                        @if ($instansi->logo_senat_base64)
+                            <img data-image-preview src="{{ $instansi->logoSenatDataUri() }}" alt="Logo senat"
+                                 class="size-full object-contain p-2">
+                        @else
+                            <img data-image-preview alt="Pratinjau logo senat" class="hidden size-full object-contain p-2">
+                            <span data-image-placeholder class="text-slate-300">
+                                <svg class="size-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                                    <rect x="3.5" y="4.5" width="17" height="15" rx="2.5" />
+                                    <circle cx="9" cy="10" r="2.2" />
+                                    <path d="m5.5 17 4.2-4.2a2 2 0 0 1 2.8 0l5.5 5.2M15 8.5h3" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </span>
+                        @endif
+                    </div>
+
+                    <div class="min-w-0 flex-1">
+                        <label for="logo_senat" class="form-label">Berkas Logo Senat <span class="text-rose-500">*</span></label>
+                        <input type="file" id="logo_senat" name="logo_senat" required
+                               accept="image/png,image/jpeg,image/webp"
+                               data-image-input data-max-kb="500"
+                               @class([
+                                   'block w-full cursor-pointer rounded-xl border bg-slate-50/60 text-sm text-slate-500 shadow-sm transition file:mr-3 file:cursor-pointer file:rounded-l-xl file:border-0 file:bg-teal-600 file:px-4 file:py-2.5 file:text-xs file:font-bold file:text-white hover:border-teal-300 focus:outline-none',
+                                   'border-rose-300 bg-rose-50/40' => $errors->has('logo_senat'),
+                                   'border-slate-200' => ! $errors->has('logo_senat'),
+                               ])>
+                        <p class="mt-1.5 text-[11px] leading-relaxed text-slate-400">
+                            Format JPG, PNG, atau WEBP. Maksimal 500 KB.
+                            @if ($instansi->logo_senat_base64)
+                                Unggah berkas baru untuk mengganti logo senat saat ini.
+                            @endif
+                        </p>
+                        <p data-image-error class="form-error hidden" role="alert"></p>
+                        @error('logo_senat') <p class="form-error">{{ $message }}</p> @enderror
+                    </div>
+                </div>
+
+                <div class="flex flex-col-reverse gap-3 border-t border-slate-100 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+                    <p class="flex items-center gap-1.5 text-[11px] text-slate-400">
+                        <svg class="size-3.5 shrink-0 text-teal-500" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm.75-11.25a.75.75 0 0 0-1.5 0v2.5h-2.5a.75.75 0 0 0 0 1.5h2.5v2.5a.75.75 0 0 0 1.5 0v-2.5h2.5a.75.75 0 0 0 0-1.5h-2.5v-2.5Z" clip-rule="evenodd" />
+                        </svg>
+                        Logo senat hanya dapat diunggah oleh administrator.
+                    </p>
+                    <button type="submit" class="btn-primary justify-center sm:w-auto">
+                        <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                            <path d="M12 15.5V4m0 0 4 4m-4-4-4 4" stroke-linecap="round" stroke-linejoin="round" />
+                            <path d="M4.5 15v3A1.5 1.5 0 0 0 6 19.5h12a1.5 1.5 0 0 0 1.5-1.5v-3" stroke-linecap="round" />
+                        </svg>
+                        Simpan Logo Senat
+                    </button>
+                </div>
+            </form>
+        </section>
     </div>
 @endsection
