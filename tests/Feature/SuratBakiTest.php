@@ -265,6 +265,9 @@ class SuratBakiTest extends TestCase
         // Daftar hadir (halaman 2) memuat waktu, tempat, materi, dan tabel kehadiran.
         $this->assertStringContainsString('DAFTAR HADIR RAPAT TIM KOMITE INTEGRITAS AKADEMIK', $html);
         $this->assertStringContainsString('Tempat pelaksanaan', $html);
+        // Format tanggal daftar hadir: "Hari, DD Bulan YYYY" (bukan DD-MM-YYYY).
+        $this->assertStringContainsString('Minggu, 01 November 2026', $html);
+        $this->assertStringNotContainsString('Minggu, 01-11-2026', $html);
         // Tempat pelaksanaan dari isian form tampil di halaman 2 (menggantikan titik-titik).
         $this->assertStringContainsString('Ruang Rapat Tim Komite Lt. 2', $html);
         $this->assertStringNotContainsString(str_repeat('.', 55), $html);

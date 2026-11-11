@@ -218,7 +218,7 @@
                     <caption class="sr-only">Waktu, tempat, dan materi rapat</caption>
                     <tbody>
                         @foreach ([
-                            'Hari, tanggal' => (string) $baki->tanggal_surat?->locale('id')->translatedFormat('l, d-m-Y'),
+                            'Hari, tanggal' => (string) $baki->tanggal_surat?->locale('id')->translatedFormat('l, d F Y'),
                             'Tempat pelaksanaan' => (string) $baki->tempat_pelaksanaan,
                             'Materi rapat' => 'Pemberian pertimbangan/persetujuan kenaikan jabatan akademik dosen',
                         ] as $label => $nilai)

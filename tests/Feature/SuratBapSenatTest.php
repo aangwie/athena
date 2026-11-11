@@ -380,6 +380,9 @@ class SuratBapSenatTest extends TestCase
 
         // Daftar hadir (halaman 2) memuat waktu, tempat, materi, dan tabel kehadiran.
         $this->assertStringContainsString('DAFTAR HADIR RAPAT', $html);
+        // Format tanggal daftar hadir: "Hari, DD Bulan YYYY" (bukan DD-MM-YYYY).
+        $this->assertStringContainsString('Sabtu, 31 Oktober 2026', $html);
+        $this->assertStringNotContainsString('Sabtu, 31-10-2026', $html);
         $this->assertStringContainsString('Ruang Rapat Senat Lt. 2', $html);
         $this->assertStringContainsString('Pemberian pertimbangan kenaikan jabatan akademik dosen', $html);
         $this->assertStringContainsString('Rina Wijaya, M.Kom.', $html);

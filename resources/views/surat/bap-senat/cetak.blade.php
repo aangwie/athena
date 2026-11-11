@@ -215,7 +215,7 @@
                     <caption class="sr-only">Waktu, tempat, dan materi rapat</caption>
                     <tbody>
                         @foreach ([
-                            'Hari, tanggal' => (string) $bap->tanggal_bap?->locale('id')->translatedFormat('l, d-m-Y'),
+                            'Hari, tanggal' => (string) $bap->tanggal_bap?->locale('id')->translatedFormat('l, d F Y'),
                             'Tempat pelaksanaan' => (string) $bap->tempat_pelaksanaan,
                             'Materi rapat' => (string) $bap->materi_rapat,
                         ] as $label => $nilai)
