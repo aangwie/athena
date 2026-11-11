@@ -162,7 +162,7 @@
                 </table>
 
                 <p class="mt-2 text-justify text-[16px] leading-snug">
-                    Untuk Kenaikan Jabatan Akademik Dosen ke Asisten Ahli/Lektor/Lektor Kepala/Profesor
+                    Untuk Kenaikan Jabatan Akademik Dosen ke Asisten Ahli
                     dalam bidang ilmu penugasan keahlian/kompetensi/kepakaran {{ $bap->bidang_keilmuan }}.
                 </p>
 
