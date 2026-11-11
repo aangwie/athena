@@ -535,7 +535,9 @@ class SuratTest extends TestCase
             ->assertSee('cetak-ukuran')
             // Baris tabel & blok tanda tangan tidak boleh terpotong di tengah halaman.
             ->assertSee('.cetak-tabel tr { break-inside: avoid; }')
-            ->assertSee('.cetak-tanda-tangan { break-inside: avoid; }');
+            ->assertSee('.cetak-tanda-tangan { break-inside: avoid; }')
+            // Huruf naskah Times New Roman 16px (kop memakai partial kop-surat tersendiri).
+            ->assertSee("font-family: 'Times New Roman', Times, serif;", false);
     }
 
     public function test_admin_can_open_pakta_integritas_validasi_preview(): void
@@ -606,7 +608,16 @@ class SuratTest extends TestCase
             ->assertSee('id="margin-atas"', false)
             ->assertSee('value="1.5"', false)
             ->assertSee('@page { size: A4 portrait; margin: 1.5cm; }')
-            ->assertSee('cetak-ukuran');
+            ->assertSee('cetak-ukuran')
+            // Huruf naskah Times New Roman 16px; kop 16px penyelenggara, 18px instansi, 10px alamat.
+            ->assertSee("font-family: 'Times New Roman', Times, serif;", false)
+            ->assertSee('<p class="text-[16px] font-bold uppercase">', false)
+            ->assertSee('<p class="text-[18px] font-bold uppercase">', false)
+            ->assertSee('class="text-[10px]"', false)
+            // Jarak baris dirapatkan (naskah 1,375 dan tabel 1,25) supaya naskah 16px
+            // tetap muat satu halaman A4/F4 pada margin 1,5 cm.
+            ->assertSee('<table class="cetak-tabel mt-2 w-full border-collapse border border-slate-900 text-[16px] leading-tight">', false)
+            ->assertSee('<p class="mt-2 text-[16px] leading-snug text-justify">', false);
     }
 
     public function test_validasi_tanpa_tanggal_pengesahan_memakai_tanggal_pakta(): void

@@ -353,10 +353,19 @@ class SuratBapSenatTest extends TestCase
         $this->assertSame(2, substr_count($html, 'data:image/png;base64,logo-senat'));
         $this->assertStringNotContainsString('data:image/png;base64,logo-instansi', $html);
 
-        // Seluruh naskah BAP senat memakai huruf Times New Roman, bukan font aplikasi.
-        $this->assertStringContainsString('body { font-family: Times New Roman, Times, serif; }', $html);
-        $this->assertStringNotContainsString('font-sans', $html);
-        $this->assertSame(2, substr_count($html, 'style="font-family: Times New Roman, Times, serif;"'));
+        // Seluruh naskah BAP senat memakai Times New Roman 16px; kop 16px penyelenggara, 18px instansi, 10px alamat.
+        $this->assertStringContainsString("font-family: 'Times New Roman', Times, serif;", $html);
+        $this->assertStringContainsString('font-size: 16px;', $html);
+        $this->assertSame(4, substr_count($html, '<p class="text-[16px] font-bold uppercase">'));
+        $this->assertSame(2, substr_count($html, '<p class="text-[18px] font-bold uppercase">'));
+        $this->assertSame(2, substr_count($html, 'class="text-[10px]"'));
+
+        // Jarak baris dirapatkan (naskah 1,375 dan tabel identitas 1,25) supaya naskah 16px
+        // tetap muat satu halaman A4/F4 pada margin 1,5 cm.
+        $this->assertStringContainsString('<table class="mt-2 w-full border-collapse text-[16px] leading-tight">', $html);
+        $this->assertStringContainsString('<p class="mt-2 text-justify text-[16px] leading-snug">', $html);
+        // Font aplikasi hanya tersisa pada panel alat cetak di luar kertas.
+        $this->assertSame(1, substr_count($html, 'font-sans'));
 
         // Berita acara (halaman 1).
         $this->assertStringContainsString('Persetujuan Senat Akademik', $html);
@@ -409,9 +418,9 @@ class SuratBapSenatTest extends TestCase
         // Logo senat belum diunggah: kop tetap memakai logo instansi agar tidak kosong.
         $this->assertSame(2, substr_count($html, 'data:image/png;base64,logo-instansi'));
         $this->assertStringNotContainsString('logo-senat', $html);
-        // Huruf Times New Roman tetap berlaku untuk seluruh naskah.
-        $this->assertStringContainsString('body { font-family: Times New Roman, Times, serif; }', $html);
-        $this->assertSame(2, substr_count($html, 'style="font-family: Times New Roman, Times, serif;"'));
+        // Huruf Times New Roman 16px tetap berlaku untuk seluruh naskah.
+        $this->assertStringContainsString("font-family: 'Times New Roman', Times, serif;", $html);
+        $this->assertStringContainsString('font-size: 16px;', $html);
     }
 
     public function test_daftar_hadir_bap_senat_urut_ketua_sekretaris_anggota(): void

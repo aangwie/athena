@@ -63,8 +63,16 @@
         /* Margin awal 1,5 cm semua sisi; JS memperbarui nilainya sebelum dicetak. */
         :root { --cetak-margin: 1.5cm; }
 
-        /* Pratinjau layar: jarak ke tepi kertas digambar sendiri lewat padding. */
-        .cetak-kertas { padding: var(--cetak-margin); }
+        /* Pratinjau layar: jarak ke tepi kertas digambar sendiri lewat padding.
+           Seluruh naskah memakai Times New Roman 16px; kop mengatur ukurannya sendiri
+           (18px nama instansi, 10px alamat instansi).
+           Jarak baris dirapatkan (1,375 naskah, 1,25 tabel identitas) supaya naskah 16px
+           tetap muat satu halaman A4/F4 pada margin 1,5 cm. */
+        .cetak-kertas {
+            padding: var(--cetak-margin);
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 16px;
+        }
 
         @media print {
             /* Margin asli tiap halaman lewat @page supaya halaman lanjutan pun tetap
@@ -86,7 +94,7 @@
 
             /* Tabel karya: header berulang di halaman lanjutan dan baris tidak terpotong
                di tengah, sehingga isi tabel menyesuaikan halaman tanpa terpotong acak. */
-            .cetak-tabel { font-size: 10px; }
+            .cetak-tabel { font-size: 16px; }
             .cetak-tabel thead { display: table-header-group; }
             .cetak-tabel tr { break-inside: avoid; }
             .cetak-tabel td { padding: 2px 4px !important; }
@@ -128,35 +136,35 @@
              style="padding: var(--cetak-margin)">
             @include('surat.partials.kop-surat')
 
-            <header class="mt-3 text-center">
-                <h1 class="text-sm font-extrabold tracking-tight uppercase underline">
+            <header class="mt-2 text-center">
+                <h1 class="text-[16px] font-extrabold tracking-tight uppercase underline">
                     Surat Pernyataan Pakta Integritas
                 </h1>
-                <h2 class="text-sm font-extrabold tracking-tight uppercase underline">
+                <h2 class="text-[16px] font-extrabold tracking-tight uppercase underline">
                     Pengesahan Hasil Validasi Karya Ilmiah
                 </h2>
-                <p class="mt-0.5 text-[11px] font-bold">Nomor : {{ $nomorValidasi }}</p>
+                <p class="mt-0.5 text-[16px] font-bold">Nomor : {{ $nomorValidasi }}</p>
             </header>
 
-            <p class="mt-3 text-[11px] leading-relaxed">
+            <p class="mt-2 text-[16px] leading-snug">
                 Yang bertandatangan di bawah ini, Ketua {{ $instansi?->nama_instansi ?: '…' }} :
             </p>
 
             @include('surat.pakta-integritas.partials.identitas-validasi', ['baris' => $identitasKetua])
 
-            <p class="mt-3 text-[11px] leading-relaxed text-justify">
+            <p class="mt-2 text-[16px] leading-snug text-justify">
                 Menyatakan dengan sebenarnya bahwa seluruh dokumen persyaratan yang diajukan sebagai bahan
                 pertimbangan kelayakan kenaikan jabatan akademik dosen, atas nama :
             </p>
 
             @include('surat.pakta-integritas.partials.identitas-validasi', ['baris' => $identitasDosen])
 
-            <p class="mt-3 text-[11px] leading-relaxed text-justify">
+            <p class="mt-2 text-[16px] leading-snug text-justify">
                 Dengan data karya ilmiah, seperti di bawah ini :
             </p>
 
 
-            <table class="cetak-tabel mt-2 w-full border-collapse border border-slate-900 text-[11px]">
+            <table class="cetak-tabel mt-2 w-full border-collapse border border-slate-900 text-[16px] leading-tight">
                 <caption class="sr-only">Daftar karya ilmiah beserta identitasnya</caption>
                 <colgroup>
                     <col style="width: 6%">
@@ -171,7 +179,7 @@
                         <th class="border border-slate-900 px-2 py-1 text-center font-bold">Judul</th>
                         <th class="border border-slate-900 px-2 py-1 text-center font-bold">Identitas Karya Ilmiah</th>
                     </tr>
-                    <tr class="text-[10px]">
+                    <tr class="text-[16px]">
                         <td class="border border-slate-900 px-2 py-0.5 text-center">1</td>
                         <td class="border border-slate-900 px-2 py-0.5 text-center">2</td>
                         <td class="border border-slate-900 px-2 py-0.5 text-center">3</td>
@@ -204,25 +212,25 @@
                 </tbody>
             </table>
 
-            <p class="mt-3 text-[11px] leading-relaxed text-justify">
+            <p class="mt-2 text-[16px] leading-snug text-justify">
                 Telah diperiksa dan divalidasi dengan baik bahwa karya ilmiah tersebut <span class="font-bold">telah
                 memenuhi syarat kaidah ilmiah, norma akademik, dan norma hukum (tidak ada pelanggaran integritas
                 akademik)</span> sesuai dengan Peraturan Menteri Pendidikan, Kebudayaan, Riset dan Teknologi Nomor 39
                 Tahun 2021 tentang Integritas Akademik dalam Menghasilkan Karya Ilmiah.
             </p>
 
-            <p class="mt-2 text-[11px] leading-relaxed text-justify">
+            <p class="mt-2 text-[16px] leading-snug text-justify">
                 Apabila dikemudian hari terbukti ada pelanggaran integritas akademik dalam karya ilmiah tersebut maka
                 kami ikut bertanggung jawab sesuai dengan Peraturan Menteri Pendidikan, Kebudayaan, Riset dan Teknologi
                 Nomor 39 Tahun 2021 tentang Integritas Akademik dalam Menghasilkan Karya Ilmiah.
             </p>
 
-            <p class="mt-2 text-[11px] leading-relaxed text-justify">
+            <p class="mt-2 text-[16px] leading-snug text-justify">
                 Demikian surat pernyataan ini saya buat untuk dipergunakan sebagaimana mestinya.
             </p>
 
             {{-- Tanda tangan ketua instansi: ruang 1,8 cm untuk tanda tangan dan stempel. --}}
-            <div class="cetak-tanda-tangan mt-6 flex text-[11px]">
+            <div class="cetak-tanda-tangan mt-4 flex text-[16px]">
                 <div class="w-1/2"></div>
                 <div class="w-1/2">
                     <p>{{ $kotaTanggal }}</p>

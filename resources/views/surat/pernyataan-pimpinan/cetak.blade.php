@@ -16,8 +16,16 @@
         /* Margin awal 1,5 cm semua sisi; JS memperbarui nilainya sebelum dicetak. */
         :root { --cetak-margin: 1.5cm; }
 
-        /* Pratinjau layar: jarak ke tepi kertas digambar sendiri lewat padding. */
-        .cetak-kertas { padding: var(--cetak-margin); }
+        /* Pratinjau layar: jarak ke tepi kertas digambar sendiri lewat padding.
+           Seluruh naskah memakai Times New Roman 16px; kop mengatur ukurannya sendiri
+           (18px nama instansi, 10px alamat instansi).
+           Jarak baris dirapatkan (1,375 naskah, 1,25 tabel identitas) supaya naskah 16px
+           tetap muat satu halaman A4/F4 pada margin 1,5 cm. */
+        .cetak-kertas {
+            padding: var(--cetak-margin);
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 16px;
+        }
 
         @media print {
             /* Margin asli tiap halaman lewat @page supaya halaman lanjutan pun tetap
@@ -74,18 +82,18 @@
              style="padding: var(--cetak-margin)">
             @include('surat.partials.kop-surat')
 
-            <header class="mt-3 text-center">
-                <h1 class="text-[12px] font-extrabold uppercase underline">
+            <header class="mt-2 text-center">
+                <h1 class="text-[16px] font-extrabold uppercase underline">
                     Surat Pernyataan Pimpinan Perguruan Tinggi
                 </h1>
-                <p class="mt-0.5 text-[11px]">Nomor: {{ $pernyataan->nomor_surat ?: '…' }}</p>
+                <p class="mt-0.5 text-[16px]">Nomor: {{ $pernyataan->nomor_surat ?: '…' }}</p>
             </header>
 
-            <p class="mt-3 text-justify text-[11px] leading-relaxed">
+            <p class="mt-2 text-justify text-[16px] leading-snug">
                 Yang bertandatangan di bawah ini, Pimpinan {{ $instansi?->nama_instansi ?: '…' }}:
             </p>
 
-            <table class="mt-2 w-full border-collapse text-[11px]">
+            <table class="mt-2 w-full border-collapse text-[16px] leading-tight">
                 <caption class="sr-only">Identitas pimpinan</caption>
                 <tbody>
                     @foreach ([
@@ -98,21 +106,21 @@
                         'Jabatan / TMT' => $pimpinan['jabatan'].' / '.$pimpinan['jabatan_tmt'],
                     ] as $label => $nilai)
                         <tr>
-                            <td class="w-[45%] py-0.5 align-top">{{ $label }}</td>
-                            <td class="w-4 py-0.5 align-top">:</td>
-                            <td class="py-0.5 align-top font-semibold">{{ $nilai }}</td>
+                            <td class="w-[45%] align-top">{{ $label }}</td>
+                            <td class="w-4 align-top">:</td>
+                            <td class="align-top font-semibold">{{ $nilai }}</td>
                         </tr>
                     @endforeach
                 </tbody>
             </table>
 
 
-            <p class="mt-3 text-justify text-[11px] leading-relaxed">
+            <p class="mt-2 text-justify text-[16px] leading-snug">
                 Menyatakan dengan sebenarnya bahwa seluruh dokumen persyaratan yang diajukan sebagai bahan
                 pertimbangan kelayakan kenaikan jabatan akademik dosen, atas nama:
             </p>
 
-            <table class="mt-2 w-full border-collapse text-[11px]">
+            <table class="mt-2 w-full border-collapse text-[16px] leading-tight">
                 <caption class="sr-only">Identitas dosen yang diusulkan</caption>
                 <tbody>
                     @foreach ([
@@ -126,21 +134,21 @@
                         'Jurusan/program studi' => $dosen['prodi'],
                     ] as $label => $nilai)
                         <tr>
-                            <td class="w-[45%] py-0.5 align-top">{{ $label }}</td>
-                            <td class="w-4 py-0.5 align-top">:</td>
-                            <td class="py-0.5 align-top font-semibold">{{ $nilai }}</td>
+                            <td class="w-[45%] align-top">{{ $label }}</td>
+                            <td class="w-4 align-top">:</td>
+                            <td class="align-top font-semibold">{{ $nilai }}</td>
                         </tr>
                     @endforeach
                 </tbody>
             </table>
 
-            <p class="mt-3 text-justify text-[11px] leading-relaxed">
+            <p class="mt-2 text-justify text-[16px] leading-snug">
                 Telah diperiksa dan divalidasi dengan baik bahwa seluruh dokumen yang diajukan adalah benar dan
                 dapat kami pertanggungjawabkan sesuai ketentuan yang berlaku, baik dalam proses perolehannya
                 maupun hal-hal yang berkaitan dengan dokumen yang bersangkutan.
             </p>
 
-            <p class="mt-2 text-justify text-[11px] leading-relaxed">
+            <p class="mt-2 text-justify text-[16px] leading-snug">
                 Apabila di kemudian hari terbukti ada pelanggaran integritas akademik terhadap dokumen tersebut,
                 maka kami bersedia menerima sanksi sesuai dengan ketentuan peraturan perundang-undangan, dan
                 bersedia mempertanggungjawabkan secara hukum sesuai dengan peraturan yang berlaku, serta
@@ -148,17 +156,17 @@
                 periode kenaikan jabatan berikutnya.
             </p>
 
-            <p class="mt-2 text-justify text-[11px] leading-relaxed">
+            <p class="mt-2 text-justify text-[16px] leading-snug">
                 Demikian surat pernyataan ini saya buat untuk dipergunakan sebagaimana mestinya.
             </p>
 
-            {{-- Tanda tangan pimpinan: ruang 2,2 cm untuk tanda tangan dan stempel. --}}
-            <div class="cetak-tanda-tangan mt-6 flex text-[11px]">
+            {{-- Tanda tangan pimpinan: ruang 2 cm untuk tanda tangan dan stempel. --}}
+            <div class="cetak-tanda-tangan mt-4 flex text-[16px]">
                 <div class="w-1/2"></div>
                 <div class="w-1/2">
                     <p>{{ $tandaTangan }}</p>
                     <p class="mt-0.5">Pimpinan</p>
-                    <div class="h-[2.2cm]" aria-hidden="true"></div>
+                    <div class="h-[2cm]" aria-hidden="true"></div>
                     <p class="font-bold underline">{{ $pimpinan['nama'] }}</p>
                     <p>NIDN: {{ $pimpinan['nidn'] }}</p>
                 </div>

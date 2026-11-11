@@ -235,10 +235,19 @@ class SuratBakiTest extends TestCase
         // Kop BAKI tidak memakai awalan "Senat Akademik" (khusus dokumen BAP Senat).
         $this->assertStringNotContainsString('Senat Akademik', $html);
 
-        // Kop BAKI tetap memakai logo instansi dan font aplikasi, bukan logo senat/Times New Roman.
+        // Kop BAKI memakai logo instansi (bukan logo senat) dengan huruf naskah Times New Roman.
         $this->assertSame(2, substr_count($html, 'data:image/png;base64,logo-instansi'));
         $this->assertStringNotContainsString('logo-senat', $html);
-        $this->assertStringNotContainsString('Times New Roman', $html);
+        $this->assertStringContainsString("font-family: 'Times New Roman', Times, serif;", $html);
+        // Ukuran huruf kop: badan penyelenggara 16px, nama instansi 18px, alamat instansi 10px.
+        $this->assertSame(4, substr_count($html, '<p class="text-[16px] font-bold uppercase">'));
+        $this->assertSame(2, substr_count($html, '<p class="text-[18px] font-bold uppercase">'));
+        $this->assertSame(2, substr_count($html, 'class="text-[10px]"'));
+
+        // Jarak baris dirapatkan (naskah 1,375 dan tabel identitas 1,25) supaya naskah 16px
+        // tetap muat satu halaman A4/F4 pada margin 1,5 cm.
+        $this->assertStringContainsString('<table class="mt-2 w-full border-collapse text-[16px] leading-tight">', $html);
+        $this->assertStringContainsString('<p class="mt-2 text-justify text-[16px] leading-snug">', $html);
 
         // Berita acara (halaman 1).
         $this->assertStringContainsString('Berita Acara Persetujuan', $html);

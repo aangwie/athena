@@ -22,8 +22,16 @@
         /* Margin awal 1,5 cm semua sisi; JS memperbarui nilainya sebelum dicetak. */
         :root { --cetak-margin: 1.5cm; }
 
-        /* Pratinjau layar: jarak ke tepi kertas digambar sendiri lewat padding. */
-        .cetak-kertas { padding: var(--cetak-margin); }
+        /* Pratinjau layar: jarak ke tepi kertas digambar sendiri lewat padding.
+           Seluruh naskah memakai Times New Roman 16px; kop mengatur ukurannya sendiri
+           (18px nama instansi, 10px alamat instansi).
+           Jarak baris dirapatkan (1,375 naskah, 1,25 tabel identitas) supaya naskah 16px
+           tetap muat satu halaman A4/F4 pada margin 1,5 cm. */
+        .cetak-kertas {
+            padding: var(--cetak-margin);
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 16px;
+        }
         /* Tiap halaman dipisah rapi pada pratinjau layar (halaman tersembunyi dikecualikan). */
         .cetak-halaman:not(.cetak-lewati) + .cetak-halaman:not(.cetak-lewati) { margin-top: 1.5rem; }
 
@@ -114,19 +122,19 @@
             <section class="cetak-halaman" data-halaman="1">
                 @include('surat.partials.kop-surat')
 
-                <header class="mt-3 text-center">
-                    <h1 class="text-[13px] font-bold uppercase">Berita Acara Persetujuan</h1>
-                    <h2 class="text-[13px] font-bold uppercase">Tim Komite Integritas Akademik</h2>
-                    <p class="mt-0.5 text-[11px] font-bold">NOMOR: {{ $baki->nomor_surat }}</p>
+                <header class="mt-2 text-center">
+                    <h1 class="text-[16px] font-bold uppercase">Berita Acara Persetujuan</h1>
+                    <h2 class="text-[16px] font-bold uppercase">Tim Komite Integritas Akademik</h2>
+                    <p class="mt-0.5 text-[16px] font-bold">NOMOR: {{ $baki->nomor_surat }}</p>
                 </header>
 
-                <p class="mt-3 text-justify text-[11px] leading-relaxed">
+                <p class="mt-2 text-justify text-[16px] leading-snug">
                     Menindaklanjuti hasil Berita Acara Senat {{ $instansi?->nama_instansi ?: '-' }} Nomor
                     {{ $bap?->nomor_bap ?: '-' }} tanggal {{ $tanggalBap }} tentang persetujuan usulan
                     kenaikan jabatan akademik dosen:
                 </p>
 
-                <table class="mt-2 w-full border-collapse text-[11px]">
+                <table class="mt-2 w-full border-collapse text-[16px] leading-tight">
                     <caption class="sr-only">Identitas dosen yang diusulkan</caption>
                     <tbody>
                         @foreach ([
@@ -142,26 +150,26 @@
                             'Jurusan/program studi' => $identitas['prodi'],
                         ] as $label => $nilai)
                             <tr>
-                                <td class="w-[45%] py-0.5 align-top">{{ $label }}</td>
-                                <td class="w-4 py-0.5 align-top">:</td>
-                                <td class="py-0.5 align-top font-semibold">{{ $nilai }}</td>
+                                <td class="w-[45%] align-top">{{ $label }}</td>
+                                <td class="w-4 align-top">:</td>
+                                <td class="align-top font-semibold">{{ $nilai }}</td>
                             </tr>
                         @endforeach
                     </tbody>
                 </table>
 
-                <p class="mt-3 text-justify text-[11px] leading-relaxed">
+                <p class="mt-2 text-justify text-[16px] leading-snug">
                     Untuk Kenaikan Jabatan Akademik Dosen ke Asisten Ahli/Lektor/Lektor Kepala/Profesor dalam
                     bidang ilmu penugasan keahlian/kompetensi/kepakaran {{ $bap?->bidang_keilmuan }}.
                 </p>
 
-                <p class="mt-2 text-justify text-[11px] leading-relaxed">
+                <p class="mt-2 text-justify text-[16px] leading-snug">
                     Tim Komite Integritas Akademik yang dihadiri oleh sejumlah {{ $anggota->count() }} orang tim
                     anggota Komite Integritas Akademik (dengan jumlah yang memenuhi kuorum) sebagaimana daftar
                     hadir terlampir.
                 </p>
 
-                <p class="mt-2 text-justify text-[11px] leading-relaxed">
+                <p class="mt-2 text-justify text-[16px] leading-snug">
                     Tim Komite Integritas Akademik melakukan pertimbangan kembali berdasarkan penilaian atas
                     integritas, kinerja, tanggung jawab dan tata krama (tidak ada pelanggaran integritas
                     akademik) dalam kehidupan kampus yang telah ditunjukkan oleh yang bersangkutan dalam
@@ -169,19 +177,19 @@
                     terakhir sampai dengan rapat pemberian pertimbangan/persetujuan ini dilakukan.
                 </p>
 
-                <p class="mt-2 text-justify text-[11px] leading-relaxed">
+                <p class="mt-2 text-justify text-[16px] leading-snug">
                     Apabila di kemudian hari terbukti bahwa ada pelanggaran integritas akademik, maka Tim Komite
                     Integritas Akademik ikut bertanggung jawab sesuai dengan Peraturan Menteri Pendidikan
                     Kebudayaan, Riset dan Teknologi Nomor 39 Tahun 2021 tentang Integritas Akademik dalam
                     Menghasilkan Karya Ilmiah.
                 </p>
 
-                <p class="mt-2 text-justify text-[11px] leading-relaxed">
+                <p class="mt-2 text-justify text-[16px] leading-snug">
                     Berita acara ini dibuat dengan sesungguhnya untuk dipergunakan sebagaimana mestinya.
                 </p>
 
                 {{-- Tanda tangan Ketua Tim Komite Integritas Akademik. --}}
-                <div class="cetak-tanda-tangan mt-6 flex text-[11px]">
+                <div class="cetak-tanda-tangan mt-4 flex text-[16px]">
                     <div class="w-1/2"></div>
                     <div class="w-1/2">
                         <p>{{ $kotaTanggal }}</p>
@@ -198,14 +206,14 @@
             <section class="cetak-halaman cetak-pisah" data-halaman="2">
                 @include('surat.partials.kop-surat')
 
-                <header class="mt-3 text-center">
-                    <h1 class="text-[13px] font-bold">DAFTAR HADIR RAPAT TIM KOMITE INTEGRITAS AKADEMIK</h1>
-                    <h2 class="text-[13px] font-bold">
+                <header class="mt-2 text-center">
+                    <h1 class="text-[16px] font-bold">DAFTAR HADIR RAPAT TIM KOMITE INTEGRITAS AKADEMIK</h1>
+                    <h2 class="text-[16px] font-bold">
                         PERGURUAN TINGGI {{ mb_strtoupper($instansi?->nama_instansi ?: '') }}
                     </h2>
                 </header>
 
-                <table class="mt-3 w-full border-collapse text-[11px]">
+                <table class="mt-2 w-full border-collapse text-[16px] leading-tight">
                     <caption class="sr-only">Waktu, tempat, dan materi rapat</caption>
                     <tbody>
                         @foreach ([
@@ -222,7 +230,7 @@
                     </tbody>
                 </table>
 
-                <table class="cetak-tabel mt-3 w-full border-collapse border border-slate-900 text-[11px]">
+                <table class="cetak-tabel mt-2 w-full border-collapse border border-slate-900 text-[16px]">
                     <caption class="sr-only">Daftar hadir tim komite integritas akademik</caption>
                     <colgroup>
                         <col style="width: 9%">
@@ -252,7 +260,7 @@
                 </table>
 
                 {{-- Tanda tangan pemimpin rapat (Ketua Tim Komite). --}}
-                <div class="cetak-tanda-tangan mt-6 flex text-[11px]">
+                <div class="cetak-tanda-tangan mt-4 flex text-[16px]">
                     <div class="w-1/2"></div>
                     <div class="w-1/2">
                         <p>{{ $kotaTanggal }}</p>

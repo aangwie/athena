@@ -17,15 +17,20 @@
     @endphp
 
     <style>
-        /* Seluruh naskah BAP senat (layar maupun cetak) memakai huruf Times New Roman. */
-        body { font-family: Times New Roman, Times, serif; }
-
         /* Cetak ke PDF lewat dialog cetak peramban (A4 portrait), mengikuti formulir SKP. */
         /* Margin awal 1,5 cm semua sisi; JS memperbarui nilainya sebelum dicetak. */
         :root { --cetak-margin: 1.5cm; }
 
-        /* Pratinjau layar: jarak ke tepi kertas digambar sendiri lewat padding. */
-        .cetak-kertas { padding: var(--cetak-margin); }
+        /* Pratinjau layar: jarak ke tepi kertas digambar sendiri lewat padding.
+           Seluruh naskah memakai Times New Roman 16px; kop mengatur ukurannya sendiri
+           (18px nama instansi, 10px alamat instansi).
+           Jarak baris dirapatkan (1,375 naskah, 1,25 tabel identitas) supaya naskah 16px
+           tetap muat satu halaman A4/F4 pada margin 1,5 cm. */
+        .cetak-kertas {
+            padding: var(--cetak-margin);
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 16px;
+        }
         /* Tiap halaman dipisah rapi pada pratinjau layar (halaman tersembunyi dikecualikan). */
         .cetak-halaman:not(.cetak-lewati) + .cetak-halaman:not(.cetak-lewati) { margin-top: 1.5rem; }
 
@@ -66,7 +71,7 @@
     {{-- Diisi JavaScript sebelum window.print() agar margin tiap halaman ikut menyesuaikan. --}}
     <style id="cetak-ukuran"></style>
 </head>
-<body class="min-h-screen bg-slate-100 p-4 text-slate-900 sm:p-8">
+<body class="min-h-screen bg-slate-100 p-4 font-sans text-slate-900 sm:p-8">
     <div class="cetak-lembar mx-auto max-w-4xl">
         <div class="cetak-aksi mb-4 flex flex-wrap items-end justify-between gap-3">
             <a href="{{ route('surat.index') }}#bap-senat" class="btn-secondary">
@@ -115,15 +120,15 @@
             <section class="cetak-halaman" data-halaman="1">
                 @include('surat.partials.kop-surat', ['senatAkademik' => true])
 
-                <header class="mt-3 text-center">
-                    <h1 class="text-[13px] font-bold uppercase underline">Berita Acara</h1>
-                    <h2 class="text-[13px] font-bold uppercase">
+                <header class="mt-2 text-center">
+                    <h1 class="text-[16px] font-bold uppercase underline">Berita Acara</h1>
+                    <h2 class="text-[16px] font-bold uppercase">
                         Persetujuan Senat Akademik {{ mb_strtoupper($instansi?->nama_instansi ?: 'Nama Instansi Belum Diisi') }}
                     </h2>
-                    <p class="mt-0.5 text-[11px]">NOMOR: {{ $bap->nomor_bap }}</p>
+                    <p class="mt-0.5 text-[16px]">NOMOR: {{ $bap->nomor_bap }}</p>
                 </header>
 
-                <p class="mt-3 text-justify text-[11px] leading-relaxed">
+                <p class="mt-2 text-justify text-[16px] leading-snug">
                     Pada hari ini {{ $tanggal?->translatedFormat('l') ?: '-' }} tanggal
                     {{ $tanggal?->translatedFormat('d') ?: '-' }} bulan
                     {{ $tanggal?->translatedFormat('F') ?: '-' }} tahun
@@ -133,7 +138,7 @@
                     telah melakukan rapat pemberian pertimbangan/persetujuan pengajuan Kenaikan Jabatan Akademik kepada:
                 </p>
 
-                <table class="mt-2 w-full border-collapse text-[11px]">
+                <table class="mt-2 w-full border-collapse text-[16px] leading-tight">
                     <caption class="sr-only">Identitas dosen yang diusulkan</caption>
                     <tbody>
                         @foreach ([
@@ -148,20 +153,20 @@
                             'Jurusan/program studi' => $identitas['prodi'],
                         ] as $label => $nilai)
                             <tr>
-                                <td class="w-[45%] py-0.5 align-top">{{ $label }}</td>
-                                <td class="w-4 py-0.5 align-top">:</td>
-                                <td class="py-0.5 align-top font-semibold">{{ $nilai }}</td>
+                                <td class="w-[45%] align-top">{{ $label }}</td>
+                                <td class="w-4 align-top">:</td>
+                                <td class="align-top font-semibold">{{ $nilai }}</td>
                             </tr>
                         @endforeach
                     </tbody>
                 </table>
 
-                <p class="mt-3 text-justify text-[11px] leading-relaxed">
+                <p class="mt-2 text-justify text-[16px] leading-snug">
                     Untuk Kenaikan Jabatan Akademik Dosen ke Asisten Ahli/Lektor/Lektor Kepala/Profesor
                     dalam bidang ilmu penugasan keahlian/kompetensi/kepakaran {{ $bap->bidang_keilmuan }}.
                 </p>
 
-                <p class="mt-2 text-justify text-[11px] leading-relaxed">
+                <p class="mt-2 text-justify text-[16px] leading-snug">
                     Hasil pertimbangan diberikan berdasarkan penilaian atas integritas, kinerja, tanggung jawab,
                     dan tata krama dalam kehidupan kampus yang telah ditetapkan oleh yang bersangkutan dalam
                     melaksanakan tridharma Perguruan Tinggi sejak yang bersangkutan menduduki jabatan akademik
@@ -170,18 +175,18 @@
                     kenaikan jabatan.
                 </p>
 
-                <p class="mt-2 text-justify text-[11px] leading-relaxed">
+                <p class="mt-2 text-justify text-[16px] leading-snug">
                     Apabila di kemudian hari terbukti bahwa ada pelanggaran integritas akademik maka Tim Senat
                     ikut bertanggung jawab sesuai dengan Peraturan Menteri Pendidikan, Kebudayaan, Riset, dan
                     Teknologi Nomor 39 Tahun 2021 tentang Integritas Akademik dalam Menghasilkan Karya Ilmiah.
                 </p>
 
-                <p class="mt-2 text-justify text-[11px] leading-relaxed">
+                <p class="mt-2 text-justify text-[16px] leading-snug">
                     Berita acara ini dibuat dengan sesungguhnya untuk dipergunakan sebagaimana mestinya.
                 </p>
 
                 {{-- Tanda tangan hanya untuk Ketua Senat. --}}
-                <div class="cetak-tanda-tangan mt-6 flex text-[11px]">
+                <div class="cetak-tanda-tangan mt-4 flex text-[16px]">
                     <div class="w-1/2"></div>
                     <div class="w-1/2">
                         <p>{{ $kotaTanggal }}</p>
@@ -198,14 +203,14 @@
             <section class="cetak-halaman cetak-pisah" data-halaman="2">
                 @include('surat.partials.kop-surat', ['senatAkademik' => true])
 
-                <header class="mt-3 text-center">
-                    <h1 class="text-[13px] font-bold">DAFTAR HADIR RAPAT</h1>
-                    <h2 class="text-[13px] font-bold">
+                <header class="mt-2 text-center">
+                    <h1 class="text-[16px] font-bold">DAFTAR HADIR RAPAT</h1>
+                    <h2 class="text-[16px] font-bold">
                         PERSETUJUAN SENAT AKADEMIK {{ mb_strtoupper($instansi?->nama_instansi ?: '') }}
                     </h2>
                 </header>
 
-                <table class="mt-3 w-full border-collapse text-[11px]">
+                <table class="mt-2 w-full border-collapse text-[16px] leading-tight">
                     <caption class="sr-only">Waktu, tempat, dan materi rapat</caption>
                     <tbody>
                         @foreach ([
@@ -222,7 +227,7 @@
                     </tbody>
                 </table>
 
-                <table class="cetak-tabel mt-3 w-full border-collapse border border-slate-900 text-[11px]">
+                <table class="cetak-tabel mt-2 w-full border-collapse border border-slate-900 text-[16px]">
                     <caption class="sr-only">Daftar hadir anggota senat</caption>
                     <colgroup>
                         <col style="width: 9%">
@@ -252,7 +257,7 @@
                 </table>
 
                 {{-- Tanda tangan pemimpin rapat (Ketua Senat). --}}
-                <div class="cetak-tanda-tangan mt-6 flex text-[11px]">
+                <div class="cetak-tanda-tangan mt-4 flex text-[16px]">
                     <div class="w-1/2"></div>
                     <div class="w-1/2">
                         <p>{{ $kotaTanggal }}</p>

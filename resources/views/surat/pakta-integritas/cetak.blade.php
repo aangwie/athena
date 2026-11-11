@@ -25,8 +25,16 @@
         /* Margin awal 1,5 cm semua sisi; JS memperbarui nilainya sebelum dicetak. */
         :root { --cetak-margin: 1.5cm; }
 
-        /* Pratinjau layar: jarak ke tepi kertas digambar sendiri lewat padding. */
-        .cetak-kertas { padding: var(--cetak-margin); }
+        /* Pratinjau layar: jarak ke tepi kertas digambar sendiri lewat padding.
+           Seluruh naskah memakai Times New Roman 16px; kop mengatur ukurannya sendiri
+           (18px nama instansi, 10px alamat instansi).
+           Jarak baris dirapatkan (1,375 naskah, 1,25 tabel identitas) supaya naskah 16px
+           tetap muat satu halaman A4/F4 pada margin 1,5 cm. */
+        .cetak-kertas {
+            padding: var(--cetak-margin);
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 16px;
+        }
 
         @media print {
             /* Margin asli tiap halaman lewat @page supaya halaman lanjutan pun tetap
@@ -48,7 +56,7 @@
 
             /* Tabel karya: header berulang di halaman lanjutan dan baris tidak terpotong
                di tengah, sehingga potongan halaman tidak lagi acak-acakan. */
-            .cetak-tabel { font-size: 10px; }
+            .cetak-tabel { font-size: 16px; }
             .cetak-tabel thead { display: table-header-group; }
             .cetak-tabel tr { break-inside: avoid; }
             .cetak-tabel td { padding: 2px 4px !important; }
@@ -87,14 +95,14 @@
         <div class="cetak-kertas rounded-2xl border border-slate-200 bg-white shadow-sm"
              style="padding: var(--cetak-margin)">
             <header class="text-center">
-                <h1 class="text-sm font-extrabold tracking-tight uppercase underline">
+                <h1 class="text-[16px] font-extrabold tracking-tight uppercase underline">
                     Surat Pernyataan Pakta Integritas<br>Keabsahan Karya Ilmiah
                 </h1>
             </header>
 
-            <p class="mt-4 text-[11px] leading-relaxed">Yang bertanda tangan di bawah ini:</p>
+            <p class="mt-4 text-[16px] leading-snug">Yang bertanda tangan di bawah ini:</p>
 
-            <table class="mt-2 w-full border-collapse text-[11px]">
+            <table class="mt-2 w-full border-collapse text-[16px] leading-tight">
                 <caption class="sr-only">Identitas dosen pembuat pernyataan</caption>
                 <tbody>
                     @foreach ([
@@ -109,21 +117,21 @@
                         'Jurusan /program studi' => $identitas['prodi'],
                     ] as $label => $nilai)
                         <tr>
-                            <td class="w-[45%] py-0.5 align-top">{{ $label }}</td>
-                            <td class="w-4 py-0.5 align-top">:</td>
-                            <td class="py-0.5 align-top font-semibold">{{ $nilai }}</td>
+                            <td class="w-[45%] align-top">{{ $label }}</td>
+                            <td class="w-4 align-top">:</td>
+                            <td class="align-top font-semibold">{{ $nilai }}</td>
                         </tr>
                     @endforeach
                 </tbody>
             </table>
 
-            <p class="mt-3 text-[11px] leading-relaxed text-justify">
+            <p class="mt-2 text-[16px] leading-snug text-justify">
                 Dengan ini menyatakan bahwa semua Karya Ilmiah yang digunakan untuk usulan kenaikan jabatan
                 akademik dosen telah memenuhi integritas akademik, di antara karya ilmiah tersebut sebagai
                 pemenuhan persyaratan khusus di bawah ini:
             </p>
 
-            <table class="cetak-tabel mt-2 w-full border-collapse border border-slate-900 text-[11px]">
+            <table class="cetak-tabel mt-2 w-full border-collapse border border-slate-900 text-[16px] leading-tight">
                 <caption class="sr-only">Daftar karya ilmiah yang dinyatakan</caption>
                 <colgroup>
                     <col style="width: 8%">
@@ -151,7 +159,7 @@
                 </tbody>
             </table>
 
-            <ol class="mt-3 list-none space-y-1.5 text-[11px] leading-relaxed">
+            <ol class="mt-2 list-none space-y-1.5 text-[16px] leading-snug">
                 <li class="flex gap-2">
                     <span class="w-4 shrink-0">1.</span>
                     <span class="text-justify">Adalah benar karya saya sendiri dan tidak dihasilkan dengan cara melanggar integritas akademik.</span>
@@ -162,12 +170,12 @@
                 </li>
             </ol>
 
-            <p class="mt-3 text-[11px] leading-relaxed text-justify">
+            <p class="mt-2 text-[16px] leading-snug text-justify">
                 Demikian surat pernyataan ini saya buat untuk dipergunakan sebagaimana mestinya.
             </p>
 
             {{-- Ruang tanda tangan: jarak 1,8 cm dipakai untuk tanda tangan dan materai. --}}
-            <div class="cetak-tanda-tangan mt-4 flex text-[11px]">
+            <div class="cetak-tanda-tangan mt-4 flex text-[16px]">
                 <div class="w-1/2"></div>
                 <div class="w-1/2">
                     <p>{{ $tandaTangan }}</p>

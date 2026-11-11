@@ -19,8 +19,16 @@
         /* Margin awal 1,5 cm semua sisi; JS memperbarui nilainya sebelum dicetak. */
         :root { --cetak-margin: 1.5cm; }
 
-        /* Pratinjau layar: jarak ke tepi kertas digambar sendiri lewat padding. */
-        .cetak-kertas { padding: var(--cetak-margin); }
+        /* Pratinjau layar: jarak ke tepi kertas digambar sendiri lewat padding.
+           Seluruh naskah memakai Times New Roman 16px; kop mengatur ukurannya sendiri
+           (18px nama instansi, 10px alamat instansi).
+           Jarak baris dirapatkan (1,375 naskah, 1,25 tabel identitas) supaya naskah 16px
+           tetap muat satu halaman A4/F4 pada margin 1,5 cm. */
+        .cetak-kertas {
+            padding: var(--cetak-margin);
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 16px;
+        }
 
         @media print {
             /* Margin asli tiap halaman lewat @page supaya halaman lanjutan pun tetap
@@ -81,7 +89,7 @@
              style="padding: var(--cetak-margin)">
             @include('surat.partials.kop-surat')
 
-            <table class="mt-3 w-full border-collapse text-[11px]">
+            <table class="mt-2 w-full border-collapse text-[16px] leading-tight">
                 <caption class="sr-only">Kepala surat</caption>
                 <tbody>
                     @foreach ([
@@ -90,32 +98,32 @@
                         'Hal' => $pengantar->perihal,
                     ] as $label => $nilai)
                         <tr>
-                            <td class="w-20 py-0.5 align-top">{{ $label }}</td>
-                            <td class="w-3 py-0.5 align-top">:</td>
-                            <td class="py-0.5 align-top">{{ $nilai !== '' ? $nilai : '—' }}</td>
+                            <td class="w-20 align-top">{{ $label }}</td>
+                            <td class="w-3 align-top">:</td>
+                            <td class="align-top">{{ $nilai !== '' ? $nilai : '—' }}</td>
                         </tr>
                     @endforeach
                 </tbody>
             </table>
 
             {{-- Blok tujuan: "Kepada. Yth. <nama>" / "di" / "<kota tujuan>". --}}
-            <div class="mt-3 text-[11px]">
+            <div class="mt-2 text-[16px]">
                 <p class="font-bold">Kepada. Yth. {{ $kepada !== '' ? $kepada : str_repeat('.', 50) }}</p>
                 <p>di</p>
                 <p>{{ $kotaTujuan !== '' ? $kotaTujuan : str_repeat('.', 30) }}</p>
             </div>
 
-            <p class="mt-3 text-[11px]">Dengan hormat,</p>
+            <p class="mt-2 text-[16px]">Dengan hormat,</p>
 
 
             @if ($pengantar->kolektif)
                 {{-- Badan surat kolektif: tabel dosen. --}}
-                <p class="mt-3 text-justify text-[11px] leading-relaxed">
+                <p class="mt-2 text-justify text-[16px] leading-snug">
                     Bersama ini kami kirimkan data dosen {{ $instansi?->nama_instansi ?: '-' }} yang belum masuk
                     dalam aplikasi SIAP Jafa, sebagai berikut:
                 </p>
 
-                <table class="cetak-tabel mt-2 w-full border-collapse border border-slate-900 text-[11px]">
+                <table class="cetak-tabel mt-2 w-full border-collapse border border-slate-900 text-[16px]">
                     <caption class="sr-only">Daftar dosen</caption>
                     <colgroup>
                         <col style="width: 7%">
@@ -146,22 +154,22 @@
                     </tbody>
                 </table>
 
-                <p class="mt-3 text-justify text-[11px] leading-relaxed">
+                <p class="mt-2 text-justify text-[16px] leading-snug">
                     Adapun kelengkapan data dosen di atas, sebagaimana terlampir.
                 </p>
-                <p class="mt-2 text-justify text-[11px] leading-relaxed">
+                <p class="mt-2 text-justify text-[16px] leading-snug">
                     Demikian surat pengantar ini dibuat, atas perhatiannya diucapkan terima kasih.
                 </p>
             @else
                 {{-- Badan surat pribadi: blok identitas satu dosen. --}}
                 @php $item = $dosen[0] ?? ['nama' => '—', 'nidn' => '—', 'nuptk' => '', 'jabatan' => '—']; @endphp
 
-                <p class="mt-3 text-justify text-[11px] leading-relaxed">
+                <p class="mt-2 text-justify text-[16px] leading-snug">
                     Bersama ini kami kirimkan berkas usulan Jabatan Akademik Dosen {{ $instansi?->nama_instansi ?: '-' }},
                     sebagai berikut:
                 </p>
 
-                <table class="mt-2 w-full border-collapse text-[11px]">
+                <table class="mt-2 w-full border-collapse text-[16px] leading-tight">
                     <caption class="sr-only">Identitas dosen yang diusulkan</caption>
                     <tbody>
                         @php
@@ -177,21 +185,21 @@
                         @endphp
                         @foreach ($barisPribadi as $label => $nilai)
                             <tr>
-                                <td class="w-[9rem] py-0.5 align-top">{{ $label }}</td>
-                                <td class="w-4 py-0.5 align-top">:</td>
-                                <td class="py-0.5 align-top font-semibold">{{ $nilai !== '' ? $nilai : '—' }}</td>
+                                <td class="w-[9rem] align-top">{{ $label }}</td>
+                                <td class="w-4 align-top">:</td>
+                                <td class="align-top font-semibold">{{ $nilai !== '' ? $nilai : '—' }}</td>
                             </tr>
                         @endforeach
                     </tbody>
                 </table>
 
-                <p class="mt-3 text-justify text-[11px] leading-relaxed">
+                <p class="mt-2 text-justify text-[16px] leading-snug">
                     Demikian surat pengantar ini dibuat, atas kerjasamanya kami ucapkan terima kasih.
                 </p>
             @endif
 
             {{-- Tanda tangan ketua instansi. --}}
-            <div class="cetak-tanda-tangan mt-6 flex text-[11px]">
+            <div class="cetak-tanda-tangan mt-4 flex text-[16px]">
                 <div class="w-1/2"></div>
                 <div class="w-1/2">
                     <p>{{ $kotaTanggal }}</p>
