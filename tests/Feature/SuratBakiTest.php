@@ -249,6 +249,9 @@ class SuratBakiTest extends TestCase
         $this->assertStringContainsString('<table class="mt-2 w-full border-collapse text-[16px] leading-tight">', $html);
         $this->assertStringContainsString('<p class="mt-2 text-justify text-[16px] leading-snug">', $html);
 
+        // Ruang tanda tangan 2,5 cm antara jabatan dan nama, baik di halaman 1 maupun 2.
+        $this->assertSame(2, substr_count($html, '<div class="h-[2.5cm]" aria-hidden="true"></div>'));
+
         // Berita acara (halaman 1).
         $this->assertStringContainsString('Berita Acara Persetujuan', $html);
         $this->assertStringContainsString('Tim Komite Integritas Akademik', $html);

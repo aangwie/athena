@@ -198,13 +198,13 @@
                 </p>
             @endif
 
-            {{-- Tanda tangan ketua instansi. --}}
-            <div class="cetak-tanda-tangan mt-4 flex text-[16px]">
+            {{-- Tanda tangan ketua instansi: ruang kosong 2,5 cm antara jabatan dan nama. --}}
+            <div class="cetak-tanda-tangan mt-2 flex text-[16px]">
                 <div class="w-1/2"></div>
                 <div class="w-1/2">
                     <p>{{ $kotaTanggal }}</p>
                     <p class="mt-0.5">Ketua,</p>
-                    <div class="h-[1.7cm]" aria-hidden="true"></div>
+                    <div class="h-[2.5cm]" aria-hidden="true"></div>
                     <p class="font-bold underline">{{ $pimpinan['nama'] }}</p>
                     <p>NIDN. {{ $pimpinan['nidn'] }}</p>
                 </div>

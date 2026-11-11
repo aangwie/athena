@@ -174,13 +174,13 @@
                 Demikian surat pernyataan ini saya buat untuk dipergunakan sebagaimana mestinya.
             </p>
 
-            {{-- Ruang tanda tangan: jarak 1,8 cm dipakai untuk tanda tangan dan materai. --}}
-            <div class="cetak-tanda-tangan mt-4 flex text-[16px]">
+            {{-- Ruang tanda tangan: 2,5 cm antara jabatan dan nama untuk tanda tangan dan materai. --}}
+            <div class="cetak-tanda-tangan mt-2 flex text-[16px]">
                 <div class="w-1/2"></div>
                 <div class="w-1/2">
                     <p>{{ $tandaTangan }}</p>
                     <p class="mt-0.5">Yang membuat pernyataan</p>
-                    <div class="h-[1.8cm]" aria-hidden="true"></div>
+                    <div class="h-[2.5cm]" aria-hidden="true"></div>
                     <p class="font-bold underline">{{ $identitas['nama'] }}</p>
                     <p>NIDN: {{ $identitas['nidn'] }}</p>
                 </div>

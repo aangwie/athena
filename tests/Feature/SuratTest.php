@@ -341,7 +341,9 @@ class SuratTest extends TestCase
             // Margin tiap halaman ditulis JS supaya mengikuti pilihan pengguna.
             ->assertSee('cetak-ukuran')
             // Blok tanda tangan tidak boleh terpotong di tengah halaman.
-            ->assertSee('.cetak-tanda-tangan { break-inside: avoid; }');
+            ->assertSee('.cetak-tanda-tangan { break-inside: avoid; }')
+            // Ruang tanda tangan 2,5 cm antara jabatan dan nama penanda tangan.
+            ->assertSee('<div class="h-[2.5cm]" aria-hidden="true"></div>', false);
     }
 
     public function test_dosen_cannot_print_update_or_delete_pernyataan_pimpinan(): void
@@ -536,6 +538,8 @@ class SuratTest extends TestCase
             // Baris tabel & blok tanda tangan tidak boleh terpotong di tengah halaman.
             ->assertSee('.cetak-tabel tr { break-inside: avoid; }')
             ->assertSee('.cetak-tanda-tangan { break-inside: avoid; }')
+            // Ruang tanda tangan 2,5 cm antara jabatan dan nama penanda tangan.
+            ->assertSee('<div class="h-[2.5cm]" aria-hidden="true"></div>', false)
             // Huruf naskah Times New Roman 16px (kop memakai partial kop-surat tersendiri).
             ->assertSee("font-family: 'Times New Roman', Times, serif;", false);
     }
@@ -617,7 +621,9 @@ class SuratTest extends TestCase
             // Jarak baris dirapatkan (naskah 1,375 dan tabel 1,25) supaya naskah 16px
             // tetap muat satu halaman A4/F4 pada margin 1,5 cm.
             ->assertSee('<table class="cetak-tabel mt-2 w-full border-collapse border border-slate-900 text-[16px] leading-tight">', false)
-            ->assertSee('<p class="mt-2 text-[16px] leading-snug text-justify">', false);
+            ->assertSee('<p class="mt-2 text-[16px] leading-snug text-justify">', false)
+            // Ruang tanda tangan 2,5 cm antara jabatan dan nama penanda tangan.
+            ->assertSee('<div class="h-[2.5cm]" aria-hidden="true"></div>', false);
     }
 
     public function test_validasi_tanpa_tanggal_pengesahan_memakai_tanggal_pakta(): void

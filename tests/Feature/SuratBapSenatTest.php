@@ -364,6 +364,9 @@ class SuratBapSenatTest extends TestCase
         // tetap muat satu halaman A4/F4 pada margin 1,5 cm.
         $this->assertStringContainsString('<table class="mt-2 w-full border-collapse text-[16px] leading-tight">', $html);
         $this->assertStringContainsString('<p class="mt-2 text-justify text-[16px] leading-snug">', $html);
+
+        // Ruang tanda tangan 2,5 cm antara jabatan dan nama, baik di halaman 1 maupun 2.
+        $this->assertSame(2, substr_count($html, '<div class="h-[2.5cm]" aria-hidden="true"></div>'));
         // Font aplikasi hanya tersisa pada panel alat cetak di luar kertas.
         $this->assertSame(1, substr_count($html, 'font-sans'));
 

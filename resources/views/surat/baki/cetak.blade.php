@@ -188,13 +188,14 @@
                     Berita acara ini dibuat dengan sesungguhnya untuk dipergunakan sebagaimana mestinya.
                 </p>
 
-                {{-- Tanda tangan Ketua Tim Komite Integritas Akademik. --}}
-                <div class="cetak-tanda-tangan mt-4 flex text-[16px]">
+                {{-- Tanda tangan Ketua Tim Komite Integritas Akademik: ruang kosong 2,5 cm
+                     antara jabatan dan nama untuk tanda tangan basah. --}}
+                <div class="cetak-tanda-tangan mt-2 flex text-[16px]">
                     <div class="w-1/2"></div>
                     <div class="w-1/2">
                         <p>{{ $kotaTanggal }}</p>
                         <p class="mt-0.5">Ketua Tim</p>
-                        <div class="h-[1.8cm]" aria-hidden="true"></div>
+                        <div class="h-[2.5cm]" aria-hidden="true"></div>
                         <p class="font-bold underline">{{ $namaKetua }}</p>
                         <p>{{ $nidnKetua }}</p>
                     </div>
@@ -259,13 +260,13 @@
                     </tbody>
                 </table>
 
-                {{-- Tanda tangan pemimpin rapat (Ketua Tim Komite). --}}
-                <div class="cetak-tanda-tangan mt-4 flex text-[16px]">
+                {{-- Tanda tangan pemimpin rapat (Ketua Tim Komite): ruang kosong 2,5 cm. --}}
+                <div class="cetak-tanda-tangan mt-2 flex text-[16px]">
                     <div class="w-1/2"></div>
                     <div class="w-1/2">
                         <p>{{ $kotaTanggal }}</p>
                         <p class="mt-0.5">Ketua Tim,</p>
-                        <div class="h-[1.8cm]" aria-hidden="true"></div>
+                        <div class="h-[2.5cm]" aria-hidden="true"></div>
                         <p class="font-bold underline">{{ $namaKetua }}</p>
                         <p>{{ $nidnKetua }}</p>
                     </div>

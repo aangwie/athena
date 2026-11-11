@@ -257,6 +257,8 @@ class SuratPengantarTest extends TestCase
         $this->assertStringContainsString('Pacitan, 10 Maret 2026', $html);
         $this->assertStringContainsString($ketua->name, $html);
         $this->assertStringContainsString('NIDN. 0708098001', $html);
+        // Ruang tanda tangan 2,5 cm antara jabatan dan nama penanda tangan.
+        $this->assertStringContainsString('<div class="h-[2.5cm]" aria-hidden="true"></div>', $html);
 
         // Pilihan margin sebelum cetak, default 1,5 cm semua sisi.
         $this->assertStringContainsString('id="margin-atas"', $html);
@@ -309,6 +311,8 @@ class SuratPengantarTest extends TestCase
         $this->assertStringContainsString('value="1.5"', $html);
         $this->assertStringContainsString('@page { size: A4 portrait; margin: 1.5cm; }', $html);
         $this->assertStringContainsString('cetak-ukuran', $html);
+        // Ruang tanda tangan 2,5 cm antara jabatan dan nama penanda tangan.
+        $this->assertStringContainsString('<div class="h-[2.5cm]" aria-hidden="true"></div>', $html);
     }
 
     public function test_dosen_cannot_manage_pengantar(): void
