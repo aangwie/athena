@@ -6,8 +6,16 @@
 
 @section('content')
     @php
-        $hour = (int) now()->format('H');
-        $greeting = $hour < 11 ? 'Selamat pagi' : ($hour < 15 ? 'Selamat siang' : ($hour < 18 ? 'Selamat sore' : 'Selamat malam'));
+        // Sapaan mengikuti jam aplikasi (config app.timezone) dengan presisi menit:
+        // pagi 03.01–10.00, siang 10.01–15.00, sore 15.01–19.00, malam 19.01–03.00.
+        $sekarang = now();
+        $menit = $sekarang->hour * 60 + $sekarang->minute;
+        $greeting = match (true) {
+            $menit <= 180, $menit > 1140 => 'Selamat malam', // 19.01 – 03.00
+            $menit <= 600 => 'Selamat pagi', // 03.01 – 10.00
+            $menit <= 900 => 'Selamat siang', // 10.01 – 15.00
+            default => 'Selamat sore', // 15.01 – 19.00
+        };
         $firstName = auth()->user()->firstName();
     @endphp
 
