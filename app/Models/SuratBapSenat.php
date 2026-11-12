@@ -48,6 +48,7 @@ class SuratBapSenat extends Model
             'EKONOMI',
             'PENDIDIKAN EKONOMI',
             'EKONOMI SUMBERDAYA',
+            'MANAJEMEN SDM',
         ],
     ];
 

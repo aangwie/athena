@@ -74,6 +74,7 @@ class SuratBapSenatTest extends TestCase
             ->assertSee('EKONOMI')
             ->assertSee('PENDIDIKAN EKONOMI')
             ->assertSee('EKONOMI SUMBERDAYA')
+            ->assertSee('MANAJEMEN SDM')
             // Kode angka bidang keilmuan tidak lagi ditampilkan pada dropdown.
             ->assertDontSee('20.101.1003')
             ->assertDontSee('50.132.1020')
@@ -142,7 +143,7 @@ class SuratBapSenatTest extends TestCase
             ->assertOk()
             ->getContent();
 
-        // Rumpun E memuat tiga bidang ilmu ekonomi.
+        // Rumpun E memuat empat bidang ilmu ekonomi.
         $this->assertSame(1, preg_match(
             '/<optgroup label="E\. Ekonomi">(.*?)<\/optgroup>/s',
             $html,
@@ -152,9 +153,11 @@ class SuratBapSenatTest extends TestCase
         $this->assertStringContainsString('<option value="EKONOMI"', $rumpun[1]);
         $this->assertStringContainsString('<option value="PENDIDIKAN EKONOMI"', $rumpun[1]);
         $this->assertStringContainsString('<option value="EKONOMI SUMBERDAYA"', $rumpun[1]);
+        $this->assertStringContainsString('<option value="MANAJEMEN SDM"', $rumpun[1]);
 
-        // Ketiga bidang tersebut tidak muncul pada rumpun lain.
+        // Keempat bidang tersebut tidak muncul pada rumpun lain.
         $this->assertSame(1, substr_count($html, '<option value="EKONOMI SUMBERDAYA"'));
+        $this->assertSame(1, substr_count($html, '<option value="MANAJEMEN SDM"'));
     }
 
     public function test_admin_can_save_bap_senat_with_bidang_ekonomi(): void
