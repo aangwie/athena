@@ -99,7 +99,7 @@
                     @foreach ([
                         'Nama' => $pimpinan['nama'],
                         'NIDN/NUPTK' => $pimpinan['nidn']." / ".$pimpinan['nuptk'] ?: '—',
-                        'Status dosen tetap' => 'Dosen Tetap',
+                        'Status dosen tetap' => 'Non PNS',
                         'Tempat, tanggal lahir' => $pimpinan['ttl'],
                         'Pangkat golongan ruang / TMT' => $pimpinan['pangkat'].' / '.$pimpinan['pangkat_tmt'],
                         'Jabatan / TMT' => $pimpinan['jabatan'].' / '.$pimpinan['jabatan_tmt'],
@@ -124,9 +124,8 @@
                 <tbody>
                     @foreach ([
                         'Nama' => $dosen['nama'],
-                        'NIDN' => $dosen['nidn'],
-                        'NUPTK' => $dosen['nuptk'],
-                        'Status dosen tetap' => 'Dosen Tetap',
+                        'NIDN/NUPTK' => $dosen['nidn']." / ".$dosen['nuptk'] ?: '—',
+                        'Status dosen tetap' => 'Non PNS',
                         'Tempat, tanggal lahir' => $dosen['ttl'],
                         'Pangkat golongan ruang / TMT' => $dosen['pangkat'].' / '.$dosen['pangkat_tmt'],
                         'Jabatan / TMT' => $dosen['jabatan'].' / '.$dosen['jabatan_tmt'],

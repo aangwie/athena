@@ -341,7 +341,9 @@ class SuratTest extends TestCase
             // Nama pimpinan apa adanya sesuai database (tidak dipaksa kapital).
             ->assertSee('Dr. Ayu Lestari, M.Kom.')
             ->assertDontSee('DR. AYU LESTARI')
-            ->assertSee('Dosen Tetap')
+            // Status kepegawaian pada cetak surat selalu "Non PNS".
+            ->assertSee('Non PNS')
+            ->assertDontSee('Dosen Tetap')
             // Jabatan / TMT dosen adalah jabatan akademik, beserta TMT-nya.
             ->assertSee('Jabatan / TMT')
             ->assertSee('Lektor / 15 Januari 2020')
@@ -630,7 +632,8 @@ class SuratTest extends TestCase
             ->assertSee('Yang bertandatangan di bawah ini, Ketua Universitas Athena')
             ->assertSee('NIDN / NUPTK')
             ->assertSee('Status dosen tetap')
-            ->assertSee('Dosen Tetap')
+            ->assertSee('Non PNS')
+            ->assertDontSee('Dosen Tetap')
             ->assertSee('Dr. Ayu Lestari, M.Kom.')
             // Identitas jurnal.
             ->assertSee('Nama Jurnal')

@@ -800,4 +800,27 @@ class SuratBapSenatTest extends TestCase
 
         $this->assertDatabaseCount('surat_bap_senat', 1);
     }
+
+    public function test_cetak_bap_senat_menulis_status_kepegawaian_non_pns(): void
+    {
+        Instansi::create(['nama_instansi' => 'Universitas Athena', 'kota' => 'Bandung']);
+
+        [$dosen, $ketua, $anggota] = $this->makeSenat();
+
+        $bap = SuratBapSenat::create([
+            'nomor_bap' => '016/BAP-SENAT/X/2026',
+            'tanggal_bap' => '2026-10-31',
+            'user_id' => $dosen->id,
+            'bidang_keilmuan' => 'Sistem Informasi',
+            'prosentase_penelitian' => 150,
+            'anggota_senat_ids' => [$ketua->user_id, $anggota->user_id],
+        ]);
+
+        $this->actingAs($this->makeUser('admin'))
+            ->get(route('surat.bap-senat.cetak', $bap))
+            ->assertOk()
+            ->assertSee('Status dosen tetap')
+            ->assertSee('Non PNS')
+            ->assertDontSee('Dosen Tetap');
+    }
 }

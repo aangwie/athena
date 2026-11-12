@@ -109,7 +109,7 @@
                         'Nama' => $identitas['nama'],
                         'NIDN' => $identitas['nidn'],
                         'NUPTK' => $identitas['nuptk'] ?: '—',
-                        'Status dosen tetap' => 'Dosen Tetap',
+                        'Status dosen tetap' => 'Non PNS',
                         'Tempat tanggal lahir' => $identitas['ttl'],
                         'Pangkat golongan ruang / TMT' => $identitas['pangkat'].' / '.$identitas['pangkat_tmt'],
                         'Jabatan / TMT' => $identitas['jabatan'].' / '.$identitas['jabatan_tmt'],

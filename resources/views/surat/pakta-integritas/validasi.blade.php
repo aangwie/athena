@@ -25,7 +25,7 @@
         $identitasKetua = [
             ['Nama', $ketua['nama'] ?? '—'],
             ['NIDN / NUPTK', ($ketua['nidn'] ?? '—').' / '.($ketua['nuptk'] ?: '—')],
-            ['Status dosen tetap', 'Dosen Tetap'],
+            ['Status dosen tetap', 'Non PNS'],
             ['Tempat, tanggal lahir', $ketua['ttl'] ?? '—'],
             ['Pangkat, Golongan Ruang, TMT', $denganTmt($ketua['pangkat'] ?? '—', $ketua['pangkat_tmt'] ?? null, ' / ')],
             ['Jabatan, TMT', $denganTmt($ketua['jabatan'] ?? '—', $ketua['jabatan_tmt'] ?? null)],
@@ -33,7 +33,7 @@
         $identitasDosen = [
             ['Nama', $identitas['nama']],
             ['NIDN / NUPTK', $identitas['nidn'].' / '.($identitas['nuptk'] ?: '—')],
-            ['Status dosen tetap', 'Dosen Tetap'],
+            ['Status dosen tetap', 'Non PNS'],
             ['Tempat, tanggal lahir', $identitas['ttl']],
             ['Pangkat, Golongan Ruang, TMT', $denganTmt($identitas['pangkat'], $identitas['pangkat_tmt'], ' / ')],
             ['Jabatan, TMT', $denganTmt($identitas['jabatan'], $identitas['jabatan_tmt'])],

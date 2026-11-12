@@ -375,4 +375,16 @@ class SuratBakiTest extends TestCase
 
         $this->assertDatabaseCount('surat_baki', 1);
     }
+
+    public function test_cetak_baki_menulis_status_kepegawaian_non_pns(): void
+    {
+        $baki = $this->makeBaki($this->makeBapSenat($this->makeUser('dosen')));
+
+        $this->actingAs($this->makeUser('admin'))
+            ->get(route('surat.baki.cetak', $baki))
+            ->assertOk()
+            ->assertSee('Status dosen tetap')
+            ->assertSee('Non PNS')
+            ->assertDontSee('Dosen Tetap');
+    }
 }
