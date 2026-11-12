@@ -130,7 +130,8 @@
                         'Status dosen tetap' => 'Dosen Tetap',
                         'Tempat, tanggal lahir' => $dosen['ttl'],
                         'Pangkat golongan ruang / TMT' => $dosen['pangkat'].' / '.$dosen['pangkat_tmt'],
-                        'Jabatan / TMT / pendidikan tertinggi' => $dosen['jabatan'].' /-/ '.$dosen['pendidikan'],
+                        'Jabatan / TMT' => $dosen['jabatan'].' / '.$dosen['jabatan_tmt'],
+                        'Pendidikan tertinggi' => $dosen['pendidikan'],
                         'Jurusan/program studi' => $dosen['prodi'],
                     ] as $label => $nilai)
                         <tr>

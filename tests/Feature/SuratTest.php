@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Instansi;
+use App\Models\JabatanFungsional;
 use App\Models\JabatanStruktural;
 use App\Models\KaryaTulis;
 use App\Models\StrukturInstansi;
@@ -313,9 +314,15 @@ class SuratTest extends TestCase
 
     public function test_admin_can_open_pernyataan_pimpinan_print_preview(): void
     {
+        $dosen = $this->makeUser('dosen');
+        $dosen->riwayatJabatanStruktural()->create([
+            'jabatan_fungsional_id' => JabatanFungsional::create(['nama' => 'Lektor'])->id,
+            'tmt' => '2020-01-15',
+        ]);
+
         $pernyataan = SuratPernyataanPimpinan::query()->create([
             'struktur_instansi_id' => $this->makePimpinan()->id,
-            'user_id' => $this->makeUser('dosen')->id,
+            'user_id' => $dosen->id,
             'tanggal_surat' => '2026-10-31',
             'nomor_surat' => '001/SPP/PT/2026',
         ]);
@@ -334,6 +341,10 @@ class SuratTest extends TestCase
             ->assertSee('Dr. Ayu Lestari, M.Kom.')
             ->assertDontSee('DR. AYU LESTARI')
             ->assertSee('Dosen Tetap')
+            // Jabatan / TMT dosen adalah jabatan akademik, beserta TMT-nya.
+            ->assertSee('Jabatan / TMT')
+            ->assertSee('Lektor / 15 Januari 2020')
+            ->assertSee('Pendidikan tertinggi')
             // Pilihan margin sebelum cetak, default 1,5 cm semua sisi.
             ->assertSee('id="margin-atas"', false)
             ->assertSee('value="1.5"', false)

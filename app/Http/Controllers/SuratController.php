@@ -398,7 +398,7 @@ class SuratController extends Controller
             // Tempat pada baris tanda tangan mengikuti kota instansi.
             'kota' => Instansi::query()->value('kota'),
             'pimpinan' => $this->identitas($pernyataan->pimpinan?->user, $pernyataan->pimpinan?->jabatanStruktural?->nama),
-            'dosen' => $this->identitas($pernyataan->dosen),
+            'dosen' => $this->identitasDosen($pernyataan->dosen),
         ]);
     }
 
