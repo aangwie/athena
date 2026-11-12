@@ -61,23 +61,47 @@ class TimKomiteTest extends TestCase
             ->assertDontSee('Sekretaris');
     }
 
-    public function test_ketua_is_sorted_before_anggota(): void
+    public function test_member_table_follows_admin_input_order(): void
     {
         $admin = $this->makeAdmin();
-        $ketua = $this->makeDosen('1987654321', 'Dr. Ayu Lestari, M.Kom.');
+        // Nama dosen sengaja tidak berurutan abjad supaya urutan tabel mudah diperiksa.
         $anggota = $this->makeDosen('1990011220', 'Budi Santoso, M.Pd.');
+        $ketua = $this->makeDosen('1987654321', 'Dr. Ayu Lestari, M.Kom.');
+        $anggotaLain = $this->makeDosen('1995123120', 'Ahmad Fauzi, S.Kom.');
 
+        // Urutan input admin: anggota, ketua, lalu anggota lain.
         TimKomite::create(['user_id' => $anggota->id, 'jabatan' => 'anggota']);
         TimKomite::create(['user_id' => $ketua->id, 'jabatan' => 'ketua']);
+        TimKomite::create(['user_id' => $anggotaLain->id, 'jabatan' => 'anggota']);
 
-        $urutan = $this->actingAs($admin)
+        $response = $this->actingAs($admin)
             ->get('/instansi/tim-komite')
-            ->assertOk()
-            ->viewData('items')
-            ->pluck('jabatan')
-            ->all();
+            ->assertOk();
 
-        $this->assertSame(['ketua', 'anggota'], $urutan);
+        // Tabel mengikuti urutan input (id menaik), bukan abjad nama maupun jabatan.
+        $this->assertSame(
+            ['Budi Santoso, M.Pd.', 'Dr. Ayu Lestari, M.Kom.', 'Ahmad Fauzi, S.Kom.'],
+            $response->viewData('items')->pluck('user.name')->all(),
+        );
+
+        $html = $response->getContent();
+
+        // Hanya periksa isi tabel: daftar opsi dosen pada formulir tetap berurut abjad.
+        $this->assertSame(1, preg_match('/<table data-datatable.*?<\/table>/s', $html, $cocok));
+        $tabel = $cocok[0];
+
+        $this->assertLessThan(
+            strpos($tabel, 'Dr. Ayu Lestari, M.Kom.'),
+            strpos($tabel, 'Budi Santoso, M.Pd.'),
+        );
+        $this->assertLessThan(
+            strpos($tabel, 'Ahmad Fauzi, S.Kom.'),
+            strpos($tabel, 'Dr. Ayu Lestari, M.Kom.'),
+        );
+
+        // Kolom No mengikuti urutan baris tabel: 1, 2, 3.
+        $this->assertSame(3, preg_match_all('/font-mono text-slate-500">(\d+)</', $tabel, $nomor));
+        $this->assertSame(['1', '2', '3'], $nomor[1]);
     }
 
     public function test_tim_komite_menu_is_listed_on_admin_sidebar(): void

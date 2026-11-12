@@ -285,6 +285,33 @@ class SuratBakiTest extends TestCase
         $this->assertStringContainsString('.cetak-tabel tr { break-inside: avoid; }', $html);
     }
 
+    public function test_daftar_hadir_baki_only_prints_rows_with_member_names(): void
+    {
+        $baki = $this->makeBaki($this->makeBapSenat($this->makeUser('dosen')));
+
+        TimKomite::create([
+            'user_id' => $this->makeUser('dosen', '197501012000031001', 'Dr. Hendra Wijaya, M.Pd.')->id,
+            'jabatan' => 'ketua',
+        ]);
+        TimKomite::create([
+            'user_id' => $this->makeUser('dosen', '198801012012011002', 'Sari Puspita, M.Kom.')->id,
+            'jabatan' => 'anggota',
+        ]);
+
+        $html = $this->actingAs($this->makeUser('admin'))
+            ->get(route('surat.baki.cetak', $baki))
+            ->assertOk()
+            ->getContent();
+
+        // Tabel daftar hadir hanya berisi baris anggota (tidak ada baris kosong pengisi).
+        $this->assertSame(1, preg_match('/<table class="cetak-tabel.*?<\/table>/s', $html, $cocok));
+        // 1 baris header + 2 baris anggota bernama.
+        $this->assertSame(3, substr_count($cocok[0], '<tr>'));
+
+        // Jumlah peserta pada narasi berita acara mengikuti daftar hadir yang dicetak.
+        $this->assertStringContainsString('sejumlah 2 orang tim', $html);
+    }
+
     public function test_dosen_cannot_manage_baki(): void
     {
         $dosen = $this->makeUser('dosen');

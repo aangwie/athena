@@ -13,8 +13,11 @@
         $kotaTanggal = ($kota ?: str_repeat('.', 15)).', '.($baki->tanggal_surat?->locale('id')->translatedFormat('j F Y') ?? str_repeat('.', 10));
         $namaKetua = $ketua?->user?->name ?? '';
         $nidnKetua = 'NIDN. '.($ketua?->user?->nidn ?: str_repeat('.', 20));
-        // Daftar hadir selalu menyediakan minimal 12 baris.
-        $jumlahBaris = max(12, $anggota->count());
+        // Daftar hadir hanya memuat baris yang benar-benar berisi nama anggota tim
+        // komite; baris kosong (tanpa nama) tidak ikut dicetak.
+        $pesertaHadir = $anggota
+            ->filter(fn ($komite): bool => filled($komite->user?->name))
+            ->values();
     @endphp
 
     <style>
@@ -164,7 +167,7 @@
                 </p>
 
                 <p class="mt-2 text-justify text-[16px] leading-snug">
-                    Tim Komite Integritas Akademik yang dihadiri oleh sejumlah {{ $anggota->count() }} orang tim
+                    Tim Komite Integritas Akademik yang dihadiri oleh sejumlah {{ $pesertaHadir->count() }} orang tim
                     anggota Komite Integritas Akademik (<strong>dengan jumlah yang memenuhi kuorum</strong>) sebagaimana daftar
                     hadir terlampir.
                 </p>
@@ -248,15 +251,15 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @for ($i = 0; $i < $jumlahBaris; $i++)
-                            @php $komite = $anggota->get($i); @endphp
+                        {{-- Hanya baris berisi anggota (bernama) yang dicetak; baris kosong dihilangkan. --}}
+                        @foreach ($pesertaHadir as $komite)
                             <tr>
-                                <td class="border border-slate-900 px-2 py-1.5 text-center align-top">{{ $i + 1 }}</td>
-                                <td class="border border-slate-900 px-2 py-1.5 align-top">{{ $komite?->user?->name ?? '' }}</td>
-                                <td class="border border-slate-900 px-2 py-1.5 align-top">{{ $komite?->jabatanLabel() ?? '' }}</td>
+                                <td class="border border-slate-900 px-2 py-1.5 text-center align-top">{{ $loop->iteration }}</td>
+                                <td class="border border-slate-900 px-2 py-1.5 align-top">{{ $komite->user?->name }}</td>
+                                <td class="border border-slate-900 px-2 py-1.5 align-top">{{ $komite->jabatanLabel() }}</td>
                                 <td class="border border-slate-900 px-2 py-1.5 align-top"></td>
                             </tr>
-                        @endfor
+                        @endforeach
                     </tbody>
                 </table>
 

@@ -16,9 +16,10 @@ class TimKomiteController extends Controller
     {
         $items = TimKomite::query()
             ->with('user')
-            ->get()
-            ->sortBy(fn (TimKomite $item) => [array_search($item->jabatan, array_keys(TimKomite::JABATAN)), $item->user?->name ?? ''])
-            ->values();
+            // Urutan tabel mengikuti urutan input admin (id menaik), bukan abjad nama
+            // dan bukan pengelompokan jabatan, supaya susunan yang disusun admin tetap.
+            ->orderBy('id')
+            ->get();
 
         // Parameter ?edit= memakai ulang formulir yang sama di halaman ini.
         return view('instansi.tim-komite.index', [

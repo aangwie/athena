@@ -143,8 +143,7 @@
                     <tbody>
                         @foreach ([
                             'Nama' => $identitas['nama'],
-                            'NIDN' => $identitas['nidn'],
-                            'NUPTK' => $identitas['nuptk'] ?: '—',
+                            'NIDN/NUPTK' => $identitas['nidn']."/".$identitas['nuptk'] ?: '—',
                             'Status dosen tetap' => 'Dosen Tetap',
                             'Tempat, tanggal lahir' => $identitas['ttl'],
                             'Pangkat golongan ruang, TMT' => $identitas['pangkat'].' / '.$identitas['pangkat_tmt'],
@@ -167,8 +166,8 @@
                 </p>
 
                 <p class="mt-2 text-justify text-[16px] leading-snug">
-                    Hasil pertimbangan diberikan berdasarkan penilaian atas integritas, kinerja, tanggung jawab,
-                    dan tata krama dalam kehidupan kampus yang telah ditetapkan oleh yang bersangkutan dalam
+                    Hasil pertimbangan diberikan berdasarkan penilaian atas <strong>integritas, kinerja, tanggung jawab,
+                    dan tata krama</strong> dalam kehidupan kampus yang telah ditetapkan oleh yang bersangkutan dalam
                     melaksanakan tridharma Perguruan Tinggi sejak yang bersangkutan menduduki jabatan akademik
                     terakhir sampai dengan rapat pemberian pertimbangan persetujuan ini dilaksanakan{{ $bap->menggunakanProsentase() ? ', dengan hasil penilaian proporsi penelitian '.$bap->prosentase_penelitian.'% dari total kebutuhan kenaikan jabatan' : '' }}.
                 </p>
@@ -205,7 +204,7 @@
                 <header class="mt-2 text-center">
                     <h1 class="text-[16px] font-bold">DAFTAR HADIR RAPAT</h1>
                     <h2 class="text-[16px] font-bold">
-                        PERSETUJUAN SENAT AKADEMIK {{ mb_strtoupper($instansi?->nama_instansi ?: '') }}
+                        SENAT AKADEMIK {{ mb_strtoupper($instansi?->nama_instansi ?: '') }}
                     </h2>
                 </header>
 
