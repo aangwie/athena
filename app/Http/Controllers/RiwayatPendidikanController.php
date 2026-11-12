@@ -40,12 +40,11 @@ class RiwayatPendidikanController extends Controller
         $user = $request->user();
         $data = $request->validated();
 
-        unset($data['ijazah'], $data['transkrip']);
+        unset($data['dokumen'], $data['akreditasi_prodi'], $data['disertasi_tesis']);
 
-        $data['ijazah_path'] = $this->simpanBerkas($request->file('ijazah'), $user, $data['jenjang']);
-        $data['transkrip_path'] = $this->isPerguruanTinggi($data['jenjang'])
-            ? $this->simpanBerkas($request->file('transkrip'), $user, $data['jenjang'])
-            : null;
+        $data['ijazah_transkrip_path'] = $this->simpanBerkas($request->file('dokumen'), $user, $data['jenjang'], 'ijazah_transkrip');
+        $data['akreditasi_prodi_path'] = $this->simpanBerkas($request->file('akreditasi_prodi'), $user, $data['jenjang'], 'akreditasi_prodi');
+        $data['disertasi_tesis_path'] = $this->simpanBerkas($request->file('disertasi_tesis'), $user, $data['jenjang'], 'disertasi_tesis');
 
         $user->riwayatPendidikan()->create($data);
 
@@ -69,22 +68,11 @@ class RiwayatPendidikanController extends Controller
 
         $data = $request->validated();
 
-        unset($data['ijazah'], $data['transkrip']);
+        unset($data['dokumen'], $data['akreditasi_prodi'], $data['disertasi_tesis']);
 
-        if ($request->hasFile('ijazah')) {
-            $this->hapusBerkas($riwayatPendidikan->ijazah_path);
-            $data['ijazah_path'] = $this->simpanBerkas($request->file('ijazah'), $request->user(), $data['jenjang']);
-        }
-
-        if ($this->isPerguruanTinggi($data['jenjang'])) {
-            if ($request->hasFile('transkrip')) {
-                $this->hapusBerkas($riwayatPendidikan->transkrip_path);
-                $data['transkrip_path'] = $this->simpanBerkas($request->file('transkrip'), $request->user(), $data['jenjang']);
-            }
-        } else {
-            $this->hapusBerkas($riwayatPendidikan->transkrip_path);
-            $data['transkrip_path'] = null;
-        }
+        $this->gantiBerkas($request, 'dokumen', 'ijazah_transkrip_path', $riwayatPendidikan, $data);
+        $this->gantiBerkas($request, 'akreditasi_prodi', 'akreditasi_prodi_path', $riwayatPendidikan, $data);
+        $this->gantiBerkas($request, 'disertasi_tesis', 'disertasi_tesis_path', $riwayatPendidikan, $data);
 
         $riwayatPendidikan->update($data);
 
@@ -97,7 +85,13 @@ class RiwayatPendidikanController extends Controller
     {
         $this->ensureOwner($request, $riwayatPendidikan);
 
-        $this->hapusBerkas($riwayatPendidikan->ijazah_path, $riwayatPendidikan->transkrip_path);
+        $this->hapusBerkas(
+            $riwayatPendidikan->ijazah_transkrip_path,
+            $riwayatPendidikan->akreditasi_prodi_path,
+            $riwayatPendidikan->disertasi_tesis_path,
+            $riwayatPendidikan->ijazah_path,
+            $riwayatPendidikan->transkrip_path,
+        );
         $riwayatPendidikan->delete();
 
         return redirect()
@@ -109,11 +103,7 @@ class RiwayatPendidikanController extends Controller
     {
         $this->ensureOwner($request, $riwayatPendidikan);
 
-        abort_unless(in_array($jenis, ['ijazah', 'transkrip'], true), 404);
-
-        $path = $jenis === 'ijazah'
-            ? $riwayatPendidikan->ijazah_path
-            : $riwayatPendidikan->transkrip_path;
+        $path = $riwayatPendidikan->pathBerkas($jenis);
 
         abort_unless($path && Storage::disk('local')->exists($path), 404);
 
@@ -127,23 +117,31 @@ class RiwayatPendidikanController extends Controller
         abort_unless($riwayatPendidikan->user_id === $request->user()->id, 404);
     }
 
-    private function isPerguruanTinggi(string $jenjang): bool
-    {
-        return in_array($jenjang, RiwayatPendidikan::PERGURUAN_TINGGI, true);
-    }
-
     /**
-     * Simpan PDF dengan nama jenjang_nidn_kode_acak.pdf pada disk privat.
+     * Simpan PDF dengan nama jenis_jenjang_nidn_kode_acak.pdf pada disk privat.
      */
-    private function simpanBerkas(?UploadedFile $file, User $user, string $jenjang): ?string
+    private function simpanBerkas(?UploadedFile $file, User $user, string $jenjang, string $jenis): ?string
     {
         if (! $file) {
             return null;
         }
 
-        $nama = sprintf('%s_%s_%s.pdf', $jenjang, $user->nidn, Str::random(16));
+        $nama = sprintf('%s_%s_%s_%s.pdf', $jenis, $jenjang, $user->nidn, Str::random(16));
 
         return $file->storeAs("riwayat-pendidikan/{$user->nidn}", $nama, 'local');
+    }
+
+    /**
+     * Ganti berkas pada kolom tertentu saat pengguna mengunggah berkas baru.
+     */
+    private function gantiBerkas(Request $request, string $field, string $column, RiwayatPendidikan $riwayatPendidikan, array &$data): void
+    {
+        if (! $request->hasFile($field)) {
+            return;
+        }
+
+        $this->hapusBerkas($riwayatPendidikan->{$column});
+        $data[$column] = $this->simpanBerkas($request->file($field), $request->user(), $data['jenjang'], $field);
     }
 
     private function hapusBerkas(?string ...$paths): void

@@ -19,6 +19,7 @@ use App\Http\Controllers\PengajuanDosenController;
 use App\Http\Controllers\PengajuanDupakController;
 use App\Http\Controllers\PengaturanController;
 use App\Http\Controllers\ProfilDosenController;
+use App\Http\Controllers\RiwayatDosenController;
 use App\Http\Controllers\RiwayatPekerjaanController;
 use App\Http\Controllers\RiwayatPendidikanController;
 use App\Http\Controllers\SkpController;
@@ -61,6 +62,15 @@ Route::middleware('auth')->group(function () {
         Route::delete('/{id}', [DataDosenController::class, 'destroy'])->name('destroy');
     });
 
+    Route::middleware('admin')->prefix('riwayat-dosen')->name('riwayat-dosen.')->group(function () {
+        Route::get('/', [RiwayatDosenController::class, 'index'])->name('index');
+        Route::get('/{user}/sk-dosen-tetap', [RiwayatDosenController::class, 'skDosenTetap'])->name('sk');
+        Route::get('/{user}/pendidikan/{riwayatPendidikan}/berkas/{jenis}', [RiwayatDosenController::class, 'berkas'])
+            ->whereIn('jenis', ['ijazah_transkrip', 'akreditasi_prodi', 'disertasi_tesis', 'ijazah', 'transkrip'])
+            ->name('berkas');
+        Route::get('/{user}', [RiwayatDosenController::class, 'detail'])->name('show');
+    });
+
     Route::view('/panduan-pengajuan', 'panduan.pengajuan')
         ->middleware('dosen')
         ->name('panduan.pengajuan');
@@ -77,7 +87,7 @@ Route::middleware('auth')->group(function () {
         Route::put('/riwayat-pendidikan/{riwayatPendidikan}', [RiwayatPendidikanController::class, 'update'])->name('pendidikan.update');
         Route::delete('/riwayat-pendidikan/{riwayatPendidikan}', [RiwayatPendidikanController::class, 'destroy'])->name('pendidikan.destroy');
         Route::get('/riwayat-pendidikan/{riwayatPendidikan}/berkas/{jenis}', [RiwayatPendidikanController::class, 'berkas'])
-            ->whereIn('jenis', ['ijazah', 'transkrip'])
+            ->whereIn('jenis', ['ijazah_transkrip', 'akreditasi_prodi', 'disertasi_tesis', 'ijazah', 'transkrip'])
             ->name('pendidikan.berkas');
 
         // ponytail: isi riwayat tendik menyusul; sekarang masih halaman kosong.
@@ -88,6 +98,7 @@ Route::middleware('auth')->group(function () {
 
     Route::middleware('dosen')->prefix('profil')->name('profil.')->group(function () {
         Route::get('/', [ProfilDosenController::class, 'show'])->name('show');
+        Route::get('/riwayat', [RiwayatDosenController::class, 'show'])->name('riwayat');
 
         Route::get('/pengajuan', [PengajuanDosenController::class, 'mulai'])->name('pengajuan.mulai');
         Route::post('/pengajuan/jabatan', [PengajuanDosenController::class, 'simpanJabatan'])->name('pengajuan.jabatan.store');
@@ -132,6 +143,7 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/riwayat-pekerjaan', [RiwayatPekerjaanController::class, 'index'])->name('pekerjaan.index');
         Route::put('/riwayat-pekerjaan', [RiwayatPekerjaanController::class, 'updateIdentitas'])->name('pekerjaan.update');
+        Route::get('/riwayat-pekerjaan/sk-dosen-tetap', [RiwayatPekerjaanController::class, 'skDosenTetap'])->name('pekerjaan.sk');
 
         Route::post('/riwayat-pekerjaan/kepangkatan', [RiwayatPekerjaanController::class, 'storeKepangkatan'])->name('pekerjaan.kepangkatan.store');
         Route::put('/riwayat-pekerjaan/kepangkatan/{riwayatKepangkatan}', [RiwayatPekerjaanController::class, 'updateKepangkatan'])->name('pekerjaan.kepangkatan.update');

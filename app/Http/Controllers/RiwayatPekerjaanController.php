@@ -12,8 +12,11 @@ use App\Models\RiwayatKepangkatan;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class RiwayatPekerjaanController extends Controller
 {
@@ -66,6 +69,7 @@ class RiwayatPekerjaanController extends Controller
             'nuptk' => ['nullable', 'string', 'max:30'],
             'bidang_ilmu' => ['nullable', 'string', 'max:100'],
             'program_studi' => ['nullable', 'string', Rule::exists('prodi', 'nama_prodi')],
+            'sk_dosen_tetap' => ['nullable', 'file', 'mimes:pdf', 'max:1024'],
         ];
 
         foreach (self::SK as $sk) {
@@ -80,10 +84,14 @@ class RiwayatPekerjaanController extends Controller
 
         $data = $request->validate($rules, [
             'program_studi.exists' => 'Prodi tidak ditemukan pada data master prodi.',
+            'sk_dosen_tetap.file' => 'Berkas SK Dosen Tetap gagal diunggah.',
+            'sk_dosen_tetap.mimes' => 'Berkas SK Dosen Tetap harus berformat PDF.',
+            'sk_dosen_tetap.max' => 'Ukuran berkas SK Dosen Tetap maksimal 1 MB.',
         ], [
             'nuptk' => 'NUPTK',
             'bidang_ilmu' => 'Bidang Ilmu',
             'program_studi' => 'Prodi',
+            'sk_dosen_tetap' => 'berkas SK Dosen Tetap',
         ]);
 
         // Prodi tempat mengajar disimpan pada akun (users.program_studi),
@@ -93,9 +101,20 @@ class RiwayatPekerjaanController extends Controller
             unset($data['program_studi']);
         }
 
+        $skDosenTetap = $request->file('sk_dosen_tetap');
+        unset($data['sk_dosen_tetap']);
+
         $profil = $user->profilDosen()->firstOrNew([]);
         $profil->fill($data);
         $profil->user_id = $user->id;
+
+        if ($skDosenTetap) {
+            if (filled($profil->sk_dosen_tetap_path)) {
+                Storage::disk('local')->delete($profil->sk_dosen_tetap_path);
+            }
+            $nama = sprintf('sk_dosen_tetap_%s_%s.pdf', $user->nidn, Str::random(16));
+            $profil->sk_dosen_tetap_path = $skDosenTetap->storeAs("riwayat-pekerjaan/{$user->nidn}", $nama, 'local');
+        }
 
         // Masa kerja tidak diisi manual: dihitung dari Tanggal SK (hari ini − tanggal SK).
         foreach (self::SK as $sk) {
@@ -107,6 +126,20 @@ class RiwayatPekerjaanController extends Controller
         return redirect()
             ->route('profil.pekerjaan.index')
             ->with('status', 'Data kepegawaian, prodi, dan masa kerja berhasil disimpan.');
+    }
+
+    public function skDosenTetap(Request $request): StreamedResponse
+    {
+        $profil = $request->user()->profilDosen;
+
+        abort_unless(
+            $profil && $profil->sk_dosen_tetap_path && Storage::disk('local')->exists($profil->sk_dosen_tetap_path),
+            404,
+        );
+
+        return Storage::disk('local')->response($profil->sk_dosen_tetap_path, basename($profil->sk_dosen_tetap_path), [
+            'Content-Type' => 'application/pdf',
+        ]);
     }
 
     public function storeKepangkatan(Request $request): RedirectResponse

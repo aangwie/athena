@@ -8,7 +8,6 @@
     @php
         $isEdit = $riwayat !== null;
         $jenjang = old('jenjang', $riwayat->jenjang ?? '');
-        $isPerguruanTinggi = in_array($jenjang, \App\Models\RiwayatPendidikan::PERGURUAN_TINGGI, true);
     @endphp
 
     <div class="mx-auto max-w-3xl">
@@ -90,7 +89,7 @@
                         </select>
                         @error('jenjang') <p class="form-error">{{ $message }}</p> @enderror
                         <p class="mt-1.5 text-[11px] leading-relaxed text-slate-400">
-                            Jenjang D3–S3 wajib melampirkan ijazah dan transkrip.
+                            Semua jenjang melampirkan bukti ijazah & transkrip yang digabung menjadi satu berkas PDF.
                         </p>
                     </div>
 
@@ -130,17 +129,17 @@
                     <span class="section-number">02</span>
                     <div>
                         <h3 class="text-sm font-extrabold text-slate-800">Berkas Bukti</h3>
-                        <p class="mt-0.5 text-xs text-slate-400">Unggah bukti ijazah, dan transkrip untuk perguruan tinggi.</p>
+                        <p class="mt-0.5 text-xs text-slate-400">Unggah bukti ijazah & transkrip, akreditasi prodi, serta disertasi/tesis dalam format PDF.</p>
                     </div>
                 </div>
 
                 <div class="space-y-5 px-5 py-5 sm:px-6">
                     <div data-file-field>
-                        <label for="ijazah" class="form-label">
-                            Bukti Ijazah <span class="text-rose-500">*</span>
+                        <label for="dokumen" class="form-label">
+                            Bukti Ijazah & Transkrip <span class="text-rose-500">*</span>
                         </label>
 
-                        @if ($riwayat?->ijazah_path)
+                        @if ($riwayat?->ijazah_transkrip_path)
                             <div class="mb-2.5 flex items-center justify-between gap-3 rounded-xl border border-teal-100 bg-teal-50/50 px-3.5 py-2.5">
                                 <div class="flex min-w-0 items-center gap-2">
                                     <span class="flex size-8 shrink-0 items-center justify-center rounded-lg bg-white text-teal-600 shadow-sm ring-1 ring-teal-100">
@@ -149,41 +148,41 @@
                                         </svg>
                                     </span>
                                     <div class="min-w-0">
-                                        <p class="truncate font-mono text-[11px] font-semibold text-teal-800">{{ basename($riwayat->ijazah_path) }}</p>
+                                        <p class="truncate font-mono text-[11px] font-semibold text-teal-800">{{ basename($riwayat->ijazah_transkrip_path) }}</p>
                                         <p class="text-[10px] text-teal-700/60">Berkas saat ini</p>
                                     </div>
                                 </div>
-                                <a href="{{ route('profil.pendidikan.berkas', [$riwayat, 'ijazah']) }}" target="_blank" rel="noopener"
+                                <a href="{{ route('profil.pendidikan.berkas', [$riwayat, 'ijazah_transkrip']) }}" target="_blank" rel="noopener"
                                    class="shrink-0 rounded-lg bg-white px-2.5 py-1.5 text-[10px] font-bold text-teal-700 shadow-sm ring-1 ring-teal-100 transition hover:bg-teal-50">
                                     Lihat
                                 </a>
                             </div>
                         @endif
 
-                        <input type="file" id="ijazah" name="ijazah" accept="application/pdf,.pdf" data-pdf-input data-max-kb="500"
+                        <input type="file" id="dokumen" name="dokumen" accept="application/pdf,.pdf" data-pdf-input data-max-kb="1024"
                                @class([
                                    'block w-full cursor-pointer rounded-xl border bg-slate-50/60 text-sm text-slate-500 shadow-sm transition file:mr-3 file:cursor-pointer file:rounded-l-xl file:border-0 file:bg-teal-600 file:px-4 file:py-2.5 file:text-xs file:font-bold file:text-white hover:border-teal-300 focus:outline-none',
-                                   'border-rose-300 bg-rose-50/40' => $errors->has('ijazah'),
-                                   'border-slate-200' => ! $errors->has('ijazah'),
+                                   'border-rose-300 bg-rose-50/40' => $errors->has('dokumen'),
+                                   'border-slate-200' => ! $errors->has('dokumen'),
                                ])>
                         <p class="mt-1.5 text-[11px] text-slate-400">
-                            Format PDF, maksimal 500 KB.
-                            @if ($isEdit || $riwayat?->ijazah_path)
+                            Gabungan ijazah & transkrip. Format PDF, maksimal 1 MB.
+                            @if ($isEdit || $riwayat?->ijazah_transkrip_path)
                                 Kosongkan jika tidak ingin mengganti berkas.
                             @else
                                 Wajib diunggah.
                             @endif
                         </p>
                         <p data-file-error class="form-error hidden" role="alert"></p>
-                        @error('ijazah') <p class="form-error">{{ $message }}</p> @enderror
+                        @error('dokumen') <p class="form-error">{{ $message }}</p> @enderror
                     </div>
 
-                    <div data-transkrip-field @class(['hidden' => ! $isPerguruanTinggi])>
-                        <label for="transkrip" class="form-label">
-                            Bukti Transkrip <span class="text-rose-500">*</span>
+                    <div data-file-field>
+                        <label for="akreditasi_prodi" class="form-label">
+                            Akreditasi Prodi <span class="font-normal text-slate-400">(opsional)</span>
                         </label>
 
-                        @if ($riwayat?->transkrip_path)
+                        @if ($riwayat?->akreditasi_prodi_path)
                             <div class="mb-2.5 flex items-center justify-between gap-3 rounded-xl border border-indigo-100 bg-indigo-50/50 px-3.5 py-2.5">
                                 <div class="flex min-w-0 items-center gap-2">
                                     <span class="flex size-8 shrink-0 items-center justify-center rounded-lg bg-white text-indigo-600 shadow-sm ring-1 ring-indigo-100">
@@ -192,32 +191,76 @@
                                         </svg>
                                     </span>
                                     <div class="min-w-0">
-                                        <p class="truncate font-mono text-[11px] font-semibold text-indigo-800">{{ basename($riwayat->transkrip_path) }}</p>
+                                        <p class="truncate font-mono text-[11px] font-semibold text-indigo-800">{{ basename($riwayat->akreditasi_prodi_path) }}</p>
                                         <p class="text-[10px] text-indigo-700/60">Berkas saat ini</p>
                                     </div>
                                 </div>
-                                <a href="{{ route('profil.pendidikan.berkas', [$riwayat, 'transkrip']) }}" target="_blank" rel="noopener"
+                                <a href="{{ route('profil.pendidikan.berkas', [$riwayat, 'akreditasi_prodi']) }}" target="_blank" rel="noopener"
                                    class="shrink-0 rounded-lg bg-white px-2.5 py-1.5 text-[10px] font-bold text-indigo-700 shadow-sm ring-1 ring-indigo-100 transition hover:bg-indigo-50">
                                     Lihat
                                 </a>
                             </div>
                         @endif
 
-                        <input type="file" id="transkrip" name="transkrip" accept="application/pdf,.pdf" data-pdf-input data-max-kb="500"
-                               @disabled(! $isPerguruanTinggi)
+                        <input type="file" id="akreditasi_prodi" name="akreditasi_prodi" accept="application/pdf,.pdf" data-pdf-input data-max-kb="1024"
                                @class([
                                    'block w-full cursor-pointer rounded-xl border bg-slate-50/60 text-sm text-slate-500 shadow-sm transition file:mr-3 file:cursor-pointer file:rounded-l-xl file:border-0 file:bg-indigo-600 file:px-4 file:py-2.5 file:text-xs file:font-bold file:text-white hover:border-indigo-300 focus:outline-none',
-                                   'border-rose-300 bg-rose-50/40' => $errors->has('transkrip'),
-                                   'border-slate-200' => ! $errors->has('transkrip'),
+                                   'border-rose-300 bg-rose-50/40' => $errors->has('akreditasi_prodi'),
+                                   'border-slate-200' => ! $errors->has('akreditasi_prodi'),
                                ])>
                         <p class="mt-1.5 text-[11px] text-slate-400">
-                            Wajib untuk jenjang D3–S3. Format PDF, maksimal 500 KB.
-                            @if ($riwayat?->transkrip_path)
+                            Format PDF, maksimal 1 MB.
+                            @if ($riwayat?->akreditasi_prodi_path)
                                 Kosongkan jika tidak ingin mengganti berkas.
+                            @else
+                                Opsional, unggah jika tersedia.
                             @endif
                         </p>
                         <p data-file-error class="form-error hidden" role="alert"></p>
-                        @error('transkrip') <p class="form-error">{{ $message }}</p> @enderror
+                        @error('akreditasi_prodi') <p class="form-error">{{ $message }}</p> @enderror
+                    </div>
+
+                    <div data-file-field>
+                        <label for="disertasi_tesis" class="form-label">
+                            Disertasi / Tesis <span class="font-normal text-slate-400">(opsional)</span>
+                        </label>
+
+                        @if ($riwayat?->disertasi_tesis_path)
+                            <div class="mb-2.5 flex items-center justify-between gap-3 rounded-xl border border-amber-100 bg-amber-50/50 px-3.5 py-2.5">
+                                <div class="flex min-w-0 items-center gap-2">
+                                    <span class="flex size-8 shrink-0 items-center justify-center rounded-lg bg-white text-amber-600 shadow-sm ring-1 ring-amber-100">
+                                        <svg class="size-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                            <path fill-rule="evenodd" d="M4 2.75A1.75 1.75 0 0 0 2.25 4.5v11A1.75 1.75 0 0 0 4 17.25h12a1.75 1.75 0 0 0 1.75-1.75V6.56a1.75 1.75 0 0 0-.513-1.237l-2.31-2.31A1.75 1.75 0 0 0 13.69 2.5H4Z" clip-rule="evenodd" />
+                                        </svg>
+                                    </span>
+                                    <div class="min-w-0">
+                                        <p class="truncate font-mono text-[11px] font-semibold text-amber-800">{{ basename($riwayat->disertasi_tesis_path) }}</p>
+                                        <p class="text-[10px] text-amber-700/60">Berkas saat ini</p>
+                                    </div>
+                                </div>
+                                <a href="{{ route('profil.pendidikan.berkas', [$riwayat, 'disertasi_tesis']) }}" target="_blank" rel="noopener"
+                                   class="shrink-0 rounded-lg bg-white px-2.5 py-1.5 text-[10px] font-bold text-amber-700 shadow-sm ring-1 ring-amber-100 transition hover:bg-amber-50">
+                                    Lihat
+                                </a>
+                            </div>
+                        @endif
+
+                        <input type="file" id="disertasi_tesis" name="disertasi_tesis" accept="application/pdf,.pdf" data-pdf-input data-max-kb="4096"
+                               @class([
+                                   'block w-full cursor-pointer rounded-xl border bg-slate-50/60 text-sm text-slate-500 shadow-sm transition file:mr-3 file:cursor-pointer file:rounded-l-xl file:border-0 file:bg-amber-600 file:px-4 file:py-2.5 file:text-xs file:font-bold file:text-white hover:border-amber-300 focus:outline-none',
+                                   'border-rose-300 bg-rose-50/40' => $errors->has('disertasi_tesis'),
+                                   'border-slate-200' => ! $errors->has('disertasi_tesis'),
+                               ])>
+                        <p class="mt-1.5 text-[11px] text-slate-400">
+                            Format PDF, maksimal 4 MB.
+                            @if ($riwayat?->disertasi_tesis_path)
+                                Kosongkan jika tidak ingin mengganti berkas.
+                            @else
+                                Opsional, unggah untuk S2/S3.
+                            @endif
+                        </p>
+                        <p data-file-error class="form-error hidden" role="alert"></p>
+                        @error('disertasi_tesis') <p class="form-error">{{ $message }}</p> @enderror
                     </div>
 
                     <div class="flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50/60 px-4 py-3.5">
@@ -231,8 +274,8 @@
                             <p class="text-xs font-bold text-slate-700">Informasi penyimpanan berkas</p>
                             <p class="mt-1 text-[11px] leading-relaxed text-slate-500">
                                 Berkas disimpan otomatis dengan nama
-                                <span class="font-mono text-[10px] font-semibold text-slate-700">jenjang_nidn_kode_acak.pdf</span>,
-                                misalnya <span class="font-mono text-[10px] font-semibold text-slate-700">sd_0708048703_stkip46dtghjstA5d.pdf</span>.
+                                <span class="font-mono text-[10px] font-semibold text-slate-700">jenis_jenjang_nidn_kode_acak.pdf</span>,
+                                misalnya <span class="font-mono text-[10px] font-semibold text-slate-700">ijazah_transkrip_sd_0708048703_stkip46dtghjstA5d.pdf</span>.
                                 Berkas hanya dapat diakses oleh pemilik akun.
                             </p>
                         </div>

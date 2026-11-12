@@ -45,6 +45,9 @@ class RiwayatPendidikan extends Model
         'tahun_lulus',
         'ijazah_path',
         'transkrip_path',
+        'ijazah_transkrip_path',
+        'akreditasi_prodi_path',
+        'disertasi_tesis_path',
     ];
 
     protected function casts(): array
@@ -78,6 +81,32 @@ class RiwayatPendidikan extends Model
     public function isPerguruanTinggi(): bool
     {
         return in_array($this->jenjang, self::PERGURUAN_TINGGI, true);
+    }
+
+    /**
+     * Daftar dokumen yang dapat diunggah beserta label dan kolom path-nya.
+     *
+     * @return array<string, array{label: string, path: ?string}>
+     */
+    public function berkasList(): array
+    {
+        return [
+            'ijazah_transkrip' => ['label' => 'Ijazah & Transkrip', 'path' => $this->ijazah_transkrip_path],
+            'akreditasi_prodi' => ['label' => 'Akreditasi Prodi', 'path' => $this->akreditasi_prodi_path],
+            'disertasi_tesis' => ['label' => 'Disertasi / Tesis', 'path' => $this->disertasi_tesis_path],
+        ];
+    }
+
+    public function pathBerkas(string $jenis): ?string
+    {
+        return match ($jenis) {
+            'ijazah_transkrip' => $this->ijazah_transkrip_path,
+            'akreditasi_prodi' => $this->akreditasi_prodi_path,
+            'disertasi_tesis' => $this->disertasi_tesis_path,
+            'ijazah' => $this->ijazah_path,
+            'transkrip' => $this->transkrip_path,
+            default => null,
+        };
     }
 
     /**

@@ -50,14 +50,7 @@ class RiwayatPendidikanRequest extends FormRequest
         $riwayat = $this->route('riwayatPendidikan');
         $isUpdate = $riwayat instanceof RiwayatPendidikan;
 
-        $hasIjazah = $isUpdate && filled($riwayat->ijazah_path);
-        $hasTranskrip = $isUpdate && filled($riwayat->transkrip_path);
-
-        $isPerguruanTinggi = in_array(
-            $this->input('jenjang'),
-            RiwayatPendidikan::PERGURUAN_TINGGI,
-            true,
-        );
+        $hasDokumen = $isUpdate && filled($riwayat->ijazah_transkrip_path);
 
         $tahunSekarang = now()->year;
 
@@ -67,18 +60,14 @@ class RiwayatPendidikanRequest extends FormRequest
             'jurusan' => ['nullable', 'string', 'max:150'],
             'tahun_masuk' => ['required', 'integer', 'min:1900', "max:{$tahunSekarang}"],
             'tahun_lulus' => ['nullable', 'integer', 'min:1900', "max:{$tahunSekarang}", 'gte:tahun_masuk'],
-            'ijazah' => [
-                $hasIjazah ? 'nullable' : 'required',
+            'dokumen' => [
+                $hasDokumen ? 'nullable' : 'required',
                 'file',
                 'mimes:pdf',
-                'max:500',
+                'max:1024',
             ],
-            'transkrip' => [
-                $isPerguruanTinggi ? ($hasTranskrip ? 'nullable' : 'required') : 'nullable',
-                'file',
-                'mimes:pdf',
-                'max:500',
-            ],
+            'akreditasi_prodi' => ['nullable', 'file', 'mimes:pdf', 'max:1024'],
+            'disertasi_tesis' => ['nullable', 'file', 'mimes:pdf', 'max:4096'],
         ];
     }
 
@@ -95,8 +84,9 @@ class RiwayatPendidikanRequest extends FormRequest
             'jurusan' => 'jurusan',
             'tahun_masuk' => 'tahun masuk',
             'tahun_lulus' => 'tahun lulus',
-            'ijazah' => 'bukti ijazah',
-            'transkrip' => 'bukti transkrip',
+            'dokumen' => 'bukti ijazah & transkrip',
+            'akreditasi_prodi' => 'akreditasi prodi',
+            'disertasi_tesis' => 'disertasi / tesis',
         ];
     }
 
@@ -117,14 +107,16 @@ class RiwayatPendidikanRequest extends FormRequest
             'tahun_lulus.min' => 'Tahun lulus tidak valid.',
             'tahun_lulus.max' => 'Tahun lulus tidak boleh melebihi tahun ini.',
             'tahun_lulus.gte' => 'Tahun lulus tidak boleh lebih awal dari tahun masuk.',
-            'ijazah.required' => 'Bukti ijazah wajib diunggah.',
-            'ijazah.file' => 'Bukti ijazah gagal diunggah.',
-            'ijazah.mimes' => 'Bukti ijazah harus berformat PDF.',
-            'ijazah.max' => 'Ukuran berkas ijazah maksimal 500 KB.',
-            'transkrip.required' => 'Bukti transkrip wajib diunggah untuk jenjang perguruan tinggi.',
-            'transkrip.file' => 'Bukti transkrip gagal diunggah.',
-            'transkrip.mimes' => 'Bukti transkrip harus berformat PDF.',
-            'transkrip.max' => 'Ukuran berkas transkrip maksimal 500 KB.',
+            'dokumen.required' => 'Bukti ijazah & transkrip wajib diunggah.',
+            'dokumen.file' => 'Bukti ijazah & transkrip gagal diunggah.',
+            'dokumen.mimes' => 'Bukti ijazah & transkrip harus berformat PDF.',
+            'dokumen.max' => 'Ukuran bukti ijazah & transkrip maksimal 1 MB.',
+            'akreditasi_prodi.file' => 'Akreditasi prodi gagal diunggah.',
+            'akreditasi_prodi.mimes' => 'Akreditasi prodi harus berformat PDF.',
+            'akreditasi_prodi.max' => 'Ukuran akreditasi prodi maksimal 1 MB.',
+            'disertasi_tesis.file' => 'Disertasi / tesis gagal diunggah.',
+            'disertasi_tesis.mimes' => 'Disertasi / tesis harus berformat PDF.',
+            'disertasi_tesis.max' => 'Ukuran disertasi / tesis maksimal 4 MB.',
         ];
     }
 }

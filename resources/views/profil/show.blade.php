@@ -222,16 +222,22 @@
                                     </div>
 
                                     <div class="flex flex-wrap items-center gap-1.5 pl-16 sm:pl-0">
-                                        @if ($item->ijazah_path)
-                                            <a href="{{ route('profil.pendidikan.berkas', [$item, 'ijazah']) }}" target="_blank" rel="noopener"
+                                        @if ($item->ijazah_transkrip_path)
+                                            <a href="{{ route('profil.pendidikan.berkas', [$item, 'ijazah_transkrip']) }}" target="_blank" rel="noopener"
                                                class="inline-flex items-center gap-1 rounded-lg bg-teal-50 px-2 py-1 text-[10px] font-bold text-teal-700 ring-1 ring-teal-100 ring-inset transition hover:bg-teal-100">
-                                                Ijazah
+                                                Ijazah & Transkrip
                                             </a>
                                         @endif
-                                        @if ($item->transkrip_path)
-                                            <a href="{{ route('profil.pendidikan.berkas', [$item, 'transkrip']) }}" target="_blank" rel="noopener"
+                                        @if ($item->akreditasi_prodi_path)
+                                            <a href="{{ route('profil.pendidikan.berkas', [$item, 'akreditasi_prodi']) }}" target="_blank" rel="noopener"
                                                class="inline-flex items-center gap-1 rounded-lg bg-indigo-50 px-2 py-1 text-[10px] font-bold text-indigo-700 ring-1 ring-indigo-100 ring-inset transition hover:bg-indigo-100">
-                                                Transkrip
+                                                Akreditasi Prodi
+                                            </a>
+                                        @endif
+                                        @if ($item->disertasi_tesis_path)
+                                            <a href="{{ route('profil.pendidikan.berkas', [$item, 'disertasi_tesis']) }}" target="_blank" rel="noopener"
+                                               class="inline-flex items-center gap-1 rounded-lg bg-amber-50 px-2 py-1 text-[10px] font-bold text-amber-700 ring-1 ring-amber-100 ring-inset transition hover:bg-amber-100">
+                                                Disertasi / Tesis
                                             </a>
                                         @endif
                                     </div>

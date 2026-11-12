@@ -59,6 +59,7 @@ class ProfilDosen extends Model
         'masa_kerja_golongan_lama_bulan',
         'masa_kerja_golongan_baru_tahun',
         'masa_kerja_golongan_baru_bulan',
+        'sk_dosen_tetap_path',
     ];
 
     protected function casts(): array

@@ -8,7 +8,7 @@
     @php
         $total = $riwayatList->count();
         $tertinggi = $riwayatList->sortByDesc(fn ($item) => $item->jenjangRank())->first();
-        $lengkap = $riwayatList->filter(fn ($item) => $item->ijazah_path && (! $item->isPerguruanTinggi() || $item->transkrip_path))->count();
+        $lengkap = $riwayatList->filter(fn ($item) => filled($item->ijazah_transkrip_path))->count();
     @endphp
 
     <div class="mx-auto max-w-6xl">
@@ -20,7 +20,7 @@
                 </span>
                 <h2 class="text-xl font-extrabold tracking-tight text-slate-900 sm:text-2xl">Riwayat Pendidikan</h2>
                 <p class="mt-1.5 max-w-2xl text-sm leading-relaxed text-slate-500">
-                    Kelola riwayat pendidikan formal dari SD hingga perguruan tinggi beserta bukti ijazah dan transkrip.
+                    Kelola riwayat pendidikan formal dari SD hingga perguruan tinggi beserta bukti ijazah & transkrip, akreditasi prodi, dan disertasi/tesis.
                 </p>
             </div>
 
@@ -157,22 +157,31 @@
                                     </td>
                                     <td>
                                         <div class="flex flex-wrap items-center gap-1.5">
-                                            @if ($item->ijazah_path)
-                                                <a href="{{ route('profil.pendidikan.berkas', [$item, 'ijazah']) }}" target="_blank" rel="noopener"
+                                            @if ($item->ijazah_transkrip_path)
+                                                <a href="{{ route('profil.pendidikan.berkas', [$item, 'ijazah_transkrip']) }}" target="_blank" rel="noopener"
                                                    class="inline-flex items-center gap-1 rounded-lg bg-teal-50 px-2 py-1 text-[10px] font-bold text-teal-700 ring-1 ring-teal-100 ring-inset transition hover:bg-teal-100">
                                                     <svg class="size-3" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                                                         <path fill-rule="evenodd" d="M4 2.75A1.75 1.75 0 0 0 2.25 4.5v11A1.75 1.75 0 0 0 4 17.25h12a1.75 1.75 0 0 0 1.75-1.75V6.56a1.75 1.75 0 0 0-.513-1.237l-2.31-2.31A1.75 1.75 0 0 0 13.69 2.5H4Z" clip-rule="evenodd" />
                                                     </svg>
-                                                    Ijazah
+                                                    Ijazah & Transkrip
                                                 </a>
                                             @endif
-                                            @if ($item->transkrip_path)
-                                                <a href="{{ route('profil.pendidikan.berkas', [$item, 'transkrip']) }}" target="_blank" rel="noopener"
+                                            @if ($item->akreditasi_prodi_path)
+                                                <a href="{{ route('profil.pendidikan.berkas', [$item, 'akreditasi_prodi']) }}" target="_blank" rel="noopener"
                                                    class="inline-flex items-center gap-1 rounded-lg bg-indigo-50 px-2 py-1 text-[10px] font-bold text-indigo-700 ring-1 ring-indigo-100 ring-inset transition hover:bg-indigo-100">
                                                     <svg class="size-3" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                                                         <path fill-rule="evenodd" d="M4 2.75A1.75 1.75 0 0 0 2.25 4.5v11A1.75 1.75 0 0 0 4 17.25h12a1.75 1.75 0 0 0 1.75-1.75V6.56a1.75 1.75 0 0 0-.513-1.237l-2.31-2.31A1.75 1.75 0 0 0 13.69 2.5H4Z" clip-rule="evenodd" />
                                                     </svg>
-                                                    Transkrip
+                                                    Akreditasi Prodi
+                                                </a>
+                                            @endif
+                                            @if ($item->disertasi_tesis_path)
+                                                <a href="{{ route('profil.pendidikan.berkas', [$item, 'disertasi_tesis']) }}" target="_blank" rel="noopener"
+                                                   class="inline-flex items-center gap-1 rounded-lg bg-amber-50 px-2 py-1 text-[10px] font-bold text-amber-700 ring-1 ring-amber-100 ring-inset transition hover:bg-amber-100">
+                                                    <svg class="size-3" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                                        <path fill-rule="evenodd" d="M4 2.75A1.75 1.75 0 0 0 2.25 4.5v11A1.75 1.75 0 0 0 4 17.25h12a1.75 1.75 0 0 0 1.75-1.75V6.56a1.75 1.75 0 0 0-.513-1.237l-2.31-2.31A1.75 1.75 0 0 0 13.69 2.5H4Z" clip-rule="evenodd" />
+                                                    </svg>
+                                                    Disertasi / Tesis
                                                 </a>
                                             @endif
                                         </div>
@@ -188,7 +197,7 @@
                                                 Edit
                                             </a>
                                             <form method="POST" action="{{ route('profil.pendidikan.destroy', $item) }}"
-                                                  data-confirm="Hapus riwayat {{ $item->jenjangLabel() }} - {{ $item->nama_institusi }}? Berkas ijazah dan transkrip juga akan dihapus.">
+                                                  data-confirm="Hapus riwayat {{ $item->jenjangLabel() }} - {{ $item->nama_institusi }}? Berkas ijazah & transkrip, akreditasi prodi, dan disertasi/tesis juga akan dihapus.">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit"
@@ -234,7 +243,7 @@
                         </svg>
                         Klik judul kolom untuk mengurutkan data.
                     </p>
-                    <p>Berkas PDF maksimal 500 KB</p>
+                    <p>Ijazah & transkrip 1 MB · Akreditasi prodi 1 MB · Disertasi/tesis 4 MB</p>
                 </div>
             </div>
         </section>

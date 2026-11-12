@@ -93,7 +93,7 @@ class TendikRoleTest extends TestCase
                 'jurusan' => null,
                 'tahun_masuk' => 1996,
                 'tahun_lulus' => 2002,
-                'ijazah' => UploadedFile::fake()->create('ijazah.pdf', 100, 'application/pdf'),
+                'dokumen' => UploadedFile::fake()->create('dokumen.pdf', 100, 'application/pdf'),
             ])
             ->assertRedirect(route('profil.pendidikan.index'))
             ->assertSessionHasNoErrors();

@@ -113,6 +113,7 @@ class User extends Authenticatable
             $disk = Storage::disk('local');
             $disk->deleteDirectory("syarat-khusus/{$user->nidn}");
             $disk->deleteDirectory("riwayat-pendidikan/{$user->nidn}");
+            $disk->deleteDirectory("riwayat-pekerjaan/{$user->nidn}");
         });
     }
 

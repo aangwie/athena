@@ -288,7 +288,9 @@ const boot = () => {
             }
 
             if (file.size > maxKb * 1024) {
-                setFileError(`Ukuran berkas maksimal ${maxKb} KB.`);
+                const maxLabel = maxKb >= 1024 ? `${maxKb / 1024} MB` : `${maxKb} KB`;
+
+                setFileError(`Ukuran berkas maksimal ${maxLabel}.`);
 
                 return;
             }

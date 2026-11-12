@@ -153,6 +153,51 @@
                                            class="form-input cursor-not-allowed bg-slate-100 text-slate-500">
                                 </div>
                             </div>
+
+                            @if ($sk === 'pplp')
+                                <div class="mt-4 border-t border-slate-200 pt-4" data-file-field>
+                                    <label for="sk_dosen_tetap" class="form-label">
+                                        Berkas SK Dosen Tetap <span class="font-normal text-slate-400">(opsional)</span>
+                                    </label>
+
+                                    @if ($profil?->sk_dosen_tetap_path)
+                                        <div class="mb-2.5 flex items-center justify-between gap-3 rounded-xl border border-teal-100 bg-teal-50/50 px-3.5 py-2.5">
+                                            <div class="flex min-w-0 items-center gap-2">
+                                                <span class="flex size-8 shrink-0 items-center justify-center rounded-lg bg-white text-teal-600 shadow-sm ring-1 ring-teal-100">
+                                                    <svg class="size-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                                        <path fill-rule="evenodd" d="M4 2.75A1.75 1.75 0 0 0 2.25 4.5v11A1.75 1.75 0 0 0 4 17.25h12a1.75 1.75 0 0 0 1.75-1.75V6.56a1.75 1.75 0 0 0-.513-1.237l-2.31-2.31A1.75 1.75 0 0 0 13.69 2.5H4Z" clip-rule="evenodd" />
+                                                    </svg>
+                                                </span>
+                                                <div class="min-w-0">
+                                                    <p class="truncate font-mono text-[11px] font-semibold text-teal-800">{{ basename($profil->sk_dosen_tetap_path) }}</p>
+                                                    <p class="text-[10px] text-teal-700/60">Berkas saat ini</p>
+                                                </div>
+                                            </div>
+                                            <a href="{{ route('profil.pekerjaan.sk') }}" target="_blank" rel="noopener"
+                                               class="shrink-0 rounded-lg bg-white px-2.5 py-1.5 text-[10px] font-bold text-teal-700 shadow-sm ring-1 ring-teal-100 transition hover:bg-teal-50">
+                                                Lihat
+                                            </a>
+                                        </div>
+                                    @endif
+
+                                    <input type="file" id="sk_dosen_tetap" name="sk_dosen_tetap" accept="application/pdf,.pdf" data-pdf-input data-max-kb="1024"
+                                           @class([
+                                               'block w-full cursor-pointer rounded-xl border bg-slate-50/60 text-sm text-slate-500 shadow-sm transition file:mr-3 file:cursor-pointer file:rounded-l-xl file:border-0 file:bg-teal-600 file:px-4 file:py-2.5 file:text-xs file:font-bold file:text-white hover:border-teal-300 focus:outline-none',
+                                               'border-rose-300 bg-rose-50/40' => $errors->has('sk_dosen_tetap'),
+                                               'border-slate-200' => ! $errors->has('sk_dosen_tetap'),
+                                           ])>
+                                    <p class="mt-1.5 text-[11px] text-slate-400">
+                                        Format PDF, maksimal 1 MB.
+                                        @if ($profil?->sk_dosen_tetap_path)
+                                            Kosongkan jika tidak ingin mengganti berkas.
+                                        @else
+                                            Opsional, unggah SK Dosen Tetap Anda.
+                                        @endif
+                                    </p>
+                                    <p data-file-error class="form-error hidden" role="alert"></p>
+                                    @error('sk_dosen_tetap') <p class="form-error">{{ $message }}</p> @enderror
+                                </div>
+                            @endif
                         </div>
                     @endforeach
                 </div>

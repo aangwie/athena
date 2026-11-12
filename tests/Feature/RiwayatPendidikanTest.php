@@ -43,7 +43,7 @@ class RiwayatPendidikanTest extends TestCase
             'jurusan' => null,
             'tahun_masuk' => 1993,
             'tahun_lulus' => 1999,
-            'ijazah' => UploadedFile::fake()->create('ijazah.pdf', 100, 'application/pdf'),
+            'dokumen' => UploadedFile::fake()->create('dokumen.pdf', 100, 'application/pdf'),
         ], $overrides);
     }
 
@@ -55,11 +55,12 @@ class RiwayatPendidikanTest extends TestCase
             'jurusan' => 'Pendidikan Informatika',
             'tahun_masuk' => 2005,
             'tahun_lulus' => 2009,
-            'transkrip' => UploadedFile::fake()->create('transkrip.pdf', 100, 'application/pdf'),
+            'akreditasi_prodi' => UploadedFile::fake()->create('akreditasi_prodi.pdf', 100, 'application/pdf'),
+            'disertasi_tesis' => UploadedFile::fake()->create('disertasi_tesis.pdf', 100, 'application/pdf'),
         ], $overrides));
     }
 
-    public function test_dosen_can_add_sd_education_with_ijazah(): void
+    public function test_dosen_can_add_sd_education_with_dokumen(): void
     {
         $dosen = $this->makeDosen();
 
@@ -73,15 +74,16 @@ class RiwayatPendidikanTest extends TestCase
         $this->assertSame($dosen->id, $riwayat->user_id);
         $this->assertSame('sd', $riwayat->jenjang);
         $this->assertSame('SD Negeri 1 Bandung', $riwayat->nama_institusi);
-        $this->assertNull($riwayat->transkrip_path);
+        $this->assertNull($riwayat->akreditasi_prodi_path);
+        $this->assertNull($riwayat->disertasi_tesis_path);
         $this->assertMatchesRegularExpression(
-            '/^sd_1987654321_[A-Za-z0-9]{16}\.pdf$/',
-            basename($riwayat->ijazah_path),
+            '/^ijazah_transkrip_sd_1987654321_[A-Za-z0-9]{16}\.pdf$/',
+            basename($riwayat->ijazah_transkrip_path),
         );
-        Storage::disk('local')->assertExists($riwayat->ijazah_path);
+        Storage::disk('local')->assertExists($riwayat->ijazah_transkrip_path);
     }
 
-    public function test_dosen_can_add_higher_education_with_ijazah_and_transkrip(): void
+    public function test_dosen_can_add_higher_education_with_optional_berkas(): void
     {
         $dosen = $this->makeDosen();
 
@@ -94,48 +96,60 @@ class RiwayatPendidikanTest extends TestCase
 
         $this->assertSame('s1', $riwayat->jenjang);
         $this->assertMatchesRegularExpression(
-            '/^s1_1987654321_[A-Za-z0-9]{16}\.pdf$/',
-            basename($riwayat->ijazah_path),
+            '/^ijazah_transkrip_s1_1987654321_[A-Za-z0-9]{16}\.pdf$/',
+            basename($riwayat->ijazah_transkrip_path),
         );
         $this->assertMatchesRegularExpression(
-            '/^s1_1987654321_[A-Za-z0-9]{16}\.pdf$/',
-            basename($riwayat->transkrip_path),
+            '/^akreditasi_prodi_s1_1987654321_[A-Za-z0-9]{16}\.pdf$/',
+            basename($riwayat->akreditasi_prodi_path),
         );
-        Storage::disk('local')->assertExists($riwayat->ijazah_path);
-        Storage::disk('local')->assertExists($riwayat->transkrip_path);
+        $this->assertMatchesRegularExpression(
+            '/^disertasi_tesis_s1_1987654321_[A-Za-z0-9]{16}\.pdf$/',
+            basename($riwayat->disertasi_tesis_path),
+        );
+        Storage::disk('local')->assertExists($riwayat->ijazah_transkrip_path);
+        Storage::disk('local')->assertExists($riwayat->akreditasi_prodi_path);
+        Storage::disk('local')->assertExists($riwayat->disertasi_tesis_path);
     }
 
-    public function test_higher_education_requires_ijazah_and_transkrip(): void
+    public function test_education_requires_dokumen(): void
     {
         $dosen = $this->makeDosen();
 
-        $payload = $this->higherPayload();
-        unset($payload['ijazah'], $payload['transkrip']);
+        $payload = $this->payload();
+        unset($payload['dokumen']);
 
         $this->actingAs($dosen)
             ->from('/profil/riwayat-pendidikan/create')
             ->post('/profil/riwayat-pendidikan', $payload)
             ->assertRedirect('/profil/riwayat-pendidikan/create')
-            ->assertSessionHasErrors(['ijazah', 'transkrip']);
+            ->assertSessionHasErrors(['dokumen']);
     }
 
-    public function test_ijazah_must_be_pdf_and_not_exceed_500_kb(): void
+    public function test_dokumen_must_be_pdf_and_not_exceed_limits(): void
     {
         $dosen = $this->makeDosen();
 
         $this->actingAs($dosen)
             ->from('/profil/riwayat-pendidikan/create')
             ->post('/profil/riwayat-pendidikan', $this->payload([
-                'ijazah' => UploadedFile::fake()->create('ijazah.jpg', 100, 'image/jpeg'),
+                'dokumen' => UploadedFile::fake()->create('dokumen.jpg', 100, 'image/jpeg'),
             ]))
-            ->assertSessionHasErrors('ijazah');
+            ->assertSessionHasErrors('dokumen');
 
         $this->actingAs($dosen)
             ->from('/profil/riwayat-pendidikan/create')
             ->post('/profil/riwayat-pendidikan', $this->payload([
-                'ijazah' => UploadedFile::fake()->create('ijazah.pdf', 501, 'application/pdf'),
+                'dokumen' => UploadedFile::fake()->create('dokumen.pdf', 1025, 'application/pdf'),
             ]))
-            ->assertSessionHasErrors('ijazah');
+            ->assertSessionHasErrors('dokumen');
+
+        $this->actingAs($dosen)
+            ->from('/profil/riwayat-pendidikan/create')
+            ->post('/profil/riwayat-pendidikan', $this->payload([
+                'disertasi_tesis' => UploadedFile::fake()->create('disertasi.pdf', 4097, 'application/pdf'),
+            ]))
+            ->assertSessionHasErrors('disertasi_tesis');
     }
 
     public function test_dosen_can_update_education_and_replace_berkas(): void
@@ -145,13 +159,13 @@ class RiwayatPendidikanTest extends TestCase
         $this->actingAs($dosen)->post('/profil/riwayat-pendidikan', $this->payload());
 
         $riwayat = RiwayatPendidikan::firstOrFail();
-        $oldPath = $riwayat->ijazah_path;
+        $oldPath = $riwayat->ijazah_transkrip_path;
 
         $this->actingAs($dosen)
             ->put(route('profil.pendidikan.update', $riwayat), $this->payload([
                 'nama_institusi' => 'SD Negeri 2 Bandung',
                 'tahun_lulus' => 2000,
-                'ijazah' => UploadedFile::fake()->create('ijazah-baru.pdf', 120, 'application/pdf'),
+                'dokumen' => UploadedFile::fake()->create('dokumen-baru.pdf', 120, 'application/pdf'),
             ]))
             ->assertRedirect(route('profil.pendidikan.index'))
             ->assertSessionHasNoErrors();
@@ -160,32 +174,33 @@ class RiwayatPendidikanTest extends TestCase
 
         $this->assertSame('SD Negeri 2 Bandung', $riwayat->nama_institusi);
         $this->assertSame(2000, $riwayat->tahun_lulus);
-        $this->assertNotSame($oldPath, $riwayat->ijazah_path);
+        $this->assertNotSame($oldPath, $riwayat->ijazah_transkrip_path);
         Storage::disk('local')->assertMissing($oldPath);
-        Storage::disk('local')->assertExists($riwayat->ijazah_path);
+        Storage::disk('local')->assertExists($riwayat->ijazah_transkrip_path);
     }
 
-    public function test_switching_to_non_higher_education_removes_transkrip(): void
+    public function test_dosen_can_add_optional_berkas_on_update(): void
     {
         $dosen = $this->makeDosen();
 
-        $this->actingAs($dosen)->post('/profil/riwayat-pendidikan', $this->higherPayload());
+        $this->actingAs($dosen)->post('/profil/riwayat-pendidikan', $this->payload());
 
         $riwayat = RiwayatPendidikan::firstOrFail();
-        $transkripPath = $riwayat->transkrip_path;
+
+        $this->assertNull($riwayat->akreditasi_prodi_path);
+        $this->assertNull($riwayat->disertasi_tesis_path);
 
         $this->actingAs($dosen)
             ->put(route('profil.pendidikan.update', $riwayat), $this->payload([
-                'jenjang' => 'sma',
-                'nama_institusi' => 'SMA Negeri 3 Bandung',
+                'akreditasi_prodi' => UploadedFile::fake()->create('akreditasi.pdf', 100, 'application/pdf'),
+                'disertasi_tesis' => UploadedFile::fake()->create('disertasi.pdf', 100, 'application/pdf'),
             ]))
             ->assertSessionHasNoErrors();
 
         $riwayat->refresh();
 
-        $this->assertSame('sma', $riwayat->jenjang);
-        $this->assertNull($riwayat->transkrip_path);
-        Storage::disk('local')->assertMissing($transkripPath);
+        $this->assertNotNull($riwayat->akreditasi_prodi_path);
+        $this->assertNotNull($riwayat->disertasi_tesis_path);
     }
 
     public function test_dosen_can_delete_education_and_its_files(): void
@@ -195,22 +210,24 @@ class RiwayatPendidikanTest extends TestCase
         $this->actingAs($dosen)->post('/profil/riwayat-pendidikan', $this->higherPayload());
 
         $riwayat = RiwayatPendidikan::firstOrFail();
-        $ijazahPath = $riwayat->ijazah_path;
-        $transkripPath = $riwayat->transkrip_path;
+        $dokumenPath = $riwayat->ijazah_transkrip_path;
+        $akreditasiPath = $riwayat->akreditasi_prodi_path;
+        $disertasiPath = $riwayat->disertasi_tesis_path;
 
         $this->actingAs($dosen)
             ->delete(route('profil.pendidikan.destroy', $riwayat))
             ->assertRedirect(route('profil.pendidikan.index'));
 
         $this->assertDatabaseMissing('riwayat_pendidikan', ['id' => $riwayat->id]);
-        Storage::disk('local')->assertMissing($ijazahPath);
-        Storage::disk('local')->assertMissing($transkripPath);
+        Storage::disk('local')->assertMissing($dokumenPath);
+        Storage::disk('local')->assertMissing($akreditasiPath);
+        Storage::disk('local')->assertMissing($disertasiPath);
     }
 
     public function test_dosen_can_download_own_berkas(): void
     {
         $dosen = $this->makeDosen();
-        $path = 'riwayat-pendidikan/1987654321/ijazah.pdf';
+        $path = 'riwayat-pendidikan/1987654321/ijazah_transkrip.pdf';
 
         Storage::disk('local')->put($path, '%PDF-1.4');
 
@@ -219,11 +236,11 @@ class RiwayatPendidikanTest extends TestCase
             'nama_institusi' => 'SD Negeri 1 Bandung',
             'tahun_masuk' => 1993,
             'tahun_lulus' => 1999,
-            'ijazah_path' => $path,
+            'ijazah_transkrip_path' => $path,
         ]);
 
         $this->actingAs($dosen)
-            ->get(route('profil.pendidikan.berkas', [$riwayat, 'ijazah']))
+            ->get(route('profil.pendidikan.berkas', [$riwayat, 'ijazah_transkrip']))
             ->assertOk()
             ->assertHeader('content-type', 'application/pdf');
     }
@@ -238,7 +255,7 @@ class RiwayatPendidikanTest extends TestCase
             'nama_institusi' => 'SD Negeri 1 Sleman',
             'tahun_masuk' => 1996,
             'tahun_lulus' => 2002,
-            'ijazah_path' => 'riwayat-pendidikan/1111111111/ijazah.pdf',
+            'ijazah_transkrip_path' => 'riwayat-pendidikan/1111111111/dokumen.pdf',
         ]);
 
         $this->actingAs($dosen)
@@ -254,7 +271,7 @@ class RiwayatPendidikanTest extends TestCase
             ->assertNotFound();
 
         $this->actingAs($dosen)
-            ->get(route('profil.pendidikan.berkas', [$riwayat, 'ijazah']))
+            ->get(route('profil.pendidikan.berkas', [$riwayat, 'ijazah_transkrip']))
             ->assertNotFound();
     }
 
@@ -267,7 +284,7 @@ class RiwayatPendidikanTest extends TestCase
             'nama_institusi' => 'SD Negeri 1 Bandung',
             'tahun_masuk' => 1993,
             'tahun_lulus' => 1999,
-            'ijazah_path' => 'riwayat-pendidikan/1987654321/sd.pdf',
+            'ijazah_transkrip_path' => 'riwayat-pendidikan/1987654321/sd.pdf',
         ]);
 
         $dosen->riwayatPendidikan()->create([
@@ -276,8 +293,9 @@ class RiwayatPendidikanTest extends TestCase
             'jurusan' => 'Pendidikan Informatika',
             'tahun_masuk' => 2005,
             'tahun_lulus' => 2009,
-            'ijazah_path' => 'riwayat-pendidikan/1987654321/s1.pdf',
-            'transkrip_path' => 'riwayat-pendidikan/1987654321/s1-transkrip.pdf',
+            'ijazah_transkrip_path' => 'riwayat-pendidikan/1987654321/s1.pdf',
+            'akreditasi_prodi_path' => 'riwayat-pendidikan/1987654321/akreditasi.pdf',
+            'disertasi_tesis_path' => 'riwayat-pendidikan/1987654321/disertasi.pdf',
         ]);
 
         $this->actingAs($dosen)
@@ -288,8 +306,9 @@ class RiwayatPendidikanTest extends TestCase
             ->assertSee('SD Negeri 1 Bandung')
             ->assertSee('Universitas Pendidikan Indonesia')
             ->assertSee('Pendidikan Informatika')
-            ->assertSee('Ijazah')
-            ->assertSee('Transkrip');
+            ->assertSee('Ijazah & Transkrip', false)
+            ->assertSee('Akreditasi Prodi')
+            ->assertSee('Disertasi / Tesis');
     }
 
     public function test_portfolio_displays_education_history_and_berkas_links(): void
@@ -302,8 +321,9 @@ class RiwayatPendidikanTest extends TestCase
             'jurusan' => 'Pendidikan Informatika',
             'tahun_masuk' => 2005,
             'tahun_lulus' => 2009,
-            'ijazah_path' => 'riwayat-pendidikan/1987654321/ijazah.pdf',
-            'transkrip_path' => 'riwayat-pendidikan/1987654321/transkrip.pdf',
+            'ijazah_transkrip_path' => 'riwayat-pendidikan/1987654321/dokumen.pdf',
+            'akreditasi_prodi_path' => 'riwayat-pendidikan/1987654321/akreditasi.pdf',
+            'disertasi_tesis_path' => 'riwayat-pendidikan/1987654321/disertasi.pdf',
         ]);
 
         $this->actingAs($dosen)
@@ -312,7 +332,8 @@ class RiwayatPendidikanTest extends TestCase
             ->assertSee('Riwayat Pendidikan')
             ->assertSee('Universitas Pendidikan Indonesia')
             ->assertSee('Pendidikan Informatika')
-            ->assertSee('Ijazah')
-            ->assertSee('Transkrip');
+            ->assertSee('Ijazah & Transkrip', false)
+            ->assertSee('Akreditasi Prodi')
+            ->assertSee('Disertasi / Tesis');
     }
 }
