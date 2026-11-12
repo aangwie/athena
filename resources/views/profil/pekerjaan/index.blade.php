@@ -46,12 +46,17 @@
                     <p class="mt-0.5 text-xs text-rose-600">
                         Terdapat {{ $errors->count() }} isian yang perlu diperbaiki sebelum data dapat disimpan.
                     </p>
+                    <ul class="mt-2 list-inside list-disc space-y-1 text-xs font-semibold text-rose-600">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
                 </div>
             </div>
         @endif
 
         {{-- Identitas kepegawaian + masa kerja --}}
-        <form method="POST" action="{{ route('profil.pekerjaan.update') }}" class="mb-5 space-y-5">
+        <form method="POST" action="{{ route('profil.pekerjaan.update') }}" enctype="multipart/form-data" class="mb-5 space-y-5">
             @csrf
             @method('PUT')
 

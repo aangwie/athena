@@ -68,6 +68,8 @@ class RiwayatPekerjaanTest extends TestCase
         $response->assertOk();
         $response->assertSee('Riwayat Pekerjaan');
         $response->assertSee('Masa Kerja');
+        // Form identitas kepegawaian wajib multipart agar upload SK Dosen Tetap terkirim.
+        $response->assertSee('enctype="multipart/form-data"', false);
         $response->assertSee('Riwayat Kepangkatan');
         $response->assertSee('Riwayat Jabatan Struktural');
         $response->assertSee($master['kepangkatan']->nama);

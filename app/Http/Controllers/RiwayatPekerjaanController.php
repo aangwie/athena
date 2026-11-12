@@ -82,17 +82,42 @@ class RiwayatPekerjaanController extends Controller
             $rules["masa_kerja_golongan_{$jenis}_bulan"] = ['nullable', 'integer', 'min:0', 'max:11'];
         }
 
-        $data = $request->validate($rules, [
+        $attributes = [
+            'nuptk' => 'NUPTK',
+            'bidang_ilmu' => 'Bidang Ilmu',
+            'program_studi' => 'Prodi',
+            'sk_dosen_tetap' => 'Berkas SK Dosen Tetap',
+        ];
+
+        $messages = [
+            'nuptk.max' => 'NUPTK maksimal 30 karakter.',
+            'bidang_ilmu.max' => 'Bidang Ilmu maksimal 100 karakter.',
             'program_studi.exists' => 'Prodi tidak ditemukan pada data master prodi.',
             'sk_dosen_tetap.file' => 'Berkas SK Dosen Tetap gagal diunggah.',
             'sk_dosen_tetap.mimes' => 'Berkas SK Dosen Tetap harus berformat PDF.',
             'sk_dosen_tetap.max' => 'Ukuran berkas SK Dosen Tetap maksimal 1 MB.',
-        ], [
-            'nuptk' => 'NUPTK',
-            'bidang_ilmu' => 'Bidang Ilmu',
-            'program_studi' => 'Prodi',
-            'sk_dosen_tetap' => 'berkas SK Dosen Tetap',
-        ]);
+        ];
+
+        $skLabels = ['pplp' => 'SK Dosen Tetap', 'jafa' => 'SK Jafa Terakhir', 'impasing' => 'SK Impasing Terakhir'];
+        foreach (self::SK as $sk) {
+            $attributes["sk_{$sk}_tanggal"] = "Tanggal {$skLabels[$sk]}";
+            $messages["sk_{$sk}_tanggal.date"] = "Tanggal {$skLabels[$sk]} tidak valid.";
+        }
+
+        $golonganLabels = ['lama' => 'Lama', 'baru' => 'Baru'];
+        foreach (['lama', 'baru'] as $jenis) {
+            $label = "Masa Kerja Golongan {$golonganLabels[$jenis]}";
+            $attributes["masa_kerja_golongan_{$jenis}_tahun"] = "Tahun {$label}";
+            $attributes["masa_kerja_golongan_{$jenis}_bulan"] = "Bulan {$label}";
+            $messages["masa_kerja_golongan_{$jenis}_tahun.integer"] = "Tahun {$label} harus berupa angka bulat.";
+            $messages["masa_kerja_golongan_{$jenis}_tahun.min"] = "Tahun {$label} tidak boleh kurang dari 0.";
+            $messages["masa_kerja_golongan_{$jenis}_tahun.max"] = "Tahun {$label} maksimal 60.";
+            $messages["masa_kerja_golongan_{$jenis}_bulan.integer"] = "Bulan {$label} harus berupa angka bulat.";
+            $messages["masa_kerja_golongan_{$jenis}_bulan.min"] = "Bulan {$label} tidak boleh kurang dari 0.";
+            $messages["masa_kerja_golongan_{$jenis}_bulan.max"] = "Bulan {$label} harus antara 0 sampai 11; kelebihan bulan silakan dikonversi ke tahun.";
+        }
+
+        $data = $request->validate($rules, $messages, $attributes);
 
         // Prodi tempat mengajar disimpan pada akun (users.program_studi),
         // kolom yang sudah dipakai profil & surat pernyataan pimpinan.
