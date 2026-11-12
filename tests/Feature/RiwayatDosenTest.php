@@ -100,7 +100,9 @@ class RiwayatDosenTest extends TestCase
         $this->actingAs($admin)
             ->get(route('riwayat-dosen.index'))
             ->assertOk()
-            ->assertSee($dosen->name);
+            ->assertSee($dosen->name)
+            ->assertSee('data-datatable', false)
+            ->assertSee('data-table-search', false);
 
         $this->actingAs($admin)
             ->get(route('riwayat-dosen.show', $dosen))
