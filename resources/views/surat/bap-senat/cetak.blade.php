@@ -143,7 +143,7 @@
                     <tbody>
                         @foreach ([
                             'Nama' => $identitas['nama'],
-                            'NIDN/NUPTK' => $identitas['nidn']."/".$identitas['nuptk'] ?: '—',
+                            'NIDN/NUPTK' => $identitas['nidn']." / ".$identitas['nuptk'] ?: '—',
                             'Status dosen tetap' => 'Dosen Tetap',
                             'Tempat, tanggal lahir' => $identitas['ttl'],
                             'Pangkat golongan ruang, TMT' => $identitas['pangkat'].' / '.$identitas['pangkat_tmt'],
