@@ -98,8 +98,8 @@
                 <tbody>
                     @foreach ([
                         'Nama' => $pimpinan['nama'],
-                        'NIDN' => $pimpinan['nidn'],
-                        'NUPTK' => $pimpinan['nuptk'],
+                        'NIDN/NUPTK' => $pimpinan['nidn']." / ".$pimpinan['nuptk'] ?: '—',
+                        <!-- 'NUPTK' => $pimpinan['nuptk'], -->
                         'Status dosen tetap' => 'Dosen Tetap',
                         'Tempat, tanggal lahir' => $pimpinan['ttl'],
                         'Pangkat golongan ruang / TMT' => $pimpinan['pangkat'].' / '.$pimpinan['pangkat_tmt'],
