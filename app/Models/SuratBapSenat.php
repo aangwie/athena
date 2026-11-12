@@ -44,6 +44,11 @@ class SuratBapSenat extends Model
             'ILMU ATAU SAINS KEOLAHRAGAAN',
             'KEAGAMAAN',
         ],
+        'E. Ekonomi' => [
+            'EKONOMI',
+            'PENDIDIKAN EKONOMI',
+            'EKONOMI SUMBERDAYA',
+        ],
     ];
 
     /**
