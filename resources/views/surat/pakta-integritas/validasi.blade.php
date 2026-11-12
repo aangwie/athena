@@ -14,25 +14,32 @@
         $kotaTanggal = ($kota ?: '…').', '.($tanggalPengesahan?->locale('id')->translatedFormat('j F Y') ?? '……');
         $nomorValidasi = trim((string) $pakta->nomor_validasi) ?: str_repeat('.', 30);
 
-        // Identitas ketua & dosen pada blok surat (label, nilai, TMT opsional).
+        // TMT dicetak menyatu di belakang nilai labelnya, mis. "Tenaga Pengajar,
+        // 25 September 2023" atau "IIIc / Penata / 01 Juli 2024". Nilai "—" berarti
+        // TMT belum ada, jadi tidak ikut dicetak.
+        $denganTmt = fn (?string $nilai, ?string $tmt, string $pemisah = ', '): string => filled($tmt) && $tmt !== '—'
+            ? rtrim((string) $nilai).$pemisah.$tmt
+            : (string) $nilai;
+
+        // Identitas ketua & dosen pada blok surat (label, nilai yang sudah memuat TMT).
         $identitasKetua = [
-            ['Nama', $ketua['nama'] ?? '—', null],
-            ['NIDN / NUPTK', ($ketua['nidn'] ?? '—').' / '.($ketua['nuptk'] ?: '—'), null],
-            ['Status Ikatan Kerja', 'Dosen Tetap', null],
-            ['Tempat, tanggal lahir', $ketua['ttl'] ?? '—', null],
-            ['Pangkat, Golongan Ruang, TMT', ($ketua['pangkat'] ?? '—').' / '.($ketua['pangkat_tmt'] ?? '—'), $ketua['pangkat_tmt'] ?? null],
-            ['Jabatan, TMT', $ketua['jabatan'] ?? '—', $ketua['jabatan_tmt'] ?? null],
+            ['Nama', $ketua['nama'] ?? '—'],
+            ['NIDN / NUPTK', ($ketua['nidn'] ?? '—').' / '.($ketua['nuptk'] ?: '—')],
+            ['Status dosen tetap', 'Dosen Tetap'],
+            ['Tempat, tanggal lahir', $ketua['ttl'] ?? '—'],
+            ['Pangkat, Golongan Ruang, TMT', $denganTmt($ketua['pangkat'] ?? '—', $ketua['pangkat_tmt'] ?? null, ' / ')],
+            ['Jabatan, TMT', $denganTmt($ketua['jabatan'] ?? '—', $ketua['jabatan_tmt'] ?? null)],
         ];
         $identitasDosen = [
-            ['Nama', $identitas['nama'], null],
-            ['NIDN / NUPTK', $identitas['nidn'].' / '.($identitas['nuptk'] ?: '—'), null],
-            ['Status Ikatan Kerja', 'Dosen Tetap', null],
-            ['Tempat, tanggal lahir', $identitas['ttl'], null],
-            ['Pangkat, Golongan Ruang, TMT', $identitas['pangkat'], $identitas['pangkat_tmt']],
-            ['Jabatan, TMT', $identitas['jabatan'], $identitas['jabatan_tmt']],
-            ['Pendidikan tertinggi', $identitas['pendidikan'], null],
-            ['Fakultas/Sekolah Tinggi/Akademi', $instansi?->nama_instansi ?: '—', null],
-            ['Program Studi', $identitas['prodi'], null],
+            ['Nama', $identitas['nama']],
+            ['NIDN / NUPTK', $identitas['nidn'].' / '.($identitas['nuptk'] ?: '—')],
+            ['Status dosen tetap', 'Dosen Tetap'],
+            ['Tempat, tanggal lahir', $identitas['ttl']],
+            ['Pangkat, Golongan Ruang, TMT', $denganTmt($identitas['pangkat'], $identitas['pangkat_tmt'], ' / ')],
+            ['Jabatan, TMT', $denganTmt($identitas['jabatan'], $identitas['jabatan_tmt'])],
+            ['Pendidikan tertinggi', $identitas['pendidikan']],
+            ['Fakultas/Sekolah Tinggi/Akademi', $instansi?->nama_instansi ?: '—'],
+            ['Program Studi', $identitas['prodi']],
         ];
 
         // Baris tabel validasi: setiap karya ilmiah menampilkan identitasnya sendiri.

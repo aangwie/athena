@@ -194,7 +194,7 @@ class SuratController extends Controller
             'pakta' => $pakta,
             // Tempat pada baris tanda tangan mengikuti kota instansi.
             'kota' => Instansi::query()->value('kota'),
-            'identitas' => $this->identitasDosen($pakta->dosen),
+            'identitas' => $this->identitas($pakta->dosen),
             'karya' => $pakta->karyaTerpilih(),
         ]);
     }
@@ -218,7 +218,7 @@ class SuratController extends Controller
             'instansi' => Instansi::query()->first(),
             // Tempat pada baris tanda tangan mengikuti kota instansi.
             'kota' => Instansi::query()->value('kota'),
-            'identitas' => $this->identitasDosen($pakta->dosen),
+            'identitas' => $this->identitas($pakta->dosen),
             // Ketua instansi sebagai penanda tangan lembar validasi.
             'ketua' => $this->identitas($this->ketua()),
             'karya' => $pakta->karyaTerpilih(),
@@ -271,7 +271,7 @@ class SuratController extends Controller
             'instansi' => Instansi::query()->first(),
             // Tempat pada baris tanda tangan mengikuti kota instansi.
             'kota' => Instansi::query()->value('kota'),
-            'identitas' => $this->identitasDosen($bap->dosen),
+            'identitas' => $this->identitas($bap->dosen),
             'anggota' => $bap->anggotaSenat(),
             'ketua' => $senat->firstWhere('jabatan', 'ketua'),
         ]);
@@ -319,7 +319,7 @@ class SuratController extends Controller
             // Tempat pada baris tanda tangan mengikuti kota instansi.
             'kota' => Instansi::query()->value('kota'),
             'dosen' => $pengantar->dosenList()
-                ->map(fn (User $dosen): array => $this->identitasDosen($dosen))
+                ->map(fn (User $dosen): array => $this->identitas($dosen))
                 ->all(),
             // Penanda tangan surat pengantar: pimpinan berjabatan Ketua/Rektor.
             'pimpinan' => $this->identitas($this->ketua()),
@@ -376,7 +376,7 @@ class SuratController extends Controller
             'instansi' => Instansi::query()->first(),
             // Tempat pada baris tanda tangan mengikuti kota instansi.
             'kota' => Instansi::query()->value('kota'),
-            'identitas' => $this->identitasDosen($baki->bapSenat?->dosen),
+            'identitas' => $this->identitas($baki->bapSenat?->dosen),
             'anggota' => $timKomite,
             'ketua' => $timKomite->firstWhere('jabatan', 'ketua'),
         ]);
@@ -401,8 +401,8 @@ class SuratController extends Controller
             // Pimpinan surat ini juga dosen, jadi "Jabatan / TMT" memakai jabatan
             // akademik (Riwayat Pekerjaan → Jabatan Akademik) beserta TMT-nya,
             // sama seperti blok identitas dosen di bawahnya — bukan "Ketua".
-            'pimpinan' => $this->identitasDosen($pernyataan->pimpinan?->user),
-            'dosen' => $this->identitasDosen($pernyataan->dosen),
+            'pimpinan' => $this->identitas($pernyataan->pimpinan?->user),
+            'dosen' => $this->identitas($pernyataan->dosen),
         ]);
     }
 
@@ -434,33 +434,6 @@ class SuratController extends Controller
                 : null,
             'karya_tulis_ids' => array_map('intval', $data['karya_tulis_ids'] ?? []),
         ];
-    }
-
-    /**
-     * Identitas dosen untuk badan surat, dengan jabatan akademik sebagai "Jabatan".
-     *
-     * @return array<string, string>
-     */
-    private function identitasDosen(?User $dosen): array
-    {
-        $identitas = $this->identitas($dosen);
-
-        // Pada surat, "Jabatan / TMT" adalah jabatan akademik, bukan struktural.
-        // Ambil dari baris riwayat yang benar-benar memuat jabatan akademik
-        // (Riwayat Pekerjaan → Jabatan Akademik), terbaru menurut TMT.
-        $fungsional = $dosen?->riwayatJabatanStruktural
-            ->whereNotNull('jabatan_fungsional_id')
-            ->sortByDesc('tmt')
-            ->first();
-
-        // Belum ada baris riwayat: pakai kolom users.jabatan_fungsional (data dosen
-        // hasil impor). Jabatan struktural tidak pernah dipakai pada baris ini,
-        // supaya surat tidak menampilkan jabatan seperti "Ketua".
-        $identitas['jabatan'] = $fungsional?->jabatanFungsional?->nama
-            ?: ($dosen?->jabatan_fungsional ?: '—');
-        $identitas['jabatan_tmt'] = $fungsional?->tmtLabel() ?? '—';
-
-        return $identitas;
     }
 
     /**
@@ -540,6 +513,9 @@ class SuratController extends Controller
     /**
      * Identitas pimpinan/dosen yang tampil pada badan surat.
      *
+     * "Jabatan" memakai Jabatan Terakhir pada Profil → Riwayat Pekerjaan →
+     * Riwayat Jabatan Akademik beserta TMT-nya, bukan jabatan struktural.
+     *
      * ponytail: belum ada kolom NIP & status dosen tetap — NIP memakai NIY/NPP,
      * status tampil "—" sampai field kepegawaian ditambahkan.
      *
@@ -556,10 +532,12 @@ class SuratController extends Controller
 
         $profil = $user?->profilDosen;
         $pangkat = $user?->riwayatKepangkatan->sortByDesc('tmt')->first();
-        // Jabatan terakhir pada identitas surat adalah jabatan struktural: ambil
-        // dari baris yang memuat jabatan struktural saja.
+        // Jabatan pada identitas surat mengikuti "Jabatan Terakhir" di
+        // Profil → Riwayat Pekerjaan → Riwayat Jabatan Akademik: baris riwayat
+        // yang memuat jabatan akademik dengan TMT paling akhir. Jabatan
+        // struktural (mis. "Ketua") tidak dipakai pada baris ini.
         $jabatanTerakhir = $user?->riwayatJabatanStruktural
-            ->whereNotNull('jabatan_struktural_id')
+            ->whereNotNull('jabatan_fungsional_id')
             ->sortByDesc('tmt')
             ->first();
         $pendidikan = $user?->riwayatPendidikan
@@ -578,7 +556,9 @@ class SuratController extends Controller
             ])->filter()->implode(', ') ?: '—',
             'pangkat' => $pangkat?->pangkatLabel() ?? '—',
             'pangkat_tmt' => $pangkat?->tmtLabel() ?? '—',
-            'jabatan' => $jabatanTerakhir?->strukturalLabel() ?? ($user?->jabatan_fungsional ?: '—'),
+            // Belum ada riwayat jabatan akademik: pakai kolom users.jabatan_fungsional
+            // (data dosen hasil impor) supaya baris jabatan tetap terisi.
+            'jabatan' => $jabatanTerakhir?->jabatanFungsional?->nama ?: ($user?->jabatan_fungsional ?: '—'),
             'jabatan_tmt' => $jabatanTerakhir?->tmtLabel() ?? '—',
             'pendidikan' => $pendidikan?->jenjangLabel() ?? '—',
             'fakultas' => '—',

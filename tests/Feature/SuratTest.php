@@ -6,6 +6,7 @@ use App\Models\Instansi;
 use App\Models\JabatanFungsional;
 use App\Models\JabatanStruktural;
 use App\Models\KaryaTulis;
+use App\Models\Kepangkatan;
 use App\Models\StrukturInstansi;
 use App\Models\SuratPaktaIntegritas;
 use App\Models\SuratPernyataanPimpinan;
@@ -628,7 +629,7 @@ class SuratTest extends TestCase
             // Blok identitas ketua & dosen.
             ->assertSee('Yang bertandatangan di bawah ini, Ketua Universitas Athena')
             ->assertSee('NIDN / NUPTK')
-            ->assertSee('Status Ikatan Kerja')
+            ->assertSee('Status dosen tetap')
             ->assertSee('Dosen Tetap')
             ->assertSee('Dr. Ayu Lestari, M.Kom.')
             // Identitas jurnal.
@@ -668,6 +669,56 @@ class SuratTest extends TestCase
             ->assertSee('<p class="mt-2 text-[16px] leading-snug text-justify">', false)
             // Ruang tanda tangan 2,5 cm antara jabatan dan nama penanda tangan.
             ->assertSee('<div class="h-[2.5cm]" aria-hidden="true"></div>', false);
+    }
+
+    public function test_validasi_mencetak_tmt_menyatu_pada_baris_pangkat_dan_jabatan(): void
+    {
+        Instansi::create(['nama_instansi' => 'Universitas Athena', 'kota' => 'Bandung']);
+
+        // Ketua: pangkat memakai TMT kepangkatan; jabatan mengikuti Jabatan
+        // Terakhir pada Riwayat Jabatan Akademik (bukan kolom
+        // users.jabatan_fungsional) beserta TMT terakhirnya.
+        $ketua = $this->makePimpinan()->user;
+        $ketua->update(['jabatan_fungsional' => 'Lektor']);
+        $ketua->riwayatKepangkatan()->create([
+            'kepangkatan_id' => Kepangkatan::create(['nama' => 'Penata', 'golongan' => 'IIIc'])->id,
+            'tmt' => '2024-07-01',
+        ]);
+        $ketua->riwayatJabatanStruktural()->create([
+            'jabatan_fungsional_id' => JabatanFungsional::create(['nama' => 'Lektor Kepala'])->id,
+            'tmt' => '2024-02-12',
+        ]);
+        // Jabatan struktural (Rektor, dari Struktur Instansi) tidak dipakai pada
+        // baris "Jabatan, TMT" walaupun TMT-nya lebih akhir.
+        $ketua->riwayatJabatanStruktural()->create([
+            'jabatan_struktural_id' => JabatanStruktural::query()->value('id'),
+            'tmt' => '2025-03-01',
+        ]);
+
+        // Dosen: TMT jabatan akademiknya ikut tercetak di belakang nama jabatan.
+        $dosen = $this->makeUser('dosen');
+        $dosen->riwayatJabatanStruktural()->create([
+            'jabatan_fungsional_id' => JabatanFungsional::create(['nama' => 'Tenaga Pengajar'])->id,
+            'tmt' => '2023-09-25',
+        ]);
+
+        $pakta = $this->makePakta($dosen, '2026-10-31');
+
+        $this->actingAs($this->makeUser('admin'))
+            ->get(route('surat.pakta-integritas.validasi', $pakta))
+            ->assertOk()
+            ->assertSee('Pangkat, Golongan Ruang, TMT')
+            ->assertSee('IIIc / Penata / 01 Juli 2024')
+            // Jabatan ketua = baris jabatan akademik dengan TMT paling akhir,
+            // bukan users.jabatan_fungsional ("Lektor").
+            ->assertSee('Lektor Kepala, 12 Februari 2024')
+            ->assertSee('Tenaga Pengajar, 25 September 2023')
+            // Jabatan struktural tidak ikut tercetak pada baris jabatan ketua.
+            ->assertDontSee('Rektor, 01 Maret 2025')
+            // TMT tidak lagi dicetak sebagai kolom terpisah di sisi kanan.
+            ->assertDontSee('TMT : 01 Juli 2024')
+            ->assertDontSee('TMT : 12 Februari 2024')
+            ->assertDontSee('TMT : 25 September 2023');
     }
 
     public function test_validasi_tanpa_tanggal_pengesahan_memakai_tanggal_pakta(): void
