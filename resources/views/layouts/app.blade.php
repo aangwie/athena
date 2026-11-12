@@ -205,14 +205,6 @@
                                     </svg>
                                     <span class="sidebar-label">Riwayat Pekerjaan</span>
                                 </a>
-                                <a href="{{ route('profil.riwayat') }}" title="Riwayat Dosen" @class(['sidebar-link', 'sidebar-link-active' => request()->routeIs('profil.riwayat')])>
-                                    <svg class="size-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                                        <circle cx="12" cy="8" r="3.5" />
-                                        <path d="M4.5 20a7.5 7.5 0 0 1 15 0" stroke-linecap="round" />
-                                        <path d="M9 12.5h6M12 9.5v6" stroke-linecap="round" />
-                                    </svg>
-                                    <span class="sidebar-label">Riwayat Dosen</span>
-                                </a>
                             @endif
                             @if (auth()->user()->isTendik())
                                 <a href="{{ route('profil.tendik.index') }}" title="Riwayat Tendik" @class(['sidebar-link', 'sidebar-link-active' => request()->routeIs('profil.tendik.*')])>
