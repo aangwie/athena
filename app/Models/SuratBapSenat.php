@@ -57,6 +57,16 @@ class SuratBapSenat extends Model
      */
     public const PROSENTASE_PENELITIAN = [150, 200, 300, 400, 550, 700, 850, 1050];
 
+    /**
+     * Pilihan tujuan kenaikan jabatan akademik pada BAP senat.
+     *
+     * @var array<string, string>
+     */
+    public const KENAIKAN_JABATAN = [
+        'belum_asisten_ahli' => 'Belum ke Asisten Ahli',
+        'asisten_ahli_ke_lektor' => 'Asisten Ahli ke Lektor',
+    ];
+
     protected $table = 'surat_bap_senat';
 
     protected $fillable = [
@@ -64,6 +74,7 @@ class SuratBapSenat extends Model
         'tanggal_bap',
         'user_id',
         'bidang_keilmuan',
+        'kenaikan_jabatan',
         'prosentase_penelitian',
         'tempat_pelaksanaan',
         'materi_rapat',
@@ -135,6 +146,35 @@ class SuratBapSenat extends Model
     public static function prosentasePenelitianList(): array
     {
         return self::PROSENTASE_PENELITIAN;
+    }
+
+    /**
+     * Daftar kunci pilihan kenaikan jabatan akademik yang sah, untuk dropdown & validasi.
+     *
+     * @return list<string>
+     */
+    public static function kenaikanJabatanList(): array
+    {
+        return array_keys(self::KENAIKAN_JABATAN);
+    }
+
+    /**
+     * Prosentase proporsi penelitian hanya dipakai pada kenaikan Asisten Ahli ke Lektor.
+     */
+    public function menggunakanProsentase(): bool
+    {
+        return $this->kenaikan_jabatan === 'asisten_ahli_ke_lektor';
+    }
+
+    /**
+     * Tujuan kenaikan jabatan untuk naskah cetak, mis. "Asisten Ahli" atau "Lektor".
+     */
+    public function targetKenaikan(): string
+    {
+        return match ($this->kenaikan_jabatan) {
+            'asisten_ahli_ke_lektor' => 'Lektor',
+            default => 'Asisten Ahli',
+        };
     }
 
     /**

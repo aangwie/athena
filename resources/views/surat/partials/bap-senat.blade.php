@@ -18,6 +18,10 @@
         sort($prosentaseList);
     }
 
+    // Pilihan kenaikan jabatan akademik menentukan tampil/tidaknya proporsi penelitian.
+    $kenaikanJabatanList = \App\Models\SuratBapSenat::KENAIKAN_JABATAN;
+    $kenaikanJabatanForm = (string) old('kenaikan_jabatan', $bapEdit?->kenaikan_jabatan);
+
     // Urutan pilihan admin dipertahankan: anggota yang sudah dipilih tampil lebih dulu
     // mengikuti urutan pilihan (termasuk saat menyunting atau setelah validasi gagal),
     // sisanya menyusul. Urutan ini pula yang dipakai tabel daftar hadir saat dicetak.
@@ -130,11 +134,26 @@
         </div>
 
         <div>
+            <label for="kenaikan_jabatan" class="form-label">
+                Pilihan Kenaikan Jabatan Akademik <span class="text-rose-500">*</span>
+            </label>
+            <select id="kenaikan_jabatan" name="kenaikan_jabatan" required
+                    @class(['form-select', 'border-rose-300 bg-rose-50/40' => $errors->has('kenaikan_jabatan')])>
+                <option value="">Pilih kenaikan jabatan</option>
+                @foreach ($kenaikanJabatanList as $nilai => $label)
+                    <option value="{{ $nilai }}" @selected($kenaikanJabatanForm === $nilai)>{{ $label }}</option>
+                @endforeach
+            </select>
+            @error('kenaikan_jabatan') <p class="form-error">{{ $message }}</p> @enderror
+            <p class="mt-1.5 text-[11px] text-slate-400">Tentukan tujuan kenaikan jabatan akademik dosen.</p>
+        </div>
+
+        <div data-grup-prosentase>
             <label for="prosentase_penelitian" class="form-label">
                 Prosentase Proporsi Penelitian <span class="text-rose-500">*</span>
             </label>
             {{-- Nilai dipilih dari daftar tetap: 150, 200, 300, 400, 550, 700, 850, 1050. --}}
-            <select id="prosentase_penelitian" name="prosentase_penelitian" required
+            <select id="prosentase_penelitian" name="prosentase_penelitian"
                     data-select-search="Cari prosentase…"
                     @class(['form-select', 'border-rose-300 bg-rose-50/40' => $errors->has('prosentase_penelitian')])>
                 <option value="">Pilih prosentase</option>

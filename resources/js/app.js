@@ -777,6 +777,29 @@ const boot = () => {
         sync();
     });
 
+    // BAP Senat: prosentase proporsi penelitian hanya relevan untuk kenaikan
+    // Asisten Ahli ke Lektor; pada "Belum ke Asisten Ahli" dropdown disembunyikan.
+    const kenaikanJabatan = document.querySelector('#kenaikan_jabatan');
+    const grupProsentase = document.querySelector('[data-grup-prosentase]');
+
+    if (kenaikanJabatan && grupProsentase) {
+        const prosentaseSelect = grupProsentase.querySelector('select');
+
+        const sinkronProsentase = () => {
+            const tampil = kenaikanJabatan.value === 'asisten_ahli_ke_lektor';
+
+            grupProsentase.classList.toggle('hidden', !tampil);
+
+            if (prosentaseSelect) {
+                prosentaseSelect.disabled = !tampil;
+                prosentaseSelect.required = tampil;
+            }
+        };
+
+        kenaikanJabatan.addEventListener('change', sinkronProsentase);
+        sinkronProsentase();
+    }
+
     // Riwayat karya tulis: bidang jurnal/prosiding tampil mengikuti jenis karya ilmiah terpilih.
     const karyaJenis = document.querySelector('#karya_ilmiah');
 

@@ -38,6 +38,10 @@ class SuratBapSenatRequest extends FormRequest
      */
     public function rules(): array
     {
+        // Prosentase proporsi penelitian hanya relevan saat kenaikan yang dipilih
+        // adalah Asisten Ahli ke Lektor.
+        $memakaiProsentase = $this->input('kenaikan_jabatan') === 'asisten_ahli_ke_lektor';
+
         return [
             'nomor_bap' => ['required', 'string', 'max:100'],
             'tanggal_bap' => ['required', 'date_format:d-m-Y'],
@@ -49,7 +53,13 @@ class SuratBapSenatRequest extends FormRequest
                 ),
             ],
             'bidang_keilmuan' => ['required', 'string', 'max:255', Rule::in($this->bidangKeilmuanDiizinkan())],
-            'prosentase_penelitian' => ['required', 'integer', Rule::in($this->prosentaseDiizinkan())],
+            'kenaikan_jabatan' => ['required', 'string', Rule::in(SuratBapSenat::kenaikanJabatanList())],
+            'prosentase_penelitian' => [
+                'nullable',
+                'integer',
+                Rule::in($this->prosentaseDiizinkan()),
+                Rule::requiredIf($memakaiProsentase),
+            ],
             'tempat_pelaksanaan' => ['required', 'string', 'max:150'],
             'materi_rapat' => ['required', 'string', 'max:255'],
             'anggota_senat_ids' => ['required', 'array', 'min:1'],
@@ -106,6 +116,7 @@ class SuratBapSenatRequest extends FormRequest
             'tanggal_bap' => 'tanggal',
             'dosen_id' => 'nama dosen',
             'bidang_keilmuan' => 'bidang keilmuan',
+            'kenaikan_jabatan' => 'pilihan kenaikan jabatan akademik',
             'prosentase_penelitian' => 'prosentase proporsi penelitian',
             'tempat_pelaksanaan' => 'tempat pelaksanaan',
             'materi_rapat' => 'materi rapat',
@@ -128,6 +139,8 @@ class SuratBapSenatRequest extends FormRequest
             'dosen_id.exists' => 'Nama dosen harus dosen aktif.',
             'bidang_keilmuan.required' => 'Bidang keilmuan wajib dipilih.',
             'bidang_keilmuan.in' => 'Bidang keilmuan tidak valid, pilih dari daftar yang tersedia.',
+            'kenaikan_jabatan.required' => 'Pilihan kenaikan jabatan akademik wajib dipilih.',
+            'kenaikan_jabatan.in' => 'Pilihan kenaikan jabatan akademik tidak valid.',
             'prosentase_penelitian.required' => 'Prosentase proporsi penelitian wajib diisi.',
             'prosentase_penelitian.integer' => 'Prosentase proporsi penelitian harus berupa angka.',
             'prosentase_penelitian.in' => 'Prosentase proporsi penelitian tidak valid, pilih dari daftar yang tersedia.',

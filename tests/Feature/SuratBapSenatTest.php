@@ -70,6 +70,12 @@ class SuratBapSenatTest extends TestCase
             ->assertSee('PENDIDIKAN BAHASA INGGRIS (50.132.1020)')
             ->assertSee('PENDIDIKAN MATEMATIKA (50.132.1057)')
             ->assertSee('KEAGAMAAN (60.101.1001)')
+            ->assertSee('Pilihan Kenaikan Jabatan Akademik')
+            ->assertSee('name="kenaikan_jabatan"', false)
+            ->assertSee('<option value="belum_asisten_ahli"', false)
+            ->assertSee('Belum ke Asisten Ahli')
+            ->assertSee('<option value="asisten_ahli_ke_lektor"', false)
+            ->assertSee('Asisten Ahli ke Lektor')
             ->assertSee('Prosentase Proporsi Penelitian')
             // Prosentase proporsi penelitian berupa dropdown dengan pilihan tetap.
             ->assertSee('name="prosentase_penelitian"', false)
@@ -107,6 +113,7 @@ class SuratBapSenatTest extends TestCase
                 'tanggal_bap' => '31-10-2026',
                 'dosen_id' => $dosen->id,
                 'bidang_keilmuan' => 'APLIKASI PERANGKAT LUNAK SITUS',
+                'kenaikan_jabatan' => 'asisten_ahli_ke_lektor',
                 'prosentase_penelitian' => 150,
                 'tempat_pelaksanaan' => 'Ruang Rapat Senat Lt. 2',
                 'materi_rapat' => 'Pemberian pertimbangan kenaikan jabatan akademik dosen',
@@ -121,6 +128,7 @@ class SuratBapSenatTest extends TestCase
         $this->assertSame('2026-10-31', $bap->tanggal_bap->toDateString());
         $this->assertSame($dosen->id, $bap->user_id);
         $this->assertSame('APLIKASI PERANGKAT LUNAK SITUS', $bap->bidang_keilmuan);
+        $this->assertSame('asisten_ahli_ke_lektor', $bap->kenaikan_jabatan);
         $this->assertSame(150, $bap->prosentase_penelitian);
         $this->assertSame('Ruang Rapat Senat Lt. 2', $bap->tempat_pelaksanaan);
         $this->assertSame('Pemberian pertimbangan kenaikan jabatan akademik dosen', $bap->materi_rapat);
@@ -132,6 +140,7 @@ class SuratBapSenatTest extends TestCase
                 'tanggal_bap' => '01-11-2026',
                 'dosen_id' => $dosen->id,
                 'bidang_keilmuan' => 'TEKNIK JARINGAN KOMPUTER',
+                'kenaikan_jabatan' => 'asisten_ahli_ke_lektor',
                 'prosentase_penelitian' => 200,
                 'tempat_pelaksanaan' => 'Aula Kampus',
                 'materi_rapat' => 'Pembahasan usulan jabatan akademik',
@@ -145,6 +154,7 @@ class SuratBapSenatTest extends TestCase
         $this->assertSame('002/BAP-SENAT/XI/2026', $bap->nomor_bap);
         $this->assertSame('2026-11-01', $bap->tanggal_bap->toDateString());
         $this->assertSame('TEKNIK JARINGAN KOMPUTER', $bap->bidang_keilmuan);
+        $this->assertSame('asisten_ahli_ke_lektor', $bap->kenaikan_jabatan);
         $this->assertSame(200, $bap->prosentase_penelitian);
         $this->assertSame('Aula Kampus', $bap->tempat_pelaksanaan);
         $this->assertSame('Pembahasan usulan jabatan akademik', $bap->materi_rapat);
@@ -231,6 +241,7 @@ class SuratBapSenatTest extends TestCase
                 'tanggal_bap' => '31-10-2026',
                 'dosen_id' => $dosen->id,
                 'bidang_keilmuan' => 'Sistem Informasi',
+                'kenaikan_jabatan' => 'asisten_ahli_ke_lektor',
                 'prosentase_penelitian' => 300,
                 'tempat_pelaksanaan' => 'Ruang Rapat Senat Lt. 2',
                 'materi_rapat' => 'Pemberian pertimbangan kenaikan jabatan akademik',
@@ -306,6 +317,98 @@ class SuratBapSenatTest extends TestCase
             ->assertSessionHasErrors('prosentase_penelitian');
 
         $this->assertDatabaseCount('surat_bap_senat', 0);
+    }
+
+    public function test_bap_senat_belum_asisten_ahli_menyimpan_prosentase_kosong(): void
+    {
+        [$dosen, $ketua] = $this->makeSenat();
+        $admin = $this->makeUser('admin');
+
+        $this->actingAs($admin)
+            ->post(route('surat.bap-senat.store'), [
+                'nomor_bap' => '015/BAP-SENAT/X/2026',
+                'tanggal_bap' => '31-10-2026',
+                'dosen_id' => $dosen->id,
+                'bidang_keilmuan' => 'APLIKASI PERANGKAT LUNAK SITUS',
+                'kenaikan_jabatan' => 'belum_asisten_ahli',
+                'tempat_pelaksanaan' => 'Ruang Rapat Senat Lt. 2',
+                'materi_rapat' => 'Pemberian pertimbangan kenaikan jabatan akademik dosen',
+                'anggota_senat_ids' => [$ketua->user_id],
+            ])
+            ->assertRedirect(route('surat.index').'#bap-senat')
+            ->assertSessionHasNoErrors();
+
+        $bap = SuratBapSenat::query()->firstOrFail();
+
+        $this->assertSame('belum_asisten_ahli', $bap->kenaikan_jabatan);
+        $this->assertNull($bap->prosentase_penelitian);
+    }
+
+    public function test_bap_senat_asisten_ahli_ke_lektor_wajib_prosentase(): void
+    {
+        [$dosen, $ketua] = $this->makeSenat();
+        $admin = $this->makeUser('admin');
+
+        $this->actingAs($admin)
+            ->post(route('surat.bap-senat.store'), [
+                'nomor_bap' => '016/BAP-SENAT/X/2026',
+                'tanggal_bap' => '31-10-2026',
+                'dosen_id' => $dosen->id,
+                'bidang_keilmuan' => 'APLIKASI PERANGKAT LUNAK SITUS',
+                'kenaikan_jabatan' => 'asisten_ahli_ke_lektor',
+                'tempat_pelaksanaan' => 'Ruang Rapat Senat Lt. 2',
+                'materi_rapat' => 'Pemberian pertimbangan kenaikan jabatan akademik dosen',
+                'anggota_senat_ids' => [$ketua->user_id],
+            ])
+            ->assertSessionHasErrors('prosentase_penelitian');
+
+        $this->assertDatabaseCount('surat_bap_senat', 0);
+    }
+
+    public function test_cetak_bap_senat_menyesuaikan_teks_kenaikan_dan_prosentase(): void
+    {
+        Instansi::create(['nama_instansi' => 'Universitas Athena', 'kota' => 'Bandung']);
+
+        [$dosen, $ketua] = $this->makeSenat();
+        $admin = $this->makeUser('admin');
+
+        // Belum ke Asisten Ahli: tidak ada kalimat proporsi penelitian.
+        $belum = SuratBapSenat::create([
+            'nomor_bap' => '017/BAP-SENAT/X/2026',
+            'tanggal_bap' => '2026-10-31',
+            'user_id' => $dosen->id,
+            'bidang_keilmuan' => 'Sistem Informasi',
+            'kenaikan_jabatan' => 'belum_asisten_ahli',
+            'prosentase_penelitian' => null,
+            'anggota_senat_ids' => [$ketua->user_id],
+        ]);
+
+        $html = $this->actingAs($admin)
+            ->get(route('surat.bap-senat.cetak', $belum))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringContainsString('Untuk Kenaikan Jabatan Akademik Dosen ke Asisten Ahli', $html);
+        $this->assertStringNotContainsString('proporsi penelitian', $html);
+
+        // Asisten Ahli ke Lektor: kalimat proporsi penelitian ditampilkan.
+        $lektor = SuratBapSenat::create([
+            'nomor_bap' => '018/BAP-SENAT/X/2026',
+            'tanggal_bap' => '2026-10-31',
+            'user_id' => $dosen->id,
+            'bidang_keilmuan' => 'Sistem Informasi',
+            'kenaikan_jabatan' => 'asisten_ahli_ke_lektor',
+            'prosentase_penelitian' => 150,
+            'anggota_senat_ids' => [$ketua->user_id],
+        ]);
+
+        $html = $this->actingAs($admin)
+            ->get(route('surat.bap-senat.cetak', $lektor))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringContainsString('Untuk Kenaikan Jabatan Akademik Dosen ke Lektor', $html);
+        $this->assertStringContainsString('proporsi penelitian 150%', $html);
     }
 
     public function test_admin_can_delete_bap_senat(): void

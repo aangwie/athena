@@ -162,7 +162,7 @@
                 </table>
 
                 <p class="mt-2 text-justify text-[16px] leading-snug">
-                    Untuk Kenaikan Jabatan Akademik Dosen ke Asisten Ahli
+                    Untuk Kenaikan Jabatan Akademik Dosen ke {{ $bap->targetKenaikan() }}
                     dalam bidang ilmu penugasan keahlian/kompetensi/kepakaran {{ $bap->bidang_keilmuan }}.
                 </p>
 
@@ -170,9 +170,7 @@
                     Hasil pertimbangan diberikan berdasarkan penilaian atas integritas, kinerja, tanggung jawab,
                     dan tata krama dalam kehidupan kampus yang telah ditetapkan oleh yang bersangkutan dalam
                     melaksanakan tridharma Perguruan Tinggi sejak yang bersangkutan menduduki jabatan akademik
-                    terakhir sampai dengan rapat pemberian pertimbangan persetujuan ini dilaksanakan, dengan
-                    hasil penilaian proporsi penelitian {{ $bap->prosentase_penelitian }}% dari total kebutuhan
-                    kenaikan jabatan.
+                    terakhir sampai dengan rapat pemberian pertimbangan persetujuan ini dilaksanakan{{ $bap->menggunakanProsentase() ? ', dengan hasil penilaian proporsi penelitian '.$bap->prosentase_penelitian.'% dari total kebutuhan kenaikan jabatan' : '' }}.
                 </p>
 
                 <p class="mt-2 text-justify text-[16px] leading-snug">
