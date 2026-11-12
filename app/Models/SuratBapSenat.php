@@ -50,6 +50,13 @@ class SuratBapSenat extends Model
      */
     public const RUMPUN_LAINNYA = 'Lainnya (data lama)';
 
+    /**
+     * Pilihan tetap prosentase proporsi penelitian pada BAP senat (dropdown).
+     *
+     * @var list<int>
+     */
+    public const PROSENTASE_PENELITIAN = [150, 200, 300, 400, 550, 700, 850, 1050];
+
     protected $table = 'surat_bap_senat';
 
     protected $fillable = [
@@ -121,18 +128,34 @@ class SuratBapSenat extends Model
     }
 
     /**
-     * Anggota senat yang tercatat hadir pada rapat, urut jabatan
-     * (Ketua, Sekretaris, Anggota) lalu nama.
+     * Daftar nilai prosentase proporsi penelitian yang sah, untuk dropdown & validasi.
+     *
+     * @return list<int>
+     */
+    public static function prosentasePenelitianList(): array
+    {
+        return self::PROSENTASE_PENELITIAN;
+    }
+
+    /**
+     * Anggota senat yang tercatat hadir pada rapat, mengikuti urutan pilihan admin saat
+     * mengisi formulir: pilihan pertama paling atas, pilihan terakhir paling bawah.
      *
      * @return Collection<int, Senat>
      */
     public function anggotaSenat(): Collection
     {
+        $urutan = array_map('intval', $this->anggota_senat_ids ?? []);
+
+        // Posisi pada daftar pilihan dipakai sebagai kunci urut. Anggota yang sudah tidak
+        // ada pada daftar pilihan diletakkan paling bawah agar tetap tampil.
+        $posisi = array_flip($urutan);
+
         return Senat::query()
             ->with('user')
-            ->whereIn('user_id', $this->anggota_senat_ids ?? [])
+            ->whereIn('user_id', $urutan)
             ->get()
-            ->sortBy(fn (Senat $item) => [$item->urutanJabatan(), $item->user?->name ?? ''])
+            ->sortBy(fn (Senat $item) => $posisi[(int) $item->user_id] ?? PHP_INT_MAX)
             ->values();
     }
 }

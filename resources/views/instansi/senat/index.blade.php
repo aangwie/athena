@@ -76,7 +76,7 @@
                     </div>
                 </div>
 
-                <div class="grid gap-5 px-5 py-5 sm:px-6 lg:grid-cols-2">
+                <div class="grid gap-5 px-5 py-5 sm:px-6 lg:grid-cols-3">
                     <div>
                         <label for="user_id" class="form-label">Nama Dosen <span class="text-rose-500">*</span></label>
                         <select id="user_id" name="user_id" required
@@ -99,6 +99,8 @@
                     <div>
                         <label for="jabatan" class="form-label">Jabatan <span class="text-rose-500">*</span></label>
                         <select id="jabatan" name="jabatan" required
+                                data-dependent-select="#jabatan_tambahan"
+                                data-sub-options="{{ json_encode($rangkapanMap, JSON_UNESCAPED_SLASHES) }}"
                                 data-select-search="Cari jabatan…"
                                 @class(['form-select', 'border-rose-300 bg-rose-50/40' => $errors->has('jabatan')])>
                             <option value="">Pilih jabatan</option>
@@ -108,12 +110,34 @@
                         </select>
                         @error('jabatan') <p class="form-error">{{ $message }}</p> @enderror
                         <p class="mt-1.5 text-[11px] text-slate-400">
-                            Satu dosen hanya dapat terdaftar sekali pada senat. Ketua hanya boleh satu orang;
+                            Satu dosen boleh merangkap jabatan. Ketua hanya boleh satu orang;
                             @if ($ketuaBolehDipilih)
                                 jabatan ketua belum terisi.
                             @else
                                 ubah atau hapus dulu ketua atas nama {{ $ketua->user?->name }}.
                             @endif
+                        </p>
+                    </div>
+
+                    {{-- Merangkap jabatan: opsional, pilihan mengikuti jabatan utama. --}}
+                    <div data-dependent-field>
+                        <label for="jabatan_tambahan" class="form-label">
+                            Merangkap Jabatan <span class="font-normal text-slate-400">(opsional)</span>
+                        </label>
+                        <select id="jabatan_tambahan" name="jabatan_tambahan"
+                                data-selected="{{ old('jabatan_tambahan', $editSenat?->jabatan_tambahan) }}"
+                                data-placeholder="Tidak merangkap"
+                                data-select-search="Cari jabatan rangkapan…"
+                                @class(['form-select', 'border-rose-300 bg-rose-50/40' => $errors->has('jabatan_tambahan')])>
+                            <option value="">Tidak merangkap</option>
+                            @foreach ($rangkapanMap[old('jabatan', $editSenat?->jabatan)] ?? $rangkapanList as $nilai => $label)
+                                <option value="{{ $nilai }}" @selected((string) old('jabatan_tambahan', $editSenat?->jabatan_tambahan) === (string) $nilai)>{{ $label }}</option>
+                            @endforeach
+                        </select>
+                        @error('jabatan_tambahan') <p class="form-error">{{ $message }}</p> @enderror
+                        <p class="mt-1.5 text-[11px] text-slate-400">
+                            Isi bila dosen merangkap jabatan lain, mis. Ketua merangkap Anggota.
+                            Ketua tidak dapat dipilih sebagai jabatan rangkapan.
                         </p>
                     </div>
                 </div>
@@ -149,7 +173,7 @@
                                 <h3 class="text-base font-extrabold tracking-tight text-slate-900">Daftar Anggota Senat</h3>
                                 <span class="rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-bold text-indigo-600">{{ $items->count() }} orang</span>
                             </div>
-                            <p class="mt-0.5 text-xs text-slate-400">Ketua &amp; sekretaris ditampilkan lebih dulu, lalu anggota sesuai abjad.</p>
+                            <p class="mt-0.5 text-xs text-slate-400">Ketua &amp; sekretaris ditampilkan lebih dulu, lalu anggota dan anggota/ex officio sesuai abjad. Dosen yang merangkap jabatan tetap tampil satu baris.</p>
                         </div>
                     </div>
 
@@ -185,8 +209,9 @@
                                         <span @class([
                                             'badge-status',
                                             'bg-teal-50 text-teal-700 ring-teal-200' => $item->jabatan === 'ketua',
-                                            'bg-slate-50 text-slate-600 ring-slate-200' => $item->jabatan !== 'ketua',
-                                        ])>{{ $item->jabatanLabel() }}</span>
+                                            'bg-indigo-50 text-indigo-700 ring-indigo-200' => $item->jabatan === 'anggota_ex_officio',
+                                            'bg-slate-50 text-slate-600 ring-slate-200' => ! in_array($item->jabatan, ['ketua', 'anggota_ex_officio'], true),
+                                        ])>{{ $item->jabatanLengkap() }}</span>
                                     </td>
                                     <td class="px-5 py-3">
                                         <div class="flex items-center justify-end gap-1">

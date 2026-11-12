@@ -1137,6 +1137,42 @@ function siapkanDropdownCari(select, indeks) {
 
     const terpilih = () => Array.from(select.options).filter((option) => option.selected && option.value !== '');
 
+    // Multi select: urutan pilihan admin dicatat agar urutan yang dikirim ke server (dan urutan
+    // chip) sama dengan urutan klik — pilihan pertama paling atas, pilihan terakhir paling bawah.
+    const urutanPilih = terpilih().map((option) => option.value);
+
+    // Urutan dasar opsi (sebelum dipilih), dipakai untuk mengembalikan opsi yang dilepas lagi.
+    const urutanAsal = Array.from(select.options).map((option) => option.value);
+
+    const catatPilihan = (option, dipilih) => {
+        const posisi = urutanPilih.indexOf(option.value);
+
+        if (dipilih && posisi === -1) {
+            urutanPilih.push(option.value);
+        } else if (!dipilih && posisi !== -1) {
+            urutanPilih.splice(posisi, 1);
+        }
+    };
+
+    // Susun ulang opsi: opsi kosong tetap paling awal, lalu opsi terpilih mengikuti urutan klik,
+    // lalu sisanya pada urutan semula. Urutan DOM inilah yang tersubmit ke server.
+    const rapikanUrutan = () => {
+        if (!multi) {
+            return;
+        }
+
+        const peta = new Map(Array.from(select.options).map((option) => [option.value, option]));
+        const urutan = [];
+
+        [...(opsiKosong ? [''] : []), ...urutanPilih, ...urutanAsal].forEach((nilai) => {
+            if (!urutan.includes(nilai) && peta.has(nilai)) {
+                urutan.push(nilai);
+            }
+        });
+
+        urutan.forEach((nilai) => select.append(peta.get(nilai)));
+    };
+
     const gambarNilai = () => {
         const dipilih = terpilih();
 
@@ -1172,6 +1208,8 @@ function siapkanDropdownCari(select, indeks) {
             hapus.addEventListener('click', (event) => {
                 event.stopPropagation();
                 option.selected = false;
+                catatPilihan(option, false);
+                rapikanUrutan();
                 ubah();
             });
 
@@ -1252,6 +1290,8 @@ function siapkanDropdownCari(select, indeks) {
 
         if (multi) {
             option.selected = !option.selected;
+            catatPilihan(option, option.selected);
+            rapikanUrutan();
             ubah();
         } else {
             select.value = option.value;

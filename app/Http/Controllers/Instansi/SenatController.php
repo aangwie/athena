@@ -27,6 +27,9 @@ class SenatController extends Controller
             'items' => $items,
             'editSenat' => $items->firstWhere('id', (int) $request->query('edit')),
             'jabatanList' => Senat::JABATAN,
+            // Opsi jabatan rangkapan per jabatan utama (dropdown bertingkat).
+            'rangkapanMap' => Senat::rangkapanPerJabatan(),
+            'rangkapanList' => Senat::rangkapanOptions(),
             'dosenList' => User::query()
                 ->where('role', 'dosen')
                 ->where('is_active', true)
@@ -102,6 +105,13 @@ class SenatController extends Controller
                 Rule::unique('senat', 'user_id')->ignore($senat?->id),
             ],
             'jabatan' => ['required', Rule::in(array_keys(Senat::JABATAN))],
+            // Satu dosen boleh merangkap satu jabatan lain; Ketua tidak dapat
+            // dirangkap maupun dijadikan rangkapan (lihat JABATAN_TIDAK_DIRANGKAP).
+            'jabatan_tambahan' => [
+                'nullable',
+                Rule::in(array_keys(Senat::rangkapanOptions())),
+                'different:jabatan',
+            ],
         ];
 
         // Senat hanya boleh punya satu ketua.
@@ -116,9 +126,12 @@ class SenatController extends Controller
             'jabatan.required' => 'Jabatan wajib dipilih.',
             'jabatan.in' => 'Jabatan senat tidak valid.',
             'jabatan.unique' => 'Ketua senat sudah ada. Hapus atau ubah jabatan ketua sebelumnya terlebih dahulu.',
+            'jabatan_tambahan.in' => 'Jabatan rangkapan tidak valid. Ketua tidak dapat dirangkap.',
+            'jabatan_tambahan.different' => 'Jabatan rangkapan tidak boleh sama dengan jabatan utama.',
         ], [
             'user_id' => 'nama dosen',
             'jabatan' => 'jabatan',
+            'jabatan_tambahan' => 'jabatan rangkapan',
         ]);
     }
 

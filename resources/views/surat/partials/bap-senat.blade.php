@@ -7,6 +7,26 @@
     if ($bidangForm !== '' && \App\Models\SuratBapSenat::rumpunBidangKeilmuan($bidangForm) === null) {
         $bidangMap[\App\Models\SuratBapSenat::RUMPUN_LAINNYA] = [$bidangForm => $bidangForm];
     }
+
+    // Prosentase proporsi penelitian dipilih dari daftar tetap (dropdown).
+    $prosentaseList = \App\Models\SuratBapSenat::prosentasePenelitianList();
+    $prosentaseForm = (string) old('prosentase_penelitian', $bapEdit?->prosentase_penelitian);
+
+    // Nilai lama di luar daftar tetap ditampilkan agar tidak hilang saat disunting.
+    if ($prosentaseForm !== '' && ! in_array((int) $prosentaseForm, $prosentaseList, true)) {
+        $prosentaseList[] = (int) $prosentaseForm;
+        sort($prosentaseList);
+    }
+
+    // Urutan pilihan admin dipertahankan: anggota yang sudah dipilih tampil lebih dulu
+    // mengikuti urutan pilihan (termasuk saat menyunting atau setelah validasi gagal),
+    // sisanya menyusul. Urutan ini pula yang dipakai tabel daftar hadir saat dicetak.
+    $anggotaDipilih = array_map('strval', (array) old('anggota_senat_ids', $bapEdit?->anggota_senat_ids ?? []));
+    $senatForm = $senatList
+        ->filter(fn ($senat) => in_array((string) $senat->user_id, $anggotaDipilih, true))
+        ->sortBy(fn ($senat) => array_search((string) $senat->user_id, $anggotaDipilih, true))
+        ->concat($senatList->reject(fn ($senat) => in_array((string) $senat->user_id, $anggotaDipilih, true)))
+        ->values();
 @endphp
 
 <p class="mt-1 max-w-2xl text-sm leading-relaxed text-slate-500">
@@ -113,11 +133,17 @@
             <label for="prosentase_penelitian" class="form-label">
                 Prosentase Proporsi Penelitian <span class="text-rose-500">*</span>
             </label>
-            <input type="number" id="prosentase_penelitian" name="prosentase_penelitian" required
-                   min="0" max="100" step="1" inputmode="numeric"
-                   value="{{ old('prosentase_penelitian', $bapEdit?->prosentase_penelitian) }}" placeholder="0 - 100"
-                   @class(['form-input', 'border-rose-300 bg-rose-50/40' => $errors->has('prosentase_penelitian')])>
+            {{-- Nilai dipilih dari daftar tetap: 150, 200, 300, 400, 550, 700, 850, 1050. --}}
+            <select id="prosentase_penelitian" name="prosentase_penelitian" required
+                    data-select-search="Cari prosentase…"
+                    @class(['form-select', 'border-rose-300 bg-rose-50/40' => $errors->has('prosentase_penelitian')])>
+                <option value="">Pilih prosentase</option>
+                @foreach ($prosentaseList as $nilai)
+                    <option value="{{ $nilai }}" @selected($prosentaseForm === (string) $nilai)>{{ $nilai }}%</option>
+                @endforeach
+            </select>
             @error('prosentase_penelitian') <p class="form-error">{{ $message }}</p> @enderror
+            <p class="mt-1.5 text-[11px] text-slate-400">Pilih salah satu nilai proporsi penelitian.</p>
         </div>
 
         <div>
@@ -153,10 +179,10 @@
             <select id="bap_anggota_senat" name="anggota_senat_ids[]" multiple required size="6"
                     data-select-search="Cari nama anggota senat…"
                     @class(['form-select', 'border-rose-300 bg-rose-50/40' => $errors->has('anggota_senat_ids')])>
-                @foreach ($senatList as $senat)
+                @foreach ($senatForm as $senat)
                     <option value="{{ $senat->user_id }}"
-                            @selected(in_array((string) $senat->user_id, array_map('strval', old('anggota_senat_ids', $bapEdit?->anggota_senat_ids ?? [])), true))>
-                        {{ $senat->user?->name }} — {{ $senat->jabatanLabel() }}
+                            @selected(in_array((string) $senat->user_id, $anggotaDipilih, true))>
+                        {{ $senat->user?->name }} — {{ $senat->jabatanLengkap() }}
                     </option>
                 @endforeach
             </select>
@@ -165,6 +191,8 @@
 
             <p class="mt-1.5 text-[11px] text-slate-400">
                 Tahan Ctrl (Windows) atau Cmd (macOS) untuk memilih lebih dari satu anggota.
+                Urutan pilihan menentukan urutan nama pada daftar hadir cetak: pilihan pertama
+                paling atas, pilihan terakhir paling bawah.
                 @if ($senatList->isEmpty())
                     Belum ada anggota senat.
                     <a href="{{ route('instansi.senat.index') }}" class="font-bold underline">Atur susunan senat</a>.

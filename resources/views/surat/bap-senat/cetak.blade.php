@@ -250,7 +250,7 @@
                             <tr>
                                 <td class="border border-slate-900 px-2 py-1.5 text-center align-top">{{ $i + 1 }}</td>
                                 <td class="border border-slate-900 px-2 py-1.5 align-top">{{ $senat?->user?->name ?? '' }}</td>
-                                <td class="border border-slate-900 px-2 py-1.5 align-top">{{ $senat?->jabatanLabel() ?? '' }}</td>
+                                <td class="border border-slate-900 px-2 py-1.5 align-top">{{ $senat?->jabatanLengkap() ?? '' }}</td>
                                 <td class="border border-slate-900 px-2 py-1.5 align-top"></td>
                             </tr>
                         @endfor

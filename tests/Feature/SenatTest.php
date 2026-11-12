@@ -60,7 +60,10 @@ class SenatTest extends TestCase
             ->assertSee('Budi Santoso, M.Pd.')
             ->assertSee('Ketua')
             ->assertSee('Sekretaris')
-            ->assertSee('Anggota');
+            ->assertSee('Anggota')
+            ->assertSee('Anggota/Ex Officio')
+            ->assertSee('Merangkap Jabatan')
+            ->assertSee('data-dependent-select="#jabatan_tambahan"', false);
     }
 
     public function test_sekretaris_is_a_valid_jabatan_and_sorted_after_ketua(): void
@@ -89,6 +92,193 @@ class SenatTest extends TestCase
             ->all();
 
         $this->assertSame(['ketua', 'sekretaris', 'anggota'], $urutan);
+    }
+
+    public function test_anggota_ex_officio_is_a_valid_jabatan_and_sorted_after_anggota(): void
+    {
+        $admin = $this->makeAdmin();
+        $anggota = $this->makeDosen('1995050520', 'Ahmad Fauzi, M.T.');
+        $exOfficio = $this->makeDosen('1990011220', 'Budi Santoso, M.Pd.');
+        $exOfficioLain = $this->makeDosen('1993030320', 'Citra Dewi, M.Kom.');
+
+        // Jabatan baru dapat disimpan, dan lebih dari satu dosen boleh ex officio
+        // (batasan satu orang hanya berlaku untuk jabatan ketua).
+        foreach ([$exOfficio, $exOfficioLain] as $dosen) {
+            $this->actingAs($admin)
+                ->post('/instansi/senat', ['user_id' => $dosen->id, 'jabatan' => 'anggota_ex_officio'])
+                ->assertRedirect(route('instansi.senat.index'))
+                ->assertSessionHasNoErrors();
+        }
+
+        $this->assertSame(
+            ['anggota_ex_officio', 'anggota_ex_officio'],
+            Senat::whereIn('user_id', [$exOfficio->id, $exOfficioLain->id])->pluck('jabatan')->all(),
+        );
+
+        Senat::create(['user_id' => $anggota->id, 'jabatan' => 'anggota']);
+
+        $items = $this->actingAs($admin)
+            ->get('/instansi/senat')
+            ->assertOk()
+            ->assertSee('Anggota/Ex Officio')
+            ->viewData('items');
+
+        // Anggota/Ex Officio tampil setelah anggota biasa.
+        $this->assertSame(
+            ['anggota', 'anggota_ex_officio', 'anggota_ex_officio'],
+            $items->pluck('jabatan')->all(),
+        );
+
+        // Dalam kelompok jabatan yang sama, urutan mengikuti abjad nama dosen.
+        $this->assertSame(
+            ['Ahmad Fauzi, M.T.', 'Budi Santoso, M.Pd.', 'Citra Dewi, M.Kom.'],
+            $items->pluck('user.name')->all(),
+        );
+    }
+
+    public function test_ketua_boleh_merangkap_anggota_dalam_satu_baris_senat(): void
+    {
+        $admin = $this->makeAdmin();
+        $ketua = $this->makeDosen('1987654321', 'Dr. Ayu Lestari, M.Kom.');
+
+        $this->actingAs($admin)
+            ->post('/instansi/senat', [
+                'user_id' => $ketua->id,
+                'jabatan' => 'ketua',
+                'jabatan_tambahan' => 'anggota',
+            ])
+            ->assertRedirect(route('instansi.senat.index'))
+            ->assertSessionHasNoErrors();
+
+        // Rangkapan disimpan pada baris yang sama, bukan baris senat baru.
+        $senat = Senat::firstOrFail();
+        $this->assertSame('ketua', $senat->jabatan);
+        $this->assertSame('anggota', $senat->jabatan_tambahan);
+        $this->assertSame('Ketua merangkap Anggota', $senat->jabatanLengkap());
+        $this->assertDatabaseCount('senat', 1);
+
+        $this->actingAs($admin)
+            ->get('/instansi/senat')
+            ->assertOk()
+            ->assertSee('Ketua merangkap Anggota');
+    }
+
+    public function test_sekretaris_boleh_merangkap_anggota_dan_rangkapan_dapat_dikosongkan(): void
+    {
+        $admin = $this->makeAdmin();
+        $sekretaris = $this->makeDosen('1990011220', 'Budi Santoso, M.Pd.');
+
+        $this->actingAs($admin)
+            ->post('/instansi/senat', [
+                'user_id' => $sekretaris->id,
+                'jabatan' => 'sekretaris',
+                'jabatan_tambahan' => 'anggota',
+            ])
+            ->assertSessionHasNoErrors();
+
+        $senat = Senat::firstOrFail();
+        $this->assertSame('Sekretaris merangkap Anggota', $senat->jabatanLengkap());
+
+        // Pilihan "Tidak merangkap" mengosongkan kembali jabatan rangkapan.
+        $this->actingAs($admin)
+            ->put(route('instansi.senat.update', $senat), [
+                'user_id' => $sekretaris->id,
+                'jabatan' => 'sekretaris',
+                'jabatan_tambahan' => '',
+            ])
+            ->assertRedirect(route('instansi.senat.index'))
+            ->assertSessionHasNoErrors();
+
+        $senat->refresh();
+        $this->assertNull($senat->jabatan_tambahan);
+        $this->assertSame('Sekretaris', $senat->jabatanLengkap());
+    }
+
+    public function test_jabatan_rangkapan_menolak_ketua_jabatan_yang_sama_dan_nilai_tidak_dikenal(): void
+    {
+        $admin = $this->makeAdmin();
+        $dosen = $this->makeDosen();
+
+        // Ketua tidak dapat dirangkap: hanya boleh sebagai jabatan utama.
+        $this->actingAs($admin)
+            ->from('/instansi/senat')
+            ->post('/instansi/senat', [
+                'user_id' => $dosen->id,
+                'jabatan' => 'sekretaris',
+                'jabatan_tambahan' => 'ketua',
+            ])
+            ->assertSessionHasErrors([
+                'jabatan_tambahan' => 'Jabatan rangkapan tidak valid. Ketua tidak dapat dirangkap.',
+            ]);
+
+        // Rangkapan tidak boleh sama dengan jabatan utama.
+        $this->actingAs($admin)
+            ->from('/instansi/senat')
+            ->post('/instansi/senat', [
+                'user_id' => $dosen->id,
+                'jabatan' => 'anggota',
+                'jabatan_tambahan' => 'anggota',
+            ])
+            ->assertSessionHasErrors([
+                'jabatan_tambahan' => 'Jabatan rangkapan tidak boleh sama dengan jabatan utama.',
+            ]);
+
+        // Jabatan di luar daftar senat tetap ditolak.
+        $this->actingAs($admin)
+            ->from('/instansi/senat')
+            ->post('/instansi/senat', [
+                'user_id' => $dosen->id,
+                'jabatan' => 'anggota',
+                'jabatan_tambahan' => 'bendahara',
+            ])
+            ->assertSessionHasErrors('jabatan_tambahan');
+
+        $this->assertDatabaseCount('senat', 0);
+    }
+
+    public function test_opsi_jabatan_rangkapan_mengikuti_jabatan_utama(): void
+    {
+        // Semua jabatan boleh dirangkap kecuali Ketua.
+        $this->assertSame(
+            ['sekretaris', 'anggota', 'anggota_ex_officio'],
+            array_keys(Senat::rangkapanOptions()),
+        );
+
+        $peta = Senat::rangkapanPerJabatan();
+
+        // Jabatan utama tidak ditawarkan sebagai rangkapannya sendiri.
+        $this->assertSame(['sekretaris', 'anggota', 'anggota_ex_officio'], array_keys($peta['ketua']));
+        $this->assertSame(['anggota', 'anggota_ex_officio'], array_keys($peta['sekretaris']));
+        $this->assertSame(['sekretaris', 'anggota_ex_officio'], array_keys($peta['anggota']));
+        $this->assertSame(['sekretaris', 'anggota'], array_keys($peta['anggota_ex_officio']));
+    }
+
+    public function test_dosen_merangkap_diurutkan_memakai_jabatan_tertinggi(): void
+    {
+        $admin = $this->makeAdmin();
+        $ketua = $this->makeDosen('1987654321', 'Dr. Ayu Lestari, M.Kom.');
+        $anggota = $this->makeDosen('1995050520', 'Ahmad Fauzi, M.T.');
+        $merangkap = $this->makeDosen('1993030320', 'Citra Dewi, M.Kom.');
+
+        Senat::create(['user_id' => $ketua->id, 'jabatan' => 'ketua']);
+        Senat::create(['user_id' => $anggota->id, 'jabatan' => 'anggota']);
+        // Anggota yang merangkap sekretaris tampil bersama kelompok sekretaris.
+        Senat::create([
+            'user_id' => $merangkap->id,
+            'jabatan' => 'anggota',
+            'jabatan_tambahan' => 'sekretaris',
+        ]);
+
+        $items = $this->actingAs($admin)
+            ->get('/instansi/senat')
+            ->assertOk()
+            ->assertSee('Anggota merangkap Sekretaris')
+            ->viewData('items');
+
+        $this->assertSame(
+            ['Dr. Ayu Lestari, M.Kom.', 'Citra Dewi, M.Kom.', 'Ahmad Fauzi, M.T.'],
+            $items->pluck('user.name')->all(),
+        );
     }
 
     public function test_senat_menu_is_listed_on_admin_sidebar(): void

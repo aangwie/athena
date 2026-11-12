@@ -49,7 +49,7 @@ class SuratBapSenatRequest extends FormRequest
                 ),
             ],
             'bidang_keilmuan' => ['required', 'string', 'max:255', Rule::in($this->bidangKeilmuanDiizinkan())],
-            'prosentase_penelitian' => ['required', 'integer', 'between:0,100'],
+            'prosentase_penelitian' => ['required', 'integer', Rule::in($this->prosentaseDiizinkan())],
             'tempat_pelaksanaan' => ['required', 'string', 'max:150'],
             'materi_rapat' => ['required', 'string', 'max:255'],
             'anggota_senat_ids' => ['required', 'array', 'min:1'],
@@ -71,6 +71,24 @@ class SuratBapSenatRequest extends FormRequest
 
         if ($bap instanceof SuratBapSenat && filled($bap->bidang_keilmuan)) {
             $daftar[] = $bap->bidang_keilmuan;
+        }
+
+        return array_values(array_unique($daftar));
+    }
+
+    /**
+     * Nilai prosentase proporsi penelitian yang boleh dipilih: daftar tetap pada model,
+     * ditambah nilai lama milik BAP yang sedang diubah agar data lama tetap dapat disunting.
+     *
+     * @return list<int>
+     */
+    private function prosentaseDiizinkan(): array
+    {
+        $daftar = SuratBapSenat::prosentasePenelitianList();
+        $bap = $this->route('bap');
+
+        if ($bap instanceof SuratBapSenat && $bap->prosentase_penelitian !== null) {
+            $daftar[] = (int) $bap->prosentase_penelitian;
         }
 
         return array_values(array_unique($daftar));
@@ -111,7 +129,8 @@ class SuratBapSenatRequest extends FormRequest
             'bidang_keilmuan.required' => 'Bidang keilmuan wajib dipilih.',
             'bidang_keilmuan.in' => 'Bidang keilmuan tidak valid, pilih dari daftar yang tersedia.',
             'prosentase_penelitian.required' => 'Prosentase proporsi penelitian wajib diisi.',
-            'prosentase_penelitian.between' => 'Prosentase proporsi penelitian harus 0 sampai 100.',
+            'prosentase_penelitian.integer' => 'Prosentase proporsi penelitian harus berupa angka.',
+            'prosentase_penelitian.in' => 'Prosentase proporsi penelitian tidak valid, pilih dari daftar yang tersedia.',
             'tempat_pelaksanaan.required' => 'Tempat pelaksanaan wajib diisi.',
             'materi_rapat.required' => 'Materi rapat wajib diisi.',
             'anggota_senat_ids.required' => 'Anggota senat wajib dipilih.',
