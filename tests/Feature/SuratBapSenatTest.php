@@ -66,10 +66,14 @@ class SuratBapSenatTest extends TestCase
             ->assertSee('<optgroup label="B. Bahasa &amp; Linguistik">', false)
             ->assertSee('<optgroup label="C. Pendidikan &amp; Keguruan">', false)
             ->assertSee('<optgroup label="D. Humaniora, Sosial &amp; Keagamaan">', false)
-            ->assertSee('APLIKASI PERANGKAT LUNAK SITUS (20.101.1003)')
-            ->assertSee('PENDIDIKAN BAHASA INGGRIS (50.132.1020)')
-            ->assertSee('PENDIDIKAN MATEMATIKA (50.132.1057)')
-            ->assertSee('KEAGAMAAN (60.101.1001)')
+            ->assertSee('APLIKASI PERANGKAT LUNAK SITUS')
+            ->assertSee('PENDIDIKAN BAHASA INGGRIS')
+            ->assertSee('PENDIDIKAN MATEMATIKA')
+            ->assertSee('KEAGAMAAN')
+            // Kode angka bidang keilmuan tidak lagi ditampilkan pada dropdown.
+            ->assertDontSee('20.101.1003')
+            ->assertDontSee('50.132.1020')
+            ->assertDontSee('60.101.1001')
             ->assertSee('Pilihan Kenaikan Jabatan Akademik')
             ->assertSee('name="kenaikan_jabatan"', false)
             ->assertSee('<option value="belum_asisten_ahli"', false)
@@ -100,6 +104,51 @@ class SuratBapSenatTest extends TestCase
             ->assertSee('Rina Wijaya, M.Kom.')
             ->assertSee('Daftar Berita Acara Persetujuan Senat')
             ->assertSee('data-datatable', false);
+    }
+
+    public function test_bidang_keilmuan_pendidikan_sejarah_tampil_tanpa_kode_pada_rumpun_pendidikan_dan_keguruan(): void
+    {
+        $this->makeSenat();
+
+        $html = $this->actingAs($this->makeUser('admin'))
+            ->get(route('surat.index'))
+            ->assertOk()
+            ->getContent();
+
+        // Label pilihan tidak lagi memuat kode angka di belakang nama bidang.
+        $this->assertStringNotContainsString('PENDIDIKAN MATEMATIKA (', $html);
+        $this->assertStringNotContainsString('APLIKASI PERANGKAT LUNAK SITUS (', $html);
+
+        // "PENDIDIKAN SEJARAH" tersedia pada rumpun C. Pendidikan & Keguruan.
+        $this->assertSame(1, preg_match(
+            '/<optgroup label="C\. Pendidikan &amp; Keguruan">(.*?)<\/optgroup>/s',
+            $html,
+            $rumpun
+        ), 'Rumpun C. Pendidikan & Keguruan tidak ditemukan pada dropdown bidang keilmuan.');
+
+        $this->assertStringContainsString('<option value="PENDIDIKAN SEJARAH"', $rumpun[1]);
+    }
+
+    public function test_admin_can_save_bap_senat_with_pendidikan_sejarah(): void
+    {
+        [$dosen, $ketua] = $this->makeSenat();
+
+        $this->actingAs($this->makeUser('admin'))
+            ->post(route('surat.bap-senat.store'), [
+                'nomor_bap' => '020/BAP-SENAT/XI/2026',
+                'tanggal_bap' => '12-11-2026',
+                'dosen_id' => $dosen->id,
+                'bidang_keilmuan' => 'PENDIDIKAN SEJARAH',
+                'kenaikan_jabatan' => 'asisten_ahli_ke_lektor',
+                'prosentase_penelitian' => 150,
+                'tempat_pelaksanaan' => 'Ruang Rapat Senat Lt. 2',
+                'materi_rapat' => 'Pemberian pertimbangan kenaikan jabatan akademik dosen',
+                'anggota_senat_ids' => [$ketua->user_id],
+            ])
+            ->assertRedirect(route('surat.index').'#bap-senat')
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame('PENDIDIKAN SEJARAH', SuratBapSenat::query()->firstOrFail()->bidang_keilmuan);
     }
 
     public function test_admin_can_save_and_update_bap_senat(): void

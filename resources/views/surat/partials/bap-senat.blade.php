@@ -5,7 +5,7 @@
 
     // Bidang dari data lama yang belum ada pada daftar tetap ditampilkan agar tidak hilang.
     if ($bidangForm !== '' && \App\Models\SuratBapSenat::rumpunBidangKeilmuan($bidangForm) === null) {
-        $bidangMap[\App\Models\SuratBapSenat::RUMPUN_LAINNYA] = [$bidangForm => $bidangForm];
+        $bidangMap[\App\Models\SuratBapSenat::RUMPUN_LAINNYA] = [$bidangForm];
     }
 
     // Prosentase proporsi penelitian dipilih dari daftar tetap (dropdown).
@@ -116,21 +116,22 @@
             <label for="bidang_keilmuan" class="form-label">
                 Bidang Keilmuan <span class="text-rose-500">*</span>
             </label>
-            {{-- Daftar dikelompokkan per rumpun ilmu memakai <optgroup> (dropdown + sub). --}}
+            {{-- Daftar dikelompokkan per rumpun ilmu memakai <optgroup> (dropdown + sub).
+                 Nama bidang ditampilkan tanpa kode angka. --}}
             <select id="bidang_keilmuan" name="bidang_keilmuan" required
                     data-select-search="Cari bidang atau rumpun ilmu…"
                     @class(['form-select', 'border-rose-300 bg-rose-50/40' => $errors->has('bidang_keilmuan')])>
                 <option value="">Pilih bidang keilmuan</option>
                 @foreach ($bidangMap as $rumpun => $daftar)
                     <optgroup label="{{ $rumpun }}">
-                        @foreach ($daftar as $nama => $label)
-                            <option value="{{ $nama }}" @selected($bidangForm === $nama)>{{ $label }}</option>
+                        @foreach ($daftar as $nama)
+                            <option value="{{ $nama }}" @selected($bidangForm === $nama)>{{ $nama }}</option>
                         @endforeach
                     </optgroup>
                 @endforeach
             </select>
             @error('bidang_keilmuan') <p class="form-error">{{ $message }}</p> @enderror
-            <p class="mt-1.5 text-[11px] text-slate-400">Dikelompokkan per rumpun ilmu A–D beserta kodenya.</p>
+            <p class="mt-1.5 text-[11px] text-slate-400">Dikelompokkan per rumpun ilmu A–D.</p>
         </div>
 
         <div>

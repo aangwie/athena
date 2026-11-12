@@ -10,38 +10,39 @@ class SuratBapSenat extends Model
 {
     /**
      * Bidang keilmuan senat, dikelompokkan per rumpun ilmu.
-     * Format: [rumpun => [nama bidang => kode bidang]].
+     * Format: [rumpun => [nama bidang, ...]] — ditampilkan apa adanya tanpa kode angka.
      *
-     * @var array<string, array<string, string>>
+     * @var array<string, list<string>>
      */
     public const BIDANG_KEILMUAN = [
         'A. Komputer & Teknologi' => [
-            'APLIKASI PERANGKAT LUNAK SITUS' => '20.101.1003',
-            'PENDIDIKAN KOMPUTER ATAU INFORMATIKA' => '50.132.1053',
-            'TEKNIK JARINGAN KOMPUTER' => '50.150.1003',
+            'APLIKASI PERANGKAT LUNAK SITUS',
+            'PENDIDIKAN KOMPUTER ATAU INFORMATIKA',
+            'TEKNIK JARINGAN KOMPUTER',
         ],
         'B. Bahasa & Linguistik' => [
-            'BAHASA DAN KEBUDAYAAN INDONESIA' => '30.105.1012',
-            'BAHASA INGGRIS' => '30.105.1022',
-            'LINGUISTIK' => '30.105.1043',
-            'LINGUISTIK TERAPAN BAHASA INGGRIS' => '30.105.1046',
-            'PENDIDIKAN BAHASA DAN SASTRA INDONESIA' => '50.132.1017',
-            'PENDIDIKAN BAHASA INDONESIA' => '50.132.1019',
-            'PENDIDIKAN BAHASA INGGRIS' => '50.132.1020',
+            'BAHASA DAN KEBUDAYAAN INDONESIA',
+            'BAHASA INGGRIS',
+            'LINGUISTIK',
+            'LINGUISTIK TERAPAN BAHASA INGGRIS',
+            'PENDIDIKAN BAHASA DAN SASTRA INDONESIA',
+            'PENDIDIKAN BAHASA INDONESIA',
+            'PENDIDIKAN BAHASA INGGRIS',
         ],
         'C. Pendidikan & Keguruan' => [
-            'MANAJEMEN PENDIDIKAN' => '50.132.1004',
-            'PENDIDIKAN' => '50.132.1006',
-            'PENDIDIKAN GURU SEKOLAH DASAR' => '50.132.1039',
-            'PENDIDIKAN ILMU PENGETAHUAN SOSIAL' => '50.132.1042',
-            'PENDIDIKAN MATEMATIKA' => '50.132.1057',
-            'PSIKOLOGI PENDIDIKAN' => '50.113.1040',
+            'MANAJEMEN PENDIDIKAN',
+            'PENDIDIKAN',
+            'PENDIDIKAN GURU SEKOLAH DASAR',
+            'PENDIDIKAN ILMU PENGETAHUAN SOSIAL',
+            'PENDIDIKAN MATEMATIKA',
+            'PENDIDIKAN SEJARAH',
+            'PSIKOLOGI PENDIDIKAN',
         ],
         'D. Humaniora, Sosial & Keagamaan' => [
-            'KAJIAN SASTRA DAN BUDAYA' => '30.108.1001',
-            'SEJARAH' => '30.106.1002',
-            'ILMU ATAU SAINS KEOLAHRAGAAN' => '50.114.1005',
-            'KEAGAMAAN' => '60.101.1001',
+            'KAJIAN SASTRA DAN BUDAYA',
+            'SEJARAH',
+            'ILMU ATAU SAINS KEOLAHRAGAAN',
+            'KEAGAMAAN',
         ],
     ];
 
@@ -97,31 +98,23 @@ class SuratBapSenat extends Model
 
     /**
      * Pilihan bidang keilmuan untuk dropdown, dikelompokkan per rumpun.
-     * Label memuat kode bidang di belakangnya, mis. "SEJARAH (30.106.1002)".
+     * Nama bidang ditampilkan apa adanya, tanpa kode angka di belakangnya.
      *
-     * @return array<string, array<string, string>>
+     * @return array<string, list<string>>
      */
     public static function bidangKeilmuanOptions(): array
     {
-        $opsi = [];
-
-        foreach (self::BIDANG_KEILMUAN as $rumpun => $daftar) {
-            foreach ($daftar as $nama => $kode) {
-                $opsi[$rumpun][$nama] = $nama.' ('.$kode.')';
-            }
-        }
-
-        return $opsi;
+        return self::BIDANG_KEILMUAN;
     }
 
     /**
-     * Daftar nama bidang keilmuan yang sah (tanpa kode), untuk validasi.
+     * Daftar nama bidang keilmuan yang sah, untuk validasi.
      *
      * @return list<string>
      */
     public static function bidangKeilmuanList(): array
     {
-        return array_keys(array_merge(...array_values(self::BIDANG_KEILMUAN)));
+        return array_merge(...array_values(self::BIDANG_KEILMUAN));
     }
 
     /**
@@ -130,7 +123,7 @@ class SuratBapSenat extends Model
     public static function rumpunBidangKeilmuan(?string $bidang): ?string
     {
         foreach (self::BIDANG_KEILMUAN as $rumpun => $daftar) {
-            if (array_key_exists((string) $bidang, $daftar)) {
+            if (in_array((string) $bidang, $daftar, true)) {
                 return $rumpun;
             }
         }

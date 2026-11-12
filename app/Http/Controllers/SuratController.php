@@ -364,11 +364,12 @@ class SuratController extends Controller
     {
         $baki->load('bapSenat.dosen');
 
+        // Susunan tim komite pada daftar hadir mengikuti urutan input admin (id menaik),
+        // bukan abjad nama maupun pengelompokan jabatan.
         $timKomite = TimKomite::query()
             ->with('user')
-            ->get()
-            ->sortBy(fn (TimKomite $item) => [array_search($item->jabatan, array_keys(TimKomite::JABATAN)), $item->user?->name ?? ''])
-            ->values();
+            ->orderBy('id')
+            ->get();
 
         return view('surat.baki.cetak', [
             'baki' => $baki,

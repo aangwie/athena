@@ -312,6 +312,50 @@ class SuratBakiTest extends TestCase
         $this->assertStringContainsString('sejumlah 2 orang tim', $html);
     }
 
+    public function test_daftar_hadir_baki_follows_admin_input_order(): void
+    {
+        $baki = $this->makeBaki($this->makeBapSenat($this->makeUser('dosen')));
+
+        // Nama sengaja tidak berurutan abjad dan ketua diinput terakhir, supaya
+        // urutan daftar hadir mudah dibedakan dari urutan abjad/jabatan.
+        TimKomite::create([
+            'user_id' => $this->makeUser('dosen', '198801012012011002', 'Sari Puspita, M.Kom.')->id,
+            'jabatan' => 'anggota',
+        ]);
+        TimKomite::create([
+            'user_id' => $this->makeUser('dosen', '199512312020121003', 'Ahmad Fauzi, S.Kom.')->id,
+            'jabatan' => 'anggota',
+        ]);
+        TimKomite::create([
+            'user_id' => $this->makeUser('dosen', '197501012000031001', 'Dr. Hendra Wijaya, M.Pd.')->id,
+            'jabatan' => 'ketua',
+        ]);
+
+        $html = $this->actingAs($this->makeUser('admin'))
+            ->get(route('surat.baki.cetak', $baki))
+            ->assertOk()
+            ->getContent();
+
+        // Daftar hadir (halaman 2) mengikuti urutan input admin (id menaik),
+        // bukan abjad nama maupun pengelompokan jabatan.
+        $tabel = substr($html, (int) strpos($html, 'DAFTAR HADIR RAPAT TIM KOMITE INTEGRITAS AKADEMIK'));
+        $this->assertSame(1, preg_match('/<table class="cetak-tabel.*?<\/table>/s', $tabel, $cocok));
+        $tabel = $cocok[0];
+
+        $this->assertLessThan(
+            strpos($tabel, 'Ahmad Fauzi, S.Kom.'),
+            strpos($tabel, 'Sari Puspita, M.Kom.'),
+        );
+        $this->assertLessThan(
+            strpos($tabel, 'Dr. Hendra Wijaya, M.Pd.'),
+            strpos($tabel, 'Ahmad Fauzi, S.Kom.'),
+        );
+
+        // Kolom NO tetap berurutan 1, 2, 3 mengikuti urutan baris.
+        $this->assertSame(3, preg_match_all('/text-center align-top">(\d+)</', $tabel, $nomor));
+        $this->assertSame(['1', '2', '3'], $nomor[1]);
+    }
+
     public function test_dosen_cannot_manage_baki(): void
     {
         $dosen = $this->makeUser('dosen');
