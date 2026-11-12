@@ -390,14 +390,17 @@ class SuratController extends Controller
      */
     public function cetakPernyataanPimpinan(SuratPernyataanPimpinan $pernyataan): View
     {
-        $pernyataan->load(['pimpinan.jabatanStruktural', 'pimpinan.user', 'dosen']);
+        $pernyataan->load(['pimpinan.user', 'dosen']);
 
         return view('surat.pernyataan-pimpinan.cetak', [
             'pernyataan' => $pernyataan,
             'instansi' => Instansi::query()->first(),
             // Tempat pada baris tanda tangan mengikuti kota instansi.
             'kota' => Instansi::query()->value('kota'),
-            'pimpinan' => $this->identitas($pernyataan->pimpinan?->user, $pernyataan->pimpinan?->jabatanStruktural?->nama),
+            // Pimpinan surat ini juga dosen, jadi "Jabatan / TMT" memakai jabatan
+            // akademik (Riwayat Pekerjaan → Jabatan Akademik) beserta TMT-nya,
+            // sama seperti blok identitas dosen di bawahnya — bukan "Ketua".
+            'pimpinan' => $this->identitasDosen($pernyataan->pimpinan?->user),
             'dosen' => $this->identitasDosen($pernyataan->dosen),
         ]);
     }
@@ -442,14 +445,19 @@ class SuratController extends Controller
         $identitas = $this->identitas($dosen);
 
         // Pada surat, "Jabatan / TMT" adalah jabatan akademik, bukan struktural.
-        // Ambil dari baris yang benar-benar memuat jabatan akademik.
+        // Ambil dari baris riwayat yang benar-benar memuat jabatan akademik
+        // (Riwayat Pekerjaan → Jabatan Akademik), terbaru menurut TMT.
         $fungsional = $dosen?->riwayatJabatanStruktural
             ->whereNotNull('jabatan_fungsional_id')
             ->sortByDesc('tmt')
             ->first();
 
-        $identitas['jabatan'] = $fungsional?->fungsionalLabel() ?? $identitas['jabatan'];
-        $identitas['jabatan_tmt'] = $fungsional?->tmtLabel() ?? $identitas['jabatan_tmt'];
+        // Belum ada baris riwayat: pakai kolom users.jabatan_fungsional (data dosen
+        // hasil impor). Jabatan struktural tidak pernah dipakai pada baris ini,
+        // supaya surat tidak menampilkan jabatan seperti "Ketua".
+        $identitas['jabatan'] = $fungsional?->jabatanFungsional?->nama
+            ?: ($dosen?->jabatan_fungsional ?: '—');
+        $identitas['jabatan_tmt'] = $fungsional?->tmtLabel() ?? '—';
 
         return $identitas;
     }
@@ -536,12 +544,12 @@ class SuratController extends Controller
      *
      * @return array<string, string>
      */
-    private function identitas(?User $user, ?string $jabatan = null): array
+    private function identitas(?User $user): array
     {
         $user?->loadMissing([
             'profilDosen',
             'riwayatKepangkatan.kepangkatan',
-            'riwayatJabatanStruktural',
+            'riwayatJabatanStruktural.jabatanFungsional',
             'riwayatPendidikan',
         ]);
 
@@ -569,7 +577,7 @@ class SuratController extends Controller
             ])->filter()->implode(', ') ?: '—',
             'pangkat' => $pangkat?->pangkatLabel() ?? '—',
             'pangkat_tmt' => $pangkat?->tmtLabel() ?? '—',
-            'jabatan' => $jabatan ?: ($jabatanTerakhir?->strukturalLabel() ?? ($user?->jabatan_fungsional ?: '—')),
+            'jabatan' => $jabatanTerakhir?->strukturalLabel() ?? ($user?->jabatan_fungsional ?: '—'),
             'jabatan_tmt' => $jabatanTerakhir?->tmtLabel() ?? '—',
             'pendidikan' => $pendidikan?->jenjangLabel() ?? '—',
             'fakultas' => '—',

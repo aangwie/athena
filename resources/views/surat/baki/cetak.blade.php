@@ -159,20 +159,20 @@
                 </table>
 
                 <p class="mt-2 text-justify text-[16px] leading-snug">
-                    Untuk Kenaikan Jabatan Akademik Dosen ke Asisten Ahli/Lektor/Lektor Kepala/Profesor dalam
+                    Untuk Kenaikan Jabatan Akademik Dosen ke Asisten Ahli dalam
                     bidang ilmu penugasan keahlian/kompetensi/kepakaran {{ $bap?->bidang_keilmuan }}.
                 </p>
 
                 <p class="mt-2 text-justify text-[16px] leading-snug">
                     Tim Komite Integritas Akademik yang dihadiri oleh sejumlah {{ $anggota->count() }} orang tim
-                    anggota Komite Integritas Akademik (dengan jumlah yang memenuhi kuorum) sebagaimana daftar
+                    anggota Komite Integritas Akademik (<strong>dengan jumlah yang memenuhi kuorum</strong>) sebagaimana daftar
                     hadir terlampir.
                 </p>
 
                 <p class="mt-2 text-justify text-[16px] leading-snug">
                     Tim Komite Integritas Akademik melakukan pertimbangan kembali berdasarkan penilaian atas
-                    integritas, kinerja, tanggung jawab dan tata krama (tidak ada pelanggaran integritas
-                    akademik) dalam kehidupan kampus yang telah ditunjukkan oleh yang bersangkutan dalam
+                    <strong>integritas, kinerja, tanggung jawab dan tata krama (tidak ada pelanggaran integritas
+                    akademik)</strong> dalam kehidupan kampus yang telah ditunjukkan oleh yang bersangkutan dalam
                     melaksanakan Tridharma Perguruan Tinggi, sejak yang bersangkutan menduduki jabatan akademik
                     terakhir sampai dengan rapat pemberian pertimbangan/persetujuan ini dilakukan.
                 </p>

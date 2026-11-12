@@ -357,6 +357,39 @@ class SuratTest extends TestCase
             ->assertSee('<div class="h-[2.5cm]" aria-hidden="true"></div>', false);
     }
 
+    public function test_pernyataan_pimpinan_print_memakai_jabatan_akademik_bukan_struktural(): void
+    {
+        // Pimpinan surat juga dosen: jabatannya diambil dari Riwayat Pekerjaan →
+        // Jabatan Akademik, bukan dari jabatan struktural di Struktur Instansi.
+        $pimpinan = $this->makePimpinan();
+        $pimpinan->user->riwayatJabatanStruktural()->create([
+            'jabatan_fungsional_id' => JabatanFungsional::create(['nama' => 'Lektor Kepala'])->id,
+            'tmt' => '2019-03-04',
+        ]);
+
+        $dosen = $this->makeUser('dosen');
+        $dosen->riwayatJabatanStruktural()->create([
+            'jabatan_fungsional_id' => JabatanFungsional::create(['nama' => 'Asisten Ahli'])->id,
+            'tmt' => '2021-07-01',
+        ]);
+
+        $pernyataan = SuratPernyataanPimpinan::query()->create([
+            'struktur_instansi_id' => $pimpinan->id,
+            'user_id' => $dosen->id,
+            'tanggal_surat' => '2026-10-31',
+        ]);
+
+        $this->actingAs($this->makeUser('admin'))
+            ->get(route('surat.pernyataan-pimpinan.cetak', $pernyataan))
+            ->assertOk()
+            // Jabatan / TMT = jabatan akademik beserta TMT-nya.
+            ->assertSee('Lektor Kepala / 04 Maret 2019')
+            ->assertSee('Asisten Ahli / 01 Juli 2021')
+            // Jabatan struktural (Rektor/Ketua) tidak dipakai di baris jabatan.
+            ->assertDontSee('Rektor')
+            ->assertDontSee('Ketua');
+    }
+
     public function test_dosen_cannot_print_update_or_delete_pernyataan_pimpinan(): void
     {
         $pernyataan = SuratPernyataanPimpinan::query()->create([
