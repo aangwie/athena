@@ -62,6 +62,28 @@ class TimKomiteController extends Controller
     }
 
     /**
+     * Hapus beberapa anggota tim komite sekaligus dari tabel daftar anggota.
+     */
+    public function bulkDestroy(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'ids' => ['required', 'array', 'min:1'],
+            'ids.*' => ['integer', Rule::exists('tim_komite', 'id')],
+        ], [
+            'ids.required' => 'Pilih minimal satu anggota tim komite yang akan dihapus.',
+            'ids.min' => 'Pilih minimal satu anggota tim komite yang akan dihapus.',
+        ]);
+
+        $jumlah = TimKomite::query()->whereIn('id', $data['ids'])->delete();
+
+        return redirect()
+            ->route('instansi.tim-komite.index')
+            ->with('status', $jumlah === 0
+                ? 'Tidak ada anggota tim komite yang dihapus.'
+                : "{$jumlah} anggota tim komite berhasil dihapus.");
+    }
+
+    /**
      * @return array<string, mixed>
      */
     private function validated(Request $request, ?TimKomite $timKomite = null): array

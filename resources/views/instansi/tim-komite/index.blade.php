@@ -12,7 +12,7 @@
         $ketuaBolehDipilih = $ketua === null || $ketua->id === $editTimKomite?->id;
     @endphp
 
-    <div class="mx-auto max-w-5xl">
+    <div class="mx-auto max-w-6xl">
         <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
                 <span class="mb-2 inline-flex items-center gap-2 text-[11px] font-bold tracking-[0.14em] text-teal-700 uppercase">
@@ -152,21 +152,38 @@
                         </div>
                     </div>
 
-                    <div class="relative w-full lg:w-72">
-                        <label for="tim-komite-search" class="sr-only">Cari anggota tim komite</label>
-                        <svg class="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-slate-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                            <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 1 0 3.4 9.83l3.13 3.14a.75.75 0 1 0 1.06-1.06l-3.14-3.14A5.5 5.5 0 0 0 9 3.5ZM5 9a4 4 0 1 1 8 0 4 4 0 0 1-8 0Z" clip-rule="evenodd" />
-                        </svg>
-                        <input type="search" id="tim-komite-search" data-table-search placeholder="Cari nama atau jabatan…"
-                               class="form-input pl-9">
+                    <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+                        {{-- Hapus massal: tombol mengirim formulir tersembunyi di bawah tabel. --}}
+                        <button type="submit" form="bulk-form-tim-komite" data-bulk-submit disabled
+                                class="btn-secondary w-auto justify-center px-4 whitespace-nowrap text-rose-600 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-slate-200 disabled:hover:bg-white disabled:hover:text-rose-600">
+                            <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                <path d="M4.5 7h15M9.5 7V5.5A1.5 1.5 0 0 1 11 4h2a1.5 1.5 0 0 1 1.5 1.5V7M6.5 7l.8 12A1.5 1.5 0 0 0 8.8 20.5h6.4a1.5 1.5 0 0 0 1.5-1.4l.8-12" stroke-linecap="round" stroke-linejoin="round" />
+                                <path d="M10 11v5.5M14 11v5.5" stroke-linecap="round" />
+                            </svg>
+                            <span data-bulk-label>Hapus terpilih</span>
+                        </button>
+
+                        <div class="relative w-full lg:w-72">
+                            <label for="tim-komite-search" class="sr-only">Cari anggota tim komite</label>
+                            <svg class="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-slate-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 1 0 3.4 9.83l3.13 3.14a.75.75 0 1 0 1.06-1.06l-3.14-3.14A5.5 5.5 0 0 0 9 3.5ZM5 9a4 4 0 1 1 8 0 4 4 0 0 1-8 0Z" clip-rule="evenodd" />
+                            </svg>
+                            <input type="search" id="tim-komite-search" data-table-search placeholder="Cari nama atau jabatan…"
+                                   class="form-input pl-9">
+                        </div>
                     </div>
                 </div>
 
-                <div class="overflow-x-auto">
+                <div class="overflow-x-auto px-2 pb-2 sm:px-4">
                     <table data-datatable data-row-numbers data-page-length="10" class="w-full text-left text-sm">
                         <thead>
                             <tr>
                                 <th scope="col" class="no-sort w-16">No</th>
+                                {{-- Kolom centang sengaja bukan kolom pertama: data-row-numbers menomori kolom 0. --}}
+                                <th scope="col" class="no-sort all w-12">
+                                    <input type="checkbox" data-bulk-all aria-label="Pilih semua anggota tim komite"
+                                           class="size-4 cursor-pointer accent-teal-600">
+                                </th>
                                 <th scope="col">Nama</th>
                                 <th scope="col">Jabatan</th>
                                 <th scope="col" class="no-sort text-right">Aksi</th>
@@ -176,6 +193,12 @@
                             @forelse ($items as $item)
                                 <tr class="border-b border-slate-100">
                                     <td class="px-5 py-3 font-mono text-slate-500">{{ $loop->iteration }}</td>
+                                    <td class="px-5 py-3">
+                                        <input type="checkbox" form="bulk-form-tim-komite" name="ids[]" value="{{ $item->id }}" data-bulk-item
+                                               aria-label="Pilih {{ $item->user?->name }}"
+                                               title="Pilih {{ $item->user?->name }}"
+                                               class="size-4 cursor-pointer accent-teal-600">
+                                    </td>
                                     <td class="px-5 py-3">
                                         <p class="font-semibold text-slate-800">{{ $item->user?->name ?? '—' }}</p>
                                         <p class="mt-0.5 font-mono text-[11px] text-slate-400">{{ $item->user?->nidn }}</p>
@@ -214,7 +237,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="4" class="px-5 py-16 text-center">
+                                    <td colspan="5" class="px-5 py-16 text-center">
                                         <span class="mx-auto flex size-14 items-center justify-center rounded-2xl bg-slate-50 text-slate-300">
                                             <svg class="size-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
                                                 <circle cx="9" cy="8.5" r="3" />
@@ -231,12 +254,19 @@
                     </table>
                 </div>
 
+                <form id="bulk-form-tim-komite" method="POST" action="{{ route('instansi.tim-komite.bulk-destroy') }}" data-bulk-form class="hidden"
+                      data-confirm-title="Hapus anggota tim komite terpilih?"
+                      data-confirm="Semua anggota tim komite yang dipilih akan dihapus dari susunan tim komite instansi. Tindakan ini tidak dapat dibatalkan.">
+                    @csrf
+                    @method('DELETE')
+                </form>
+
                 <div class="flex flex-col gap-2 border-t border-slate-100 bg-slate-50/50 px-5 py-3 text-[11px] text-slate-400 sm:flex-row sm:items-center sm:justify-between sm:px-6">
                     <p class="flex items-center gap-1.5">
                         <svg class="size-3.5 text-teal-500" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                             <path fill-rule="evenodd" d="M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0Zm-7-4a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM9 9a.75.75 0 0 0 0 1.5h.25v3h-.25a.75.75 0 0 0 0 1.5h2a.75.75 0 0 0 0-1.5h-.25v-3.75A.75.75 0 0 0 10.25 9H9Z" clip-rule="evenodd" />
                         </svg>
-                        Gunakan kolom pencarian untuk menyaring data dengan cepat.
+                        Centang beberapa baris untuk menghapus anggota sekaligus.
                     </p>
                     <p>Dosen diambil dari data dosen aktif.</p>
                 </div>
@@ -244,3 +274,51 @@
         </section>
     </div>
 @endsection
+
+@push('scripts')
+    <script>
+        (() => {
+            const form = document.querySelector('#bulk-form-tim-komite');
+            const semua = document.querySelector('[data-bulk-all]');
+            const tombol = document.querySelector('[data-bulk-submit]');
+
+            if (!form || !semua || !tombol) return;
+
+            const label = tombol.querySelector('[data-bulk-label]');
+            const kotak = () => Array.from(document.querySelectorAll('[data-bulk-item]'));
+
+            const segarkan = () => {
+                const terpilih = kotak().filter((el) => el.checked).length;
+                const tampil = kotak().filter((el) => el.offsetParent !== null && !el.disabled);
+
+                tombol.disabled = terpilih === 0;
+
+                if (label) {
+                    label.textContent = terpilih ? `Hapus (${terpilih})` : 'Hapus terpilih';
+                }
+
+                semua.checked = tampil.length > 0 && tampil.every((el) => el.checked);
+            };
+
+            document.addEventListener('change', (event) => {
+                if (event.target === semua) {
+                    kotak().forEach((el) => {
+                        if (!el.disabled && el.offsetParent !== null) {
+                            el.checked = semua.checked;
+                        }
+                    });
+                }
+
+                if (event.target === semua || event.target.matches('[data-bulk-item]')) {
+                    segarkan();
+                }
+            });
+
+            // DataTables mengganti baris per halaman tanpa memicu event change.
+            document.addEventListener('DOMContentLoaded', () => {
+                window.jQuery?.(document).on('draw.dt', segarkan);
+                segarkan();
+            });
+        })();
+    </script>
+@endpush

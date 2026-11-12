@@ -273,6 +273,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/tim-komite', [TimKomiteController::class, 'index'])->name('tim-komite.index');
         Route::post('/tim-komite', [TimKomiteController::class, 'store'])->name('tim-komite.store');
         Route::put('/tim-komite/{timKomite}', [TimKomiteController::class, 'update'])->name('tim-komite.update');
+        // Rute hapus massal harus di atas rute {timKomite} agar tidak dianggap sebagai id.
+        Route::delete('/tim-komite/hapus-terpilih', [TimKomiteController::class, 'bulkDestroy'])->name('tim-komite.bulk-destroy');
         Route::delete('/tim-komite/{timKomite}', [TimKomiteController::class, 'destroy'])->name('tim-komite.destroy');
 
         Route::get('/prodi', [ProdiController::class, 'index'])->name('prodi.index');

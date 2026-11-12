@@ -143,6 +143,88 @@ class TimKomiteTest extends TestCase
         $this->assertDatabaseMissing('tim_komite', ['id' => $timKomite->id]);
     }
 
+    public function test_admin_can_bulk_delete_selected_anggota_tim_komite(): void
+    {
+        $admin = $this->makeAdmin();
+        $ketua = $this->makeDosen('1987654321', 'Dr. Ayu Lestari, M.Kom.');
+        $anggota = $this->makeDosen('1990011220', 'Budi Santoso, M.Pd.');
+        $tetap = $this->makeDosen('1995123120', 'Ahmad Fauzi, S.Kom.');
+
+        $barisKetua = TimKomite::create(['user_id' => $ketua->id, 'jabatan' => 'ketua']);
+        $barisAnggota = TimKomite::create(['user_id' => $anggota->id, 'jabatan' => 'anggota']);
+        $barisTetap = TimKomite::create(['user_id' => $tetap->id, 'jabatan' => 'anggota']);
+
+        // Halaman menyediakan formulir hapus massal dan kotak centang per baris.
+        $this->actingAs($admin)
+            ->get('/instansi/tim-komite')
+            ->assertOk()
+            ->assertSee(route('instansi.tim-komite.bulk-destroy'), false)
+            ->assertSee('data-bulk-all', false)
+            ->assertSee('data-bulk-item', false)
+            ->assertSee('name="ids[]"', false);
+
+        $this->actingAs($admin)
+            ->delete('/instansi/tim-komite/hapus-terpilih', [
+                'ids' => [$barisKetua->id, $barisAnggota->id],
+            ])
+            ->assertRedirect(route('instansi.tim-komite.index'))
+            ->assertSessionHas('status', '2 anggota tim komite berhasil dihapus.');
+
+        $this->assertDatabaseMissing('tim_komite', ['id' => $barisKetua->id]);
+        $this->assertDatabaseMissing('tim_komite', ['id' => $barisAnggota->id]);
+        // Baris yang tidak dicentang tetap tersimpan.
+        $this->assertDatabaseHas('tim_komite', ['id' => $barisTetap->id]);
+        $this->assertDatabaseCount('tim_komite', 1);
+    }
+
+    public function test_bulk_delete_requires_at_least_one_selected_member(): void
+    {
+        $admin = $this->makeAdmin();
+        $dosen = $this->makeDosen();
+
+        $timKomite = TimKomite::create(['user_id' => $dosen->id, 'jabatan' => 'anggota']);
+
+        $this->actingAs($admin)
+            ->from('/instansi/tim-komite')
+            ->delete('/instansi/tim-komite/hapus-terpilih', ['ids' => []])
+            ->assertRedirect('/instansi/tim-komite')
+            ->assertSessionHasErrors([
+                'ids' => 'Pilih minimal satu anggota tim komite yang akan dihapus.',
+            ]);
+
+        $this->assertDatabaseHas('tim_komite', ['id' => $timKomite->id]);
+    }
+
+    public function test_bulk_delete_rejects_unknown_member_id(): void
+    {
+        $admin = $this->makeAdmin();
+        $dosen = $this->makeDosen();
+
+        $timKomite = TimKomite::create(['user_id' => $dosen->id, 'jabatan' => 'anggota']);
+
+        $this->actingAs($admin)
+            ->from('/instansi/tim-komite')
+            ->delete('/instansi/tim-komite/hapus-terpilih', [
+                'ids' => [$timKomite->id, 999999],
+            ])
+            ->assertSessionHasErrors('ids.1');
+
+        $this->assertDatabaseHas('tim_komite', ['id' => $timKomite->id]);
+    }
+
+    public function test_non_admin_cannot_bulk_delete_tim_komite(): void
+    {
+        $dosen = $this->makeDosen();
+
+        $timKomite = TimKomite::create(['user_id' => $dosen->id, 'jabatan' => 'anggota']);
+
+        $this->actingAs($dosen)
+            ->delete('/instansi/tim-komite/hapus-terpilih', ['ids' => [$timKomite->id]])
+            ->assertForbidden();
+
+        $this->assertDatabaseHas('tim_komite', ['id' => $timKomite->id]);
+    }
+
     public function test_tim_komite_rejects_inactive_dosen_invalid_jabatan_and_duplicate_member(): void
     {
         $admin = $this->makeAdmin();
