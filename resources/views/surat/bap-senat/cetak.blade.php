@@ -17,11 +17,22 @@
 
         // Format cetak V2 (lampiran): tanda tangan sekretaris di samping ketua senat,
         // lalu anggota senat dua kolom (nomor berlanjut ke kolom kanan) dengan garis
-        // tanda tangan di samping tiap nama, sesuai urutan pilihan pada formulir.
+        // tanda tangan di samping tiap nama, sesuai urutan pilihan pada formulir,
+        // ditutup daftar hadir rapat seperti V1 pada halaman berikutnya.
         $namaSekretaris = $sekretaris?->user?->name ?? '';
         $nidnSekretaris = 'NIDN. '.($sekretaris?->user?->nidn ?: str_repeat('.', 20));
-        $anggotaKiri = $anggota->take((int) ceil($anggota->count() / 2));
-        $anggotaKanan = $anggota->slice($anggotaKiri->count())->values();
+
+        // Ketua & sekretaris sudah menandatangani berita acara, sehingga keduanya tidak
+        // diulang pada daftar anggota senat V2 — tetapi tetap tercatat pada daftar hadir.
+        $pimpinanSenat = collect([$ketua?->user_id, $sekretaris?->user_id])
+            ->filter()
+            ->map(fn ($id) => (int) $id);
+        $anggotaTanpaPimpinan = $anggota
+            ->reject(fn ($item) => $pimpinanSenat->contains((int) $item->user_id))
+            ->values();
+
+        $anggotaKiri = $anggotaTanpaPimpinan->take((int) ceil($anggotaTanpaPimpinan->count() / 2));
+        $anggotaKanan = $anggotaTanpaPimpinan->slice($anggotaKiri->count())->values();
     @endphp
 
     <style>
@@ -44,6 +55,19 @@
 
         /* Halaman yang tidak dipilih tidak ditampilkan (layar maupun cetak). */
         .cetak-lewati { display: none !important; }
+
+        /* Daftar hadir V2: kolom tanda tangan dipecah dua bagian bergaris (kiri & kanan)
+           seperti lampiran. Nomor baris ditulis di pojok kiri atas bagian yang harus
+           ditandatangani — ganjil di kiri, genap di kanan — sehingga ruang di bawahnya
+           bebas untuk tanda tangan basah, dan tinggi selnya tetap supaya baris lain
+           tidak bergeser. */
+        .cetak-ttd {
+            height: 0.85cm;
+            padding: 0.1cm 0 0 0.2cm;
+            text-align: left;
+            vertical-align: top;
+            line-height: 1;
+        }
 
         @media print {
             /* Margin asli tiap halaman lewat @page supaya halaman lanjutan pun tetap
@@ -75,8 +99,10 @@
             /* Blok tanda tangan tetap satu blok. */
             .cetak-tanda-tangan { break-inside: avoid; }
 
-            /* Daftar anggota senat (V2) boleh berlanjut ke halaman berikutnya, tetapi
-               tiap baris tetap utuh dan judulnya tidak tertinggal sendirian di bawah. */
+            /* Daftar anggota senat (V2) mengalir seperti naskah biasa: baris yang masih
+               muat tetap dicetak di halaman berjalan, sisanya berlanjut ke halaman
+               berikutnya — tidak dipindah utuh ke halaman baru. Yang dijaga hanya agar
+               satu baris tidak terpotong dan judul tidak menggantung tanpa isi. */
             .cetak-anggota-judul { break-after: avoid; }
             .cetak-anggota tr { break-inside: avoid; }
         }
@@ -93,13 +119,14 @@
 
             <div class="flex flex-wrap items-end gap-3">
                 {{-- Pilihan format cetak: V1 = model cetak lama (berita acara + daftar
-                     hadir), V2 = format lampiran (satu halaman + daftar anggota senat). --}}
+                     hadir), V2 = format lampiran (berita acara + daftar anggota senat
+                     + daftar hadir). --}}
                 <div class="flex flex-col gap-1">
                     <span class="text-sm font-semibold text-slate-600">Format cetak</span>
                     <div class="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-white p-1">
                         @foreach (['v1' => 'V1', 'v2' => 'V2'] as $kunci => $label)
                             <a href="{{ route('surat.bap-senat.cetak', ['bap' => $bap, 'versi' => $kunci]) }}"
-                               title="{{ $kunci === 'v1' ? 'Berita acara + daftar hadir (model cetak saat ini)' : 'Berita acara + daftar anggota senat bertanda tangan' }}"
+                               title="{{ $kunci === 'v1' ? 'Berita acara + daftar hadir (model cetak saat ini)' : 'Berita acara + daftar anggota senat + daftar hadir' }}"
                                @if ($versi === $kunci) aria-current="page" @endif
                                @class([
                                    'rounded-lg px-3.5 py-1.5 text-sm font-bold transition',
@@ -111,7 +138,7 @@
                         @endforeach
                     </div>
                     <span class="text-[10px] text-slate-400">
-                        {{ $versi === 'v1' ? 'V1 · Berita acara + daftar hadir' : 'V2 · Berita acara + daftar anggota senat' }}
+                        {{ $versi === 'v1' ? 'V1 · Berita acara + daftar hadir' : 'V2 · Berita acara + daftar anggota senat + daftar hadir' }}
                     </span>
                 </div>
 

@@ -1,9 +1,9 @@
 {{-- Format cetak V2 (lampiran): berita acara persetujuan senat dengan tanda tangan --}}
-{{-- sekretaris & ketua senat, lalu daftar anggota senat bernomor sesuai urutan --}}
-{{-- pilihan pada formulir, masing-masing dengan ruang tanda tangan. --}}
+{{-- sekretaris & ketua senat, daftar anggota senat bernomor sesuai urutan pilihan --}}
+{{-- pada formulir, lalu daftar hadir rapat pada halaman berikutnya. --}}
 {{-- Ukuran huruf sama dengan V1 (16px); bila naskah melebihi satu halaman A4, --}}
 {{-- isinya otomatis berlanjut ke halaman berikutnya. --}}
-<section class="text-[16px] leading-snug">
+<section class="cetak-halaman text-[16px] leading-snug" data-halaman="1">
     @include('surat.partials.kop-surat', ['senatAkademik' => true])
 
     <header class="mt-2 text-center">
@@ -93,22 +93,24 @@
 
     {{-- Daftar anggota senat: nomor mengikuti urutan pilihan pada formulir, dibagi
          dua kolom (nomor berlanjut ke kolom kanan) dengan garis tanda tangan di
-         samping tiap nama. Bila naskah melebihi satu halaman A4, daftar ini
-         otomatis berlanjut ke halaman berikutnya. --}}
-    <p class="cetak-anggota-judul mt-2 text-center text-[16px] font-bold">Anggota Senat</p>
-
+         samping tiap nama. Ketua & sekretaris tidak diulang di sini karena tanda
+         tangannya sudah ada pada berita acara di atas; keduanya tetap tercatat pada
+         daftar hadir. Bila naskah melebihi satu halaman A4, daftar ini otomatis
+         berlanjut ke halaman berikutnya. --}}
     @if ($anggota->isEmpty())
         <p class="mt-2 text-center text-[16px] italic">Belum ada anggota senat yang dipilih.</p>
-    @else
+    @elseif ($anggotaKiri->isNotEmpty())
+        <p class="cetak-anggota-judul mt-2 text-center text-[16px] font-bold">Anggota Senat</p>
+
         <table class="cetak-anggota mt-2 w-full border-collapse text-[16px] leading-tight">
             <caption class="sr-only">Anggota senat sesuai urutan pilihan</caption>
             <colgroup>
                 <col style="width: 4%">
-                <col style="width: 32%">
-                <col style="width: 14%">
+                <col style="width: 33%">
+                <col style="width: 13%">
                 <col style="width: 4%">
-                <col style="width: 32%">
-                <col style="width: 14%">
+                <col style="width: 33%">
+                <col style="width: 13%">
             </colgroup>
             <tbody>
                 @for ($i = 0; $i < $anggotaKiri->count(); $i++)
@@ -117,20 +119,21 @@
                         $kanan = $anggotaKanan->get($i);
                     @endphp
                     <tr>
-                        <td class="py-1 pr-2 align-bottom whitespace-nowrap">{{ $i + 1 }}.</td>
-                        <td class="py-1 align-bottom">{{ $kiri?->user?->name }}</td>
-                        {{-- Garis tanda tangan anggota senat (kolom kiri). --}}
-                        <td class="py-1 align-bottom">
-                            <div class="w-full border-b border-slate-900" aria-hidden="true">&nbsp;</div>
+                        <td class="py-1 pr-2 align-top whitespace-nowrap">{{ $i + 1 }}.</td>
+                        <td class="py-1 align-top">{{ $kiri?->user?->name }}</td>
+                        {{-- Garis tanda tangan anggota senat (kolom kiri); tingginya tetap
+                             supaya nama yang memakai dua baris tidak menggeser garis. --}}
+                        <td class="py-1 align-top">
+                            <div class="h-[0.6cm] border-b border-slate-900" aria-hidden="true"></div>
                         </td>
-                        <td class="py-1 pr-2 align-bottom whitespace-nowrap">
+                        <td class="py-1 pr-2 align-top whitespace-nowrap">
                             {{ $kanan ? ($anggotaKiri->count() + $i + 1).'.' : '' }}
                         </td>
-                        <td class="py-1 align-bottom">{{ $kanan?->user?->name }}</td>
+                        <td class="py-1 align-top">{{ $kanan?->user?->name }}</td>
                         {{-- Garis tanda tangan anggota senat (kolom kanan). --}}
-                        <td class="py-1 align-bottom">
+                        <td class="py-1 align-top">
                             @if ($kanan)
-                                <div class="w-full border-b border-slate-900" aria-hidden="true">&nbsp;</div>
+                                <div class="h-[0.6cm] border-b border-slate-900" aria-hidden="true"></div>
                             @endif
                         </td>
                     </tr>
@@ -138,4 +141,78 @@
             </tbody>
         </table>
     @endif
+</section>
+
+{{-- Halaman 2 (V2): daftar hadir rapat seperti V1. Ketua & sekretaris tetap tercatat
+     di sini walau tanda tangannya sudah ada pada berita acara. Kolom tanda tangan
+     dibagi dua bagian bergaris (kiri & kanan): baris ganjil menandatangani bagian
+     kiri, baris genap bagian kanan, dan nomor baris ditulis pada bagian tersebut
+     supaya tanda tangan basah yang tinggi tidak saling menimpa. --}}
+<section class="cetak-halaman cetak-pisah text-[16px] leading-snug" data-halaman="2">
+    @include('surat.partials.kop-surat', ['senatAkademik' => true])
+
+    <header class="mt-2 text-center">
+        <h1 class="text-[16px] font-bold">DAFTAR HADIR RAPAT</h1>
+        <h2 class="text-[16px] font-bold">
+            SENAT AKADEMIK {{ mb_strtoupper($instansi?->nama_instansi ?: '') }}
+        </h2>
+    </header>
+
+    <table class="mt-2 w-full border-collapse text-[16px] leading-tight">
+        <caption class="sr-only">Waktu, tempat, dan materi rapat</caption>
+        <tbody>
+            @foreach ([
+                'Hari, tanggal' => (string) $bap->tanggal_bap?->locale('id')->translatedFormat('l, d F Y'),
+                'Tempat pelaksanaan' => (string) $bap->tempat_pelaksanaan,
+                'Materi rapat' => (string) $bap->materi_rapat,
+            ] as $label => $nilai)
+                <tr>
+                    <td class="w-[4.2cm] py-1 align-top">{{ $label }}</td>
+                    <td class="w-4 py-1 align-top">:</td>
+                    <td class="py-1 align-top">{{ $nilai !== '' ? $nilai : str_repeat('.', 55) }}</td>
+                </tr>
+            @endforeach
+        </tbody>
+    </table>
+
+    <table class="cetak-tabel mt-2 w-full border-collapse border border-slate-900 text-[16px]">
+        <caption class="sr-only">Daftar hadir anggota senat</caption>
+        <colgroup>
+            <col style="width: 6%">
+            <col style="width: 38%">
+            <col style="width: 22%">
+            {{-- Kolom tanda tangan dipecah dua bagian sama lebar (kiri & kanan). --}}
+            <col style="width: 17%">
+            <col style="width: 17%">
+        </colgroup>
+        <thead>
+            <tr>
+                <th class="border border-slate-900 px-2 py-1.5 text-center font-bold">NO</th>
+                <th class="border border-slate-900 px-2 py-1.5 text-center font-bold">NAMA</th>
+                <th class="border border-slate-900 px-2 py-1.5 text-center font-bold">JABATAN</th>
+                {{-- Satu judul untuk dua bagian tanda tangan seperti lampiran: garis
+                     pemisahnya baru tampak pada baris isi di bawahnya. --}}
+                <th colspan="2" class="border border-slate-900 px-2 py-1.5 text-center font-bold">TANDA TANGAN</th>
+            </tr>
+        </thead>
+        <tbody>
+            @for ($i = 0; $i < $jumlahBaris; $i++)
+                @php
+                    $hadir = $anggota->get($i);
+                    // Baris ganjil menandatangani bagian kiri dan baris genap bagian
+                    // kanan, sehingga tanda tangan basah yang tinggi tidak saling
+                    // menimpa. Nomor baris ditulis pada bagian yang ditandatangani.
+                    $ttdKiri = $i % 2 === 0;
+                @endphp
+                <tr>
+                    <td class="border border-slate-900 px-2 py-1 text-center align-middle">{{ $i + 1 }}</td>
+                    <td class="border border-slate-900 px-2 py-1 align-middle">{{ $hadir?->user?->name ?? '' }}</td>
+                    <td class="border border-slate-900 px-2 py-1 align-middle">{{ $hadir?->jabatanLengkap() ?? '' }}</td>
+                    {{-- Dua bagian tanda tangan yang dipisahkan garis, seperti lampiran. --}}
+                    <td class="cetak-ttd border border-slate-900">{{ $ttdKiri ? $i + 1 : '' }}</td>
+                    <td class="cetak-ttd border border-slate-900">{{ $ttdKiri ? '' : $i + 1 }}</td>
+                </tr>
+            @endfor
+        </tbody>
+    </table>
 </section>

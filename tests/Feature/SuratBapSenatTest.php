@@ -863,10 +863,11 @@ class SuratBapSenatTest extends TestCase
         $this->assertStringContainsString('versi=v1', $html);
         $this->assertStringContainsString('versi=v2', $html);
 
-        // V2 hanya satu halaman: tanpa pilihan halaman & tanpa daftar hadir.
+        // V2 dua halaman: berita acara + daftar anggota senat, lalu daftar hadir.
+        // Pilihan halaman hanya ada pada V1, sehingga tidak tampil di sini.
         $this->assertStringNotContainsString('Halaman dicetak', $html);
-        $this->assertStringNotContainsString('DAFTAR HADIR RAPAT', $html);
-        $this->assertSame(0, substr_count($html, 'class="cetak-halaman'));
+        $this->assertStringContainsString('DAFTAR HADIR RAPAT', $html);
+        $this->assertSame(2, substr_count($html, 'class="cetak-halaman'));
 
         // Judul lampiran, nomor BAP, dan identitas dosen yang diusulkan.
         $this->assertStringContainsString('Berita Acara Persetujuan Senat', $html);
@@ -891,52 +892,31 @@ class SuratBapSenatTest extends TestCase
 
         // Daftar anggota senat: dua kolom seperti lampiran — kolom kiri memuat
         // separuh anggota pertama, kolom kanan melanjutkan nomornya — dan tiap nama
-        // diberi garis tanda tangan pada kolom yang sama. Nomor mengikuti urutan
-        // pilihan admin (pilihan pertama = nomor 1).
-        $daftar = substr($html, (int) strpos($html, 'Anggota Senat'));
+        // diberi garis tanda tangan pada kolom yang sama. Ketua & sekretaris tidak
+        // diulang di sini karena tanda tangannya sudah ada pada berita acara di atas,
+        // sehingga tinggal anggota lain (Rina Wijaya) yang bernomor 1.
+        $awalDaftar = (int) strpos($html, '>Anggota Senat</p>');
+        $daftar = substr($html, $awalDaftar, (int) strpos($html, 'DAFTAR HADIR RAPAT') - $awalDaftar);
 
         $this->assertMatchesRegularExpression(
             '/1\.\s*<\/td>\s*<td[^>]*>\s*Rina Wijaya, M\.Kom\./',
             $daftar,
-            'Pilihan pertama harus bernomor 1.',
+            'Anggota selain ketua & sekretaris harus bernomor 1.',
         );
-        $this->assertMatchesRegularExpression(
-            '/2\.\s*<\/td>\s*<td[^>]*>\s*Dra\. Sari Puspita, M\.Si\./',
-            $daftar,
-            'Pilihan kedua harus bernomor 2.',
-        );
-        $this->assertMatchesRegularExpression(
-            '/3\.\s*<\/td>\s*<td[^>]*>\s*Dr\. Budi Santoso, M\.Pd\./',
-            $daftar,
-            'Pilihan ketiga harus bernomor 3.',
-        );
+        $this->assertStringNotContainsString('Dra. Sari Puspita, M.Si.', $daftar);
+        $this->assertStringNotContainsString('Dr. Budi Santoso, M.Pd.', $daftar);
 
-        // Urutan baca dua kolom: kolom kiri berisi pilihan pertama & kedua secara
-        // berurutan, kolom kanan melanjutkan pilihan ketiga.
-        $this->assertTrue(
-            strpos($daftar, 'Rina Wijaya, M.Kom.') < strpos($daftar, 'Dra. Sari Puspita, M.Si.'),
-            'Kolom kiri harus memuat pilihan pertama di atas pilihan kedua.',
-        );
-        $this->assertTrue(
-            strpos($daftar, 'Dr. Budi Santoso, M.Pd.') > strpos($daftar, 'Rina Wijaya, M.Kom.'),
-            'Kolom kanan memuat pilihan ketiga.',
-        );
-
-        // Satu garis tanda tangan untuk setiap anggota senat.
-        $this->assertSame(3, substr_count($daftar, 'border-b border-slate-900'));
+        // Satu garis tanda tangan untuk satu anggota senat (kolom kiri). Kolom kanan
+        // tetap disediakan selebar kolom kiri walau belum terpakai.
+        $this->assertSame(1, substr_count($daftar, 'border-b border-slate-900'));
 
         // Tata letak dua kolom: kolom kiri (nomor, nama, garis) dan kolom kanan
         // (nomor, nama, garis), sehingga garis tanda tangan menempel pada namanya.
-        $this->assertSame(2, substr_count($daftar, '<col style="width: 14%">'));
+        $this->assertSame(2, substr_count($daftar, '<col style="width: 13%">'));
         $this->assertMatchesRegularExpression(
             '/Rina Wijaya, M\.Kom\.\s*<\/td>\s*<td[^>]*>\s*<div class="[^"]*border-b/',
             $daftar,
             'Garis tanda tangan kolom kiri harus mengikuti nama anggota.',
-        );
-        $this->assertMatchesRegularExpression(
-            '/3\.\s*<\/td>\s*<td[^>]*>\s*Dr\. Budi Santoso, M\.Pd\.\s*<\/td>\s*<td[^>]*>\s*<div class="[^"]*border-b/',
-            $daftar,
-            'Kolom kanan melanjutkan nomor dan tetap memiliki garis tanda tangan.',
         );
 
         // Ukuran huruf V2 sama dengan V1 (16px, Times New Roman) — tidak ada lagi
@@ -945,10 +925,134 @@ class SuratBapSenatTest extends TestCase
         $this->assertStringNotContainsString('cetak-kertas-v2', $html);
         $this->assertStringContainsString('font-size: 16px;', $html);
 
-        // Naskah yang melebihi satu halaman A4 berlanjut otomatis: baris daftar
-        // anggota tidak terpotong dan judulnya tidak tertinggal di bawah halaman.
+        // Naskah yang melebihi satu halaman A4 berlanjut otomatis: daftar anggota senat
+        // tidak dipindah utuh ke halaman berikutnya (baris yang masih muat tetap dicetak
+        // di halaman berjalan), tetapi tiap barisnya tidak boleh terpotong dan judulnya
+        // tidak boleh menggantung tanpa isi.
+        $this->assertStringNotContainsString('.cetak-anggota { break-inside: avoid; }', $html);
         $this->assertStringContainsString('.cetak-anggota tr { break-inside: avoid; }', $html);
         $this->assertStringContainsString('.cetak-anggota-judul { break-after: avoid; }', $html);
+    }
+
+    public function test_cetak_bap_senat_format_v2_menampilkan_daftar_hadir_dua_bagian_tanda_tangan(): void
+    {
+        Instansi::create(['nama_instansi' => 'Universitas Athena', 'kota' => 'Bandung']);
+
+        [$dosen, $ketua, $anggota] = $this->makeSenat();
+
+        $sekretarisUser = $this->makeUser('dosen', '198505052010011003', 'Dra. Sari Puspita, M.Si.');
+        $sekretaris = Senat::create(['user_id' => $sekretarisUser->id, 'jabatan' => 'sekretaris']);
+
+        $bap = SuratBapSenat::create([
+            'nomor_bap' => '020/BAP-SENAT/X/2026',
+            'tanggal_bap' => '2026-10-31',
+            'user_id' => $dosen->id,
+            'bidang_keilmuan' => 'Sistem Informasi',
+            'prosentase_penelitian' => 150,
+            'tempat_pelaksanaan' => 'Ruang Rapat Senat Lt. 2',
+            'materi_rapat' => 'Pemberian pertimbangan kenaikan jabatan akademik dosen',
+            'anggota_senat_ids' => [$anggota->user_id, $sekretaris->user_id, $ketua->user_id],
+        ]);
+
+        $html = $this->actingAs($this->makeUser('admin'))
+            ->get(route('surat.bap-senat.cetak', ['bap' => $bap, 'versi' => 'v2']))
+            ->assertOk()
+            ->getContent();
+
+        // Halaman 2 (daftar hadir) dimulai di lembar baru seperti format V1.
+        $this->assertStringContainsString(
+            '<section class="cetak-halaman cetak-pisah text-[16px] leading-snug" data-halaman="2">',
+            $html,
+        );
+
+        $tabel = substr($html, (int) strpos($html, 'DAFTAR HADIR RAPAT'));
+
+        $this->assertStringContainsString('SENAT AKADEMIK UNIVERSITAS ATHENA', $tabel);
+        $this->assertStringContainsString('Sabtu, 31 Oktober 2026', $tabel);
+        $this->assertStringContainsString('Ruang Rapat Senat Lt. 2', $tabel);
+        $this->assertStringContainsString('Pemberian pertimbangan kenaikan jabatan akademik dosen', $tabel);
+
+        // Kolom tanda tangan dipecah dua bagian bergaris seperti lampiran: satu judul
+        // kolom (colspan 2) dan garis pemisah yang baru tampak pada baris isi.
+        $this->assertStringContainsString(
+            '<th colspan="2" class="border border-slate-900 px-2 py-1.5 text-center font-bold">TANDA TANGAN</th>',
+            $tabel,
+        );
+        $this->assertSame(2, substr_count($tabel, '<col style="width: 17%">'));
+        $this->assertStringContainsString('.cetak-ttd {', $html);
+        $this->assertStringContainsString('height: 0.85cm;', $html);
+
+        // Ketua & sekretaris tetap tercatat di daftar hadir walau tanda tangannya
+        // sudah ada pada berita acara; urutannya mengikuti pilihan admin seperti V1.
+        $this->assertMatchesRegularExpression(
+            '/1<\/td>\s*<td[^>]*>\s*Rina Wijaya, M\.Kom\.\s*<\/td>\s*<td[^>]*>\s*Anggota\s*<\/td>/',
+            $tabel,
+        );
+        $this->assertMatchesRegularExpression(
+            '/2<\/td>\s*<td[^>]*>\s*Dra\. Sari Puspita, M\.Si\.\s*<\/td>\s*<td[^>]*>\s*Sekretaris\s*<\/td>/',
+            $tabel,
+        );
+        $this->assertMatchesRegularExpression(
+            '/3<\/td>\s*<td[^>]*>\s*Dr\. Budi Santoso, M\.Pd\.\s*<\/td>\s*<td[^>]*>\s*Ketua\s*<\/td>/',
+            $tabel,
+        );
+
+        // Minimal 12 baris seperti V1, masing-masing dengan dua bagian tanda tangan.
+        $this->assertSame(24, substr_count($tabel, 'class="cetak-ttd border border-slate-900"'));
+        $this->assertSame(12, substr_count($tabel, 'px-2 py-1 text-center align-middle'));
+
+        // Nomor baris ditulis pada bagian yang harus ditandatangani: baris ganjil di
+        // bagian kiri, baris genap di bagian kanan (lihat lampiran).
+        $this->assertMatchesRegularExpression(
+            '/<td class="cetak-ttd border border-slate-900">1<\/td>\s*<td class="cetak-ttd border border-slate-900"><\/td>/',
+            $tabel,
+            'Baris ganjil harus menandatangani bagian kiri.',
+        );
+        $this->assertMatchesRegularExpression(
+            '/<td class="cetak-ttd border border-slate-900"><\/td>\s*<td class="cetak-ttd border border-slate-900">2<\/td>/',
+            $tabel,
+            'Baris genap harus menandatangani bagian kanan.',
+        );
+
+        // Tanda tangan ketua tidak diulang di bawah daftar hadir karena sudah ada
+        // pada halaman 1 (berita acara).
+        $this->assertStringNotContainsString('Pemimpin rapat', $html);
+    }
+
+    public function test_cetak_bap_senat_format_v2_tidak_mengulang_ketua_dan_sekretaris_pada_daftar_anggota(): void
+    {
+        Instansi::create(['nama_instansi' => 'Universitas Athena', 'kota' => 'Bandung']);
+
+        [$dosen, $ketua] = $this->makeSenat();
+
+        $sekretarisUser = $this->makeUser('dosen', '198505052010011003', 'Dra. Sari Puspita, M.Si.');
+        $sekretaris = Senat::create(['user_id' => $sekretarisUser->id, 'jabatan' => 'sekretaris']);
+
+        // Hanya ketua & sekretaris yang dipilih. Keduanya sudah menandatangani berita
+        // acara, sehingga daftar anggota senat tidak ditampilkan sama sekali.
+        $bap = SuratBapSenat::create([
+            'nomor_bap' => '021/BAP-SENAT/X/2026',
+            'tanggal_bap' => '2026-10-31',
+            'user_id' => $dosen->id,
+            'bidang_keilmuan' => 'Sistem Informasi',
+            'prosentase_penelitian' => 150,
+            'anggota_senat_ids' => [$sekretaris->user_id, $ketua->user_id],
+        ]);
+
+        $html = $this->actingAs($this->makeUser('admin'))
+            ->get(route('surat.bap-senat.cetak', ['bap' => $bap, 'versi' => 'v2']))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringNotContainsString('Anggota Senat</p>', $html);
+        $this->assertStringNotContainsString('Belum ada anggota senat yang dipilih.', $html);
+
+        // Daftar hadir tetap memuat keduanya beserta jabatannya.
+        $tabel = substr($html, (int) strpos($html, 'DAFTAR HADIR RAPAT'));
+        $this->assertStringContainsString('Dra. Sari Puspita, M.Si.', $tabel);
+        $this->assertStringContainsString('Dr. Budi Santoso, M.Pd.', $tabel);
+        $this->assertStringContainsString('Sekretaris', $tabel);
+        $this->assertStringContainsString('Ketua', $tabel);
     }
 
     public function test_form_bap_senat_menampilkan_toggle_kuorum_otomatis_dan_manual(): void
