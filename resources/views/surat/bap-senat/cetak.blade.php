@@ -14,6 +14,14 @@
         $nidnKetua = 'NIDN. '.($ketua?->user?->nidn ?: str_repeat('.', 20));
         // Daftar hadir selalu menyediakan minimal 12 baris.
         $jumlahBaris = max(12, $anggota->count());
+
+        // Format cetak V2 (lampiran): tanda tangan sekretaris di samping ketua senat,
+        // lalu anggota senat dua kolom (nomor berlanjut ke kolom kanan) dengan garis
+        // tanda tangan di samping tiap nama, sesuai urutan pilihan pada formulir.
+        $namaSekretaris = $sekretaris?->user?->name ?? '';
+        $nidnSekretaris = 'NIDN. '.($sekretaris?->user?->nidn ?: str_repeat('.', 20));
+        $anggotaKiri = $anggota->take((int) ceil($anggota->count() / 2));
+        $anggotaKanan = $anggota->slice($anggotaKiri->count())->values();
     @endphp
 
     <style>
@@ -66,6 +74,11 @@
 
             /* Blok tanda tangan tetap satu blok. */
             .cetak-tanda-tangan { break-inside: avoid; }
+
+            /* Daftar anggota senat (V2) boleh berlanjut ke halaman berikutnya, tetapi
+               tiap baris tetap utuh dan judulnya tidak tertinggal sendirian di bawah. */
+            .cetak-anggota-judul { break-after: avoid; }
+            .cetak-anggota tr { break-inside: avoid; }
         }
     </style>
     {{-- Diisi JavaScript sebelum window.print() agar margin tiap halaman ikut menyesuaikan. --}}
@@ -79,21 +92,46 @@
             </a>
 
             <div class="flex flex-wrap items-end gap-3">
+                {{-- Pilihan format cetak: V1 = model cetak lama (berita acara + daftar
+                     hadir), V2 = format lampiran (satu halaman + daftar anggota senat). --}}
                 <div class="flex flex-col gap-1">
-                    <span class="text-sm font-semibold text-slate-600">Halaman dicetak</span>
-                    <div class="flex flex-wrap items-center gap-3">
-                        <label class="inline-flex cursor-pointer items-center gap-2 text-sm text-slate-700">
-                            <input type="checkbox" id="halaman-1" checked
-                                   class="size-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30">
-                            Halaman 1 — Berita Acara
-                        </label>
-                        <label class="inline-flex cursor-pointer items-center gap-2 text-sm text-slate-700">
-                            <input type="checkbox" id="halaman-2" checked
-                                   class="size-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30">
-                            Halaman 2 — Daftar Hadir
-                        </label>
+                    <span class="text-sm font-semibold text-slate-600">Format cetak</span>
+                    <div class="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-white p-1">
+                        @foreach (['v1' => 'V1', 'v2' => 'V2'] as $kunci => $label)
+                            <a href="{{ route('surat.bap-senat.cetak', ['bap' => $bap, 'versi' => $kunci]) }}"
+                               title="{{ $kunci === 'v1' ? 'Berita acara + daftar hadir (model cetak saat ini)' : 'Berita acara + daftar anggota senat bertanda tangan' }}"
+                               @if ($versi === $kunci) aria-current="page" @endif
+                               @class([
+                                   'rounded-lg px-3.5 py-1.5 text-sm font-bold transition',
+                                   'bg-teal-600 text-white shadow-sm' => $versi === $kunci,
+                                   'text-slate-600 hover:bg-slate-100' => $versi !== $kunci,
+                               ])>
+                                {{ $label }}
+                            </a>
+                        @endforeach
                     </div>
+                    <span class="text-[10px] text-slate-400">
+                        {{ $versi === 'v1' ? 'V1 · Berita acara + daftar hadir' : 'V2 · Berita acara + daftar anggota senat' }}
+                    </span>
                 </div>
+
+                @if ($versi === 'v1')
+                    <div class="flex flex-col gap-1">
+                        <span class="text-sm font-semibold text-slate-600">Halaman dicetak</span>
+                        <div class="flex flex-wrap items-center gap-3">
+                            <label class="inline-flex cursor-pointer items-center gap-2 text-sm text-slate-700">
+                                <input type="checkbox" id="halaman-1" checked
+                                       class="size-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30">
+                                Halaman 1 — Berita Acara
+                            </label>
+                            <label class="inline-flex cursor-pointer items-center gap-2 text-sm text-slate-700">
+                                <input type="checkbox" id="halaman-2" checked
+                                       class="size-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30">
+                                Halaman 2 — Daftar Hadir
+                            </label>
+                        </div>
+                    </div>
+                @endif
 
                 <div class="flex flex-wrap items-end gap-1.5">
                     <span class="pb-2.5 text-sm font-semibold text-slate-600">Margin (cm)</span>
@@ -116,6 +154,9 @@
         <div class="cetak-kertas rounded-2xl border border-slate-200 bg-white shadow-sm"
              style="padding: var(--cetak-margin)">
 
+            @if ($versi === 'v2')
+                @include('surat.bap-senat.cetak-v2')
+            @else
             {{-- Halaman 1: Berita Acara Persetujuan Senat Akademik. --}}
             <section class="cetak-halaman" data-halaman="1">
                 @include('surat.partials.kop-surat', ['senatAkademik' => true])
@@ -133,7 +174,7 @@
                     {{ $tanggal?->translatedFormat('d') ?: '-' }} bulan
                     {{ $tanggal?->translatedFormat('F') ?: '-' }} tahun
                     {{ $tanggal?->translatedFormat('Y') ?: '-' }}, Senat
-                    {{ $instansi?->nama_instansi ?: '-' }} yang dihadiri oleh sejumlah {{ $anggota->count() }}
+                    {{ $instansi?->nama_instansi ?: '-' }} yang dihadiri oleh sejumlah {{ $bap->jumlahKuorum($anggota->count()) }}
                     orang anggota senat (dengan jumlah yang memenuhi kuorum) sebagaimana daftar hadir terlampir,
                     telah melakukan rapat pemberian pertimbangan/persetujuan pengajuan Kenaikan Jabatan Akademik kepada:
                 </p>
@@ -266,6 +307,7 @@
                     </div>
                 </div>
             </section>
+            @endif
         </div>
     </div>
 
@@ -306,12 +348,14 @@
 
         // Halaman 2 hanya dimulai di lembar baru bila halaman 1 ikut dicetak,
         // supaya memilih cetak halaman 2 saja tidak menyisakan halaman kosong.
+        // Format V2 tidak punya pilihan halaman, sehingga bagian tanpa checkbox
+        // dianggap selalu dicetak.
         function terapkanHalaman() {
-            const dipilih = Object.values(halaman).filter((item) => item.pilih.checked && item.bagian);
+            const dipilih = Object.values(halaman).filter((item) => item.bagian && (item.pilih?.checked ?? true));
             const urut = Object.values(halaman).filter((item) => item.bagian);
 
             urut.forEach((item) => {
-                item.bagian.classList.toggle('cetak-lewati', ! item.pilih.checked);
+                item.bagian.classList.toggle('cetak-lewati', ! (item.pilih?.checked ?? true));
                 item.bagian.classList.remove('cetak-pisah');
             });
 

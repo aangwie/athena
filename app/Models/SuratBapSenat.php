@@ -74,6 +74,24 @@ class SuratBapSenat extends Model
         'asisten_ahli_ke_lektor' => 'Asisten Ahli ke Lektor',
     ];
 
+    /**
+     * Mode pengisian jumlah kuorum pada naskah cetak: otomatis mengikuti jumlah anggota
+     * senat yang dipilih, atau manual sesuai angka yang diisi admin.
+     */
+    public const KUORUM_OTOMATIS = 'otomatis';
+
+    public const KUORUM_MANUAL = 'manual';
+
+    /**
+     * Pilihan mode pengisian jumlah kuorum (toggle pada formulir BAP senat).
+     *
+     * @var array<string, string>
+     */
+    public const KUORUM_MODE = [
+        self::KUORUM_OTOMATIS => 'Otomatis (jumlah anggota senat)',
+        self::KUORUM_MANUAL => 'Manual (isi sendiri)',
+    ];
+
     protected $table = 'surat_bap_senat';
 
     protected $fillable = [
@@ -86,6 +104,8 @@ class SuratBapSenat extends Model
         'tempat_pelaksanaan',
         'materi_rapat',
         'anggota_senat_ids',
+        'kuorum_mode',
+        'jumlah_kuorum',
     ];
 
     protected function casts(): array
@@ -94,6 +114,7 @@ class SuratBapSenat extends Model
             'tanggal_bap' => 'date',
             'prosentase_penelitian' => 'integer',
             'anggota_senat_ids' => 'array',
+            'jumlah_kuorum' => 'integer',
         ];
     }
 
@@ -163,6 +184,37 @@ class SuratBapSenat extends Model
     public function menggunakanProsentase(): bool
     {
         return $this->kenaikan_jabatan === 'asisten_ahli_ke_lektor';
+    }
+
+    /**
+     * Daftar kunci pilihan mode pengisian kuorum yang sah, untuk validasi.
+     *
+     * @return list<string>
+     */
+    public static function kuorumModeList(): array
+    {
+        return array_keys(self::KUORUM_MODE);
+    }
+
+    /**
+     * Jumlah kuorum diisi manual oleh admin (bukan mengikuti jumlah anggota senat).
+     */
+    public function kuorumManual(): bool
+    {
+        return $this->kuorum_mode === self::KUORUM_MANUAL;
+    }
+
+    /**
+     * Angka yang dicetak pada kalimat "yang dihadiri oleh sejumlah ... orang anggota senat":
+     * angka manual bila mode manual, selain itu mengikuti jumlah anggota senat terpilih.
+     */
+    public function jumlahKuorum(int $otomatis): int
+    {
+        if ($this->kuorumManual() && $this->jumlah_kuorum !== null) {
+            return (int) $this->jumlah_kuorum;
+        }
+
+        return $otomatis;
     }
 
     /**

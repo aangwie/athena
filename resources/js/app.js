@@ -802,6 +802,29 @@ const boot = () => {
         sinkronProsentase();
     }
 
+    // BAP Senat: jumlah kuorum diisi otomatis dari jumlah anggota senat terpilih, atau
+    // manual lewat isian angka. Isian angka hanya aktif saat mode manual dipilih.
+    const kuorumMode = document.querySelectorAll('[data-kuorum-mode]');
+    const grupKuorumManual = document.querySelector('[data-grup-kuorum-manual]');
+
+    if (kuorumMode.length && grupKuorumManual) {
+        const inputKuorum = grupKuorumManual.querySelector('input[name="jumlah_kuorum"]');
+
+        const sinkronKuorum = () => {
+            const manual = document.querySelector('[data-kuorum-mode]:checked')?.value === 'manual';
+
+            grupKuorumManual.classList.toggle('hidden', !manual);
+
+            if (inputKuorum) {
+                inputKuorum.disabled = !manual;
+                inputKuorum.required = manual;
+            }
+        };
+
+        kuorumMode.forEach((radio) => radio.addEventListener('change', sinkronKuorum));
+        sinkronKuorum();
+    }
+
     // Riwayat karya tulis: bidang jurnal/prosiding tampil mengikuti jenis karya ilmiah terpilih.
     const karyaJenis = document.querySelector('#karya_ilmiah');
 

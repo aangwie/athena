@@ -256,24 +256,35 @@ class SuratController extends Controller
     }
 
     /**
-     * BAP senat siap cetak: PDF A4 (FPDF) berisi berita acara + daftar hadir rapat.
+     * BAP senat siap cetak: pratinjau A4 (HTML) dengan dua pilihan format.
+     *
+     * V1 (format lama, default): berita acara (halaman 1) dan daftar hadir
+     * (halaman 2) dipisah, dengan pilihan halaman & margin sebelum dicetak.
+     * V2 (format lampiran): berita acara dengan tanda tangan sekretaris & ketua
+     * senat, lalu daftar anggota senat bernomor (dengan garis tanda tangan)
+     * sesuai urutan pilihan pada formulir. Hurufnya sama dengan V1, sehingga
+     * naskah yang melebihi satu halaman A4 otomatis berlanjut ke halaman 2.
      */
-    public function cetakBapSenat(SuratBapSenat $bap): View
+    public function cetakBapSenat(Request $request, SuratBapSenat $bap): View
     {
         $bap->load('dosen');
 
         $senat = Senat::query()->with('user')->get();
 
-        // Halaman pratinjau A4 (HTML): berita acara (halaman 1) dan daftar hadir
-        // (halaman 2) dipisah, dengan pilihan halaman & margin sebelum dicetak.
+        // Tanpa parameter (atau nilai lain) tetap memakai format cetak V1.
+        $versi = strtolower((string) $request->query('versi')) === 'v2' ? 'v2' : 'v1';
+
         return view('surat.bap-senat.cetak', [
             'bap' => $bap,
+            'versi' => $versi,
             'instansi' => Instansi::query()->first(),
             // Tempat pada baris tanda tangan mengikuti kota instansi.
             'kota' => Instansi::query()->value('kota'),
             'identitas' => $this->identitas($bap->dosen),
             'anggota' => $bap->anggotaSenat(),
             'ketua' => $senat->firstWhere('jabatan', 'ketua'),
+            // Format V2 menampilkan tanda tangan sekretaris di samping ketua senat.
+            'sekretaris' => $senat->firstWhere('jabatan', 'sekretaris'),
         ]);
     }
 
@@ -458,6 +469,10 @@ class SuratController extends Controller
     {
         $data = $request->validated();
 
+        // Kuorum manual menyimpan angka dari admin; mode otomatis mengosongkan angkanya
+        // agar naskah cetak selalu mengikuti jumlah anggota senat yang dipilih.
+        $kuorumManual = ($data['kuorum_mode'] ?? SuratBapSenat::KUORUM_OTOMATIS) === SuratBapSenat::KUORUM_MANUAL;
+
         return [
             'nomor_bap' => $data['nomor_bap'],
             'tanggal_bap' => Carbon::createFromFormat('d-m-Y', $data['tanggal_bap'])->toDateString(),
@@ -468,6 +483,8 @@ class SuratController extends Controller
             'tempat_pelaksanaan' => $data['tempat_pelaksanaan'],
             'materi_rapat' => $data['materi_rapat'],
             'anggota_senat_ids' => array_map('intval', $data['anggota_senat_ids']),
+            'kuorum_mode' => $kuorumManual ? SuratBapSenat::KUORUM_MANUAL : SuratBapSenat::KUORUM_OTOMATIS,
+            'jumlah_kuorum' => $kuorumManual ? (int) $data['jumlah_kuorum'] : null,
         ];
     }
 

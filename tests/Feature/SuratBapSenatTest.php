@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Instansi;
+use App\Models\ProfilDosen;
 use App\Models\Senat;
 use App\Models\SuratBapSenat;
 use App\Models\User;
@@ -567,6 +568,11 @@ class SuratBapSenatTest extends TestCase
         $this->assertStringContainsString('Halaman 2 — Daftar Hadir', $html);
         $this->assertSame(2, substr_count($html, 'class="cetak-halaman'));
 
+        // Pilihan format cetak V1 (model saat ini) / V2 (format lampiran).
+        $this->assertStringContainsString('Format cetak', $html);
+        $this->assertStringContainsString('versi=v1', $html);
+        $this->assertStringContainsString('versi=v2', $html);
+
         // Pilihan margin sebelum cetak, default 1,5 cm semua sisi.
         $this->assertStringContainsString('id="margin-atas"', $html);
         $this->assertStringContainsString('value="1.5"', $html);
@@ -822,5 +828,335 @@ class SuratBapSenatTest extends TestCase
             ->assertSee('Status dosen tetap')
             ->assertSee('Non PNS')
             ->assertDontSee('Dosen Tetap');
+    }
+
+    public function test_cetak_bap_senat_format_v2_menampilkan_anggota_sesuai_urutan_pilihan(): void
+    {
+        Instansi::create(['nama_instansi' => 'Universitas Athena', 'kota' => 'Bandung']);
+
+        [$dosen, $ketua, $anggota] = $this->makeSenat();
+
+        // NUPTK tersimpan pada profil dosen; naskah V2 menuliskannya satu baris dengan NIDN.
+        ProfilDosen::create(['user_id' => $dosen->id, 'nuptk' => '1234567890123456']);
+
+        $sekretaris = $this->makeUser('dosen', '198505052010011003', 'Dra. Sari Puspita, M.Si.');
+        Senat::create(['user_id' => $sekretaris->id, 'jabatan' => 'sekretaris']);
+
+        // Urutan pilih admin: anggota, sekretaris, lalu ketua. Format V2 menomori
+        // anggota senat mengikuti urutan tersebut (pilihan pertama = nomor 1).
+        $bap = SuratBapSenat::create([
+            'nomor_bap' => '019/BAP-SENAT/X/2026',
+            'tanggal_bap' => '2026-10-31',
+            'user_id' => $dosen->id,
+            'bidang_keilmuan' => 'Sistem Informasi',
+            'prosentase_penelitian' => 150,
+            'anggota_senat_ids' => [$anggota->user_id, $sekretaris->id, $ketua->user_id],
+        ]);
+
+        $html = $this->actingAs($this->makeUser('admin'))
+            ->get(route('surat.bap-senat.cetak', ['bap' => $bap, 'versi' => 'v2']))
+            ->assertOk()
+            ->getContent();
+
+        // Pilihan format tetap tampil pada panel alat cetak.
+        $this->assertStringContainsString('Format cetak', $html);
+        $this->assertStringContainsString('versi=v1', $html);
+        $this->assertStringContainsString('versi=v2', $html);
+
+        // V2 hanya satu halaman: tanpa pilihan halaman & tanpa daftar hadir.
+        $this->assertStringNotContainsString('Halaman dicetak', $html);
+        $this->assertStringNotContainsString('DAFTAR HADIR RAPAT', $html);
+        $this->assertSame(0, substr_count($html, 'class="cetak-halaman'));
+
+        // Judul lampiran, nomor BAP, dan identitas dosen yang diusulkan.
+        $this->assertStringContainsString('Berita Acara Persetujuan Senat', $html);
+        $this->assertStringContainsString('NOMOR: 019/BAP-SENAT/X/2026', $html);
+        $this->assertStringContainsString('Status dosen tetap', $html);
+        $this->assertStringContainsString('Non PNS', $html);
+
+        // NIDN dan NUPTK ditulis pada satu baris seperti format V1 ("nidn / nuptk"),
+        // bukan dua baris terpisah seperti format V2 sebelumnya.
+        $this->assertMatchesRegularExpression(
+            '/NIDN\/NUPTK\s*<\/td>\s*<td[^>]*>\s*:\s*<\/td>\s*<td[^>]*>\s*198001012010011001\s*\/\s*1234567890123456\s*<\/td>/',
+            $html,
+        );
+        $this->assertStringNotContainsString('>NUPTK</td>', $html);
+
+        // Tanda tangan sekretaris (kiri) dan ketua senat (kanan).
+        $this->assertStringContainsString('Sekretaris,', $html);
+        $this->assertStringContainsString('Ketua Senat,', $html);
+        $this->assertStringContainsString('Dra. Sari Puspita, M.Si.', $html);
+        $this->assertStringContainsString('Dr. Budi Santoso, M.Pd.', $html);
+        $this->assertStringContainsString('NIDN. 198505052010011003', $html);
+
+        // Daftar anggota senat: dua kolom seperti lampiran — kolom kiri memuat
+        // separuh anggota pertama, kolom kanan melanjutkan nomornya — dan tiap nama
+        // diberi garis tanda tangan pada kolom yang sama. Nomor mengikuti urutan
+        // pilihan admin (pilihan pertama = nomor 1).
+        $daftar = substr($html, (int) strpos($html, 'Anggota Senat'));
+
+        $this->assertMatchesRegularExpression(
+            '/1\.\s*<\/td>\s*<td[^>]*>\s*Rina Wijaya, M\.Kom\./',
+            $daftar,
+            'Pilihan pertama harus bernomor 1.',
+        );
+        $this->assertMatchesRegularExpression(
+            '/2\.\s*<\/td>\s*<td[^>]*>\s*Dra\. Sari Puspita, M\.Si\./',
+            $daftar,
+            'Pilihan kedua harus bernomor 2.',
+        );
+        $this->assertMatchesRegularExpression(
+            '/3\.\s*<\/td>\s*<td[^>]*>\s*Dr\. Budi Santoso, M\.Pd\./',
+            $daftar,
+            'Pilihan ketiga harus bernomor 3.',
+        );
+
+        // Urutan baca dua kolom: kolom kiri berisi pilihan pertama & kedua secara
+        // berurutan, kolom kanan melanjutkan pilihan ketiga.
+        $this->assertTrue(
+            strpos($daftar, 'Rina Wijaya, M.Kom.') < strpos($daftar, 'Dra. Sari Puspita, M.Si.'),
+            'Kolom kiri harus memuat pilihan pertama di atas pilihan kedua.',
+        );
+        $this->assertTrue(
+            strpos($daftar, 'Dr. Budi Santoso, M.Pd.') > strpos($daftar, 'Rina Wijaya, M.Kom.'),
+            'Kolom kanan memuat pilihan ketiga.',
+        );
+
+        // Satu garis tanda tangan untuk setiap anggota senat.
+        $this->assertSame(3, substr_count($daftar, 'border-b border-slate-900'));
+
+        // Tata letak dua kolom: kolom kiri (nomor, nama, garis) dan kolom kanan
+        // (nomor, nama, garis), sehingga garis tanda tangan menempel pada namanya.
+        $this->assertSame(2, substr_count($daftar, '<col style="width: 14%">'));
+        $this->assertMatchesRegularExpression(
+            '/Rina Wijaya, M\.Kom\.\s*<\/td>\s*<td[^>]*>\s*<div class="[^"]*border-b/',
+            $daftar,
+            'Garis tanda tangan kolom kiri harus mengikuti nama anggota.',
+        );
+        $this->assertMatchesRegularExpression(
+            '/3\.\s*<\/td>\s*<td[^>]*>\s*Dr\. Budi Santoso, M\.Pd\.\s*<\/td>\s*<td[^>]*>\s*<div class="[^"]*border-b/',
+            $daftar,
+            'Kolom kanan melanjutkan nomor dan tetap memiliki garis tanda tangan.',
+        );
+
+        // Ukuran huruf V2 sama dengan V1 (16px, Times New Roman) — tidak ada lagi
+        // pengecilan huruf khusus V2.
+        $this->assertStringNotContainsString('text-[11px]', $html);
+        $this->assertStringNotContainsString('cetak-kertas-v2', $html);
+        $this->assertStringContainsString('font-size: 16px;', $html);
+
+        // Naskah yang melebihi satu halaman A4 berlanjut otomatis: baris daftar
+        // anggota tidak terpotong dan judulnya tidak tertinggal di bawah halaman.
+        $this->assertStringContainsString('.cetak-anggota tr { break-inside: avoid; }', $html);
+        $this->assertStringContainsString('.cetak-anggota-judul { break-after: avoid; }', $html);
+    }
+
+    public function test_form_bap_senat_menampilkan_toggle_kuorum_otomatis_dan_manual(): void
+    {
+        $this->makeSenat();
+
+        $html = $this->actingAs($this->makeUser('admin'))
+            ->get(route('surat.index'))
+            ->assertOk()
+            ->assertSee('Jumlah Kuorum')
+            ->assertSee('Otomatis (jumlah anggota senat)')
+            ->assertSee('Manual (isi sendiri)')
+            ->assertSee('name="kuorum_mode"', false)
+            ->assertSee('value="otomatis"', false)
+            ->assertSee('value="manual"', false)
+            ->assertSee('data-kuorum-mode', false)
+            ->assertSee('name="jumlah_kuorum"', false)
+            ->getContent();
+
+        // Toggle kuorum tampil di atas dropdown anggota senat.
+        $posisiToggle = strpos($html, 'name="kuorum_mode"');
+        $posisiAnggota = strpos($html, 'name="anggota_senat_ids[]"');
+
+        $this->assertNotFalse($posisiToggle);
+        $this->assertNotFalse($posisiAnggota);
+        $this->assertTrue($posisiToggle < $posisiAnggota, 'Toggle kuorum harus berada di atas dropdown anggota senat.');
+
+        // Default mode otomatis: isian angka disembunyikan dan tidak wajib diisi.
+        $this->assertStringContainsString('data-grup-kuorum-manual class="mt-3 hidden"', $html);
+        $this->assertStringContainsString('name="jumlah_kuorum" min="1" max="999" step="1" inputmode="numeric"', $html);
+        $this->assertMatchesRegularExpression('/name="jumlah_kuorum"[^>]*\sdisabled/', $html);
+    }
+
+    public function test_form_bap_senat_menampilkan_isian_kuorum_manual_saat_disunting(): void
+    {
+        [$dosen, $ketua] = $this->makeSenat();
+
+        $bap = SuratBapSenat::create([
+            'nomor_bap' => '019/BAP-SENAT/X/2026',
+            'tanggal_bap' => '2026-10-31',
+            'user_id' => $dosen->id,
+            'bidang_keilmuan' => 'Sistem Informasi',
+            'prosentase_penelitian' => 150,
+            'anggota_senat_ids' => [$ketua->user_id],
+            'kuorum_mode' => SuratBapSenat::KUORUM_MANUAL,
+            'jumlah_kuorum' => 13,
+        ]);
+
+        $html = $this->actingAs($this->makeUser('admin'))
+            ->get(route('surat.index', ['edit_bap' => $bap->id]))
+            ->assertOk()
+            ->assertSee('value="13"', false)
+            ->getContent();
+
+        // Radio "Manual" terpilih dan isian angka tampil (tanpa kelas hidden).
+        $this->assertMatchesRegularExpression('/value="manual"[^>]*\schecked/', $html);
+        $this->assertStringContainsString('data-grup-kuorum-manual class="mt-3"', $html);
+        $this->assertStringNotContainsString('data-grup-kuorum-manual class="mt-3 hidden"', $html);
+        $this->assertDoesNotMatchRegularExpression('/name="jumlah_kuorum"[^>]*\sdisabled/', $html);
+    }
+
+    public function test_cetak_bap_senat_kuorum_otomatis_mengikuti_jumlah_anggota_senat(): void
+    {
+        Instansi::create(['nama_instansi' => 'Universitas Athena', 'kota' => 'Bandung']);
+
+        [$dosen, $ketua, $anggota] = $this->makeSenat();
+        $admin = $this->makeUser('admin');
+
+        $this->actingAs($admin)
+            ->post(route('surat.bap-senat.store'), [
+                'nomor_bap' => '022/BAP-SENAT/XI/2026',
+                'tanggal_bap' => '13-11-2026',
+                'dosen_id' => $dosen->id,
+                'bidang_keilmuan' => 'APLIKASI PERANGKAT LUNAK SITUS',
+                'kenaikan_jabatan' => 'belum_asisten_ahli',
+                'tempat_pelaksanaan' => 'Ruang Rapat Senat Lt. 2',
+                'materi_rapat' => 'Pemberian pertimbangan kenaikan jabatan akademik dosen',
+                'anggota_senat_ids' => [$ketua->user_id, $anggota->user_id],
+                'kuorum_mode' => SuratBapSenat::KUORUM_OTOMATIS,
+                // Angka yang ikut terkirim pada mode otomatis harus diabaikan.
+                'jumlah_kuorum' => 40,
+            ])
+            ->assertRedirect(route('surat.index').'#bap-senat')
+            ->assertSessionHasNoErrors();
+
+        $bap = SuratBapSenat::query()->firstOrFail();
+
+        $this->assertSame(SuratBapSenat::KUORUM_OTOMATIS, $bap->kuorum_mode);
+        $this->assertNull($bap->jumlah_kuorum);
+        $this->assertSame(2, $bap->jumlahKuorum(count($bap->anggota_senat_ids)));
+
+        foreach ([null, 'v2'] as $versi) {
+            $html = $this->actingAs($admin)
+                ->get(route('surat.bap-senat.cetak', array_filter(['bap' => $bap, 'versi' => $versi])))
+                ->assertOk()
+                ->getContent();
+
+            $this->assertMatchesRegularExpression(
+                '/sejumlah\s+2\s+orang anggota senat/',
+                $html,
+                'Kuorum otomatis harus mencetak jumlah anggota senat (versi '.($versi ?? 'v1').').',
+            );
+        }
+    }
+
+    public function test_cetak_bap_senat_kuorum_manual_tercetak_di_v1_dan_v2(): void
+    {
+        Instansi::create(['nama_instansi' => 'Universitas Athena', 'kota' => 'Bandung']);
+
+        [$dosen, $ketua, $anggota] = $this->makeSenat();
+        $admin = $this->makeUser('admin');
+
+        $this->actingAs($admin)
+            ->post(route('surat.bap-senat.store'), [
+                'nomor_bap' => '023/BAP-SENAT/XI/2026',
+                'tanggal_bap' => '13-11-2026',
+                'dosen_id' => $dosen->id,
+                'bidang_keilmuan' => 'TEKNIK JARINGAN KOMPUTER',
+                'kenaikan_jabatan' => 'belum_asisten_ahli',
+                'tempat_pelaksanaan' => 'Ruang Rapat Senat Lt. 2',
+                'materi_rapat' => 'Pemberian pertimbangan kenaikan jabatan akademik dosen',
+                'anggota_senat_ids' => [$ketua->user_id, $anggota->user_id],
+                'kuorum_mode' => SuratBapSenat::KUORUM_MANUAL,
+                'jumlah_kuorum' => 13,
+            ])
+            ->assertRedirect(route('surat.index').'#bap-senat')
+            ->assertSessionHasNoErrors();
+
+        $bap = SuratBapSenat::query()->firstOrFail();
+
+        $this->assertSame(SuratBapSenat::KUORUM_MANUAL, $bap->kuorum_mode);
+        $this->assertSame(13, $bap->jumlah_kuorum);
+
+        // Halaman cetak V1 dan V2 memakai angka manual, bukan jumlah anggota senat.
+        foreach ([null, 'v2'] as $versi) {
+            $html = $this->actingAs($admin)
+                ->get(route('surat.bap-senat.cetak', array_filter(['bap' => $bap, 'versi' => $versi])))
+                ->assertOk()
+                ->getContent();
+
+            $this->assertMatchesRegularExpression(
+                '/sejumlah\s+13\s+orang anggota senat/',
+                $html,
+                'Kuorum manual harus tercetak pada versi '.($versi ?? 'v1').'.',
+            );
+        }
+    }
+
+    public function test_bap_senat_kuorum_manual_wajib_diisi_angkanya(): void
+    {
+        [$dosen, $ketua] = $this->makeSenat();
+
+        $this->actingAs($this->makeUser('admin'))
+            ->post(route('surat.bap-senat.store'), [
+                'nomor_bap' => '024/BAP-SENAT/XI/2026',
+                'tanggal_bap' => '13-11-2026',
+                'dosen_id' => $dosen->id,
+                'bidang_keilmuan' => 'EKONOMI',
+                'kenaikan_jabatan' => 'belum_asisten_ahli',
+                'tempat_pelaksanaan' => 'Ruang Rapat Senat Lt. 2',
+                'materi_rapat' => 'Pemberian pertimbangan kenaikan jabatan akademik dosen',
+                'anggota_senat_ids' => [$ketua->user_id],
+                'kuorum_mode' => SuratBapSenat::KUORUM_MANUAL,
+                'jumlah_kuorum' => '',
+            ])
+            ->assertSessionHasErrors(['jumlah_kuorum']);
+
+        $this->assertDatabaseCount('surat_bap_senat', 0);
+    }
+
+    public function test_bap_senat_kembali_ke_kuorum_otomatis_mengosongkan_angka_manual(): void
+    {
+        [$dosen, $ketua] = $this->makeSenat();
+        $admin = $this->makeUser('admin');
+
+        $bap = SuratBapSenat::create([
+            'nomor_bap' => '025/BAP-SENAT/XI/2026',
+            'tanggal_bap' => '2026-11-13',
+            'user_id' => $dosen->id,
+            'bidang_keilmuan' => 'EKONOMI',
+            'kenaikan_jabatan' => 'belum_asisten_ahli',
+            'prosentase_penelitian' => null,
+            'tempat_pelaksanaan' => 'Ruang Rapat Senat Lt. 2',
+            'materi_rapat' => 'Pemberian pertimbangan kenaikan jabatan akademik dosen',
+            'anggota_senat_ids' => [$ketua->user_id],
+            'kuorum_mode' => SuratBapSenat::KUORUM_MANUAL,
+            'jumlah_kuorum' => 13,
+        ]);
+
+        $this->actingAs($admin)
+            ->put(route('surat.bap-senat.update', $bap), [
+                'nomor_bap' => '025/BAP-SENAT/XI/2026',
+                'tanggal_bap' => '13-11-2026',
+                'dosen_id' => $dosen->id,
+                'bidang_keilmuan' => 'EKONOMI',
+                'kenaikan_jabatan' => 'belum_asisten_ahli',
+                'tempat_pelaksanaan' => 'Ruang Rapat Senat Lt. 2',
+                'materi_rapat' => 'Pemberian pertimbangan kenaikan jabatan akademik dosen',
+                'anggota_senat_ids' => [$ketua->user_id],
+                'kuorum_mode' => SuratBapSenat::KUORUM_OTOMATIS,
+            ])
+            ->assertRedirect(route('surat.index').'#bap-senat')
+            ->assertSessionHasNoErrors();
+
+        $bap->refresh();
+
+        $this->assertSame(SuratBapSenat::KUORUM_OTOMATIS, $bap->kuorum_mode);
+        $this->assertNull($bap->jumlah_kuorum);
+        $this->assertSame(1, $bap->jumlahKuorum(count($bap->anggota_senat_ids)));
     }
 }

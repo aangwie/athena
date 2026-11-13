@@ -42,6 +42,9 @@ class SuratBapSenatRequest extends FormRequest
         // adalah Asisten Ahli ke Lektor.
         $memakaiProsentase = $this->input('kenaikan_jabatan') === 'asisten_ahli_ke_lektor';
 
+        // Jumlah kuorum manual wajib diisi saat admin memilih mode manual.
+        $kuorumManual = $this->input('kuorum_mode') === SuratBapSenat::KUORUM_MANUAL;
+
         return [
             'nomor_bap' => ['required', 'string', 'max:100'],
             'tanggal_bap' => ['required', 'date_format:d-m-Y'],
@@ -65,6 +68,15 @@ class SuratBapSenatRequest extends FormRequest
             'anggota_senat_ids' => ['required', 'array', 'min:1'],
             // Anggota rapat hanya boleh diambil dari daftar senat instansi.
             'anggota_senat_ids.*' => ['integer', 'distinct', Rule::exists('senat', 'user_id')],
+            // Kuorum: otomatis dari jumlah anggota senat, atau angka manual dari admin.
+            'kuorum_mode' => ['nullable', 'string', Rule::in(SuratBapSenat::kuorumModeList())],
+            'jumlah_kuorum' => [
+                'nullable',
+                'integer',
+                'min:1',
+                'max:999',
+                Rule::requiredIf($kuorumManual),
+            ],
         ];
     }
 
@@ -121,6 +133,8 @@ class SuratBapSenatRequest extends FormRequest
             'tempat_pelaksanaan' => 'tempat pelaksanaan',
             'materi_rapat' => 'materi rapat',
             'anggota_senat_ids' => 'anggota senat',
+            'kuorum_mode' => 'cara pengisian kuorum',
+            'jumlah_kuorum' => 'jumlah kuorum',
         ];
     }
 
@@ -149,6 +163,11 @@ class SuratBapSenatRequest extends FormRequest
             'anggota_senat_ids.required' => 'Anggota senat wajib dipilih.',
             'anggota_senat_ids.min' => 'Pilih minimal satu anggota senat.',
             'anggota_senat_ids.*.exists' => 'Anggota senat yang dipilih tidak terdaftar pada senat instansi.',
+            'kuorum_mode.in' => 'Cara pengisian kuorum tidak valid.',
+            'jumlah_kuorum.required' => 'Jumlah kuorum wajib diisi saat memilih mode manual.',
+            'jumlah_kuorum.integer' => 'Jumlah kuorum harus berupa angka.',
+            'jumlah_kuorum.min' => 'Jumlah kuorum minimal 1.',
+            'jumlah_kuorum.max' => 'Jumlah kuorum maksimal 999.',
         ];
     }
 }

@@ -31,6 +31,12 @@
         ->sortBy(fn ($senat) => array_search((string) $senat->user_id, $anggotaDipilih, true))
         ->concat($senatList->reject(fn ($senat) => in_array((string) $senat->user_id, $anggotaDipilih, true)))
         ->values();
+
+    // Jumlah kuorum: otomatis mengikuti jumlah anggota senat yang dipilih, atau manual
+    // dengan angka yang diisi admin. Angka inilah yang tercetak pada berita acara.
+    $kuorumModeList = \App\Models\SuratBapSenat::KUORUM_MODE;
+    $kuorumModeForm = (string) old('kuorum_mode', $bapEdit?->kuorum_mode ?: \App\Models\SuratBapSenat::KUORUM_OTOMATIS);
+    $jumlahKuorumForm = (string) old('jumlah_kuorum', $bapEdit?->jumlah_kuorum);
 @endphp
 
 <p class="mt-1 max-w-2xl text-sm leading-relaxed text-slate-500">
@@ -190,6 +196,46 @@
                    @class(['form-input', 'border-rose-300 bg-rose-50/40' => $errors->has('materi_rapat')])>
             @error('materi_rapat') <p class="form-error">{{ $message }}</p> @enderror
             <p class="mt-1.5 text-[11px] text-slate-400">Dicetak pada daftar hadir rapat (halaman 2).</p>
+        </div>
+
+        <div class="sm:col-span-2 lg:col-span-3">
+            {{-- Kuorum: otomatis dari jumlah anggota senat, atau angka manual dari admin.
+                 Angka ini tercetak pada kalimat "yang dihadiri oleh sejumlah ... orang
+                 anggota senat" di halaman cetak V1 maupun V2. --}}
+            <span class="form-label">Jumlah Kuorum <span class="text-rose-500">*</span></span>
+            <div class="grid gap-3 sm:grid-cols-2" role="radiogroup" aria-label="Cara mengisi jumlah kuorum">
+                @foreach ($kuorumModeList as $nilai => $label)
+                    <label class="choice-card items-center">
+                        <input type="radio" name="kuorum_mode" value="{{ $nilai }}" class="sr-only" required
+                               data-kuorum-mode @checked($kuorumModeForm === $nilai)>
+                        <span class="choice-indicator">
+                            <svg class="size-3 opacity-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M16.704 5.29a1 1 0 0 1 .006 1.414l-7.25 7.313a1 1 0 0 1-1.42.002L4.29 10.27a1 1 0 1 1 1.42-1.408l3.043 3.067 6.537-6.596a1 1 0 0 1 1.414-.043Z" clip-rule="evenodd" />
+                            </svg>
+                        </span>
+                        <span class="min-w-0 flex-1 text-sm font-bold text-slate-800">{{ $label }}</span>
+                    </label>
+                @endforeach
+            </div>
+            @error('kuorum_mode') <p class="form-error">{{ $message }}</p> @enderror
+
+            {{-- Isian angka hanya tampil (dan wajib) saat mode manual dipilih. --}}
+            <div data-grup-kuorum-manual @class(['mt-3', 'hidden' => $kuorumModeForm !== \App\Models\SuratBapSenat::KUORUM_MANUAL])>
+                <label for="jumlah_kuorum" class="form-label">Jumlah Kuorum Manual</label>
+                <input type="number" id="jumlah_kuorum" name="jumlah_kuorum" min="1" max="999" step="1" inputmode="numeric"
+                       value="{{ $jumlahKuorumForm }}"
+                       placeholder="Contoh: 12"
+                       autocomplete="off"
+                       @required($kuorumModeForm === \App\Models\SuratBapSenat::KUORUM_MANUAL)
+                       @disabled($kuorumModeForm !== \App\Models\SuratBapSenat::KUORUM_MANUAL)
+                       @class(['form-input', 'border-rose-300 bg-rose-50/40' => $errors->has('jumlah_kuorum')])>
+                @error('jumlah_kuorum') <p class="form-error">{{ $message }}</p> @enderror
+            </div>
+
+            <p class="mt-1.5 text-[11px] text-slate-400">
+                Otomatis: angka mengikuti jumlah anggota senat yang dipilih di bawah.
+                Manual: isi sendiri angka kuorum yang akan tercetak pada berita acara (V1 &amp; V2).
+            </p>
         </div>
 
         <div class="sm:col-span-2 lg:col-span-3">
