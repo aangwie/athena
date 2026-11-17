@@ -110,3 +110,31 @@ Pengujian menggunakan SQLite in-memory sehingga tidak mengubah data MySQL.
 > Berkas pendidikan disimpan secara privat di `storage/app/private/riwayat-pendidikan/{nidn}` dan hanya dapat diunduh oleh dosen pemilik akun melalui route yang terautentikasi.
 >
 > Logo instansi disimpan sebagai data URI base64 pada kolom `instansi.logo_base64`, sehingga tidak memerlukan berkas atau symlink `public/storage`.
+
+## Produksi & hosting
+
+Checklist singkat saat aplikasi dipasang di hosting:
+
+```bash
+php artisan migrate --force
+php artisan config:cache
+php artisan view:cache
+npm run build
+```
+
+- Set `APP_ENV=production`, `APP_DEBUG=false`, dan `APP_URL` sesuai domain (mis. `https://athena.kampus.ac.id`).
+- Pastikan folder `storage/` dan `bootstrap/cache/` dapat ditulis oleh web server.
+- Bila seluruh akses memakai HTTPS, set `SESSION_SECURE_COOKIE=true`; bila tidak, biarkan kosong.
+- Bila aplikasi berada di belakang reverse proxy (Cloudflare, LiteSpeed, dsb.), isi `TRUSTED_PROXIES` (mis. `"*"`) agar skema HTTPS dan IP klien terdeteksi benar. Nilai ini dibaca lewat `config/app.php` sehingga tetap berlaku setelah `config:cache`.
+- Jangan mengganti `APP_KEY` setelah aplikasi dipakai — sesi lama tidak dapat dibaca lagi.
+- Driver sesi bawaan adalah `database`, sehingga tabel `sessions` harus ada (`php artisan migrate`).
+
+### 419 Page Expired
+
+Pesan **419 Page Expired** muncul ketika token CSRF tidak lagi cocok dengan sesi: sesi kedaluwarsa, cookie terhapus, atau halaman lama dikirim ulang dari cache. Penanganan yang sudah terpasang:
+
+- `bootstrap/app.php` menangkap `HttpException` berstatus 419. Permintaan biasa diarahkan kembali ke halaman form sebelumnya beserta pesan "Sesi Anda telah berakhir…" dan isian yang sudah diketik (kecuali password); permintaan AJAX/JSON menerima respons `419` berisi `message` dan `sesi_berakhir`.
+- `resources/views/errors/419.blade.php` menjadi halaman 419 yang ramah (tombol muat ulang) bila redirect tidak memungkinkan.
+- `resources/js/csrf.js` menyegarkan token lewat `GET /csrf-token` (paling lama tiap 10 menit selama pengguna aktif, saat tab dibuka kembali, dan saat halaman dipulihkan dari back/forward cache). Penyegaran sengaja tidak dilakukan saat tab ditinggal agar sesi tetap kedaluwarsa sesuai `SESSION_LIFETIME`. Semua `fetch`/axios yang menerima 419 menampilkan dialog "muat ulang halaman".
+- Middleware `PreventPageCaching` mengirim `Cache-Control: no-store` untuk halaman HTML agar browser maupun page cache hosting tidak menyimpan token lama.
+- Seluruh form wajib memakai `@csrf`; halaman login dan pilih peran ikut menampilkan pesan `session('error')` dari redirect 419.

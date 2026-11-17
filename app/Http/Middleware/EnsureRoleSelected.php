@@ -13,7 +13,7 @@ class EnsureRoleSelected
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if ($request->user()?->needsRoleSelection() && ! $request->routeIs('role.*', 'logout')) {
+        if ($request->user()?->needsRoleSelection() && ! $request->routeIs('role.*', 'logout', 'csrf.token')) {
             return redirect()->route('role.select');
         }
 

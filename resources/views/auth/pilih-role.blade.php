@@ -46,6 +46,12 @@
                     hak akses akan mengikuti peran yang dipilih.
                 </p>
 
+                @if (session('error'))
+                    <p class="mt-5 rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-2.5 text-xs font-semibold leading-relaxed text-rose-700" role="alert">
+                        {{ session('error') }}
+                    </p>
+                @endif
+
                 <div class="mt-5 space-y-2.5">
                     @foreach ($roles as $role)
                         <form method="POST" action="{{ route('role.select.store') }}">

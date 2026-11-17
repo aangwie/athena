@@ -1,5 +1,6 @@
 import QRCode from 'qrcode';
 import Swal from 'sweetalert2';
+import './csrf';
 
 (() => {
             const root = document.querySelector('[data-wa-page]');
@@ -12,7 +13,8 @@ import Swal from 'sweetalert2';
             const urlQr = root.dataset.qrUrl;
             const urlPutus = root.dataset.putusUrl;
             const urlKirim = root.dataset.kirimUrl;
-            const csrf = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+            // Dibaca saat dikirim agar token hasil penyegaran resources/js/csrf.js terpakai.
+            const csrfToken = () => document.querySelector('meta[name="csrf-token"]')?.content ?? '';
 
             const $ = (selector) => root.querySelector(selector);
 
@@ -375,10 +377,15 @@ import Swal from 'sweetalert2';
                         headers: {
                             Accept: 'application/json',
                             'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': csrf,
+                            'X-CSRF-TOKEN': csrfToken(),
                         },
                         body: JSON.stringify({ nomor, pesan }),
                     });
+
+                    if (respons.status === 419) {
+                        return;
+                    }
+
                     const data = await respons.json();
 
                     if (data.errors) {
@@ -441,9 +448,14 @@ import Swal from 'sweetalert2';
                         headers: {
                             Accept: 'application/json',
                             'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': csrf,
+                            'X-CSRF-TOKEN': csrfToken(),
                         },
                     });
+
+                    if (respons.status === 419) {
+                        return;
+                    }
+
                     const data = await respons.json();
 
                     if (!data.terkonfigurasi) {

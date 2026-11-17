@@ -4,6 +4,7 @@ import Swal from 'sweetalert2';
 import $ from 'jquery';
 import DataTable from 'datatables.net';
 import 'datatables.net-responsive';
+import './csrf';
 
 window.$ = window.jQuery = $;
 
@@ -356,7 +357,6 @@ const boot = () => {
         const info = panel?.querySelector('[data-db-info]');
         const unduh = panel?.querySelector('[data-db-unduh]');
         const tombol = form.querySelector('button[type="submit"]');
-        const token = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
 
         const tampilProgres = (persen, pesan) => {
             progres?.classList.remove('hidden');
@@ -370,8 +370,10 @@ const boot = () => {
             }
         };
 
+        // Token dibaca saat dikirim (bukan saat halaman dimuat) supaya penyegaran
+        // token CSRF oleh resources/js/csrf.js ikut terpakai.
         const kirim = (url, data) => window.axios.post(url, data, {
-            headers: { 'X-CSRF-TOKEN': token },
+            headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ?? '' },
         });
 
         // data-db-langkah → dataset.dbLangkah (camelCase), bukan dataset.langkah.

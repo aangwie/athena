@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\RoleSelectionController;
+use App\Http\Controllers\CsrfTokenController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DataDosenController;
 use App\Http\Controllers\DataDosenImportController;
@@ -35,6 +36,9 @@ Route::get('/', function () {
         ? redirect()->route('dashboard')
         : redirect()->route('login');
 });
+
+// Token CSRF terbaru untuk halaman yang dibiarkan terbuka lama (mencegah 419).
+Route::get('/csrf-token', CsrfTokenController::class)->name('csrf.token');
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');

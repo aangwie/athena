@@ -123,4 +123,17 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Trusted Proxies
+    |--------------------------------------------------------------------------
+    |
+    | Reverse proxy milik hosting (Cloudflare, LiteSpeed, dsb.) yang dipercaya.
+    | Isi "*" bila seluruh trafik melewati proxy, atau daftar IP proxy yang
+    | dipisahkan koma. Dibaca di AppServiceProvider agar aman saat config:cache.
+    |
+    */
+
+    'trusted_proxies' => env('TRUSTED_PROXIES'),
+
 ];
