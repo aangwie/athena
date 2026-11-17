@@ -8,6 +8,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
+use App\Models\User;
 
 class PengajuanDupakController extends Controller
 {
@@ -18,10 +19,37 @@ class PengajuanDupakController extends Controller
     {
         return view('tim-pak.pengajuan.index', [
             'pengajuan' => PengajuanDupak::with('user')
+                ->where('tim_pak_id', request()->user()->id)
+                // Ajuan yang sudah disetujui tetap tampil agar TIM PAK dapat melihatnya read-only.
+                ->whereIn('status', ['diajukan', 'dinilai', 'disetujui'])
                 ->latest('diajukan_at')
                 ->latest('id')
                 ->get(),
         ]);
+    }
+
+    public function ajuanPak(): View
+    {
+        return view('admin.ajuan-pak.index', [
+            'pengajuan' => PengajuanDupak::with(['user', 'timPak'])
+                ->whereIn('status', ['menunggu_penugasan', 'diajukan', 'dinilai'])
+                ->latest('diajukan_at')->latest('id')->get(),
+            'timPak' => User::query()->where(function ($query) {
+                $query->where('role', 'tim_pak')->orWhereJsonContains('roles', 'tim_pak');
+            })->where('is_active', true)->orderBy('name')->get(),
+        ]);
+    }
+
+    public function tugaskan(Request $request, PengajuanDupak $pengajuan): RedirectResponse
+    {
+        $data = $request->validate(['tim_pak_id' => ['required', Rule::exists('users', 'id')->where(function ($query) {
+            $query->where(function ($roleQuery) {
+                $roleQuery->where('role', 'tim_pak')->orWhereJsonContains('roles', 'tim_pak');
+            })->where('is_active', true);
+        })]]);
+        abort_unless($pengajuan->status === 'menunggu_penugasan', 422, 'Ajuan ini sudah ditugaskan atau tidak dapat ditugaskan.');
+        $pengajuan->update(['tim_pak_id' => $data['tim_pak_id'], 'status' => 'diajukan']);
+        return back()->with('status', 'Ajuan berhasil diteruskan ke TIM PAK yang dipilih.');
     }
 
     /**
@@ -72,6 +100,7 @@ class PengajuanDupakController extends Controller
      */
     public function show(PengajuanDupak $pengajuan): View
     {
+        abort_unless($pengajuan->tim_pak_id === request()->user()->id, 403, 'Ajuan ini tidak ditugaskan kepada Anda.');
         $pengajuan->load('user');
 
         return view('tim-pak.pengajuan.show', [
@@ -88,6 +117,7 @@ class PengajuanDupakController extends Controller
      */
     public function update(Request $request, PengajuanDupak $pengajuan): RedirectResponse
     {
+        abort_unless($pengajuan->tim_pak_id === $request->user()->id, 403, 'Ajuan ini tidak ditugaskan kepada Anda.');
         if ($pengajuan->nilaiTerkunci()) {
             return redirect()
                 ->route('tim-pak.pengajuan.show', $pengajuan)

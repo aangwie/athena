@@ -212,14 +212,17 @@ class WhatsAppNotifikasiTest extends TestCase
         // Nomor WhatsApp dosen diambil dari profil dosen.
         $dosen->profilDosen()->create(['no_hp' => '0812-0000-0007']);
 
+        $timPak = $this->makeUser('tim_pak', '1');
+
         $pengajuan = $dosen->pengajuanDupak()->create([
             'tahun' => 2026,
             'semester' => 'ganjil',
             'status' => 'diajukan',
+            'tim_pak_id' => $timPak->id,
             'diajukan_at' => now()->subDay(),
         ]);
 
-        $this->actingAs($this->makeUser('tim_pak', '1'))
+        $this->actingAs($timPak)
             ->put(route('tim-pak.pengajuan.update', $pengajuan), ['nilai' => [$kegiatan->id => '3']])
             ->assertSessionHas('status');
 

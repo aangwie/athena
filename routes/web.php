@@ -191,6 +191,11 @@ Route::middleware('auth')->group(function () {
         Route::put('/{pengajuan}', [PengajuanDupakController::class, 'putuskan'])->name('update');
     });
 
+    Route::middleware('admin')->prefix('ajuan-pak')->name('ajuan-pak.')->group(function () {
+        Route::get('/', [PengajuanDupakController::class, 'ajuanPak'])->name('index');
+        Route::put('/{pengajuan}/tugaskan', [PengajuanDupakController::class, 'tugaskan'])->name('tugaskan');
+    });
+
     Route::middleware('admin')->prefix('verifikasi-berkas')->name('verifikasi-berkas.')->group(function () {
         Route::get('/', [PengajuanDosenController::class, 'verifikasiSyaratKhusus'])->name('index');
         Route::put('/{syaratKhusus}/berkas/{jenis}', [PengajuanDosenController::class, 'putuskanSyaratKhusus'])->name('update');

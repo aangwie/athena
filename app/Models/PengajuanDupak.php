@@ -14,6 +14,7 @@ class PengajuanDupak extends Model
      * @var array<string, string>
      */
     public const STATUS = [
+        'menunggu_penugasan' => 'Menunggu penugasan admin',
         'diajukan' => 'Menunggu penilaian',
         'dinilai' => 'Sudah dinilai',
         'diajukan_dupak' => 'Diajukan DUPAK',
@@ -33,6 +34,7 @@ class PengajuanDupak extends Model
 
     protected $fillable = [
         'user_id',
+        'tim_pak_id',
         'tahun',
         'semester',
         'status',
@@ -54,6 +56,11 @@ class PengajuanDupak extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function timPak(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'tim_pak_id');
     }
 
     /**
@@ -99,6 +106,7 @@ class PengajuanDupak extends Model
     public function statusClasses(): string
     {
         return match ($this->status) {
+            'menunggu_penugasan' => 'bg-amber-50 text-amber-700 ring-amber-200',
             'dinilai' => 'bg-teal-50 text-teal-700 ring-teal-200',
             'diajukan_dupak' => 'bg-sky-50 text-sky-700 ring-sky-200',
             'disetujui' => 'bg-emerald-50 text-emerald-700 ring-emerald-200',

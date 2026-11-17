@@ -137,7 +137,9 @@ class RiwayatPengajuanTest extends TestCase
 
         $pengajuan->refresh();
 
-        $this->assertSame('diajukan', $pengajuan->status);
+        // Ajukan ulang kembali ke antrean admin untuk ditugaskan ke TIM PAK.
+        $this->assertSame('menunggu_penugasan', $pengajuan->status);
+        $this->assertNull($pengajuan->tim_pak_id);
         $this->assertNull($pengajuan->dinilai_at);
     }
 
@@ -236,6 +238,33 @@ class RiwayatPengajuanTest extends TestCase
             ->assertSee('padding: 1.5cm')     // margin cetak 1,5 cm atas/bawah/kiri/kanan
             ->assertSee('cetak-orientasi')    // pilihan portrait/landscape sebelum cetak
             ->assertSee('cetakDupak');
+    }
+
+    public function test_halaman_cetak_dupak_memakai_kop_times_new_roman_dan_kolom_bahan_yang_dinilai(): void
+    {
+        Instansi::create([
+            'nama_instansi' => 'Universitas Athena Nusantara',
+            'kota' => 'Bandung',
+        ]);
+
+        $dosen = $this->makeDosen();
+        $this->makeKegiatan($dosen, 4);
+
+        $this->actingAs($dosen)
+            ->get(route('profil.pengajuan.cetak', ['tahun' => 2026, 'semester' => 'ganjil']))
+            ->assertOk()
+            // Seluruh naskah memakai Times New Roman.
+            ->assertSee('Times New Roman')
+            // Kop instansi di atas judul naskah.
+            ->assertSee('cetak-kop', false)
+            ->assertSee('Perguruan Tinggi PGRI Pacitan')
+            ->assertSee('Daftar Usul Penetapan Angka Kredit')
+            ->assertSee('Nomor :')
+            ->assertSee('Unit Kerja : Universitas Athena Nusantara')
+            // Identitas dosen yang dinilai + pernyataan TIM PAK di kolom kanan.
+            ->assertSee('Bahan yang Dinilai :')
+            ->assertSee('NUPTK / NIDN')
+            ->assertSee('Saya menyatakan bahwa Angka kredit telah dihitung');
     }
 
     public function test_perbaikan_dan_ajukan_ulang_nonaktif_setelah_dupak_disetujui(): void

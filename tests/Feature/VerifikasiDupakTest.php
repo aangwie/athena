@@ -117,10 +117,14 @@ class VerifikasiDupakTest extends TestCase
 
     public function test_dashboard_tim_pak_memakai_tabel_pengajuan_masuk_tanpa_menu_riwayat(): void
     {
+        $timPak = $this->makeUser('tim_pak');
         $dosen = $this->makeUser('dosen');
-        $dupak = $this->makeDupak($dosen);
+        $dupak = $this->makeDupak($dosen, 'diajukan');
+        // Dashboard TIM PAK hanya menampilkan ajuan berstatus diajukan/dinilai
+        // yang ditugaskan kepadanya.
+        $dupak->update(['tim_pak_id' => $timPak->id]);
 
-        $this->actingAs($this->makeUser('tim_pak'))
+        $this->actingAs($timPak)
             ->get('/dashboard')
             ->assertOk()
             // Tabelnya sama dengan menu Pengajuan Masuk: ada kolom aksi menuju penilaian.
@@ -128,7 +132,7 @@ class VerifikasiDupakTest extends TestCase
             ->assertSee($dosen->name)
             ->assertSee('2026/2027 · Ganjil')
             ->assertSee(route('tim-pak.pengajuan.show', $dupak))
-            ->assertSee('Lihat / Ubah')
+            ->assertSee('Nilai')
             // Menu Riwayat Pengajuan tidak tampil lagi untuk TIM PAK.
             ->assertDontSee('Riwayat Pengajuan');
     }

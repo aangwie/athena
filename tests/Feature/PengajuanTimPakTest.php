@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\JabatanStruktural;
 use App\Models\KegiatanDupak;
 use App\Models\Kepangkatan;
+use App\Models\PengajuanDupak;
 use App\Models\StrukturInstansi;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -42,6 +43,17 @@ class PengajuanTimPakTest extends TestCase
         ]);
     }
 
+    /**
+     * Admin meneruskan ajuan dosen ke TIM PAK terpilih.
+     */
+    private function tugaskan(PengajuanDupak $pengajuan, User $timPak): void
+    {
+        $this->actingAs($this->makeUser('admin', '99'))
+            ->put(route('ajuan-pak.tugaskan', $pengajuan), ['tim_pak_id' => $timPak->id]);
+
+        $pengajuan->refresh();
+    }
+
     public function test_dosen_can_send_usulan_to_tim_pak(): void
     {
         $dosen = $this->makeUser('dosen');
@@ -56,13 +68,14 @@ class PengajuanTimPakTest extends TestCase
             'user_id' => $dosen->id,
             'tahun' => 2026,
             'semester' => 'ganjil',
-            'status' => 'diajukan',
+            'status' => 'menunggu_penugasan',
+            'tim_pak_id' => null,
         ]);
 
         $this->actingAs($dosen)
             ->get('/profil/pengajuan/create?tahun=2026&semester=ganjil')
             ->assertOk()
-            ->assertSee('Menunggu penilaian');
+            ->assertSee('Menunggu penugasan admin');
     }
 
     public function test_usulan_ditolak_bila_periode_belum_punya_kegiatan(): void
@@ -90,10 +103,12 @@ class PengajuanTimPakTest extends TestCase
     {
         $dosen = $this->makeUser('dosen');
         $this->makeKegiatan($dosen);
+        $timPak = $this->makeUser('tim_pak');
 
         $this->actingAs($dosen)->post('/profil/pengajuan/ajukan', ['tahun' => 2026, 'semester' => 'ganjil']);
+        $this->tugaskan($dosen->pengajuanDupak()->firstOrFail(), $timPak);
 
-        $this->actingAs($this->makeUser('tim_pak'))
+        $this->actingAs($timPak)
             ->get('/tim-pak/pengajuan')
             ->assertOk()
             ->assertSee('Pengajuan DUPAK Masuk')
@@ -111,8 +126,10 @@ class PengajuanTimPakTest extends TestCase
         $this->actingAs($dosen)->post('/profil/pengajuan/ajukan', ['tahun' => 2026, 'semester' => 'ganjil']);
 
         $pengajuan = $dosen->pengajuanDupak()->firstOrFail();
+        $timPak = $this->makeUser('tim_pak');
+        $this->tugaskan($pengajuan, $timPak);
 
-        $this->actingAs($this->makeUser('tim_pak'))
+        $this->actingAs($timPak)
             ->put('/tim-pak/pengajuan/'.$pengajuan->id, [
                 'nilai' => [$formal->id => '1.5', $lain->id => '2.5'],
             ])
@@ -124,7 +141,7 @@ class PengajuanTimPakTest extends TestCase
         $this->assertSame('dinilai', $pengajuan->fresh()->status);
 
         // Halaman penilaian menampilkan input nilai dan total bidang (1,5 + 2,5 = 4).
-        $this->actingAs($this->makeUser('tim_pak', '2'))
+        $this->actingAs($timPak)
             ->get('/tim-pak/pengajuan/'.$pengajuan->id)
             ->assertOk()
             ->assertSee('name="nilai['.$formal->id.']"', false)
@@ -139,8 +156,10 @@ class PengajuanTimPakTest extends TestCase
 
         $this->actingAs($dosen)->post('/profil/pengajuan/ajukan', ['tahun' => 2026, 'semester' => 'ganjil']);
         $pengajuan = $dosen->pengajuanDupak()->firstOrFail();
+        $timPak = $this->makeUser('tim_pak');
+        $this->tugaskan($pengajuan, $timPak);
 
-        $this->actingAs($this->makeUser('tim_pak'))
+        $this->actingAs($timPak)
             ->put('/tim-pak/pengajuan/'.$pengajuan->id, [
                 'nilai' => [$periode->id => '2', $periodeLain->id => '9'],
             ]);
@@ -156,8 +175,10 @@ class PengajuanTimPakTest extends TestCase
 
         $this->actingAs($dosen)->post('/profil/pengajuan/ajukan', ['tahun' => 2026, 'semester' => 'ganjil']);
         $pengajuan = $dosen->pengajuanDupak()->firstOrFail();
+        $timPak = $this->makeUser('tim_pak');
+        $this->tugaskan($pengajuan, $timPak);
 
-        $this->actingAs($this->makeUser('tim_pak'))
+        $this->actingAs($timPak)
             ->put('/tim-pak/pengajuan/'.$pengajuan->id, ['nilai' => [$kegiatan->id => '3']]);
 
         $this->actingAs($dosen)
@@ -185,9 +206,11 @@ class PengajuanTimPakTest extends TestCase
 
         $this->actingAs($dosen)->post('/profil/pengajuan/ajukan', ['tahun' => 2026, 'semester' => 'ganjil']);
         $pengajuan = $dosen->pengajuanDupak()->firstOrFail();
+        $timPak = $this->makeUser('tim_pak');
+        $this->tugaskan($pengajuan, $timPak);
 
         // Halaman penilaian TIM PAK: jumlah per bidang 1 dan 3, jumlah total 4.
-        $this->actingAs($this->makeUser('tim_pak'))
+        $this->actingAs($timPak)
             ->get('/tim-pak/pengajuan/'.$pengajuan->id)
             ->assertOk()
             ->assertSee('Jumlah Total')
@@ -216,8 +239,10 @@ class PengajuanTimPakTest extends TestCase
 
         $this->actingAs($dosen)->post('/profil/pengajuan/ajukan', ['tahun' => 2026, 'semester' => 'ganjil']);
         $pengajuan = $dosen->pengajuanDupak()->firstOrFail();
+        $timPak = $this->makeUser('tim_pak');
+        $this->tugaskan($pengajuan, $timPak);
 
-        $this->actingAs($this->makeUser('tim_pak'))
+        $this->actingAs($timPak)
             ->put('/tim-pak/pengajuan/'.$pengajuan->id, ['nilai' => [$kegiatan->id => '2']]);
 
         $this->actingAs($dosen)
@@ -234,9 +259,8 @@ class PengajuanTimPakTest extends TestCase
 
         $this->actingAs($dosen)->post('/profil/pengajuan/ajukan', ['tahun' => 2026, 'semester' => 'ganjil']);
         $pengajuan = $dosen->pengajuanDupak()->firstOrFail();
-        $pengajuan->update(['status' => 'disetujui']);
-
         $timPak = $this->makeUser('tim_pak');
+        $pengajuan->update(['status' => 'disetujui', 'tim_pak_id' => $timPak->id]);
 
         // Daftar pengajuan: aksi berubah menjadi Lihat saja.
         $this->actingAs($timPak)
@@ -277,7 +301,9 @@ class PengajuanTimPakTest extends TestCase
             ->assertSee('Jabatan Akademik Dosen')
             ->assertSee($kegiatan->nama_kegiatan)
             // Nomor SK belum diisi admin: ditampilkan sebagai titik-titik.
-            ->assertSee('Nomor:')
+            ->assertSee('Nomor :')
+            // Unit kerja mengikuti nama instansi pada menu Instansi.
+            ->assertSee('Unit Kerja :')
             // Blok identitas menampilkan NIDN dosen pengusul pada tabel "Keterangan Perorangan".
             ->assertSee('NUPTK/NIDN')
             ->assertSee($dosen->nidn)
@@ -311,7 +337,7 @@ class PengajuanTimPakTest extends TestCase
         $this->actingAs($dosen)
             ->get('/profil/pengajuan/cetak?tahun=2026&semester=ganjil')
             ->assertOk()
-            ->assertSee('Nomor: '.$pengajuan->nomor_sk);
+            ->assertSee('Nomor : '.$pengajuan->nomor_sk);
     }
 
     public function test_cetak_memakai_tabel_layout_tetap_agar_kolom_kanan_tidak_terpotong(): void
@@ -334,7 +360,8 @@ class PengajuanTimPakTest extends TestCase
         $this->assertStringContainsString('min-width: 0', $cetak);
         $this->assertStringContainsString('overflow-wrap: anywhere', $cetak);
         // Padding body dilepas saat mencetak agar lebar kertas terpakai penuh.
-        $this->assertStringContainsString('body { background: #fff !important; padding: 0 !important; }', $cetak);
+        $this->assertStringContainsString('background: #fff !important;', $cetak);
+        $this->assertStringContainsString('padding: 0 !important;', $cetak);
 
         // Lebar kolom dikunci lewat <colgroup>; kolom "Unsur, Sub Unsur, dan Butir
         // Kegiatan" dipersempit (27% pada formulir cetak bertim penilai).

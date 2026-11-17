@@ -589,13 +589,13 @@ class PengajuanDosenController extends Controller
 
         $request->user()->pengajuanDupak()->updateOrCreate(
             ['tahun' => $tahun, 'semester' => $semester],
-            ['status' => 'diajukan', 'diajukan_at' => now(), 'dinilai_at' => null],
+            ['status' => 'menunggu_penugasan', 'tim_pak_id' => null, 'diajukan_at' => now(), 'dinilai_at' => null],
         );
 
         WhatsAppNotifikasi::ajuanPakMasuk($request->user(), $tahun, $semester);
 
         return $this->kembaliKeReview($tahun, $semester)
-            ->with('status', 'Usulan dikirim ke TIM PAK. Nilai angka kredit akan muncul setelah dinilai.');
+            ->with('status', 'Usulan berhasil dikirim dan menunggu penugasan admin ke TIM PAK.');
     }
 
     /**
@@ -690,7 +690,7 @@ class PengajuanDosenController extends Controller
                 ->with('error', 'Nilai PAK periode ini belum tersedia untuk diajukan ulang.');
         }
 
-        $pengajuan->update(['status' => 'diajukan', 'diajukan_at' => now(), 'dinilai_at' => null]);
+        $pengajuan->update(['status' => 'menunggu_penugasan', 'tim_pak_id' => null, 'diajukan_at' => now(), 'dinilai_at' => null]);
 
         WhatsAppNotifikasi::ajuanPakMasuk($request->user(), $tahun, $semester);
 

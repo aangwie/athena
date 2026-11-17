@@ -8,6 +8,16 @@
     @vite(['resources/css/app.css'])
 
     <style>
+        /* Naskah DUPAK memakai Times New Roman seperti lampiran formulir resmi. */
+        .cetak-kertas {
+            font-family: 'Times New Roman', Times, serif;
+        }
+
+        /* Kop dan kepala naskah dicetak hitam penuh (bukan abu-abu) seperti lampiran. */
+        .cetak-kop,
+        .cetak-kop * { color: #000; }
+        .cetak-kop > div { border-color: #000; }
+
         /* Cetak ke PDF lewat dialog cetak peramban (A4 portrait/landscape). */
         @media print {
             /* Margin halaman sengaja 0: margin cetak 1,5 cm digambar sendiri lewat padding
@@ -17,7 +27,11 @@
 
             .cetak-aksi { display: none !important; }
             /* Padding body dilepas supaya seluruh lebar kertas terpakai. */
-            body { background: #fff !important; padding: 0 !important; }
+            body {
+                background: #fff !important;
+                padding: 0 !important;
+                font-family: 'Times New Roman', Times, serif;
+            }
             /* 1,5 cm = margin atas, bawah, kiri, kanan kertas.
                ponytail: hanya potongan pertama/terakhir kotak ini yang dapat padding, jadi
                halaman lanjutan (DUPAK > 1 lembar) mulai dari tepi atas kertas. Pecah tiap
@@ -75,14 +89,22 @@
         </div>
 
         <div class="cetak-kertas rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <header class="mb-5 border-b border-slate-200 pb-4 text-center">
-                <h1 class="text-base font-extrabold tracking-tight text-slate-900 uppercase">
+            {{-- Kop instansi (logo, penyelenggara, nama instansi, kontak) di atas judul naskah. --}}
+            <div class="cetak-kop">
+                @include('surat.partials.kop-surat')
+            </div>
+
+            <header class="mt-4 mb-4 text-center text-black">
+                <h1 class="text-base leading-tight font-bold tracking-tight uppercase">
                     Daftar Usul Penetapan Angka Kredit<br>
                     Jabatan Akademik Dosen
                 </h1>
                 {{-- Nomor SK diisi admin saat keputusan verifikasi memilih "Setujui". --}}
-                <p class="mt-1 text-xs font-semibold text-slate-700">
-                    Nomor: {{ $pengajuan?->nomor_sk ?: str_repeat('.', 30) }}
+                <p class="mt-1.5 text-xs">
+                    Nomor : {{ $pengajuan?->nomor_sk ?: str_repeat('.', 30) }}
+                </p>
+                <p class="text-xs">
+                    Unit Kerja : {{ $instansi?->nama_instansi ?: str_repeat('.', 30) }}
                 </p>
             </header>
 

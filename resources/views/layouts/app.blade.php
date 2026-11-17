@@ -223,6 +223,13 @@
                     <div>
                         <p class="sidebar-section-title sidebar-collapse-hide mb-2 px-3 text-[10px] font-bold tracking-[0.14em] text-teal-300/50 uppercase">Administrasi</p>
                         <div class="space-y-1">
+                            <a href="{{ route('ajuan-pak.index') }}" title="Ajuan PAK" @class(['sidebar-link', 'sidebar-link-active' => request()->routeIs('ajuan-pak.*')])>
+                                <svg class="size-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                    <path d="M4 4.5h16a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-13a1 1 0 0 1 1-1Z" stroke-linejoin="round" />
+                                    <path d="M3 13h5l1.5 2.5h5L16 13h5" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                                <span class="sidebar-label">Ajuan PAK</span>
+                            </a>
                             <a href="{{ route('verifikasi-berkas.index') }}" title="Verifikasi Berkas" @class(['sidebar-link', 'sidebar-link-active' => request()->routeIs('verifikasi-berkas.*')])>
                                 <svg class="size-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
                                     <path d="M9 12.5 11 14.5 15.5 10" stroke-linecap="round" stroke-linejoin="round" />

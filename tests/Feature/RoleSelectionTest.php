@@ -108,9 +108,10 @@ class RoleSelectionTest extends TestCase
 
         PengajuanDupak::create([
             'user_id' => $dosen->id,
+            'tim_pak_id' => $timPak->id,
             'tahun' => 2026,
             'semester' => 'ganjil',
-            'status' => 'diajukan_dupak',
+            'status' => 'diajukan',
             'diajukan_at' => now(),
         ]);
 
