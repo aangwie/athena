@@ -16,6 +16,11 @@
     // Halaman cetak tidak memuat kolom "Link Bukti"; halaman lain tetap memuatnya.
     $kolomLinkBukti = $kolomLinkBukti ?? true;
 
+    // Lampiran DUPAK (halaman cetak) memakai label jumlah yang panjang: "Jumlah Unsur
+    // Penunjang" pada Bidang V dan "Jumlah (Unsur Utama + Penunjang)" untuk akumulasi
+    // seluruh unsur. Halaman review/TIM PAK tetap memakai label pendek.
+    $labelJumlahLengkap = $labelJumlahLengkap ?? false;
+
     // Banyak kolom grup "Angka Kredit Menurut": Instansi Pengusul (+ Link Bukti) + Tim Penilai.
     $totalAngkaKredit = 3 + ($kolomLinkBukti ? 1 : 0) + ($kolomPenilai ? 3 : 0);
 
@@ -131,7 +136,7 @@
         $baris[] = [
             'tingkat' => 5,
             'nomor' => null,
-            'label' => 'Jumlah',
+            'label' => $labelJumlahLengkap && $g['nomor'] === 'V' ? 'Jumlah Unsur Penunjang' : 'Jumlah',
             'kredit' => $g['entri']->sum('nilai_baru'),
             'grup' => $idGrup,
             'link' => null,
@@ -142,7 +147,7 @@
     $baris[] = [
         'tingkat' => 6,
         'nomor' => null,
-        'label' => 'Jumlah Total',
+        'label' => $labelJumlahLengkap ? 'Jumlah (Unsur Utama + Penunjang)' : 'Jumlah Total',
         'kredit' => collect($baris)->where('tingkat', 5)->sum('kredit'),
         'grup' => 'total',
         'link' => null,

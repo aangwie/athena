@@ -340,6 +340,29 @@ class PengajuanTimPakTest extends TestCase
             ->assertSee('Nomor : '.$pengajuan->nomor_sk);
     }
 
+    public function test_cetak_memakai_label_jumlah_unsur_penunjang(): void
+    {
+        $dosen = $this->makeUser('dosen');
+        $this->makeKegiatan($dosen, ['nilai_baru' => 2]);
+
+        $this->actingAs($dosen)
+            ->get('/profil/pengajuan/cetak?tahun=2026&semester=ganjil')
+            ->assertOk()
+            // Lampiran DUPAK: baris jumlah Bidang V dan rekapitulasi seluruh unsur
+            // memakai label panjang sesuai formulir resmi.
+            ->assertSee('Jumlah Unsur Penunjang')
+            ->assertSee('Jumlah (Unsur Utama + Penunjang)')
+            ->assertDontSee('Jumlah Total');
+
+        // Halaman review dosen (dan penilaian TIM PAK) tetap memakai label pendek.
+        $this->actingAs($dosen)
+            ->get('/profil/pengajuan/create?tahun=2026&semester=ganjil')
+            ->assertOk()
+            ->assertSee('Jumlah Total')
+            ->assertDontSee('Jumlah Unsur Penunjang')
+            ->assertDontSee('Jumlah (Unsur Utama + Penunjang)');
+    }
+
     public function test_cetak_memakai_tabel_layout_tetap_agar_kolom_kanan_tidak_terpotong(): void
     {
         $dosen = $this->makeUser('dosen');

@@ -122,11 +122,11 @@
                     </colgroup>
                     <thead>
                         @include('profil.pengajuan.partials.identitas', ['bagian' => 'kepala'])
-                        @include('profil.pengajuan.partials.review', ['kolomPenilai' => true, 'kolomLinkBukti' => false, 'bagian' => 'kepala'])
+                        @include('profil.pengajuan.partials.review', ['kolomPenilai' => true, 'kolomLinkBukti' => false, 'labelJumlahLengkap' => true, 'bagian' => 'kepala'])
                     </thead>
                     <tbody>
                         @include('profil.pengajuan.partials.identitas', ['bagian' => 'isi'])
-                        @include('profil.pengajuan.partials.review', ['kolomPenilai' => true, 'kolomLinkBukti' => false, 'bagian' => 'isi'])
+                        @include('profil.pengajuan.partials.review', ['kolomPenilai' => true, 'kolomLinkBukti' => false, 'labelJumlahLengkap' => true, 'bagian' => 'isi'])
                         @include('profil.pengajuan.partials.pengesahan')
                     </tbody>
                 </table>
