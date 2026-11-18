@@ -47,6 +47,7 @@ class PengaturanController extends Controller
         'job_batches',
         'failed_jobs',
         'pengaturan',
+        'panduan_penilaian',
         'instansi',
         'prodi',
         'jabatan_fungsional',

@@ -16,6 +16,7 @@ use App\Http\Controllers\Kepegawaian\JabatanFungsionalController;
 use App\Http\Controllers\Kepegawaian\JabatanStrukturalController;
 use App\Http\Controllers\Kepegawaian\KepangkatanController;
 use App\Http\Controllers\NotifikasiController;
+use App\Http\Controllers\PanduanPenilaianController;
 use App\Http\Controllers\PengajuanDosenController;
 use App\Http\Controllers\PengajuanDupakController;
 use App\Http\Controllers\PengaturanController;
@@ -78,6 +79,17 @@ Route::middleware('auth')->group(function () {
     Route::view('/panduan-pengajuan', 'panduan.pengajuan')
         ->middleware('dosen')
         ->name('panduan.pengajuan');
+
+    // Panduan penilaian: admin mengisi sumber panduan, TIM PAK hanya membaca isinya.
+    Route::middleware('admin_tim_pak')->prefix('panduan-penilaian')->name('panduan.penilaian.')->group(function () {
+        Route::get('/', [PanduanPenilaianController::class, 'index'])->name('index');
+        Route::get('/berkas', [PanduanPenilaianController::class, 'berkas'])->name('berkas');
+    });
+
+    Route::middleware('admin')->prefix('panduan-penilaian')->name('panduan.penilaian.')->group(function () {
+        Route::post('/', [PanduanPenilaianController::class, 'simpan'])->name('simpan');
+        Route::delete('/', [PanduanPenilaianController::class, 'hapus'])->name('hapus');
+    });
 
     // Data pribadi & riwayat pendidikan dipakai bersama oleh dosen dan tendik.
     Route::middleware('dosen_tendik')->prefix('profil')->name('profil.')->group(function () {

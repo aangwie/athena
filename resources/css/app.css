@@ -173,6 +173,19 @@
     }
 
     /* ----------------------------------------------------------------------
+       Sumber panduan penilaian: kolom unggah berkas dan kolom link hanya
+       tampil sesuai pilihan radio (Upload File atau Kirim Link File).
+       ---------------------------------------------------------------------- */
+    [data-panduan-sumber] [data-sumber] {
+        display: none;
+    }
+
+    [data-panduan-sumber]:has(input[name='tipe'][value='file']:checked) [data-sumber='file'],
+    [data-panduan-sumber]:has(input[name='tipe'][value='link']:checked) [data-sumber='link'] {
+        display: block;
+    }
+
+    /* ----------------------------------------------------------------------
        Dropdown pencarian (komponen .sd) — pengganti select[data-select-search]
        ---------------------------------------------------------------------- */
     .sd {

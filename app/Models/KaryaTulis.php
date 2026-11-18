@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\Tautan;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -88,8 +89,6 @@ class KaryaTulis extends Model
 
     private static function tautanPratinjau(?string $url): string
     {
-        $url = (string) $url;
-
-        return preg_replace('#/view/?(\?.*)?$#', '/preview', $url) ?? $url;
+        return Tautan::pratinjau($url);
     }
 }

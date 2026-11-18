@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\EnsureRoleSelected;
 use App\Http\Middleware\EnsureUserIsAdmin;
+use App\Http\Middleware\EnsureUserIsAdminOrTimPak;
 use App\Http\Middleware\EnsureUserIsDosen;
 use App\Http\Middleware\EnsureUserIsDosenOrTendik;
 use App\Http\Middleware\EnsureUserIsTendik;
@@ -22,6 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
             'admin' => EnsureUserIsAdmin::class,
+            'admin_tim_pak' => EnsureUserIsAdminOrTimPak::class,
             'dosen' => EnsureUserIsDosen::class,
             'dosen_tendik' => EnsureUserIsDosenOrTendik::class,
             'tendik' => EnsureUserIsTendik::class,

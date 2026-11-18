@@ -177,6 +177,14 @@
                                 </svg>
                                 <span class="sidebar-label">Pengajuan Masuk</span>
                             </a>
+                            <a href="{{ route('panduan.penilaian.index') }}" title="Panduan Penilaian" @class(['sidebar-link', 'sidebar-link-active' => request()->routeIs('panduan.penilaian*')])>
+                                <svg class="size-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                    <path d="M6 3.5h8.5L19 8v12.5H6V3.5Z" stroke-linejoin="round" />
+                                    <path d="M14 3.5V8h4.5" stroke-linejoin="round" />
+                                    <path d="M9 12.5h7M9 16h4.5" stroke-linecap="round" />
+                                </svg>
+                                <span class="sidebar-label">Panduan Penilaian</span>
+                            </a>
                         </div>
                     </div>
                 @endif
@@ -238,6 +246,14 @@
                                     <path d="M12 3.5 5.5 6v5.2c0 4.2 2.8 7.9 6.5 9.3 3.7-1.4 6.5-5.1 6.5-9.3V6L12 3.5Z" stroke-linejoin="round" />
                                 </svg>
                                 <span class="sidebar-label">Verifikasi Berkas</span>
+                            </a>
+                            <a href="{{ route('panduan.penilaian.index') }}" title="Panduan Penilaian" @class(['sidebar-link', 'sidebar-link-active' => request()->routeIs('panduan.penilaian*')])>
+                                <svg class="size-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                    <path d="M6 3.5h8.5L19 8v12.5H6V3.5Z" stroke-linejoin="round" />
+                                    <path d="M14 3.5V8h4.5" stroke-linejoin="round" />
+                                    <path d="M9 12.5h7M9 16h4.5" stroke-linecap="round" />
+                                </svg>
+                                <span class="sidebar-label">Panduan Penilaian</span>
                             </a>
                             <a href="{{ route('surat.index') }}" title="Surat" @class(['sidebar-link', 'sidebar-link-active' => request()->routeIs('surat.*')])>
                                 <svg class="size-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
