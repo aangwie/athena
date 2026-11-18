@@ -106,7 +106,9 @@
                                             @if ($item->nilaiTerkunci())
                                                 <span class="btn-secondary pointer-events-none px-3 py-1.5 text-xs opacity-50" aria-disabled="true">Perbaikan</span>
                                             @else
-                                                <a href="{{ route('profil.pengajuan.create', ['tahun' => $item->tahun, 'semester' => $item->semester]) }}"
+                                                {{-- Perbaikan lewat halaman Status Jabatan Akademik dulu agar jabatan
+                                                     akademik & pangkat/golongan yang diajukan terbawa ke entri komponen. --}}
+                                                <a href="{{ route('profil.pengajuan.mulai', ['tahun' => $item->tahun, 'semester' => $item->semester]) }}"
                                                    class="btn-secondary px-3 py-1.5 text-xs">
                                                     Perbaikan
                                                 </a>

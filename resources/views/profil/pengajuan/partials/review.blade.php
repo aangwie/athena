@@ -336,11 +336,8 @@
 </div>
 @endif
 
-@unless ($kolomPenilai)
-    {{-- Catatan hanya untuk halaman non-cetak: halaman cetak memakai kolom Tim Penilai. --}}
-    <p class="mt-3 text-[11px] leading-relaxed text-slate-400">
-        Kolom <span class="font-semibold">Baru</span> diisi oleh TIM PAK saat menilai usulan; baris
-        <span class="font-semibold">Jumlah</span> di setiap bidang dan <span class="font-semibold">Jumlah Total</span>
-        di paling bawah dihitung otomatis dari nilai tersebut.
-    </p>
-@endunless
+@if (! $kolomPenilai && $bagian === 'semua')
+    {{-- Catatan hanya untuk tabel utuh; potongan kepala/isi yang ditempel ke tabel
+         gabungan halaman lain tidak boleh menyisipkan paragraf di dalam <thead>. --}}
+    @include('profil.pengajuan.partials.catatan-kolom-baru')
+@endif

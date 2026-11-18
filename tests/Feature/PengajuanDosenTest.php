@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Http\Controllers\PengajuanDosenController;
 use App\Models\JabatanFungsional;
 use App\Models\KegiatanDupak;
+use App\Models\Kepangkatan;
 use App\Models\MasaPenilaian;
 use App\Models\SyaratKhusus;
 use App\Models\User;
@@ -62,6 +63,8 @@ class PengajuanDosenTest extends TestCase
     {
         $dosen = $this->makeUser('dosen');
         JabatanFungsional::create(['nama' => 'Lektor Kepala']);
+        // Data master kepangkatan yang mengisi dropdown Pangkat/Golongan.
+        Kepangkatan::create(['nama' => 'Penata Muda', 'golongan' => 'IIIa']);
 
         $this->actingAs($dosen)
             ->get('/profil/pengajuan')
@@ -74,6 +77,10 @@ class PengajuanDosenTest extends TestCase
             ->assertSee('name="jabatan_diajukan"', false)
             ->assertSee(route('profil.pengajuan.jabatan.store'), false)
             ->assertSee('Lektor Kepala')
+            // Pangkat/golongan target diambil dari data kepegawaian/kepangkatan.
+            ->assertSee('Pangkat/Golongan')
+            ->assertSee('name="kepangkatan_diajukan_id"', false)
+            ->assertSee('IIIa / Penata Muda')
             ->assertDontSee(route('profil.pengajuan.periode-pertama'), false);
 
         $dosen->update(['jabatan_fungsional' => null]);
@@ -85,7 +92,8 @@ class PengajuanDosenTest extends TestCase
             ->assertSee(route('profil.pengajuan.periode-pertama'), false)
             // Tanpa jabatan akademik: dropdown tidak tampil, tombol kembali jadi tautan.
             ->assertDontSee('Jabatan Akademik yang akan Diajukan')
-            ->assertDontSee('name="jabatan_diajukan"', false);
+            ->assertDontSee('name="jabatan_diajukan"', false)
+            ->assertDontSee('name="kepangkatan_diajukan_id"', false);
     }
 
     public function test_dosen_dapat_menyimpan_jabatan_akademik_yang_akan_diajukan(): void
@@ -105,6 +113,107 @@ class PengajuanDosenTest extends TestCase
             ->get('/profil/pengajuan')
             ->assertOk()
             ->assertSee('value="Lektor Kepala" selected', false);
+    }
+
+    public function test_dosen_dapat_menyimpan_pangkat_golongan_yang_akan_diajukan(): void
+    {
+        $dosen = $this->makeUser('dosen');
+        JabatanFungsional::create(['nama' => 'Lektor Kepala']);
+        $kepangkatan = Kepangkatan::create(['nama' => 'Penata Muda Tk. I', 'golongan' => 'IIIb']);
+
+        $this->actingAs($dosen)
+            ->post(route('profil.pengajuan.jabatan.store'), [
+                'jabatan_diajukan' => 'Lektor Kepala',
+                'kepangkatan_diajukan_id' => $kepangkatan->id,
+            ])
+            ->assertRedirect(route('profil.pengajuan.periode'))
+            ->assertSessionHas('status');
+
+        $dosen->refresh();
+        $this->assertSame('Lektor Kepala', $dosen->jabatan_diajukan);
+        $this->assertSame($kepangkatan->id, $dosen->kepangkatan_diajukan_id);
+
+        // Pilihan pangkat/golongan tersimpan terpilih kembali saat halaman dibuka lagi.
+        $this->actingAs($dosen)
+            ->get('/profil/pengajuan')
+            ->assertOk()
+            ->assertSee('value="'.$kepangkatan->id.'" selected', false);
+    }
+
+    public function test_pangkat_golongan_yang_akan_diajukan_harus_ada_di_data_kepegawaian(): void
+    {
+        $dosen = $this->makeUser('dosen');
+        JabatanFungsional::create(['nama' => 'Lektor Kepala']);
+
+        $this->actingAs($dosen)
+            ->post(route('profil.pengajuan.jabatan.store'), [
+                'jabatan_diajukan' => 'Lektor Kepala',
+                'kepangkatan_diajukan_id' => 99999,
+            ])
+            ->assertSessionHasErrors('kepangkatan_diajukan_id');
+
+        $this->assertNull($dosen->fresh()->kepangkatan_diajukan_id);
+    }
+
+    public function test_halaman_jabatan_akademik_menampilkan_periode_perbaikan_dari_riwayat(): void
+    {
+        $dosen = $this->makeUser('dosen');
+        JabatanFungsional::create(['nama' => 'Lektor Kepala']);
+        $kepangkatan = Kepangkatan::create(['nama' => 'Penata', 'golongan' => 'IIIc']);
+        $dosen->update([
+            'jabatan_diajukan' => 'Lektor Kepala',
+            'kepangkatan_diajukan_id' => $kepangkatan->id,
+        ]);
+
+        // Tombol Perbaikan pada riwayat membuka halaman ini dengan periode entri.
+        $this->actingAs($dosen)
+            ->get('/profil/pengajuan?tahun=2026&semester=ganjil')
+            ->assertOk()
+            ->assertSee('Perbaikan entri 2026/2027 · Ganjil')
+            ->assertSee('name="tahun" value="2026"', false)
+            ->assertSee('name="semester" value="ganjil"', false)
+            ->assertSee('Lanjut ke Entri Komponen')
+            // Data jabatan akademik & pangkat yang diajukan tetap terbawa.
+            ->assertSee('value="Lektor Kepala" selected', false)
+            ->assertSee('value="'.$kepangkatan->id.'" selected', false)
+            ->assertSee(route('profil.pengajuan.riwayat'), false);
+    }
+
+    public function test_simpan_jabatan_dari_halaman_perbaikan_langsung_ke_entri_komponen(): void
+    {
+        $dosen = $this->makeUser('dosen');
+        JabatanFungsional::create(['nama' => 'Lektor Kepala']);
+        $kepangkatan = Kepangkatan::create(['nama' => 'Penata', 'golongan' => 'IIIc']);
+
+        $this->actingAs($dosen)
+            ->post(route('profil.pengajuan.jabatan.store'), [
+                'jabatan_diajukan' => 'Lektor Kepala',
+                'kepangkatan_diajukan_id' => $kepangkatan->id,
+                'tahun' => 2026,
+                'semester' => 'ganjil',
+            ])
+            ->assertRedirect(route('profil.pengajuan.create', ['tahun' => 2026, 'semester' => 'ganjil']))
+            ->assertSessionHas('status');
+
+        $dosen->refresh();
+        $this->assertSame('Lektor Kepala', $dosen->jabatan_diajukan);
+        $this->assertSame($kepangkatan->id, $dosen->kepangkatan_diajukan_id);
+    }
+
+    public function test_simpan_jabatan_dengan_periode_tidak_valid_tetap_ke_pemilihan_periode(): void
+    {
+        $dosen = $this->makeUser('dosen');
+        JabatanFungsional::create(['nama' => 'Lektor Kepala']);
+
+        $this->actingAs($dosen)
+            ->post(route('profil.pengajuan.jabatan.store'), [
+                'jabatan_diajukan' => 'Lektor Kepala',
+                'tahun' => 1900,
+                'semester' => 'ganjil',
+            ])
+            ->assertRedirect(route('profil.pengajuan.periode'));
+
+        $this->assertSame('Lektor Kepala', $dosen->fresh()->jabatan_diajukan);
     }
 
     public function test_jabatan_akademik_yang_akan_diajukan_wajib_dipilih(): void

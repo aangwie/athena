@@ -76,6 +76,30 @@ class RiwayatPengajuanTest extends TestCase
             ->assertSee('/profil/pengajuan/create?tahun=2026&amp;semester=ganjil', false);
     }
 
+    public function test_tombol_perbaikan_mengarah_ke_halaman_jabatan_akademik_dengan_membawa_periode(): void
+    {
+        $dosen = $this->makeDosen();
+        $this->makeKegiatan($dosen, 2);
+
+        $dosen->pengajuanDupak()->create([
+            'tahun' => 2026,
+            'semester' => 'ganjil',
+            'status' => 'perlu_perbaikan',
+            'diajukan_at' => now()->subDays(10),
+            'dinilai_at' => now()->subDays(2),
+            'catatan' => 'Lengkapi bukti publikasi.',
+        ]);
+
+        $this->actingAs($dosen)
+            ->get(route('profil.pengajuan.riwayat'))
+            ->assertOk()
+            // Perbaikan membuka halaman Status Jabatan Akademik lebih dulu agar
+            // jabatan akademik & pangkat/golongan yang diajukan ikut terbawa.
+            ->assertSee('/profil/pengajuan?tahun=2026&amp;semester=ganjil', false)
+            // Tidak ada tautan Perbaikan yang langsung menuju entri komponen.
+            ->assertDontSee('/profil/pengajuan/create?tahun=2026&amp;semester=ganjil"', false);
+    }
+
     public function test_tombol_lihat_aktif_dan_mengarah_ke_tab_review_setelah_dinilai(): void
     {
         $dosen = $this->makeDosen();

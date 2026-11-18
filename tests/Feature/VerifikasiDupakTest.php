@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Kepangkatan;
 use App\Models\PengajuanDupak;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -152,6 +153,117 @@ class VerifikasiDupakTest extends TestCase
             ->assertSee('Tolak')
             ->assertSee('Simpan')
             ->assertDontSee('name="nilai[', false);
+    }
+
+    public function test_halaman_verifikasi_menampilkan_data_pengusul_di_atas_dan_bawah_komponen_penilaian(): void
+    {
+        $dosen = $this->makeUser('dosen');
+        $dupak = $this->makeDupak($dosen);
+
+        // Identitas kepegawaian pengusul, sama dengan blok "Keterangan Perorangan" cetak DUPAK.
+        $dosen->profilDosen()->create([
+            'tempat_lahir' => 'Bandung',
+            'tanggal_lahir' => '1987-05-14',
+            'nuptk' => '0943761662230152',
+            'bidang_ilmu' => 'Rekayasa Perangkat Lunak',
+            'jenis_kelamin' => 'P',
+            'masa_kerja_golongan_lama_tahun' => 0,
+            'masa_kerja_golongan_lama_bulan' => 9,
+            'masa_kerja_golongan_baru_tahun' => 1,
+            'masa_kerja_golongan_baru_bulan' => 3,
+        ]);
+
+        $dosen->riwayatPendidikan()->create([
+            'jenjang' => 's2',
+            'nama_institusi' => 'Institut Teknologi Bandung',
+            'jurusan' => 'Ilmu Komputer',
+            'tahun_masuk' => 2010,
+            'tahun_lulus' => 2012,
+        ]);
+
+        $kepangkatan = Kepangkatan::create(['nama' => 'Penata Muda Tk.1 / Golongan III/b']);
+        $dosen->riwayatKepangkatan()->create(['kepangkatan_id' => $kepangkatan->id, 'tmt' => '2021-05-01']);
+        $dosen->riwayatAngkaKredit()->create(['tahun' => 2020, 'angka_kredit' => 150]);
+        $dosen->update(['jabatan_diajukan' => 'Lektor Kepala']);
+
+        // Target pangkat/golongan yang dipilih dosen pada halaman Status Jabatan Akademik.
+        $target = Kepangkatan::create(['nama' => 'Penata', 'golongan' => 'IIIc']);
+        $dosen->update(['kepangkatan_diajukan_id' => $target->id]);
+
+        $dosen->masaPenilaian()->create([
+            'tahun' => 2026,
+            'semester' => 'ganjil',
+            'mulai' => '2018-09-01',
+            'akhir' => '2022-12-01',
+        ]);
+
+        $this->actingAs($this->makeUser('admin'))
+            ->get(route('verifikasi-dupak.show', $dupak))
+            ->assertOk()
+            // Identitas pengusul tampil di atas kolom komponen penilaian, blok pengesahan
+            // di bawahnya, persis urutan formulir cetak DUPAK dosen.
+            ->assertSeeInOrder([
+                'Keterangan Perorangan',
+                'Unsur yang Dinilai',
+                'Bahan yang Dinilai',
+                'Pendapat Tim Penilai Jabatan Angka Kredit',
+            ])
+            // Isi "Keterangan Perorangan" diambil dari data pengusul.
+            ->assertSee('INSTANSI')
+            ->assertSee('MASA PENILAIAN')
+            ->assertSee('September 2018 s.d. Desember 2022')
+            ->assertSee('NUPTK/NIDN')
+            ->assertSee('0943761662230152')
+            ->assertSee('Bandung, 14 Mei 1987')
+            ->assertSee('Perempuan')
+            ->assertSee('S2')
+            ->assertSee('Ilmu Komputer')
+            ->assertSee('Rekayasa Perangkat Lunak')
+            ->assertSee('Penata Muda Tk.1 / Golongan III/b')
+            ->assertSee('150,00')
+            ->assertSee('0 Tahun 09 Bulan')
+            ->assertSee('1 Tahun 03 Bulan')
+            // Blok "Pendapat Tim Penilai" memakai jabatan & pangkat yang diajukan dosen.
+            ->assertSee(': Lektor Kepala')
+            ->assertSee(': IIIc / Penata');
+    }
+
+    public function test_tabel_formulir_verifikasi_memiliki_jumlah_kolom_konsisten(): void
+    {
+        $dosen = $this->makeUser('dosen');
+        $dupak = $this->makeDupak($dosen);
+
+        $html = $this->actingAs($this->makeUser('admin'))
+            ->get(route('verifikasi-dupak.show', $dupak))
+            ->assertOk()
+            ->getContent();
+
+        $dom = new \DOMDocument;
+        libxml_use_internal_errors(true);
+        $dom->loadHTML($html);
+        libxml_clear_errors();
+
+        $xpath = new \DOMXPath($dom);
+        // Hanya baris <tbody> (tanpa rowspan) supaya jumlah kolom tiap baris sebanding.
+        $baris = $xpath->query('//table[contains(@class, "tabel-rekap")]/tbody/tr');
+
+        $jumlahKolom = [];
+        foreach ($baris as $tr) {
+            $total = 0;
+            foreach ($tr->childNodes as $sel) {
+                if ($sel->nodeName === 'td' || $sel->nodeName === 'th') {
+                    $total += (int) ($sel->getAttribute('colspan') ?: 1);
+                }
+            }
+            if ($total > 0) {
+                $jumlahKolom[] = $total;
+            }
+        }
+
+        // Verifikasi admin: 9 kolom = No (1) + Unsur (5) + Instansi Pengusul (3) + Link Bukti (1).
+        // Identitas pengusul, unsur yang dinilai, dan blok pengesahan berbagi tabel yang sama.
+        $this->assertNotEmpty($jumlahKolom);
+        $this->assertSame([9], array_values(array_unique($jumlahKolom)));
     }
 
     public function test_admin_menyetujui_dupak(): void

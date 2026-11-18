@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -42,6 +43,7 @@ class User extends Authenticatable
         'program_studi',
         'jabatan_fungsional',
         'jabatan_diajukan',
+        'kepangkatan_diajukan_id',
         'pangkat',
         'no_hp',
         'role',
@@ -140,6 +142,15 @@ class User extends Authenticatable
     public function riwayatKepangkatan(): HasMany
     {
         return $this->hasMany(RiwayatKepangkatan::class);
+    }
+
+    /**
+     * Pangkat/golongan target kenaikan yang dipilih pada halaman Status
+     * Jabatan Akademik, diambil dari data master kepegawaian/kepangkatan.
+     */
+    public function kepangkatanDiajukan(): BelongsTo
+    {
+        return $this->belongsTo(Kepangkatan::class, 'kepangkatan_diajukan_id');
     }
 
     public function riwayatJabatanStruktural(): HasMany

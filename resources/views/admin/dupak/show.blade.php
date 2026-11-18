@@ -67,8 +67,35 @@
             @csrf
             @method('PUT')
 
+            {{-- Formulir DUPAK pengusul: "Keterangan Perorangan" di atas kolom komponen
+                 penilaian, lalu blok "Bahan yang Dinilai" dan "Pendapat Tim Penilai"
+                 di bawahnya — sama seperti formulir cetak DUPAK milik dosen
+                 (profil/pengajuan/cetak). --}}
             <div class="overflow-hidden rounded-xl border border-slate-200 bg-white p-2 shadow-sm sm:p-4">
-                @include('profil.pengajuan.partials.review')
+                <div class="overflow-x-auto">
+                    <table class="tabel-rekap w-full min-w-[54rem] border-collapse text-xs">
+                        <caption class="sr-only">Formulir DUPAK pengusul: keterangan perorangan, unsur yang dinilai, dan pengesahan</caption>
+                        <colgroup>
+                            {{-- Lebar sama dengan rekap DUPAK tanpa grup "Tim Penilai":
+                                 4+3+3+3+39 + (4 x 12) = 100%. --}}
+                            @foreach ([4, 3, 3, 3, 39, 12, 12, 12, 12] as $lebar)
+                                <col style="width: {{ $lebar }}%">
+                            @endforeach
+                        </colgroup>
+                        <thead>
+                            @include('profil.pengajuan.partials.identitas', ['bagian' => 'kepala', 'kolomTabel' => 9])
+                            @include('profil.pengajuan.partials.review', ['bagian' => 'kepala'])
+                        </thead>
+                        <tbody>
+                            @include('profil.pengajuan.partials.identitas', ['bagian' => 'isi', 'kolomTabel' => 9])
+                            @include('profil.pengajuan.partials.review', ['bagian' => 'isi'])
+                            @include('profil.pengajuan.partials.pengesahan', ['kolomTabel' => 9])
+                        </tbody>
+                    </table>
+                </div>
+
+                {{-- Keterangan kolom "Baru" seperti pada rekap DUPAK di halaman dosen. --}}
+                @include('profil.pengajuan.partials.catatan-kolom-baru')
             </div>
 
             <div data-keputusan class="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">

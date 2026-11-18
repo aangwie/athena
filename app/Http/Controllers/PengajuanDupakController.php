@@ -2,13 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Instansi;
 use App\Models\PengajuanDupak;
+use App\Models\User;
+use App\Support\FormulirDupak;
 use App\Support\WhatsAppNotifikasi;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
-use App\Models\User;
 
 class PengajuanDupakController extends Controller
 {
@@ -49,6 +51,7 @@ class PengajuanDupakController extends Controller
         })]]);
         abort_unless($pengajuan->status === 'menunggu_penugasan', 422, 'Ajuan ini sudah ditugaskan atau tidak dapat ditugaskan.');
         $pengajuan->update(['tim_pak_id' => $data['tim_pak_id'], 'status' => 'diajukan']);
+
         return back()->with('status', 'Ajuan berhasil diteruskan ke TIM PAK yang dipilih.');
     }
 
@@ -63,6 +66,11 @@ class PengajuanDupakController extends Controller
             'pengajuan' => $pengajuan,
             'masaPenilaian' => $pengajuan->masaPenilaian(),
             'editable' => false,
+            // Data pengusul untuk blok "Keterangan Perorangan" dan blok pengesahan,
+            // sama seperti formulir cetak DUPAK milik dosen (profil/pengajuan/cetak).
+            'instansi' => Instansi::query()->first(),
+            'identitas' => FormulirDupak::identitas($pengajuan->user),
+            'pimpinan' => FormulirDupak::pimpinan(),
             ...$pengajuan->user->kegiatanPeriode($pengajuan->tahun, $pengajuan->semester),
         ]);
     }

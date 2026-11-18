@@ -9,6 +9,14 @@
     $labelPengesahan = 'w-24 shrink-0 font-semibold text-slate-600';
     $isiPengesahan = 'text-slate-800';
 
+    // Jumlah kolom tabel formulir tempat partial ini ditempel: 11 kolom pada formulir
+    // cetak DUPAK (memuat grup "Tim Penilai"), 9 kolom pada halaman verifikasi admin.
+    $kolomTabel = $kolomTabel ?? 11;
+
+    // Dua kolom isi berdampingan: kiri (identitas & hasil penilaian) dan kanan (tanda tangan).
+    $kolomKiri = intdiv($kolomTabel + 1, 2);
+    $kolomKanan = $kolomTabel - $kolomKiri;
+
     // Jarak baris identitas di kolom label (kiri) dan kolom isi (kanan) disamakan supaya
     // titik dua pada isi duduk sejajar dengan labelnya, seperti lampiran DUPAK.
     $barisPengesahan = 'leading-6';
@@ -28,16 +36,16 @@
     ];
 @endphp
 
-{{-- Baris tabel pengesahan menyatu dengan tabel gabungan halaman cetak (11 kolom):
-     kolom kiri 6 kolom, kolom kanan 5 kolom. --}}
+{{-- Baris tabel pengesahan menyatu dengan tabel gabungan halaman formulir:
+     kolom kiri separuh, kolom kanan sisanya. --}}
 <tr>
-    <td colspan="6" class="{{ $kepalaPengesahan }}">Bahan yang Dinilai :</td>
-    <td colspan="5" class="{{ $kepalaPengesahan }}">&nbsp;</td>
+    <td colspan="{{ $kolomKiri }}" class="{{ $kepalaPengesahan }}">Bahan yang Dinilai :</td>
+    <td colspan="{{ $kolomKanan }}" class="{{ $kepalaPengesahan }}">&nbsp;</td>
 </tr>
 
 <tr>
     {{-- Kolom kiri: label identitas dosen yang dinilai. --}}
-    <td colspan="6" class="{{ $selPengesahan }}">
+    <td colspan="{{ $kolomKiri }}" class="{{ $selPengesahan }}">
         <div class="pl-6">
             @foreach ($rekapPengesahan as [$label])
                 <p class="{{ $barisPengesahan }} font-semibold text-slate-700">{{ $label }}</p>
@@ -46,7 +54,7 @@
     </td>
 
     {{-- Kolom kanan: isi identitas, pernyataan TIM PAK, lalu tanda tangan Ketua. --}}
-    <td colspan="5" class="{{ $selPengesahan }}">
+    <td colspan="{{ $kolomKanan }}" class="{{ $selPengesahan }}">
         @foreach ($rekapPengesahan as [$label, $nilai])
             <p class="{{ $barisPengesahan }} {{ $isiPengesahan }}">: {{ $nilai }}</p>
         @endforeach
@@ -68,12 +76,12 @@
 
 {{-- Judul pendapat tim penilai: satu baris penuh. --}}
 <tr>
-    <td colspan="11" class="{{ $kepalaPengesahan }}">Pendapat Tim Penilai Jabatan Angka Kredit :</td>
+    <td colspan="{{ $kolomTabel }}" class="{{ $kepalaPengesahan }}">Pendapat Tim Penilai Jabatan Angka Kredit :</td>
 </tr>
 
 {{-- Hasil penilaian (kiri) + tanda tangan Tim Penilai Pusat (kanan). --}}
 <tr>
-    <td colspan="6" class="{{ $selPengesahan }}">
+    <td colspan="{{ $kolomKiri }}" class="{{ $selPengesahan }}">
         <p class="text-slate-700">Telah memenuhi syarat angka kredit untuk kenaikan Jabatan dan Pangkat menjadi :</p>
 
         <div class="mt-3 space-y-1">
@@ -87,7 +95,7 @@
             </div>
         </div>
     </td>
-    <td colspan="5" class="{{ $selPengesahan }}">
+    <td colspan="{{ $kolomKanan }}" class="{{ $selPengesahan }}">
         <p class="text-slate-700">................,</p>
         <p class="mt-2 font-semibold text-slate-700">Tim Penilai Pusat</p>
         <p class="mt-4 text-slate-700">Ketua</p>

@@ -403,7 +403,7 @@ class PengajuanTimPakTest extends TestCase
             ->getContent();
 
         // Ambil nilai width dari setiap <col> pada tabel rekap (formulir cetak).
-        $dom = new \DOMDocument();
+        $dom = new \DOMDocument;
         libxml_use_internal_errors(true);
         $dom->loadHTML($cetak);
         libxml_clear_errors();
@@ -487,7 +487,7 @@ class PengajuanTimPakTest extends TestCase
             ->assertOk()
             ->getContent();
 
-        $dom = new \DOMDocument();
+        $dom = new \DOMDocument;
         libxml_use_internal_errors(true);
         $dom->loadHTML($cetak);
         libxml_clear_errors();
@@ -527,7 +527,7 @@ class PengajuanTimPakTest extends TestCase
 
         // Hanya satu tabel formulir: "Keterangan Perorangan", "Unsur yang Dinilai", dan
         // kolom penandatangan menyambung tanpa tabel terpisah.
-        $dom = new \DOMDocument();
+        $dom = new \DOMDocument;
         libxml_use_internal_errors(true);
         $dom->loadHTML($cetak);
         libxml_clear_errors();
@@ -577,6 +577,29 @@ class PengajuanTimPakTest extends TestCase
             ->assertSee(': Lektor Kepala')
             // Pangkat/Gol memuat golongan ruang di depan nama pangkat.
             ->assertSee(': IIIa / Penata Muda');
+    }
+
+    public function test_pendapat_tim_penilai_memakai_pangkat_golongan_yang_akan_diajukan(): void
+    {
+        $dosen = $this->makeUser('dosen');
+        $dosen->update(['jabatan_diajukan' => 'Lektor Kepala']);
+        $this->makeKegiatan($dosen, ['nilai_baru' => 2]);
+
+        // Pangkat saat ini menurut riwayat kepangkatan tetap tampil di keterangan perorangan.
+        $sekarang = Kepangkatan::create(['nama' => 'Penata Muda', 'golongan' => 'IIIa']);
+        $dosen->riwayatKepangkatan()->create(['kepangkatan_id' => $sekarang->id, 'tmt' => '2019-05-01']);
+
+        // Target pangkat/golongan yang dipilih pada halaman Status Jabatan Akademik.
+        $target = Kepangkatan::create(['nama' => 'Penata', 'golongan' => 'IIIc']);
+        $dosen->update(['kepangkatan_diajukan_id' => $target->id]);
+
+        $this->actingAs($dosen)
+            ->get('/profil/pengajuan/cetak?tahun=2026&semester=ganjil')
+            ->assertOk()
+            ->assertSee('Telah memenuhi syarat angka kredit untuk kenaikan Jabatan dan Pangkat menjadi')
+            ->assertSee(': Lektor Kepala')
+            // Pangkat/Gol memakai pilihan dosen, bukan pangkat terakhir di riwayat.
+            ->assertSee(': IIIc / Penata');
     }
 
     public function test_cetak_menampilkan_keterangan_perorangan_dosen_pengusul(): void

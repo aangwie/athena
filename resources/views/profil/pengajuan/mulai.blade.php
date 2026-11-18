@@ -17,12 +17,35 @@
             </p>
         </div>
 
+        {{-- Mode perbaikan dari halaman riwayat: periode entri yang akan diperbaiki
+             ikut terbawa ke form agar dosen bisa memastikan jabatan & pangkat dulu. --}}
+        @if ($periode)
+            <div class="mb-5 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50/70 px-4 py-3">
+                <span class="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-700">
+                    <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                        <path d="M12 8v5m0 3.5h.01M12 3l9 16H3l9-16Z" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                </span>
+                <p class="text-sm leading-relaxed text-amber-800">
+                    <span class="font-bold">Perbaikan entri {{ $periodeLabel }}.</span>
+                    Periksa kembali jabatan akademik dan pangkat/golongan yang akan diajukan, lalu lanjut ke entri komponen.
+                </p>
+            </div>
+        @endif
+
         <section class="section-card p-5 sm:p-6">
             {{-- Dosen yang sudah punya jabatan akademik memilih jabatan tujuan
                  sebelum lanjut ke pemilihan periode; pengajuan pertama (IKD) tidak. --}}
             @if ($jabatan)
                 <form method="POST" action="{{ route('profil.pengajuan.jabatan.store') }}">
                     @csrf
+
+                    {{-- Periode perbaikan ikut dikirim agar setelah disimpan langsung
+                         masuk ke entri komponen periode tersebut. --}}
+                    @if ($periode)
+                        <input type="hidden" name="tahun" value="{{ $periode[0] }}">
+                        <input type="hidden" name="semester" value="{{ $periode[1] }}">
+                    @endif
             @endif
 
             <div class="flex items-start gap-4">
@@ -73,19 +96,36 @@
                         Target jabatan akademik yang akan diusulkan, terpisah dari jabatan akademik Anda saat ini.
                     </p>
                 </div>
+
+                {{-- Pangkat/golongan target kenaikan dari data kepegawaian/kepangkatan. --}}
+                <div class="mt-5">
+                    <label for="kepangkatan_diajukan_id" class="form-label">Pangkat/Golongan</label>
+                    <select id="kepangkatan_diajukan_id" name="kepangkatan_diajukan_id"
+                            data-select-search="Cari pangkat/golongan…"
+                            @class(['form-select', 'border-rose-300 bg-rose-50/40' => $errors->has('kepangkatan_diajukan_id')])>
+                        <option value="">Pilih pangkat/golongan</option>
+                        @foreach ($pangkatList as $opsi)
+                            <option value="{{ $opsi->id }}" @selected((int) old('kepangkatan_diajukan_id', $pangkatDiajukanId) === $opsi->id)>{{ $opsi->label() }}</option>
+                        @endforeach
+                    </select>
+                    @error('kepangkatan_diajukan_id') <p class="form-error">{{ $message }}</p> @enderror
+                    <p class="mt-1.5 text-[11px] text-slate-400">
+                        Target pangkat/golongan yang akan diajukan, diambil dari data kepegawaian/kepangkatan.
+                    </p>
+                </div>
             @endif
 
             <div class="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <a href="{{ route('dashboard') }}" class="btn-secondary justify-center">
+                <a href="{{ $periode ? route('profil.pengajuan.riwayat') : route('dashboard') }}" class="btn-secondary justify-center">
                     <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
                         <path d="M9.5 5.5 4 12l5.5 6.5M4.5 12H20" stroke-linecap="round" stroke-linejoin="round" />
                     </svg>
-                    Kembali ke Dashboard
+                    {{ $periode ? 'Kembali ke Riwayat' : 'Kembali ke Dashboard' }}
                 </a>
 
                 @if ($jabatan)
                     <button type="submit" class="btn-primary w-auto justify-center px-5">
-                        Lanjut Pilih Periode
+                        {{ $periode ? 'Lanjut ke Entri Komponen' : 'Lanjut Pilih Periode' }}
                         <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
                             <path d="M4.5 12h15M14.5 5.5 21 12l-6.5 6.5" stroke-linecap="round" stroke-linejoin="round" />
                         </svg>
