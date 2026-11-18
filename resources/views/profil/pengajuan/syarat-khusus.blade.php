@@ -190,15 +190,17 @@
         @endif
 
         {{-- Tabel berkas tersimpan: dipakai dosen untuk mengajukan ke admin. --}}
-        <section class="section-card mt-6 overflow-hidden">
-            <div class="border-b border-slate-100 bg-slate-50/60 px-5 py-3.5">
+        <section class="section-card mt-6 overflow-hidden" data-table-card>
+            <div class="border-b border-slate-100 bg-slate-50/60 px-5 py-3.5 sm:px-6">
                 <h3 class="text-sm font-extrabold tracking-tight text-slate-900">Indikator Kinerja Dosen</h3>
                 <p class="mt-0.5 text-xs leading-relaxed text-slate-500">
                     Ajukan berkas ke admin untuk diverifikasi. Berkas yang ditolak dapat diperbaiki lalu diajukan ulang.
                 </p>
             </div>
 
-            <div class="overflow-x-auto">
+            {{-- Jarak dalam kartu: sama dengan tabel lain agar kontrol DataTables
+                 (jumlah data & paginasi) tidak menempel ke tepi kartu. --}}
+            <div class="overflow-x-auto px-2 pb-2 sm:px-4">
                 <table data-datatable data-page-length="10" class="w-full text-left text-sm">
                     <thead>
                         <tr>

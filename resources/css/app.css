@@ -234,6 +234,35 @@
     .dp-icon {
         @apply size-4;
     }
+
+    /* ----------------------------------------------------------------------
+       Tabel data yang belum diinisialisasi DataTables (mis. belum ada data:
+       app.js melewati tabel kosong sehingga kelas .dataTable tidak pernah
+       ditambahkan). Jarak sel & header disamakan dengan tabel DataTables agar
+       isinya tidak menempel ke tepi kartu.
+       ---------------------------------------------------------------------- */
+    table[data-datatable]:not(.dataTable) thead > tr > th {
+        padding: 0.8rem 1rem;
+        border-bottom: 1px solid #e2e8f0;
+        background-color: #f8fafc;
+        color: #475569;
+        font-size: 0.6875rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+
+    table[data-datatable]:not(.dataTable) tbody > tr > td {
+        padding: 0.9rem 1rem;
+        border-bottom: 1px solid #f1f5f9;
+        color: #475569;
+        vertical-align: middle;
+    }
+
+    table[data-datatable]:not(.dataTable) tbody > tr:last-child > td {
+        border-bottom: 0;
+    }
 }
 
 /* Panel dropdown sengaja di luar @layer components: panel ditempel di <body>
