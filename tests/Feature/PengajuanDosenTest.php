@@ -132,12 +132,13 @@ class PengajuanDosenTest extends TestCase
         $dupak = route('profil.pengajuan.riwayat').'"';
         $ikd = route('profil.pengajuan.riwayat-ikd').'"';
 
-        // Sudah punya jabatan akademik: lanjut DUPAK, menu IKD disembunyikan.
+        // Sudah punya jabatan akademik: lanjut DUPAK, riwayat IKD tetap tampil
+        // sebagai arsip berkas pengajuan pertama.
         $this->actingAs($dosen)
             ->get('/dashboard')
             ->assertOk()
             ->assertSee($dupak, false)
-            ->assertDontSee($ikd, false);
+            ->assertSee($ikd, false);
 
         $dosen->update(['jabatan_fungsional' => null]);
 
@@ -147,6 +148,28 @@ class PengajuanDosenTest extends TestCase
             ->assertOk()
             ->assertSee($ikd, false)
             ->assertDontSee($dupak, false);
+    }
+
+    public function test_riwayat_ikd_is_accessible_for_dosen_with_jabatan_akademik(): void
+    {
+        // makeUser() membuat dosen dengan jabatan akademik Lektor.
+        $dosen = $this->makeUser('dosen');
+
+        $this->actingAs($dosen)
+            ->get(route('profil.pengajuan.riwayat-ikd'))
+            ->assertOk()
+            ->assertSee('Riwayat IKD')
+            ->assertSee('Pengajuan Jabatan Akademik')
+            ->assertDontSee('Pengajuan Jabatan Akademik Pertama')
+            ->assertSee('Belum ada usulan');
+
+        $dosen->update(['jabatan_fungsional' => null]);
+
+        // Tanpa jabatan akademik, kicker menegaskan tahap pengajuan pertama.
+        $this->actingAs($dosen)
+            ->get(route('profil.pengajuan.riwayat-ikd'))
+            ->assertOk()
+            ->assertSee('Pengajuan Jabatan Akademik Pertama');
     }
 
     public function test_dosen_without_jabatan_akademik_gets_special_periode_then_syarat_khusus(): void
@@ -296,6 +319,10 @@ class PengajuanDosenTest extends TestCase
             ->assertSee('enctype="multipart/form-data"', false)
             // Struktur kartu mengikuti form lain: heading bernomor per bagian.
             ->assertSee('section-heading', false)
+            // Tabel berkas memakai jarak kartu standar agar kontrol DataTables
+            // (jumlah data & paginasi) tidak menempel ke tepi kartu.
+            ->assertSee('data-table-card', false)
+            ->assertSee('overflow-x-auto px-2 pb-2 sm:px-4', false)
             ->assertSee('Periode Pengajuan')
             ->assertSee('Berkas Persyaratan')
             ->assertSee('2026/2027 · Ganjil')

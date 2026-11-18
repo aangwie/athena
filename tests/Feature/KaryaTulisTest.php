@@ -265,11 +265,12 @@ class KaryaTulisTest extends TestCase
 
     public function test_dosen_sidebar_shows_profil_riwayat_dupak_and_karya_tulis(): void
     {
+        // Dosen sudah punya jabatan akademik (Lektor): riwayat DUPAK dan riwayat
+        // IKD sama-sama tampil, disusul riwayat karya tulis.
         $this->actingAs($this->makeDosen())
             ->get('/profil/riwayat-karya-tulis')
             ->assertOk()
-            ->assertSeeInOrder(['Profil', 'Riwayat DUPAK', 'Riwayat Karya Tulis'])
-            ->assertDontSee('Riwayat IKD')
+            ->assertSeeInOrder(['Profil', 'Riwayat DUPAK', 'Riwayat IKD', 'Riwayat Karya Tulis'])
             ->assertSee(route('profil.karya-tulis.index'), false);
     }
 

@@ -117,7 +117,9 @@
                                 <span class="sidebar-label">Riwayat DUPAK</span>
                             </a>
                         @endif
-                        @if ($user->isDosen() && ! $punyaJabatanAkademik)
+                        {{-- Riwayat IKD tampil untuk semua dosen: dosen yang sudah memiliki jabatan
+                             akademik tetap perlu melihat arsip berkas BKD & IKD pengajuan pertamanya. --}}
+                        @if ($user->isDosen())
                             <a href="{{ route('profil.pengajuan.riwayat-ikd') }}" title="Riwayat IKD"
                                @class(['sidebar-link', 'sidebar-link-active' => request()->routeIs('profil.pengajuan.riwayat-ikd')])>
                                 <svg class="size-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">

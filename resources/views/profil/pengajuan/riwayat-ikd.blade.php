@@ -5,12 +5,18 @@
 @section('page-title', 'Riwayat IKD')
 
 @section('content')
+    @php
+        // Halaman ini juga dibuka dosen yang sudah memiliki jabatan akademik,
+        // jadi kicker "pertama" hanya dipakai saat dosen masih di tahap IKD.
+        $punyaJabatanAkademik = filled(auth()->user()->jabatan_fungsional);
+    @endphp
+
     <div class="mx-auto max-w-5xl">
         <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
                 <span class="mb-2 inline-flex items-center gap-2 text-[11px] font-bold tracking-[0.14em] text-teal-700 uppercase">
                     <span class="h-px w-6 bg-teal-500"></span>
-                    Pengajuan Jabatan Akademik Pertama
+                    {{ $punyaJabatanAkademik ? 'Pengajuan Jabatan Akademik' : 'Pengajuan Jabatan Akademik Pertama' }}
                 </span>
                 <h2 class="text-xl font-extrabold tracking-tight text-slate-900 sm:text-2xl">Riwayat IKD</h2>
                 <p class="mt-1.5 max-w-xl text-sm leading-relaxed text-slate-500">
