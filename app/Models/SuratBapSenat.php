@@ -50,6 +50,11 @@ class SuratBapSenat extends Model
             'EKONOMI SUMBERDAYA',
             'MANAJEMEN SDM',
         ],
+        'F. IPA' => [
+            'PENDIDIKAN BIOLOGI',
+            'PENDIDIKAN IPA',
+            'PENDIDIKAN SAINS',
+        ],
     ];
 
     /**

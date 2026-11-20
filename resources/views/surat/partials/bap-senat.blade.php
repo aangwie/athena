@@ -137,7 +137,7 @@
                 @endforeach
             </select>
             @error('bidang_keilmuan') <p class="form-error">{{ $message }}</p> @enderror
-            <p class="mt-1.5 text-[11px] text-slate-400">Dikelompokkan per rumpun ilmu A–E.</p>
+            <p class="mt-1.5 text-[11px] text-slate-400">Dikelompokkan per rumpun ilmu A–F.</p>
         </div>
 
         <div>

@@ -68,6 +68,7 @@ class SuratBapSenatTest extends TestCase
             ->assertSee('<optgroup label="C. Pendidikan &amp; Keguruan">', false)
             ->assertSee('<optgroup label="D. Humaniora, Sosial &amp; Keagamaan">', false)
             ->assertSee('<optgroup label="E. Ekonomi">', false)
+            ->assertSee('<optgroup label="F. IPA">', false)
             ->assertSee('APLIKASI PERANGKAT LUNAK SITUS')
             ->assertSee('PENDIDIKAN BAHASA INGGRIS')
             ->assertSee('PENDIDIKAN MATEMATIKA')
@@ -76,6 +77,9 @@ class SuratBapSenatTest extends TestCase
             ->assertSee('PENDIDIKAN EKONOMI')
             ->assertSee('EKONOMI SUMBERDAYA')
             ->assertSee('MANAJEMEN SDM')
+            ->assertSee('PENDIDIKAN IPA')
+            ->assertSee('PENDIDIKAN SAINS')
+            ->assertSee('PENDIDIKAN BIOLOGI')
             // Kode angka bidang keilmuan tidak lagi ditampilkan pada dropdown.
             ->assertDontSee('20.101.1003')
             ->assertDontSee('50.132.1020')
@@ -159,6 +163,54 @@ class SuratBapSenatTest extends TestCase
         // Keempat bidang tersebut tidak muncul pada rumpun lain.
         $this->assertSame(1, substr_count($html, '<option value="EKONOMI SUMBERDAYA"'));
         $this->assertSame(1, substr_count($html, '<option value="MANAJEMEN SDM"'));
+    }
+
+    public function test_bidang_keilmuan_ipa_tersedia_pada_rumpun_ipa(): void
+    {
+        $this->makeSenat();
+
+        $html = $this->actingAs($this->makeUser('admin'))
+            ->get(route('surat.index'))
+            ->assertOk()
+            ->getContent();
+
+        // Rumpun F memuat tiga bidang ilmu IPA.
+        $this->assertSame(1, preg_match(
+            '/<optgroup label="F\. IPA">(.*?)<\/optgroup>/s',
+            $html,
+            $rumpun
+        ), 'Rumpun F. IPA tidak ditemukan pada dropdown bidang keilmuan.');
+
+        $this->assertStringContainsString('<option value="PENDIDIKAN IPA"', $rumpun[1]);
+        $this->assertStringContainsString('<option value="PENDIDIKAN SAINS"', $rumpun[1]);
+        $this->assertStringContainsString('<option value="PENDIDIKAN BIOLOGI"', $rumpun[1]);
+
+        // Ketiga bidang tersebut tidak muncul pada rumpun lain.
+        $this->assertSame(1, substr_count($html, '<option value="PENDIDIKAN IPA"'));
+        $this->assertSame(1, substr_count($html, '<option value="PENDIDIKAN SAINS"'));
+        $this->assertSame(1, substr_count($html, '<option value="PENDIDIKAN BIOLOGI"'));
+    }
+
+    public function test_admin_can_save_bap_senat_with_bidang_ipa(): void
+    {
+        [$dosen, $ketua] = $this->makeSenat();
+
+        $this->actingAs($this->makeUser('admin'))
+            ->post(route('surat.bap-senat.store'), [
+                'nomor_bap' => '022/BAP-SENAT/XI/2026',
+                'tanggal_bap' => '13-11-2026',
+                'dosen_id' => $dosen->id,
+                'bidang_keilmuan' => 'PENDIDIKAN IPA',
+                'kenaikan_jabatan' => 'asisten_ahli_ke_lektor',
+                'prosentase_penelitian' => 150,
+                'tempat_pelaksanaan' => 'Ruang Rapat Senat Lt. 2',
+                'materi_rapat' => 'Pemberian pertimbangan kenaikan jabatan akademik dosen',
+                'anggota_senat_ids' => [$ketua->user_id],
+            ])
+            ->assertRedirect(route('surat.index').'#bap-senat')
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame('PENDIDIKAN IPA', SuratBapSenat::query()->firstOrFail()->bidang_keilmuan);
     }
 
     public function test_admin_can_save_bap_senat_with_bidang_ekonomi(): void
