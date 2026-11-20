@@ -15,6 +15,7 @@ use App\Http\Controllers\KaryaTulisController;
 use App\Http\Controllers\Kepegawaian\JabatanFungsionalController;
 use App\Http\Controllers\Kepegawaian\JabatanStrukturalController;
 use App\Http\Controllers\Kepegawaian\KepangkatanController;
+use App\Http\Controllers\ManualController;
 use App\Http\Controllers\NotifikasiController;
 use App\Http\Controllers\PanduanPenilaianController;
 use App\Http\Controllers\PengajuanDosenController;
@@ -90,6 +91,12 @@ Route::middleware('auth')->group(function () {
         Route::post('/', [PanduanPenilaianController::class, 'simpan'])->name('simpan');
         Route::delete('/', [PanduanPenilaianController::class, 'hapus'])->name('hapus');
     });
+
+    // Buku manual pengguna: satu dokumen HTML untuk semua peran, gambar disajikan lewat rute.
+    Route::get('/manual', [ManualController::class, 'index'])->name('manual.index');
+    Route::get('/manual/gambar/{berkas}', [ManualController::class, 'gambar'])
+        ->where('berkas', '[a-z0-9-]+\.png')
+        ->name('manual.gambar');
 
     // Data pribadi & riwayat pendidikan dipakai bersama oleh dosen dan tendik.
     Route::middleware('dosen_tendik')->prefix('profil')->name('profil.')->group(function () {

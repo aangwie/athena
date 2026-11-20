@@ -460,6 +460,16 @@
                     </div>
 
                     <div class="flex shrink-0 items-center gap-2 sm:gap-3">
+                        <a href="{{ route('manual.index') }}" target="_blank" rel="noopener"
+                           class="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-2.5 py-2 text-xs font-semibold text-slate-600 transition hover:border-teal-300 hover:text-teal-700"
+                           title="Buku Manual Pengguna" aria-label="Buku Manual Pengguna">
+                            <svg class="size-4 text-teal-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                <path d="M12 6.5C10.5 5.2 8.6 4.5 6 4.5H4v13h2c2.6 0 4.5.7 6 2 1.5-1.3 3.4-2 6-2h2v-13h-2c-2.6 0-4.5.7-6 2Z" stroke-linejoin="round" />
+                                <path d="M12 6.5v13" stroke-linecap="round" />
+                            </svg>
+                            <span class="hidden sm:inline">Buku Manual</span>
+                        </a>
+
                         <span class="hidden items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-500 md:inline-flex">
                             <svg class="size-4 text-teal-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
                                 <rect x="3.5" y="5" width="17" height="15" rx="2.5" />

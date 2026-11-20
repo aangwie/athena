@@ -1,0 +1,3017 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Buku Manual Pengguna SIMJAD</title>
+<style>body{max-width:900px;margin:2rem auto;padding:0 1.25rem;font:16px/1.65 "Segoe UI",system-ui,sans-serif;color:#1e293b}
+h1{border-bottom:2px solid #0d9488;padding-bottom:.35rem;margin-top:2.5rem;font-size:1.6rem}
+h2{margin-top:2rem;font-size:1.3rem;color:#0f766e}
+h3{margin-top:1.5rem;font-size:1.1rem}
+img{max-width:100%;height:auto;border:1px solid #e2e8f0;border-radius:.5rem;margin:.75rem 0}
+table{border-collapse:collapse;width:100%;margin:1rem 0;font-size:.9rem}
+th,td{border:1px solid #cbd5e1;padding:.45rem .6rem;text-align:left;vertical-align:top}
+th{background:#f1f5f9}
+code{background:#f1f5f9;padding:.1rem .3rem;border-radius:.25rem;font-size:.9em}
+pre{background:#f8fafc;border:1px solid #e2e8f0;padding:.75rem;overflow:auto}
+blockquote{border-left:4px solid #14b8a6;background:#f0fdfa;margin:1rem 0;padding:.6rem 1rem}
+em{color:#475569}
+@media print{body{max-width:none;margin:0}img{break-inside:avoid}h1{break-before:page}}</style>
+</head>
+<body>
+<h1>Buku Manual Pengguna SIMJAD</h1>
+<p><strong>Sistem Pengajuan Jabatan Akademik Dosen — Aplikasi Athena</strong></p>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Keterangan</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Nama aplikasi</td>
+<td>SIMJAD (Sistem Informasi Manajemen Jabatan Akademik Dosen). Nama web dapat diubah admin melalui <strong>Pengaturan → Nama Web</strong>, sehingga tulisan pada layar Anda bisa berbeda.</td>
+</tr>
+<tr>
+<td>Teknologi</td>
+<td>Laravel + Blade + Tailwind CSS, basis data MySQL/MariaDB</td>
+</tr>
+<tr>
+<td>Versi dokumen</td>
+<td>1.0</td>
+</tr>
+<tr>
+<td>Tanggal</td>
+<td>20 November 2026</td>
+</tr>
+<tr>
+<td>Peran yang dibahas</td>
+<td>Dosen, Tendik, TIM PAK, Admin</td>
+</tr>
+<tr>
+<td>Cakupan</td>
+<td>Seluruh halaman aplikasi, dari halaman masuk sampai pencetakan dokumen</td>
+</tr>
+<tr>
+<td>Tangkapan layar</td>
+<td>48 gambar pada folder <code>images/</code> (berkas <code>01</code>–<code>49</code>, nomor <code>19</code> tidak dipakai)</td>
+</tr>
+<tr>
+<td>Versi HTML</td>
+<td><code>buku-manual.html</code> — dibuat ulang dengan <code>php docs/manual/tools/render.php</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>Cara membaca buku ini</h2>
+<p>Buku ini disusun mengikuti urutan pekerjaan, bukan urutan menu. Setiap bab menjelaskan
+satu tugas lengkap: apa yang harus disiapkan, langkah klik demi klik, dan apa hasilnya.</p>
+<p>Konvensi penulisan yang dipakai:</p>
+<ul>
+<li><strong>Tebal</strong> menandai nama menu, tombol, tab, kolom isian, atau label yang tampil di layar.
+Contoh: tekan <strong>Ajukan ke TIM PAK</strong>.</li>
+<li><code>Monospace</code> menandai nilai, nama berkas, atau format yang harus diketik apa adanya.
+Contoh: berkas <code>.pdf</code> maksimal <code>1024 KB</code>.</li>
+<li>Tanda <code>→</code> menunjukkan jalur menu. Contoh: <strong>Profil → Riwayat Pendidikan</strong>.</li>
+<li>Kotak <strong>Catatan</strong> berisi hal yang mudah terlewat; kotak <strong>Peringatan</strong> berisi tindakan
+yang sulit dibatalkan.</li>
+<li>Nomor gambar mengikuti urutan pengambilan tangkapan layar, bukan urutan bab. Karena itu
+Gambar 42 (pilih peran) tampil lebih awal daripada Gambar 03.</li>
+</ul>
+<p>Data pada tangkapan layar adalah data contoh. Nama dosen, NIDN, dan angka pada layar Anda
+akan berbeda.</p>
+<p>Buku ini tersedia dalam dua bentuk: <code>buku-manual.md</code> (sumber) dan <code>buku-manual.html</code> (siap dibaca di
+peramban dan siap dicetak). Setelah menyunting berkas Markdown, buat ulang versi HTML dengan
+<code>php docs/manual/tools/render.php</code>, lalu periksa tautan gambar dengan <code>php docs/manual/tools/check.php</code>.</p>
+<p><strong>Membuka buku ini dari dalam aplikasi.</strong> Setelah masuk, tekan <strong>Buku Manual</strong> pada bilah atas
+(navbar) di kanan layar. Buku terbuka pada tab baru, lengkap dengan gambar, tombol
+<strong>Kembali ke aplikasi</strong>, dan tombol <strong>Cetak / Simpan PDF</strong> untuk mencetak atau menyimpan versi PDF.
+Tautan ini tersedia untuk semua peran — Dosen, Tendik, TIM PAK, dan Admin — sehingga tidak perlu
+mencari berkas manual secara terpisah.</p>
+<hr />
+<h2>Daftar isi</h2>
+<ol>
+<li>Mengenal aplikasi</li>
+<li>Masuk, memilih peran, dan keluar</li>
+<li>Dashboard</li>
+<li>Profil dan portofolio dosen</li>
+<li>Pengajuan DUPAK</li>
+<li>Berkas syarat khusus dan riwayat IKD</li>
+<li>Riwayat pengajuan dan panduan</li>
+<li>Administrasi data dosen</li>
+<li>Verifikasi dan penerusan ajuan</li>
+<li>Ruang Admin — surat, SKP, dan data kepegawaian</li>
+<li>Ruang Admin — data instansi dan pengaturan sistem</li>
+<li>Ruang TIM PAK</li>
+<li>SKP — penilaian, keberatan, dan usulan</li>
+<li>Referensi status dan alur DUPAK</li>
+<li>Pertanyaan umum dan penanganan masalah</li>
+<li>Lampiran — daftar gambar</li>
+</ol>
+<hr />
+<h1>1. Mengenal aplikasi</h1>
+<p>SIMJAD mengelola usulan jabatan akademik dosen dari awal sampai dokumen siap tanda tangan.
+Semua pihak bekerja pada satu data yang sama: dosen mengisi kegiatan, TIM PAK memberi angka
+kredit, admin memverifikasi, lalu surat dan berita acara dicetak dari aplikasi.</p>
+<h2>1.1 Empat peran pengguna</h2>
+<p>Satu akun dapat memiliki lebih dari satu peran (misalnya dosen yang juga anggota TIM PAK).
+Peran yang sedang aktif menentukan menu yang tampil.</p>
+<table>
+<thead>
+<tr>
+<th>Peran</th>
+<th>Yang dikerjakan</th>
+<th>Menu utama</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Dosen</strong></td>
+<td>Melengkapi profil dan portofolio, mengisi kegiatan per periode, mengajukan usulan ke TIM PAK, mengajukan DUPAK, mencetak DUPAK, mengurus keberatan SKP.</td>
+<td>Dashboard, Profil, Riwayat DUPAK, Riwayat IKD, Riwayat Karya Tulis, SKP-Dosen, Usulan SKP, Panduan Pengajuan</td>
+</tr>
+<tr>
+<td><strong>Tendik</strong></td>
+<td>Mengelola profil kepegawaian sendiri (riwayat pekerjaan, kepangkatan, jabatan).</td>
+<td>Dashboard, Profil, Riwayat Tendik</td>
+</tr>
+<tr>
+<td><strong>TIM PAK</strong></td>
+<td>Menilai angka kredit setiap entri kegiatan yang masuk, membaca panduan penilaian.</td>
+<td>Dashboard, Pengajuan Masuk, Panduan Penilaian</td>
+</tr>
+<tr>
+<td><strong>Admin</strong></td>
+<td>Mengelola data dosen, memverifikasi berkas dan DUPAK, membuat surat, menilai SKP, mengelola data instansi dan pengaturan sistem.</td>
+<td>Dashboard, Administrasi (Ajuan PAK, Verifikasi Berkas, Panduan Penilaian, Surat, SKP, Data Dosen, Riwayat Dosen, Data Instansi, Prodi, Pejabat Struktural, Senat, Tim Komite, Jabatan Akademik, Jabatan Struktural, Kepangkatan), Pengaturan, WhatsApp API</td>
+</tr>
+</tbody>
+</table>
+<h2>1.2 Istilah yang dipakai</h2>
+<table>
+<thead>
+<tr>
+<th>Istilah</th>
+<th>Arti di dalam aplikasi</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>DUPAK</strong></td>
+<td>Daftar Usulan Penetapan Angka Kredit. Berkas usulan yang diajukan dosen, dinilai TIM PAK, lalu diverifikasi admin.</td>
+</tr>
+<tr>
+<td><strong>PAK</strong></td>
+<td>Penetapan Angka Kredit. Nilai yang diberikan TIM PAK atas entri kegiatan pada satu periode.</td>
+</tr>
+<tr>
+<td><strong>Periode</strong></td>
+<td>Tahun dan semester tempat kegiatan diusulkan, misalnya <em>2026 — Semester Gasal</em>. Satu periode hanya dapat diajukan sekali sampai statusnya dikembalikan.</td>
+</tr>
+<tr>
+<td><strong>Komponen / Bidang</strong></td>
+<td>Empat kelompok kegiatan DUPAK: Pendidikan, Penelitian, Pengabdian kepada Masyarakat, dan Penunjang.</td>
+</tr>
+<tr>
+<td><strong>Entri</strong></td>
+<td>Satu baris kegiatan di dalam komponen, berisi komponen, rincian, nama kegiatan, dan tautan bukti.</td>
+</tr>
+<tr>
+<td><strong>IKD</strong></td>
+<td>Indikator Kinerja Dosen. Bukti pemenuhan kinerja yang diunggah pada syarat khusus.</td>
+</tr>
+<tr>
+<td><strong>BKD</strong></td>
+<td>Beban Kerja Dosen. Bukti kompilasi LKD dua semester terakhir.</td>
+</tr>
+<tr>
+<td><strong>SKP</strong></td>
+<td>Sasaran Kinerja Pegawai. Penilaian perilaku kerja oleh pejabat penilai, dapat disanggah lewat keberatan.</td>
+</tr>
+<tr>
+<td><strong>Jafa</strong></td>
+<td>Jabatan fungsional/akademik dosen: Asisten Ahli, Lektor, Lektor Kepala, Guru Besar.</td>
+</tr>
+<tr>
+<td><strong>BAKI</strong></td>
+<td>Berita Acara Komite Integritas Akademik, tindak lanjut usulan senat.</td>
+</tr>
+<tr>
+<td><strong>BAP Senat</strong></td>
+<td>Berita Acara Persetujuan Senat atas usulan jabatan akademik dosen.</td>
+</tr>
+</tbody>
+</table>
+<h2>1.3 Alur besar satu usulan</h2>
+<pre><code>Dosen isi kegiatan per periode
+        │
+        ▼
+Dosen menekan &quot;Ajukan ke TIM PAK&quot;      → status: Menunggu penilaian
+        │
+        ▼
+TIM PAK mengisi angka kredit tiap entri → status: Sudah dinilai
+        │
+        ▼
+Dosen menekan &quot;Ajukan Dupak&quot;            → status: Diajukan DUPAK
+        │
+        ▼
+Admin memutuskan di Verifikasi DUPAK
+        ├── Disetujui        → DUPAK siap dicetak, nilai terkunci
+        ├── Butuh Perbaikan  → dosen membetulkan entri, ajukan ulang
+        └── Ditolak          → usulan dihentikan, alasan tercatat
+</code></pre>
+<p>Bila dosen belum memiliki jabatan akademik, menu Riwayat DUPAK diarahkan ke tahap IKD
+lebih dulu: dosen mengunggah berkas syarat khusus, lalu tetap mengisi kegiatan seperti biasa.</p>
+<hr />
+<h1>2. Masuk, memilih peran, dan keluar</h1>
+<h2>2.1 Halaman masuk</h2>
+<p>Buka alamat aplikasi pada peramban (Chrome, Edge, atau Firefox versi terbaru). Anda akan
+mendarat di halaman masuk.</p>
+<p><img src="images/01-halaman-masuk.png" alt="Gambar 01 — Halaman masuk SIMJAD" /></p>
+<p><em>Gambar 01. Halaman masuk: panel informasi di kiri, formulir NIDN dan password di kanan.</em></p>
+<p>Langkah masuk:</p>
+<ol>
+<li>Isi <strong>NIDN</strong> — gunakan NIDN yang terdaftar, bukan alamat surel.</li>
+<li>Isi <strong>Password</strong>.</li>
+<li>Bila memakai komputer pribadi, centang <strong>Ingat saya di perangkat ini</strong> agar tidak perlu
+mengetik ulang pada kunjungan berikutnya. Jangan centang pada komputer bersama.</li>
+<li>Tekan <strong>Masuk</strong>.</li>
+</ol>
+<p>Bila NIDN atau password salah, aplikasi menampilkan pesan kesalahan di bawah kolom yang
+bermasalah dan isian NIDN tetap tersimpan sehingga Anda hanya perlu memperbaiki password.</p>
+<blockquote>
+<p><strong>Catatan</strong> — Halaman masuk tidak menyediakan tombol lupa password. Permintaan reset
+password dilakukan oleh admin melalui menu <strong>Data Dosen → ubah data dosen → Password</strong>.</p>
+</blockquote>
+<h2>2.2 Memilih peran (akun multi peran)</h2>
+<p>Sebagian akun memiliki lebih dari satu peran, misalnya dosen yang juga menjadi anggota
+TIM PAK atau admin. Setelah masuk, akun seperti ini melihat halaman pemilihan peran.</p>
+<p><img src="images/42-pilih-peran.png" alt="Gambar 42 — Halaman pilih peran" /></p>
+<p><em>Gambar 42. Halaman &quot;Masuk sebagai siapa?&quot; beserta kartu peran yang dimiliki akun.</em></p>
+<ol>
+<li>Halaman menampilkan nama dan NIDN Anda, lencana <strong>Multi Peran</strong>, serta pertanyaan
+<strong>Masuk sebagai siapa?</strong></li>
+<li>Setiap kartu berisi nama peran (Dosen, Tendik, TIM PAK, Admin) dan penjelasan singkat
+isi ruang tersebut.</li>
+<li>Klik salah satu kartu. Menu dan hak akses langsung mengikuti peran yang dipilih.</li>
+</ol>
+<p>Halaman ini hanya muncul sekali setelah login. Untuk berpindah peran tanpa keluar, gunakan
+menu akun di sudut kanan atas → <strong>Ganti peran</strong>; Anda akan kembali ke halaman yang sama.</p>
+<blockquote>
+<p><strong>Peringatan</strong> — Hak akses mengikuti peran yang sedang aktif. Bila tombol yang Anda cari
+tidak ada, periksa dulu peran aktif Anda di menu akun sebelum menghubungi admin.</p>
+</blockquote>
+<h2>2.3 Mengenal tata letak layar</h2>
+<p>Setelah memilih peran, semua halaman memakai tata letak yang sama:</p>
+<ul>
+<li><strong>Bilah samping kiri</strong> — kelompok menu sesuai peran. Pada layar kecil bilah ini menyusut
+menjadi ikon dan dapat dibuka dengan tombol menu di kiri atas. Setiap butir menu memiliki
+keterangan muncul saat kursor diarahkan (tooltip).</li>
+<li><strong>Bilah atas</strong> — judul halaman, tombol pintasan, dan menu akun (nama, NIDN, <strong>Ganti peran</strong>,
+<strong>Keluar</strong>). Di sisi kanan bilah atas selalu ada tombol <strong>Buku Manual</strong> (ikon buku) yang
+membuka buku yang sedang Anda baca ini pada tab baru; lihat &quot;Cara membaca buku ini&quot; di atas.</li>
+<li><strong>Area isi</strong> — kartu putih berisi formulir atau tabel. Tabel panjang memiliki kotak
+<strong>Cari</strong>, saringan status, dan pemilih jumlah baris per halaman.</li>
+</ul>
+<h2>2.4 Keluar</h2>
+<p>Klik menu akun di kanan atas → <strong>Keluar</strong>. Sesi berakhir dan Anda kembali ke halaman masuk.
+Selalu keluar setelah memakai komputer bersama atau komputer laboratorium.</p>
+<hr />
+<h1>3. Dashboard</h1>
+<p>Dashboard adalah halaman pertama setelah masuk. Isinya bergantung pada peran aktif.</p>
+<h2>3.1 Dashboard dosen</h2>
+<p><img src="images/02-dashboard-dosen.png" alt="Gambar 02 — Dashboard dosen" /></p>
+<p><em>Gambar 02. Dashboard dosen: sapaan, periode aktif, tombol pengajuan, kartu ringkasan, dan tabel riwayat.</em></p>
+<p>Bagian atas berisi:</p>
+<ul>
+<li>Lencana <strong>Ruang Dosen</strong> dan tanggal hari ini (format <em>Jumat, 20 November 2026</em>).</li>
+<li>Sapaan waktu (<strong>Selamat pagi/siang/sore/malam, <nama depan></strong>) dengan penjelasan singkat
+tugas Anda pada periode berjalan.</li>
+<li>Kotak <strong>Periode aktif</strong> berisi tahun berjalan.</li>
+<li>Tombol putih <strong>Buat Pengajuan</strong> menuju pemilihan periode, dan tombol <strong>Soon</strong> untuk modul
+pengajuan segera hadir.</li>
+</ul>
+<p>Di bawahnya ada lima kartu ringkasan pengajuan:</p>
+<table>
+<thead>
+<tr>
+<th>Kartu</th>
+<th>Arti</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Total Ajuan</strong></td>
+<td>Seluruh ajuan DUPAK Anda.</td>
+</tr>
+<tr>
+<td><strong>Menunggu Verifikasi</strong></td>
+<td>DUPAK yang sudah diajukan dan menunggu keputusan admin.</td>
+</tr>
+<tr>
+<td><strong>Disetujui</strong></td>
+<td>DUPAK yang telah disetujui admin.</td>
+</tr>
+<tr>
+<td><strong>Perlu Perbaikan</strong></td>
+<td>DUPAK yang dikembalikan admin untuk dibetulkan.</td>
+</tr>
+<tr>
+<td><strong>Ditolak</strong></td>
+<td>DUPAK yang ditolak beserta alasannya.</td>
+</tr>
+</tbody>
+</table>
+<p>Kartu bersifat ringkasan; klik untuk melihat daftar yang sesuai. Tabel <strong>Riwayat Pengajuan</strong>
+di bawahnya menampilkan periode, tanggal, status berwarna, dan tombol aksi. Gunakan kotak
+<strong>Cari</strong> atau saringan <strong>Semua status</strong> untuk mempersempit daftar. Bila periode belum punya
+nilai PAK, tabel menampilkan keterangan <em>&quot;DUPAK bisa diajukan setelah nilai PAK periode
+tersebut tersedia.&quot;</em></p>
+<h2>3.2 Dashboard admin</h2>
+<p><img src="images/20-dashboard-admin.png" alt="Gambar 20 — Dashboard admin" /></p>
+<p><em>Gambar 20. Ruang Admin: ringkasan seluruh ajuan dosen dan tabel DUPAK terbaru.</em></p>
+<p>Admin melihat sapaan <strong>Ruang Admin</strong>, periode aktif, dan tombol <strong>Buat Pengajuan</strong> yang
+mengarah ke data ajuan. Lima kartu ringkasan berisi <strong>Total Pengajuan</strong>, <strong>Menunggu
+Verifikasi</strong>, <strong>Disetujui</strong>, <strong>Perlu Perbaikan</strong>, dan <strong>Ditolak</strong> untuk seluruh dosen.</p>
+<p>Di bagian bawah, kartu <strong>DUPAK</strong> memuat daftar pengajuan terbaru: nama dosen, periode, status,
+dan tombol bermata (lihat DUPAK) menuju halaman detail verifikasi. Kotak <strong>Cari</strong> dan saringan
+status bekerja seperti pada tabel lain.</p>
+<h2>3.3 Dashboard TIM PAK</h2>
+<p><img src="images/43-dashboard-tim-pak.png" alt="Gambar 43 — Dashboard TIM PAK" /></p>
+<p><em>Gambar 43. Ruang TIM PAK: antrean pengajuan yang belum dinilai.</em></p>
+<p>TIM PAK melihat <strong>Ruang TIM PAK</strong>, tombol <strong>Pengajuan Masuk</strong>, dan kartu <strong>Belum Dinilai</strong>
+yang berisi jumlah usulan yang menunggu penilaian. Tabel <strong>Pengajuan DUPAK Masuk</strong> di bawahnya
+memuat daftar usulan beserta status dan tombol menuju formulir penilaian. Rincian pekerjaan
+penilaian dijelaskan pada Bab 12.</p>
+<hr />
+<h1>4. Profil dan portofolio dosen</h1>
+<p>Menu yang dibahas pada bab ini ada di kelompok <strong>Profil</strong> dan <strong>Profil Dosen</strong> pada bilah
+samping: <strong>Data Pribadi</strong>, <strong>Riwayat Pendidikan</strong>, <strong>Riwayat Pekerjaan</strong>, serta
+<strong>Riwayat Karya Tulis</strong> pada kelompok <strong>Menu Utama</strong>.</p>
+<blockquote>
+<p><strong>Catatan</strong> — Lengkapi profil sebelum mengisi kegiatan. Data pribadi, pendidikan, dan
+kepangkatan dipakai sebagai isi halaman muka DUPAK serta bahan surat yang dibuat admin.</p>
+</blockquote>
+<h2>4.1 Portofolio dosen</h2>
+<p>Klik <strong>Profil</strong> pada kelompok Menu Utama.</p>
+<p><img src="images/03-profil-portofolio.png" alt="Gambar 03 — Halaman portofolio dosen" /></p>
+<p><em>Gambar 03. Portofolio dosen: kartu identitas, ringkasan data pribadi, kelengkapan profil, dan riwayat pendidikan.</em></p>
+<p>Halaman ini adalah ringkasan seluruh data Anda:</p>
+<ul>
+<li><strong>Kartu identitas berwarna hijau</strong> — inisial nama, lencana <strong>DOSEN</strong>, lencana
+<strong>Portofolio aktif</strong>, nama lengkap beserta gelar, NIDN, program studi, dan jabatan
+akademik saat ini (contoh: <em>Asisten Ahli</em>). Tombol <strong>Edit Data Pribadi</strong> di kanan atas
+membuka formulir data pribadi.</li>
+<li><strong>Kartu Data Pribadi</strong> — nama lengkap, NIDN, tempat dan tanggal lahir, nomor HP, jenis
+kelamin, alamat, dan program studi. Tautan <strong>Ubah</strong> di kanan atas kartu menuju formulir
+yang sama dengan tombol sebelumnya.</li>
+<li><strong>Kartu Kelengkapan Profil</strong> — daftar periksa berisi <strong>Data pribadi</strong> dan <strong>Riwayat
+pendidikan</strong>. Tanda centang hijau berarti sudah lengkap; teks <strong>Lengkap</strong> atau jumlah data
+(contoh: <em>1 data</em>) tampil di sisi kanan. Tombol <strong>Perbarui Data Pribadi →</strong> ada di bawah
+daftar.</li>
+<li><strong>Kartu Kontak</strong> — surel, telepon, dan program studi. Tulisan <strong>Belum diatur</strong> berarti data
+tersebut belum diisi.</li>
+<li><strong>Kartu Riwayat Pendidikan</strong> — ringkasan jenjang tertinggi beserta lencana berkas
+(<strong>Ijazah &amp; Transkrip</strong>, <strong>Akreditasi Prodi</strong>, <strong>Disertasi / Tesis</strong>). Tautan <strong>Kelola</strong>
+membuka halaman riwayat pendidikan.</li>
+<li>Keterangan <strong>Diperbarui … yang lalu</strong> di bawah kartu kanan menunjukkan kapan data terakhir
+diubah.</li>
+</ul>
+<h2>4.2 Data pribadi</h2>
+<p>Buka <strong>Profil Dosen → Data Pribadi</strong>, atau tekan <strong>Edit Data Pribadi</strong> pada portofolio.</p>
+<p><img src="images/04-data-pribadi.png" alt="Gambar 04 — Formulir data pribadi" /></p>
+<p><em>Gambar 04. Formulir data pribadi dosen.</em></p>
+<p>Isian yang tersedia:</p>
+<table>
+<thead>
+<tr>
+<th>Isian</th>
+<th>Wajib</th>
+<th>Keterangan</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Nama Lengkap dan Gelar</strong></td>
+<td>Ya</td>
+<td>Tulis nama beserta gelar, contoh <code>Lina Erviana, S.Si., M.Pd.Si.</code></td>
+</tr>
+<tr>
+<td><strong>NIDN</strong></td>
+<td>—</td>
+<td>Mengikuti akun, tidak dapat diubah sendiri.</td>
+</tr>
+<tr>
+<td><strong>No. HP</strong></td>
+<td>Ya</td>
+<td>Dipakai admin untuk menghubungi Anda melalui WhatsApp.</td>
+</tr>
+<tr>
+<td><strong>Tempat Lahir</strong></td>
+<td>Ya</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>Tanggal Lahir</strong></td>
+<td>Ya</td>
+<td>Format tanggal <code>dd/mm/yyyy</code> pada pemilih tanggal.</td>
+</tr>
+<tr>
+<td><strong>Jenis Kelamin</strong></td>
+<td>—</td>
+<td>Dropdown dengan pencarian <strong>Cari jenis kelamin…</strong>.</td>
+</tr>
+<tr>
+<td><strong>Alamat</strong></td>
+<td>Ya</td>
+<td>Alamat lengkap tempat tinggal saat ini.</td>
+</tr>
+<tr>
+<td><strong>Agama</strong></td>
+<td>—</td>
+<td>Dropdown dengan pencarian <strong>Cari agama…</strong>.</td>
+</tr>
+</tbody>
+</table>
+<p>Tekan <strong>Simpan Data</strong>. Bila ada isian yang belum benar, muncul kotak merah
+<strong>&quot;Periksa kembali data Anda.&quot;</strong> beserta jumlah isian yang perlu diperbaiki; kolom bermasalah
+ditandai bingkai merah dan pesan di bawahnya. Setelah tersimpan, data langsung tampil pada
+portofolio — sesuai keterangan pada formulir, <em>&quot;Data akan langsung tampil pada portofolio
+setelah disimpan.&quot;</em></p>
+<h2>4.3 Riwayat pendidikan</h2>
+<p>Buka <strong>Profil Dosen → Riwayat Pendidikan</strong>.</p>
+<p><img src="images/05-riwayat-pendidikan.png" alt="Gambar 05 — Daftar riwayat pendidikan" /></p>
+<p><em>Gambar 05. Halaman riwayat pendidikan: kartu ringkasan di atas, tabel riwayat di bawah.</em></p>
+<p>Tiga kartu ringkasan di bagian atas:</p>
+<table>
+<thead>
+<tr>
+<th>Kartu</th>
+<th>Isi</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Total</strong></td>
+<td>Jumlah riwayat pendidikan yang tercatat (contoh: <em>1 Riwayat pendidikan</em>).</td>
+</tr>
+<tr>
+<td><strong>Tertinggi</strong></td>
+<td>Jenjang dan institusi tertinggi (contoh: <em>S2 — Universitas Gajah Mada</em>).</td>
+</tr>
+<tr>
+<td><strong>Berkas</strong></td>
+<td>Perbandingan berkas lengkap terhadap jumlah riwayat (contoh: <em>1/1 Berkas lengkap</em>).</td>
+</tr>
+</tbody>
+</table>
+<p>Tabel <strong>Daftar Riwayat Pendidikan</strong> memuat kolom <strong>Jenjang</strong>, <strong>Institusi &amp; Jurusan</strong>,
+<strong>Tahun</strong>, <strong>Berkas</strong>, dan <strong>Aksi</strong>. Data diurutkan dari jenjang pendidikan dasar ke
+tertinggi. Klik judul kolom untuk mengurutkan, gunakan kotak <strong>Cari jenjang, institusi,
+jurusan…</strong> untuk menyaring, dan pilih jumlah baris melalui pemilih <strong>data per halaman</strong>.
+Catatan di bawah tabel menyebut batas ukuran berkas: <em>Ijazah &amp; transkrip 1 MB · Akreditasi
+prodi 1 MB · Disertasi/Tesis 4 MB</em>.</p>
+<p>Tombol <strong>+ Tambah Riwayat</strong> di kanan atas membuka formulir baru; ikon pensil mengubah data,
+ikon tempat sampah menghapusnya setelah konfirmasi. Tombol <strong>Portofolio</strong> mengembalikan Anda
+ke halaman ringkasan.</p>
+<h3>Menambah riwayat pendidikan</h3>
+<p><img src="images/06-tambah-pendidikan.png" alt="Gambar 06 — Formulir tambah riwayat pendidikan" /></p>
+<p><em>Gambar 06. Formulir tambah riwayat pendidikan: bagian Data Pendidikan dan Berkas Bukti.</em></p>
+<ol>
+<li><strong>Data Pendidikan</strong>
+<ul>
+<li><strong>Nama Institusi / Sekolah</strong> — contoh pada kolom: <em>SD Negeri 1 Bandung</em>.</li>
+<li><strong>Jenjang Pendidikan</strong> — pilih dari dropdown <strong>Pilih jenjang</strong>. Semua jenjang wajib
+melampirkan bukti ijazah &amp; transkrip yang digabung menjadi satu berkas PDF.</li>
+<li><strong>Jurusan / Program Studi</strong> (opsional) — contoh: <em>Pendidikan Informatika</em>.</li>
+<li><strong>Tahun Masuk</strong> dan <strong>Tahun Lulus</strong> (opsional). Kosongkan tahun lulus bila pendidikan
+masih berjalan.</li>
+</ul>
+</li>
+<li><strong>Berkas Bukti</strong> — unggah dalam format PDF:
+<ul>
+<li><strong>Bukti Ijazah &amp; Transkrip</strong> (wajib, maksimal 1 MB) — gabungan ijazah dan transkrip.</li>
+<li><strong>Akreditasi Prodi</strong> (opsional, maksimal 1 MB) — unggah bila tersedia.</li>
+<li><strong>Disertasi / Tesis</strong> (opsional, maksimal 4 MB) — untuk jenjang S2/S3.</li>
+</ul>
+</li>
+<li>Tekan <strong>Simpan</strong> untuk menyimpan, atau <strong>Kembali</strong> untuk membatalkan.</li>
+</ol>
+<p>Saat mengubah data yang sudah ada, tiap isian berkas menampilkan <strong>Berkas saat ini</strong> dengan
+tautan <strong>Lihat</strong>. Kosongkan pemilih berkas jika tidak ingin mengganti berkas lama. Berkas
+disimpan otomatis dengan nama yang memuat NIDN Anda dan hanya dapat diakses oleh pemilik akun.</p>
+<h2>4.4 Riwayat pekerjaan dan kepangkatan</h2>
+<p>Buka <strong>Profil Dosen → Riwayat Pekerjaan</strong>.</p>
+<p><img src="images/07-riwayat-pekerjaan.png" alt="Gambar 07 — Halaman riwayat pekerjaan" /></p>
+<p><em>Gambar 07. Riwayat pekerjaan: identitas kepegawaian, masa kerja SK, dan masa kerja golongan.</em></p>
+<p>Halaman ini menggabungkan tujuh bagian bernomor. Bagian yang tampak pada gambar:</p>
+<ol>
+<li><strong>Identitas Kepegawaian</strong> — <strong>NIDN</strong> (mengikuti akun, tidak dapat diubah di sini),
+<strong>NUPTK</strong>, <strong>Prodi</strong> (pilihan diambil dari data master Prodi instansi), dan <strong>Bidang Ilmu</strong>
+(diisi manual sesuai bidang keahlian).</li>
+<li><strong>Masa Kerja</strong> — <strong>Tanggal SK</strong> dosen tetap; <strong>Masa Kerja (Tahun)</strong> dan <strong>Masa Kerja
+(Bulan)</strong> dihitung otomatis dari tanggal SK sampai hari ini. Berkas <strong>SK Dosen Tetap</strong>
+bersifat opsional (PDF maksimal 1 MB); bila sudah ada, nama berkas tampil dengan tombol
+<strong>Lihat</strong>, dan cukup dibiarkan kosong bila tidak ingin menggantinya.</li>
+</ol>
+<p>Bagian berikutnya di halaman yang sama:</p>
+<ol start="3">
+<li><strong>Masa Kerja Golongan</strong> — tanggal SK golongan beserta perhitungan masa kerja golongan.</li>
+<li><strong>Riwayat Kepangkatan</strong> — tabel <strong>Pangkat &amp; Golongan</strong>, <strong>TMT</strong>, dan <strong>Aksi</strong>. Isi
+formulir <strong>Tambah</strong>, lalu tekan <strong>Tambah</strong> untuk menyimpan, atau <strong>Simpan Perubahan</strong>
+saat menyunting. Tombol <strong>Batal Edit</strong> membatalkan penyuntingan. Ikon tempat sampah
+menghapus baris setelah konfirmasi.</li>
+<li><strong>Riwayat Angka Kredit</strong> — tabel <strong>Tahun Pengajuan</strong> dan <strong>Angka Kredit</strong> dengan pola
+tombol yang sama.</li>
+<li><strong>Riwayat Jabatan Struktural</strong> — tabel <strong>Jabatan Struktural</strong> dan <strong>TMT</strong>.</li>
+<li><strong>Riwayat Jabatan Akademik</strong> — riwayat jabatan fungsional dosen.</li>
+</ol>
+<p>Tautan <strong>SK</strong> di bagian atas halaman membuka dokumen SK pada tab baru. Tombol <strong>Portofolio</strong>
+kembali ke halaman ringkasan.</p>
+<h2>4.5 Status jabatan akademik saat mengajukan</h2>
+<p>Langkah pertama pengajuan baru menampilkan status jabatan akademik Anda.</p>
+<p><img src="images/08-status-jabatan.png" alt="Gambar 08 — Status jabatan akademik" /></p>
+<p><em>Gambar 08. Halaman Status Jabatan Akademik: jabatan saat ini dan target yang diusulkan.</em></p>
+<ul>
+<li>Kartu <strong>JABATAN AKADEMIK SAAT INI</strong> menampilkan jabatan yang sedang dipegang (contoh:
+<em>Asisten Ahli</em>) beserta penjelasan: <em>&quot;Anda sudah memiliki jabatan akademik. Lanjutkan ke
+pemilihan periode pengajuan seperti biasa.&quot;</em> Dosen yang belum memiliki jabatan akademik
+melihat arahan berbeda, yaitu melengkapi berkas IKD lebih dulu.</li>
+<li><strong>Jabatan Akademik yang akan Diajukan</strong> — pilih target, misalnya <em>Lektor</em>. Keterangan di
+bawah kolom: <em>&quot;Target jabatan akademik yang akan diusulkan, terpisah dari jabatan akademik
+Anda saat ini.&quot;</em></li>
+<li><strong>Pangkat/Golongan</strong> — pilihan diambil dari data kepegawaian/kepangkatan, misalnya
+<em>IIIc / Penata</em>.</li>
+<li>Tekan <strong>Lanjut Pilih Periode →</strong> untuk meneruskan, atau <strong>← Kembali ke Dashboard</strong> untuk
+membatalkan.</li>
+</ul>
+<h2>4.6 Riwayat karya tulis</h2>
+<p>Buka <strong>Menu Utama → Riwayat Karya Tulis</strong>.</p>
+<p><img src="images/17-karya-tulis.png" alt="Gambar 17 — Halaman riwayat karya tulis" /></p>
+<p><em>Gambar 17. Riwayat karya tulis: formulir tambah di atas, daftar karya di bawah.</em></p>
+<p>Bagian <strong>01 Tambah Karya Tulis</strong> berisi:</p>
+<ul>
+<li><strong>Karya Ilmiah</strong> — dropdown <strong>Pilih jenis karya ilmiah</strong>. Pilihan mengikuti jenis yang
+dipakai pada kegiatan DUPAK, misalnya <em>Jurnal Nasional Tidak Terakreditasi</em>, <em>Jurnal Ilmiah
+Internasional</em>, <em>Seminar Nasional</em>, atau <em>Buku Referensi</em>.</li>
+<li><strong>Judul</strong> — judul lengkap karya.</li>
+<li><strong>Link Bukti Google Drive</strong> — contoh format <code>https://drive.google.com/file/d/…/view</code>.
+Pastikan akses berkas disetel <em>&quot;Anyone with the link&quot;</em> agar tautan dapat dibuka.</li>
+<li>Untuk jurnal dan prosiding, tersedia pula isian <strong>Nama Jurnal</strong>/<strong>Nama Prosiding</strong> dan
+<strong>ISSN</strong> (opsional).</li>
+<li>Tekan <strong>+ Tambah Karya Tulis</strong>.</li>
+</ul>
+<p>Tabel <strong>Daftar Karya Tulis</strong> menampilkan jumlah data, kolom <strong>No</strong>, <strong>Karya Ilmiah</strong>,
+<strong>Judul</strong> (beserta tanggal pencatatan), <strong>Bukti</strong>, dan <strong>Aksi</strong>. Kolom <strong>Bukti</strong> berisi
+tautan <strong>Buka</strong> (membuka Google Drive) dan <strong>Pratinjau</strong>. Ikon pensil menyunting, ikon tempat
+sampah menghapus setelah konfirmasi. Gunakan kotak <strong>Cari karya ilmiah atau judul…</strong> untuk
+menyaring daftar. Tombol <strong>Profil</strong> di kanan atas kembali ke portofolio.</p>
+<hr />
+<h1>5. Pengajuan DUPAK</h1>
+<p>Bab ini adalah inti pekerjaan dosen. Alurnya berurutan: pilih jabatan yang diusulkan →
+tentukan periode → tentukan masa penilaian → isi komponen kegiatan → periksa di tab Review →
+ajukan ke TIM PAK. Setelah dinilai, ajukan DUPAK dan cetak hasilnya.</p>
+<blockquote>
+<p><strong>Catatan</strong> — Menu <strong>Riwayat DUPAK</strong> pada bilah samping membuka halaman yang sama dengan
+tombol <strong>Buat Pengajuan</strong> di dashboard. Bila Anda belum memiliki jabatan akademik, aplikasi
+mengarahkan ke tahap IKD (Bab 6) lebih dulu.</p>
+</blockquote>
+<h2>5.1 Memilih periode pengajuan</h2>
+<p><img src="images/09-pilih-periode.png" alt="Gambar 09 — Memilih periode pengajuan" /></p>
+<p><em>Gambar 09. Halaman Pilih Periode Pengajuan.</em></p>
+<ol>
+<li><strong>Tahun Akademik</strong> — pilih dari dropdown, misalnya <code>2026/2027</code>.</li>
+<li><strong>Semester</strong> — pilih <strong>Ganjil</strong> atau <strong>Genap</strong>.</li>
+<li>Tekan <strong>Lanjut Isi Komponen →</strong> untuk meneruskan, atau <strong>← Kembali ke Dashboard</strong>.</li>
+</ol>
+<p>Keterangan halaman menjelaskan bahwa periode ini dipakai untuk seluruh komponen kegiatan yang
+Anda isi. Satu kombinasi tahun akademik dan semester hanya dapat dipakai satu kali; bila
+periode sudah pernah diajukan, aplikasi menolak dan menyarankan periode lain.</p>
+<h2>5.2 Menentukan masa penilaian</h2>
+<p><img src="images/10-masa-penilaian.png" alt="Gambar 10 — Menentukan masa penilaian" /></p>
+<p><em>Gambar 10. Halaman Masa Penilaian: rentang bulan dan tahun penilaian DUPAK.</em></p>
+<ol>
+<li><strong>Dari</strong> — pilih bulan dan tahun awal, misalnya <em>Januari 2024</em>.</li>
+<li><strong>Sampai dengan</strong> — pilih bulan dan tahun akhir, misalnya <em>Desember 2026</em>.</li>
+<li>Kotak hijau di bawahnya menampilkan ringkasan, contoh: <em>&quot;Masa penilaian: Januari 2024 s.d.
+Desember 2026&quot;</em>. Periksa kembali sebelum melanjutkan.</li>
+<li>Tekan <strong>Lanjut Isi Komponen →</strong>, atau <strong>← Ubah Periode</strong> untuk kembali ke langkah
+sebelumnya.</li>
+</ol>
+<p>Rentang ini tercetak pada halaman muka DUPAK, jadi pastikan sesuai dengan periode kinerja
+yang Anda usulkan.</p>
+<h2>5.3 Formulir kegiatan: tab komponen</h2>
+<p>Setelah masa penilaian ditetapkan, Anda masuk ke halaman <strong>Pengajuan Baru</strong>.</p>
+<p><img src="images/11-pengajuan-baru.png" alt="Gambar 11 — Halaman pengajuan baru, tab Pendidikan" /></p>
+<p><em>Gambar 11. Halaman Pengajuan Baru: ringkasan periode di kanan atas dan lima tab komponen.</em></p>
+<p>Panel kanan atas menampilkan <strong>PERIODE PENGAJUAN</strong> (contoh: <em>2026/2027 · Ganjil</em>) dan <strong>MASA
+PENILAIAN</strong> (<em>Januari 2024 s.d. Desember 2026</em>). Dua tombol di sampingnya: <strong>Ubah Periode</strong>
+dan <strong>Kembali ke Dashboard</strong>.</p>
+<p>Lima tab di bawahnya:</p>
+<table>
+<thead>
+<tr>
+<th>Tab</th>
+<th>Bidang</th>
+<th>Cakupan menurut aplikasi</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>1 Pendidikan</strong></td>
+<td>Bidang A</td>
+<td>Ijazah, diklat prajabatan, kegiatan perkuliahan, pembimbingan, pengujian, dan pengembangan bahan ajar.</td>
+</tr>
+<tr>
+<td><strong>2 Penelitian</strong></td>
+<td>Bidang C</td>
+<td>Hasil penelitian, publikasi ilmiah, buku ajar, dan kekayaan intelektual yang diakui.</td>
+</tr>
+<tr>
+<td><strong>3 Pengabdian kepada Masyarakat</strong></td>
+<td>Bidang D</td>
+<td>Kegiatan pengabdian kepada masyarakat beserta hasil dan bukti pelaksanaannya.</td>
+</tr>
+<tr>
+<td><strong>4 Penunjang</strong></td>
+<td>Bidang E</td>
+<td>Organisasi profesi, penghargaan, dan tugas tambahan.</td>
+</tr>
+<tr>
+<td><strong>5 Review</strong></td>
+<td>—</td>
+<td>Rekap seluruh entri dari keempat bidang dalam satu formulir.</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Catatan</strong> — Tab <strong>Pendidikan</strong> memuat dua bidang sekaligus: Bidang A (Pendidikan) dan
+Bidang B (Pelaksanaan Pendidikan). Keduanya diisi pada tab yang sama dengan dua kartu
+formulir terpisah.</p>
+</blockquote>
+<p>Setiap tab berisi dua bagian: kartu formulir <strong>Bidang X — <nama bidang></strong> untuk menambah
+entri, dan tabel <strong>Daftar Entri Bidang X</strong> berisi entri yang sudah tersimpan.</p>
+<h3>Menambah satu entri kegiatan</h3>
+<ol>
+<li>Pada kartu formulir, pilih <strong>Komponen</strong> (wajib). Contoh pilihan pada Bidang A:
+<strong>Pendidikan Formal</strong> atau <strong>Pendidikan dan Pelatihan Prajabatan</strong>.</li>
+<li>Bila komponen memiliki rincian, dropdown <strong>Pilih rincian komponen</strong> dan <strong>Pilih rincian
+kegiatan</strong> akan muncul dan harus dipilih. Contoh pada Bidang C: komponen <em>Menghasilkan
+Karya Ilmiah</em> → rincian <em>Hasil Penelitian yang Dipublikasikan</em> → rincian kegiatan <em>Jurnal
+Ilmiah Nasional Terakreditasi</em>.</li>
+<li>Isi <strong>Nama Kegiatan</strong> — tulis nama kegiatan secara spesifik agar mudah dinilai, misalnya
+<em>Menyadur Buku Jokowi Tukang Kibul</em> atau <em>Mengajar Kelas B 6 sks</em>.</li>
+<li>Isi <strong>Link Bukti</strong> — tautan Google Drive berisi berkas pendukung. Contoh format pada kolom:
+<code>https://drive.google.com/file/d/…/view</code>. Pastikan tautan dapat dibuka oleh penilai.</li>
+<li>Tekan <strong>+ Tambah Entri</strong>. Entri langsung muncul pada tabel di bawah formulir dan formulir
+kembali kosong untuk entri berikutnya.</li>
+</ol>
+<p>Entri yang sudah tersimpan dapat diubah lewat ikon pensil atau dihapus lewat ikon tempat
+sampah (dengan konfirmasi). Kotak <strong>Cari komponen atau link…</strong> menyaring tabel, dan pemilih
+<strong>data per halaman</strong> mengatur jumlah baris yang ditampilkan.</p>
+<h3>Pilihan komponen tiap bidang</h3>
+<p>Daftar berikut diambil langsung dari aplikasi, sehingga sama dengan isi dropdown di layar.</p>
+<p><strong>Bidang A — Pendidikan</strong></p>
+<ul>
+<li>Pendidikan Formal</li>
+<li>Pendidikan dan Pelatihan Prajabatan</li>
+</ul>
+<p><strong>Bidang B — Pelaksanaan Pendidikan</strong></p>
+<ul>
+<li>Melaksanakan Perkuliahan</li>
+<li>Membimbing Seminar Mahasiswa</li>
+<li>Membimbing PKL/KKN/PKN</li>
+<li>Membimbing dan Ikut Membimbing dalam Menghasilkan Desertasi, Thesis, Skripsi, dan Laporan
+Akhir Studi — rincian: <em>Pembimbing Utama</em>, <em>Pembimbing Pendamping</em></li>
+<li>Penguji pada Ujian Akhir — rincian: <em>Ketua Penguji</em>, <em>Anggota Penguji</em></li>
+<li>Membina Kegiatan Mahasiswa</li>
+<li>Mengembangkan Program Kuliah</li>
+<li>Mengembangkan Bahan Ajar — rincian: <em>Buku Ajar</em>, <em>Modul/Petunjuk Praktikum/Diktat/Audio
+Visual/Naskah Tutorial</em></li>
+<li>Menyampaikan Orasi Ilmiah</li>
+<li>Menduduki Jabatan Pimpinan Perguruan Tinggi</li>
+<li>Membimbing Dosen yang Lebih Rendah Jabatan Fungsionalnya</li>
+<li>Melaksanakan Kegiatan Datasering dan Pencangkokan Akademik Dosen</li>
+<li>Melakukan Kegiatan Pengembangan Diri untuk Meningkatkan Kompetensi</li>
+</ul>
+<p><strong>Bidang C — Penelitian</strong></p>
+<ul>
+<li>Menghasilkan Karya Ilmiah — rincian: <em>Hasil Penelitian yang Dipublikasikan</em>, <em>Hasil
+Penelitian atau Hasil Pemikiran yang Tidak Dipublikasikan</em></li>
+<li>Menerjemahkan atau Menyadur Buku Ilmiah</li>
+<li>Mengedit/Menyunting Buku Ilmiah</li>
+<li>Membuat Rencana dan Karya Teknologi yang Dipatenkan</li>
+<li>Membuat Rancangan dan Karya Teknologi</li>
+<li>Rancangan dan Karya Seni Monumental/Pertunjukan/Karya Sastra — rincian: <em>Internasional</em>,
+<em>Nasional</em>, <em>Lokal</em></li>
+</ul>
+<p>Untuk rincian <em>Hasil Penelitian yang Dipublikasikan</em> tersedia pilihan tingkat ketiga:
+<em>Buku Referensi</em>, <em>Jurnal Ilmiah Internasional</em>, <em>Jurnal Ilmiah Nasional Terakreditasi</em>,
+<em>Jurnal Ilmiah Nasional Tidak Terakreditasi</em>, <em>Seminar Internasional</em>, <em>Seminar Nasional</em>,
+<em>Koran atau Majalah Umum</em>.</p>
+<p><strong>Bidang D — Pengabdian kepada Masyarakat</strong></p>
+<ul>
+<li>Menduduki Jabatan Pimpinan</li>
+<li>Melaksanakan Pengembangan Hasil Pendidikan dan Penelitian</li>
+<li>Memberikan Latihan/Penyuluhan/Penataran/Ceramah pada Masyarakat — rincian: <em>Terjadwal
+dalam Satu Semester atau Lebih</em>, <em>Terjadwal Kurang dari Satu Semester</em></li>
+<li>Memberi Pelayanan kepada Masyarakat atau Kegiatan Lain yang Menunjang Pelaksanaan Tujuan
+Umum Pemerintah dan Pembangunan</li>
+<li>Membuat atau Menulis Karya Pengabdian</li>
+</ul>
+<p><strong>Bidang E — Penunjang</strong></p>
+<ul>
+<li>Menjadi Anggota dalam Suatu Panitia/Badan pada Perguruan Tinggi — rincian: <em>Sebagai
+Ketua/Wakil Ketua Merangkap Anggota</em>, <em>Sebagai Anggota</em></li>
+<li>Menjadi Anggota Panitia/Badan pada Lembaga Pemerintah — rincian: <em>Panitia Pusat</em>,
+<em>Panitia Daerah</em></li>
+<li>Menjadi Anggota Organisasi Profesi — rincian: <em>Tingkat Internasional</em>, <em>Tingkat Nasional</em></li>
+<li>Mewakili Perguruan Tinggi/Lembaga Pemerintah Duduk dalam Panitia Antar Lembaga</li>
+<li>Menjadi Anggota Delegasi Nasional ke Pertemuan Internasional — rincian: <em>Ketua Delegasi</em>,
+<em>Anggota Delegasi</em></li>
+<li>Berperan Aktif dalam Pertemuan Ilmiah — rincian: <em>Tingkat Internasional/Nasional/Regional</em>,
+<em>Di Lingkungan Perguruan Tinggi</em></li>
+<li>Mendapatkan Penghargaan/Tanda Jasa — rincian: <em>Penghargaan/Tanda Jasa Satya Lancana Karya
+Satya</em>, <em>Memperoleh Penghargaan Lainnya</em></li>
+<li>Menulis Buku Pelajaran SMA ke Bawah yang Diterbitkan dan Diedarkan Secara Nasional —
+rincian: <em>SMA Sederajat</em>, <em>SMP Sederajat</em>, <em>SD Sederajat</em></li>
+<li>Mempunyai Prestasi di Bidang Olahraga/Humaniora — rincian: <em>Tingkat Internasional</em>,
+<em>Tingkat Nasional</em></li>
+<li>Keanggotaan dalam Tim Penilaian Jabatan Akademik</li>
+</ul>
+<p><img src="images/12-form-penelitian.png" alt="Gambar 12 — Tab Penelitian dengan entri tersimpan" /></p>
+<p><em>Gambar 12. Tab Penelitian (Bidang C) setelah beberapa entri ditambahkan. Kolom tabel: No, Komponen, Nama Kegiatan, Link Bukti, Periode, Ditambahkan, Aksi.</em></p>
+<h2>5.4 Memeriksa tab Review</h2>
+<p>Klik tab <strong>5 Review</strong>.</p>
+<p><img src="images/13-form-review.png" alt="Gambar 13 — Tab Review pengajuan" /></p>
+<p><em>Gambar 13. Tab Review: rekap seluruh entri dalam bentuk tabel DUPAK.</em></p>
+<p>Keterangan bagian atas: <em>&quot;Rekap seluruh entri dari keempat bidang dalam satu formulir. Periksa
+kesesuaian unsur, sub unsur, dan link buktinya.&quot;</em> Lencana di kanan atas menampilkan periode
+(<em>2026/2027 · Ganjil</em>).</p>
+<p>Tabel rekap memakai susunan resmi DUPAK:</p>
+<ul>
+<li><strong>No</strong> — nomor unsur, misalnya <em>I</em>, <em>II</em>.</li>
+<li><strong>Unsur, Sub Unsur, dan Butir Kegiatan</strong> — dikelompokkan per bidang: <strong>PENDIDIKAN (BIDANG
+A)</strong>, <strong>PELAKSANAAN PENDIDIKAN (BIDANG B)</strong>, lalu bidang C, D, dan E. Tiap baris menampilkan
+komponen dan nama kegiatan yang Anda isi, misalnya <em>1. Doktor (S3)</em> atau <em>Mengajar Kelas B
+6 sks</em>.</li>
+<li><strong>Angka Kredit Menurut → Instansi Pengusul</strong> dengan kolom <strong>Lama</strong>, <strong>Baru</strong>, <strong>Jumlah</strong>.
+Kolom <strong>Lama</strong> berisi nilai yang sudah dimiliki, kolom <strong>Baru</strong> diisi TIM PAK.</li>
+<li><strong>Link Bukti</strong> — tombol <strong>Bukti</strong> pada tiap baris membuka tautan Google Drive yang Anda
+lampirkan.</li>
+<li>Baris <strong>JUMLAH</strong> di akhir setiap bidang menjumlahkan angka kredit bidang tersebut.</li>
+</ul>
+<p>Bila ada entri yang salah, kembali ke tab bidangnya (1–4), tekan ikon pensil pada entri, betulkan,
+lalu simpan. Tab Review selalu menampilkan data terbaru.</p>
+<h2>5.5 Mengajukan usulan ke TIM PAK</h2>
+<p>Panel bawah tab Review berisi <strong>Status usulan:</strong> beserta lencana status. Saat periode baru
+dibuat, statusnya <strong>Belum diajukan</strong>. Bila sudah dinilai, di sebelah status tampil keterangan
+tanggal, contoh <em>dinilai 18 Nov 2026</em>.</p>
+<p>Tiga tombol pada panel:</p>
+<table>
+<thead>
+<tr>
+<th>Tombol</th>
+<th>Fungsi</th>
+<th>Aktif bila</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Ajukan ke TIM PAK</strong></td>
+<td>Mengirim usulan periode ini untuk dinilai.</td>
+<td>Belum terkunci oleh keputusan admin.</td>
+</tr>
+<tr>
+<td><strong>Ajukan Dupak</strong></td>
+<td>Meneruskan DUPAK ke admin memakai nilai dari TIM PAK.</td>
+<td>Status <strong>Sudah dinilai</strong>.</td>
+</tr>
+<tr>
+<td><strong>Cetak Dupak ke PDF</strong></td>
+<td>Membuka halaman cetak DUPAK pada tab baru.</td>
+<td>Selalu tersedia.</td>
+</tr>
+</tbody>
+</table>
+<p>Langkah mengajukan ke TIM PAK:</p>
+<ol>
+<li>Tekan <strong>Ajukan ke TIM PAK</strong>.</li>
+<li>Muncul konfirmasi berjudul <strong>Ajukan ke TIM PAK?</strong> dengan pesan <em>&quot;Usulan periode ini akan
+dikirim ke TIM PAK untuk dinilai.&quot;</em> Setujui.</li>
+<li>Status berubah menjadi <strong>Menunggu penilaian</strong> dan tanggal pengajuan tercatat.</li>
+</ol>
+<blockquote>
+<p><strong>Peringatan</strong> — Periode tanpa entri tidak dapat diajukan. Aplikasi menolak dengan pesan
+<em>&quot;Belum ada kegiatan pada periode ini yang bisa diajukan&quot;</em>. Tambahkan minimal satu entri
+terlebih dahulu.</p>
+</blockquote>
+<h2>5.6 Setelah dinilai: ajukan DUPAK</h2>
+<ol>
+<li>Tunggu hingga TIM PAK menyelesaikan penilaian. Status berubah menjadi <strong>Sudah dinilai</strong>
+dan tombol <strong>Ajukan Dupak</strong> menjadi aktif.</li>
+<li>Tekan <strong>Ajukan Dupak</strong>. Konfirmasi berjudul <strong>Ajukan DUPAK?</strong> menampilkan pesan <em>&quot;DUPAK
+periode ini akan diajukan memakai nilai dari TIM PAK.&quot;</em></li>
+<li>Status berubah menjadi <strong>Diajukan DUPAK</strong> dan berkas masuk ke antrean admin.</li>
+</ol>
+<p>DUPAK memakai nilai dari TIM PAK; dosen tidak mengisi ulang angka kredit. Setelah admin
+memutuskan:</p>
+<ul>
+<li><strong>Disetujui</strong> — nilai terkunci, DUPAK siap dicetak, dan tombol <strong>Ajukan ke TIM PAK</strong> tidak
+dapat dipakai lagi.</li>
+<li><strong>Butuh Perbaikan</strong> — buka <strong>Riwayat DUPAK → tab Riwayat Nilai PAK</strong>, tekan <strong>Perbaikan</strong>
+pada periode tersebut, betulkan entri, lalu <strong>Ajukan Ulang</strong>.</li>
+<li><strong>Ditolak</strong> — usulan dihentikan; alasan penolakan tampil pada riwayat.</li>
+</ul>
+<h2>5.7 Mencetak DUPAK ke PDF</h2>
+<p>Tekan <strong>Cetak Dupak ke PDF</strong> pada panel Review atau <strong>Cetak PDF</strong> pada tab Riwayat Ajuan
+DUPAK. Aplikasi membuka halaman cetak pada tab baru tanpa menu aplikasi. Pada dialog cetak
+peramban, pilih tujuan <strong>Save as PDF</strong>, ukuran kertas <strong>A4</strong>, orientasi <strong>Landscape</strong> (tabel
+rekap lebih lebar daripada tinggi), lalu simpan.</p>
+<p>Halaman cetak memuat kolom <strong>Lama</strong>, <strong>Baru</strong>, dan <strong>Jumlah</strong> di bawah grup <strong>Tim Penilai</strong>
+serta label jumlah panjang <em>Jumlah (Unsur Utama + Penunjang)</em>, dan tidak memuat kolom <strong>Link
+Bukti</strong>.</p>
+<hr />
+<h1>6. Berkas syarat khusus dan riwayat IKD</h1>
+<h2>6.1 Kapan halaman ini dipakai</h2>
+<p>Halaman <strong>Indikator Kinerja Dosen</strong> (menu <strong>Riwayat IKD</strong>) dipakai dosen yang <strong>belum memiliki
+jabatan akademik</strong> — yaitu pengajuan jabatan akademik pertama. Dosen yang sudah memiliki
+jabatan akademik tetap dapat membuka halaman ini untuk melengkapi atau memperbarui berkas.</p>
+<p>Dua berkas wajib diunggah, keduanya dalam format PDF:</p>
+<table>
+<thead>
+<tr>
+<th>Berkas</th>
+<th>Batas ukuran</th>
+<th>Isi</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>BKD 2 Semester Terakhir (Status Memenuhi, Tridharma PT terpenuhi)</strong></td>
+<td>3 MB</td>
+<td>Bukti Kompilasi LKD 2 semester terakhir dalam satu file PDF.</td>
+</tr>
+<tr>
+<td><strong>Bukti Pemenuhan Indikator Kinerja Dosen</strong></td>
+<td>5 MB</td>
+<td>Kompilasi Bukti Klaim IKD sesuai target JAD (Asisten Ahli) dari laman SISTER Dosen dalam satu file PDF, mencakup komponen [a] Pendidikan (kegiatan pembelajaran, pengajaran, dan pengembangan akademik) dan [b] Penelitian &amp; Pengmas (kontribusi langsung kepada masyarakat dan penerapan ilmu).</td>
+</tr>
+</tbody>
+</table>
+<h2>6.2 Mengunggah berkas</h2>
+<p><img src="images/18-syarat-khusus.png" alt="Gambar 18 — Halaman Indikator Kinerja Dosen" /></p>
+<p><em>Gambar 18. Halaman Indikator Kinerja Dosen: periode pengajuan, dua berkas wajib, dan tabel berkas tersimpan.</em></p>
+<p>Halaman dibuka dengan judul <strong>Indikator Kinerja Dosen</strong> dan keterangan <em>&quot;Kelengkapan syarat
+khusus untuk dosen yang belum memiliki jabatan akademik.&quot;</em></p>
+<ol>
+<li><strong>01 Periode Pengajuan</strong> — menampilkan <strong>Tahun Akademik</strong> (contoh <em>2026/2027</em>) dan
+<strong>Semester</strong> (<em>Ganjil</em>) yang sedang diisi. Keterangan: <em>&quot;Berkas di bawah hanya berlaku untuk
+periode ini.&quot;</em> Lencana periode tampil di kanan atas bagian.</li>
+<li><strong>02 Berkas Persyaratan</strong> — <em>&quot;Unggah BKD dan IKD dalam satu file PDF.&quot;</em> Untuk setiap berkas:
+<ul>
+<li>Bila sudah ada berkas tersimpan, nama berkas tampil pada kotak hijau dengan tombol
+<strong>Lihat</strong> dan keterangan <strong>Berkas saat ini</strong>.</li>
+<li>Pilih berkas baru melalui tombol <strong>Choose File</strong>; keterangan di bawahnya menyebut format
+dan batas ukuran serta pesan <em>&quot;Kosongkan jika tidak ingin mengganti berkas.&quot;</em></li>
+<li>Tekan <strong>Simpan Berkas</strong>.</li>
+</ul>
+</li>
+</ol>
+<p>Bila ada isian bermasalah, muncul kotak <em>&quot;Terdapat N isian yang perlu diperbaiki sebelum berkas
+dapat disimpan.&quot;</em> Berkas yang sudah diajukan akan terkunci: aplikasi menampilkan pesan
+<strong>&quot;Berkas periode ini sudah diajukan&quot;</strong> beserta status dan keterangan <em>&quot;Berkas tidak dapat
+diubah selama menunggu verifikasi admin.&quot;</em></p>
+<p>Bila admin menolak berkas, halaman menampilkan kotak merah <strong>&quot;Berkas ditolak admin — unggah
+ulang berkas di bawah ini.&quot;</strong> beserta catatan admin, misalnya <em>&quot;IKD: Persetujuan dibatalkan
+admin. Silakan periksa dan unggah ulang berkas IKD.&quot;</em> Unggah ulang berkas yang diminta, lalu
+ajukan kembali.</p>
+<h2>6.3 Mengajukan berkas ke admin</h2>
+<p>Di bawah formulir terdapat tabel berkas tersimpan dengan keterangan <em>&quot;Ajukan berkas ke admin
+untuk diverifikasi. Berkas yang ditolak dapat diperbaiki lalu diajukan ulang.&quot;</em></p>
+<ul>
+<li>Setiap baris menampilkan periode, berkas, dan status berwarna.</li>
+<li>Tombol <strong>Ajukan</strong> pada baris mengirim berkas periode tersebut. Konfirmasi berjudul
+<strong>Ajukan berkas?</strong> mengingatkan bahwa <em>&quot;Berkas yang diajukan tidak dapat diubah sampai admin
+memberi keputusan.&quot;</em></li>
+<li>Bila ada beberapa periode yang berkasnya sudah lengkap, aplikasi menampilkan keterangan
+<em>&quot;N periode siap diajukan.&quot;</em> dan tombol <strong>Ajukan</strong> untuk mengirim semuanya sekaligus.</li>
+<li>Bila belum ada berkas, tabel menampilkan <strong>&quot;Belum ada berkas tersimpan&quot;</strong> dengan penjelasan
+<em>&quot;Belum ada berkas lengkap (BKD &amp; IKD) yang bisa diajukan.&quot;</em></li>
+</ul>
+<h2>6.4 Riwayat IKD</h2>
+<p>Menu <strong>Riwayat IKD</strong> menampilkan riwayat pengajuan berkas beserta keputusan admin.</p>
+<p><img src="images/15-riwayat-ikd.png" alt="Gambar 15 — Halaman riwayat IKD" /></p>
+<p><em>Gambar 15. Riwayat IKD: tabel usulan BKD &amp; IKD beserta status dan catatan admin.</em></p>
+<ul>
+<li>Judul halaman <strong>Riwayat IKD</strong>, keterangan <em>&quot;Berkas BKD &amp; IKD yang sudah diajukan beserta
+keputusan admin per berkas.&quot;</em></li>
+<li>Tombol <strong>Berkas IKD</strong> di kanan atas membuka halaman unggah (bagian 6.2).</li>
+<li>Kartu <strong>Daftar Usulan BKD &amp; IKD</strong> menampilkan jumlah data, kotak <strong>Cari periode atau
+status…</strong>, dan kolom <strong>Periode</strong>, <strong>File</strong>, <strong>Status</strong>, <strong>Catatan</strong>, serta <strong>Aksi</strong>.
+Keterangan kartu: <em>&quot;Klik berkas untuk membuka, atau Edit untuk memperbaiki berkas yang
+ditolak admin.&quot;</em></li>
+<li>Bila belum ada data, tabel menampilkan <strong>&quot;Belum ada usulan&quot;</strong> dengan penjelasan <em>&quot;Usulan BKD
+&amp; IKD muncul di sini setelah berkas diajukan ke admin.&quot;</em></li>
+</ul>
+<p>Status yang mungkin muncul mengikuti keputusan admin: menunggu verifikasi, disetujui, atau
+ditolak. Berkas berstatus ditolak dapat diperbaiki melalui tombol <strong>Edit</strong> yang mengarah
+kembali ke formulir unggah.</p>
+<hr />
+<h1>7. Riwayat pengajuan dan panduan</h1>
+<h2>7.1 Riwayat Pengajuan</h2>
+<p>Menu <strong>Riwayat DUPAK</strong> (judul halaman <strong>Riwayat Pengajuan</strong>) menampilkan <em>&quot;Riwayat nilai PAK
+tiap periode beserta hasil ajuan DUPAK Anda.&quot;</em> Tombol <strong>+ Pengajuan Baru</strong> di kanan atas
+memulai usulan periode baru. Halaman ini memiliki dua tab.</p>
+<p><img src="images/14-riwayat-pengajuan.png" alt="Gambar 14 — Riwayat Pengajuan, tab Riwayat Nilai PAK" /></p>
+<p><em>Gambar 14. Riwayat Pengajuan: tab Riwayat Nilai PAK berisi periode yang sudah diajukan ke TIM PAK.</em></p>
+<h3>Tab 1 — Riwayat Nilai PAK</h3>
+<p>Keterangan tab: <em>&quot;Periode yang sudah diajukan ke TIM PAK. Gunakan Perbaikan untuk membetulkan
+entri, lalu Ajukan Ulang agar dinilai kembali.&quot;</em></p>
+<p>Kolom tabel: <strong>Periode</strong> (contoh <em>2026/2027 · Ganjil</em>), <strong>Diajukan</strong>, <strong>Dinilai</strong>, <strong>Nilai
+PAK</strong>, <strong>Status</strong>, dan <strong>Aksi</strong>. Tiap kolom judul dapat diurutkan; pemilih <strong>data per halaman</strong>
+mengatur jumlah baris; navigasi <strong>Pertama / Sebelumnya / Berikutnya / Terakhir</strong> tampil di bawah
+tabel bersama keterangan <em>&quot;Menampilkan 1–1 dari 1 data&quot;</em>.</p>
+<p>Arti tombol pada kolom <strong>Aksi</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Tombol</th>
+<th>Fungsi</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Lihat</strong></td>
+<td>Membuka rekap nilai periode tersebut. Baru aktif setelah TIM PAK menyimpan nilai PAK.</td>
+</tr>
+<tr>
+<td><strong>Perbaikan</strong></td>
+<td>Membuka formulir pengajuan pada tab Review agar entri dapat dibetulkan.</td>
+</tr>
+<tr>
+<td><strong>Ajukan Ulang</strong></td>
+<td>Mengirim kembali periode ke TIM PAK. Muncul konfirmasi <strong>Ajukan ulang nilai PAK?</strong> dengan pesan <em>&quot;Nilai PAK periode 2026/2027 · Ganjil akan diajukan ulang ke TIM PAK untuk dinilai kembali.&quot;</em></td>
+</tr>
+</tbody>
+</table>
+<p>Bila belum ada data, tabel menampilkan <strong>&quot;Belum ada nilai PAK&quot;</strong>.</p>
+<blockquote>
+<p><strong>Catatan</strong> — Pada periode yang sudah <strong>Disetujui</strong>, tombol <strong>Perbaikan</strong> dan <strong>Ajukan Ulang</strong>
+tidak aktif karena nilai sudah terkunci. Gunakan periode berikutnya untuk kegiatan baru.</p>
+</blockquote>
+<h3>Tab 2 — Riwayat Ajuan DUPAK</h3>
+<p>Tab ini memuat DUPAK yang sudah diteruskan ke admin. Kolom: <strong>Periode</strong>, <strong>Nilai PAK</strong>,
+<strong>Dinilai</strong>, <strong>Hasil Pengajuan</strong>, dan <strong>Aksi</strong>. Tombol <strong>Lihat</strong> membuka rekap DUPAK, sedangkan
+<strong>Cetak PDF</strong> membuka versi cetak pada tab baru. Bila belum ada data, muncul <strong>&quot;Belum ada ajuan
+DUPAK&quot;</strong>.</p>
+<h2>7.2 Panduan Pengajuan</h2>
+<p>Menu <strong>Panduan Pengajuan</strong> menyajikan petunjuk lengkap di dalam aplikasi, sehingga dosen tidak
+perlu membuka dokumen terpisah.</p>
+<p><img src="images/16-panduan-pengajuan.png" alt="Gambar 16 — Halaman Panduan Pengajuan" /></p>
+<p><em>Gambar 16. Panduan Pengajuan: diagram alur enam tahap dan langkah rinci per tahap.</em></p>
+<ul>
+<li>Judul <strong>Panduan Pengajuan Jabatan Akademik</strong>, keterangan <em>&quot;Alur lengkap dari pemilihan
+periode dan semester, pengisian komponen tiap bidang, sampai usulan dinilai TIM PAK dan
+diajukan ke admin.&quot;</em></li>
+<li>Diagram alur di atas: <strong>1 Pilih periode → 2 Isi 4 bidang → 3 Review → 4 TIM PAK → 5 Ajukan
+DUPAK → 6 Verifikasi admin</strong>.</li>
+<li>Sembilan kartu langkah bernomor, dari <strong>Pilih periode dan semester</strong> sampai <strong>Tindak lanjut
+hasil penilaian</strong>, masing-masing berisi butir-butir petunjuk.</li>
+<li>Bagian <strong>Arti status usulan</strong> berupa tabel dua kolom (<strong>Status</strong>, <strong>Keterangan</strong>) yang
+menjelaskan ketujuh status usulan (lihat Bab 14).</li>
+<li>Bagian <strong>Catatan penting</strong> berisi empat butir, antara lain: link bukti wajib dapat dibuka
+tanpa login (<em>&quot;siapa saja yang memiliki link&quot;</em>), satu periode hanya punya satu usulan, entri
+masih bisa diubah selama DUPAK belum disetujui, dan periode yang sudah disetujui tidak bisa
+diajukan ulang.</li>
+<li>Dua tombol di bawah: <strong>Mulai Pengajuan Baru</strong> dan <strong>Lihat Riwayat Pengajuan</strong>.</li>
+</ul>
+<hr />
+<h1>8. Administrasi data dosen</h1>
+<p>Bab ini untuk pengguna dengan role <strong>Admin</strong>. Menu terkait berada pada kelompok <strong>ADMINISTRASI</strong> di
+bilah samping: <strong>Data Dosen</strong> dan <strong>Riwayat Dosen</strong>.</p>
+<h2>8.1 Daftar data dosen</h2>
+<p><img src="images/21-data-dosen.png" alt="Gambar 21 — Halaman Data Dosen" /></p>
+<p><em>Gambar 21. Data Dosen: 53 data, tombol Import Excel dan Tambah Data, kolom Nama Dosen, NIDN, Pangkat, Role, Aksi.</em></p>
+<ul>
+<li>Judul <strong>Data Dosen</strong>, keterangan <em>&quot;Kelola data dosen: nama, NIDN, password, pangkat, dan role
+akses.&quot;</em></li>
+<li>Dua tombol kanan atas: <strong>Import Excel</strong> dan <strong>Tambah Data</strong>.</li>
+<li>Kartu <strong>Daftar Data Dosen</strong> menampilkan jumlah data (contoh <em>53 data</em>) serta keterangan
+<em>&quot;Nama, NIDN, pangkat, dan role akses tiap dosen.&quot;</em></li>
+<li>Kotak <strong>Cari nama atau NIDN…</strong> menyaring tabel; pemilih <strong>data per halaman</strong> mengatur jumlah
+baris; tiap judul kolom dapat diurutkan.</li>
+<li>Kolom: kotak centang, <strong>Nama Dosen</strong>, <strong>NIDN</strong>, <strong>Pangkat</strong>, <strong>Role</strong>, <strong>Aksi</strong>.
+<ul>
+<li><strong>Role</strong> tampil sebagai lencana: <strong>Dosen</strong>, <strong>TENDIK</strong>, <strong>TIM PAK</strong>, atau <strong>Admin</strong>. Dosen
+yang juga anggota TIM PAK menampilkan dua lencana sekaligus (contoh: <em>Dosen</em> dan <em>TIM PAK</em>).</li>
+<li><strong>Aksi</strong> berisi ikon pensil (ubah) dan tempat sampah (hapus). Akun admin sendiri hanya
+memiliki ikon pensil.</li>
+</ul>
+</li>
+<li>Kotak centang pada baris mengaktifkan tombol <strong>Hapus terpilih</strong> di kanan atas tabel untuk
+menghapus beberapa data sekaligus (dengan konfirmasi).</li>
+<li>Bila tabel kosong, muncul <strong>&quot;Belum ada data dosen.&quot;</strong></li>
+</ul>
+<h2>8.2 Menambah dan mengubah data dosen</h2>
+<p><img src="images/22-tambah-data-dosen.png" alt="Gambar 22 — Formulir Tambah Data Dosen" /></p>
+<p><em>Gambar 22. Formulir Tambah Data Dosen: bagian Identitas &amp; Akses.</em></p>
+<ol>
+<li>Dari halaman Data Dosen, tekan <strong>Tambah Data</strong> (atau ikon pensil untuk mengubah).</li>
+<li>Halaman <strong>Tambah Data Dosen</strong> / <strong>Edit Data Dosen</strong> terbuka. Pada mode ubah, <strong>ID</strong> akun
+ditampilkan di atas formulir, misalnya <code>#34</code>.</li>
+<li>Lengkapi bagian <strong>01 Identitas &amp; Akses</strong> — <em>&quot;Lengkapi data dosen, jabatan akademik, dan role
+akses.&quot;</em></li>
+</ol>
+<table>
+<thead>
+<tr>
+<th>Isian</th>
+<th>Wajib</th>
+<th>Keterangan</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Nama Dosen</strong></td>
+<td>Ya</td>
+<td>Nama lengkap beserta gelar, misalnya <em>Caraka Yoga Aprillya, M.Pd.</em></td>
+</tr>
+<tr>
+<td><strong>NIDN</strong></td>
+<td>Ya</td>
+<td>Nomor Induk Dosen Nasional.</td>
+</tr>
+<tr>
+<td><strong>Nomor WhatsApp</strong></td>
+<td>Tidak</td>
+<td>Contoh format <code>0812-3456-7890</code>. Keterangan: <em>&quot;Dipakai menerima notifikasi pengajuan via WhatsApp.&quot;</em></td>
+</tr>
+<tr>
+<td><strong>Memiliki Jabatan Akademik?</strong></td>
+<td>Ya</td>
+<td>Pilihan <strong>Ya</strong> atau <strong>Tidak</strong>. Memilih <strong>Tidak</strong> menonaktifkan dua isian di bawahnya — dipakai untuk dosen yang masih mengajukan jabatan pertama.</td>
+</tr>
+<tr>
+<td><strong>Jabatan Akademik</strong></td>
+<td>Ya (bila <strong>Ya</strong>)</td>
+<td>Dropdown dengan pencarian <em>&quot;Cari jabatan akademik…&quot;</em>, misalnya <em>Asisten Ahli</em>, <em>Lektor</em>, <em>Lektor Kepala</em>, <em>Guru Besar</em>.</td>
+</tr>
+<tr>
+<td><strong>Pangkat</strong></td>
+<td>Ya (bila <strong>Ya</strong>)</td>
+<td>Dropdown dengan pencarian <em>&quot;Cari pangkat…&quot;</em>, misalnya <em>III/b / Penata Muda Tingkat I</em>.</td>
+</tr>
+<tr>
+<td><strong>Role</strong></td>
+<td>Ya</td>
+<td>Kotak centang <strong>Dosen</strong>, <strong>TENDIK</strong>, <strong>TIM PAK</strong>, <strong>Admin</strong>. Keterangan: <em>&quot;Satu user dapat memiliki lebih dari satu role.&quot;</em></td>
+</tr>
+<tr>
+<td><strong>Password</strong></td>
+<td>Ya saat tambah</td>
+<td>Saat mengubah data, kosongkan bila password tidak ingin diganti.</td>
+</tr>
+<tr>
+<td><strong>Konfirmasi Password</strong></td>
+<td>Ya saat tambah</td>
+<td>Harus sama dengan isian password.</td>
+</tr>
+</tbody>
+</table>
+<ol start="4">
+<li>Tekan <strong>Simpan Data</strong> (atau <strong>Simpan Perubahan</strong> pada mode ubah), atau <strong>Batal</strong> untuk
+kembali tanpa menyimpan.</li>
+<li>Bila ada isian bermasalah, muncul kotak <em>&quot;Periksa kembali data Anda.&quot;</em> dengan jumlah isian
+yang perlu diperbaiki dan pesan merah di bawah isian terkait.</li>
+</ol>
+<blockquote>
+<p><strong>Peringatan</strong> — NIDN harus unik. Bila NIDN sudah dipakai akun lain, penyimpanan ditolak.
+Periksa kembali daftar sebelum menambah data baru agar tidak terjadi duplikat.</p>
+</blockquote>
+<h2>8.3 Import data dosen dari Excel</h2>
+<p><img src="images/23-import-data-dosen.png" alt="Gambar 23 — Halaman Import Data Dosen" /></p>
+<p><em>Gambar 23. Import Data Dosen: unduh template, unggah berkas, dan progres per batch.</em></p>
+<ol>
+<li>Dari halaman Data Dosen, tekan <strong>Import Excel</strong>.</li>
+<li>Halaman <strong>Import Data Dosen</strong> terbuka dengan keterangan <em>&quot;Unggah berkas Excel berisi data
+dosen. Berkas dihapus otomatis setelah semua baris tersimpan.&quot;</em></li>
+<li>Pada bagian <strong>Unduh template</strong>, tekan <strong>Unduh Template</strong>. Keterangan: <em>&quot;Template berisi judul
+kolom dan satu baris contoh. Jangan ubah urutan kolom.&quot;</em> Tabel pratinjau menampilkan judul
+kolom dan baris contoh.</li>
+<li>Pada bagian <strong>Unggah berkas</strong>, pilih berkas <strong>Berkas Excel</strong> — <em>&quot;Format .xlsx, maksimal 10
+MB.&quot;</em></li>
+<li>Jalankan import. Bilah progres menampilkan persentase dengan keterangan <strong>Mengunggah
+berkas…</strong> lalu proses penyimpanan. Keterangan halaman: <em>&quot;Pilih berkas, lalu jalankan import.
+Progres tersimpan per batch baris.&quot;</em></li>
+<li>Bila gagal, muncul pesan seperti <em>&quot;Sesi berakhir. Muat ulang halaman lalu ulangi.&quot;</em> atau
+<em>&quot;Koneksi terputus saat mengunggah berkas.&quot;</em> Muat ulang halaman lalu ulangi. Tekan
+<strong>Batal</strong> atau <strong>Kembali</strong> untuk keluar.</li>
+</ol>
+<blockquote>
+<p><strong>Catatan</strong> — Jangan menutup tab selama proses import berjalan. Import disimpan per batch,
+sehingga bila koneksi terputus cukup muat ulang halaman lalu jalankan ulang.</p>
+</blockquote>
+<h2>8.4 Riwayat dosen</h2>
+<p><img src="images/24-riwayat-dosen.png" alt="Gambar 24 — Halaman Riwayat Dosen" /></p>
+<p><em>Gambar 24. Riwayat Dosen: daftar dosen beserta NIDN, program studi, dan jabatan akademik.</em></p>
+<ul>
+<li>Judul <strong>Riwayat Dosen</strong>, kotak <strong>Cari dosen</strong> dengan placeholder <em>&quot;Cari nama, NIDN, prodi…&quot;</em>.</li>
+<li>Kolom: <strong>Nama</strong>, <strong>NIDN</strong>, <strong>Program Studi</strong>, <strong>Jabatan Akademik</strong>, <strong>Aksi</strong>. Tombol pada
+kolom <strong>Aksi</strong> membuka detail riwayat dosen tersebut.</li>
+<li>Bila tabel kosong, muncul <strong>&quot;Belum ada data dosen.&quot;</strong></li>
+</ul>
+<p>Klik salah satu baris untuk membuka halaman detail.</p>
+<p><img src="images/25-detail-riwayat-dosen.png" alt="Gambar 25 — Detail riwayat dosen" /></p>
+<p><em>Gambar 25. Detail Riwayat Dosen: profil, riwayat pendidikan, pekerjaan, dan angka kredit.</em></p>
+<p>Halaman detail menampilkan nama dosen sebagai judul, tombol <strong>Profil</strong>, lalu beberapa kartu:</p>
+<table>
+<thead>
+<tr>
+<th>Bagian</th>
+<th>Kolom</th>
+<th>Bila kosong</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Riwayat Pendidikan</strong></td>
+<td>Jenjang, Institusi / Jurusan, Tahun, Berkas</td>
+<td><strong>Belum ada riwayat pendidikan.</strong></td>
+</tr>
+<tr>
+<td><strong>Riwayat Pekerjaan</strong></td>
+<td>SK, Tanggal SK, Masa Kerja, Berkas</td>
+<td><strong>Belum ada riwayat kepangkatan.</strong></td>
+</tr>
+<tr>
+<td>Riwayat jabatan</td>
+<td>—</td>
+<td><strong>Belum ada riwayat jabatan.</strong></td>
+</tr>
+<tr>
+<td>Riwayat angka kredit</td>
+<td>—</td>
+<td><strong>Belum ada riwayat angka kredit.</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Kolom <strong>Berkas</strong> berisi tautan untuk membuka berkas pendukung milik dosen yang sedang dibuka,
+bukan berkas pribadi admin.</p>
+<hr />
+<h1>9. Verifikasi dan penerusan ajuan</h1>
+<p>Tiga menu pada kelompok <strong>ADMINISTRASI</strong> menangani berkas yang masuk dari dosen:</p>
+<table>
+<thead>
+<tr>
+<th>Menu</th>
+<th>Isi yang ditangani</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Verifikasi Berkas</strong></td>
+<td>Berkas BKD &amp; IKD dosen tanpa jabatan akademik.</td>
+</tr>
+<tr>
+<td><strong>Ajuan PAK</strong></td>
+<td>Usulan nilai PAK yang perlu diteruskan ke anggota TIM PAK.</td>
+</tr>
+<tr>
+<td><strong>Verifikasi DUPAK</strong> (dibuka dari Ajuan PAK)</td>
+<td>Keputusan akhir atas DUPAK: setujui, butuh perbaikan, atau tolak.</td>
+</tr>
+</tbody>
+</table>
+<h2>9.1 Verifikasi Berkas Syarat Khusus</h2>
+<p><img src="images/26-verifikasi-berkas.png" alt="Gambar 26 — Halaman Verifikasi Berkas" /></p>
+<p><em>Gambar 26. Verifikasi Berkas Syarat Khusus: satu baris per berkas dengan status dan aksi per baris.</em></p>
+<p>Keterangan halaman: <em>&quot;Berkas BKD dan IKD yang diajukan dosen tanpa jabatan akademik. Keputusan
+langsung tampil pada tabel berkas dosen.&quot;</em></p>
+<p>Kartu <strong>Berkas Masuk</strong> menjelaskan aturan kerja:</p>
+<ul>
+<li><em>&quot;Satu baris per file; keputusan pada satu baris hanya berlaku untuk berkas tersebut.&quot;</em> Artinya
+berkas <strong>BKD</strong> dan <strong>IKD</strong> diverifikasi terpisah, meskipun periodenya sama.</li>
+<li><em>&quot;Ikon perisai untuk memverifikasi, ikon tempat sampah untuk menghapus berkas yang belum
+diverifikasi, dan ikon panah kembali untuk membatalkan persetujuan agar dosen dapat
+memperbaiki berkasnya.&quot;</em></li>
+</ul>
+<p>Kolom tabel: <strong>Dosen</strong> (nama dan NIDN beserta program studi), <strong>Periode</strong>, <strong>File</strong> (lencana
+<strong>BKD</strong> atau <strong>IKD</strong>), <strong>Status</strong>, <strong>Catatan</strong>, <strong>Aksi</strong>.</p>
+<p>Status yang tampil: <strong>Menunggu verifikasi</strong> (kuning), <strong>Diterima</strong> (hijau), <strong>Ditolak</strong> (merah).
+Catatan berisi tanda <em>—</em> bila kosong, atau teks dari admin, misalnya <em>&quot;Persetujuan dibatalkan
+admin. Silakan periksa dan unggah ulang berkas IKD.&quot;</em></p>
+<p>Langkah memverifikasi satu berkas:</p>
+<ol>
+<li>Gunakan <strong>Cari berkas</strong> (placeholder <em>&quot;Cari dosen, periode…&quot;</em>) atau pemilih <strong>data per
+halaman</strong> untuk menemukan baris yang dituju.</li>
+<li>Tekan ikon <strong>perisai</strong> pada kolom <strong>Aksi</strong>. Panel <strong>Keputusan</strong> terbuka di bawah baris
+tersebut.</li>
+<li>Pilih <strong>Diterima</strong> atau <strong>Ditolak</strong> dan isi catatan bila perlu.</li>
+<li>Simpan. Status pada baris berubah dan keputusan langsung terlihat oleh dosen pada halaman
+Indikator Kinerja Dosen.</li>
+</ol>
+<p>Ikon lain pada kolom <strong>Aksi</strong>:</p>
+<ul>
+<li><strong>Tempat sampah</strong> — menghapus berkas yang belum diverifikasi.</li>
+<li><strong>Panah kembali</strong> — membatalkan persetujuan; dipakai ketika dosen perlu memperbaiki berkas.
+Setelah dibatalkan, dosen dapat mengunggah ulang dan mengajukan kembali.</li>
+</ul>
+<p>Bila belum ada berkas yang masuk, tabel menampilkan <strong>&quot;Belum ada berkas masuk&quot;</strong>.</p>
+<h2>9.2 Ajuan PAK: meneruskan usulan ke TIM PAK</h2>
+<p><img src="images/27-ajuan-pak.png" alt="Gambar 27 — Halaman Ajuan PAK" /></p>
+<p><em>Gambar 27. Ajuan PAK: dua data masuk, satu menunggu penugasan, satu sudah diteruskan.</em></p>
+<p>Keterangan halaman: <em>&quot;Ajuan dosen yang masuk ke admin kepegawaian. Teruskan setiap ajuan kepada
+satu anggota TIM PAK yang dipilih; hanya TIM PAK tersebut yang dapat melihat dan menilai
+ajuannya.&quot;</em></p>
+<ul>
+<li>Kartu <strong>Ajuan PAK Masuk</strong> menampilkan jumlah data dan lencana jumlah yang <strong>menunggu
+penugasan</strong>, contoh <em>2 data</em> dan <em>1 menunggu penugasan</em>. Petunjuk: <em>&quot;Tekan Tugaskan pada baris
+berstatus menunggu penugasan, lalu pilih satu anggota TIM PAK.&quot;</em></li>
+<li>Dua penyaring di kanan: <strong>Cari ajuan PAK</strong> (placeholder <em>&quot;Cari dosen, periode, TIM PAK…&quot;</em>) dan
+<strong>Filter status ajuan PAK</strong> dengan pilihan <strong>Semua status</strong>, <strong>Menunggu penugasan admin</strong>,
+<strong>Menunggu penilaian</strong>, dan <strong>Sudah dinilai</strong>.</li>
+<li>Kolom: <strong>Dosen</strong> (nama dan NIDN), <strong>Periode</strong>, <strong>Status</strong>, <strong>TIM PAK</strong>, <strong>Diajukan</strong>, <strong>Aksi</strong>.</li>
+</ul>
+<p>Langkah meneruskan ajuan:</p>
+<ol>
+<li>Cari baris berstatus <strong>Menunggu penugasan admin</strong>.</li>
+<li>Tekan <strong>→ Tugaskan</strong> pada kolom <strong>Aksi</strong>. Panel penugasan terbuka.</li>
+<li>Pilih <strong>Anggota TIM PAK</strong> * dari dropdown <strong>Pilih TIM PAK</strong> (pencarian <em>&quot;Cari nama TIM
+PAK…&quot;</em>). Bila belum ada anggota aktif, muncul pesan <em>&quot;Belum ada pengguna TIM PAK aktif.
+Tambahkan peran TIM PAK pada menu Data Dosen.&quot;</em></li>
+<li>Tekan <strong>Teruskan ke TIM PAK</strong>. Peringatan pada panel: <em>&quot;Setelah diteruskan, hanya TIM PAK yang
+dipilih yang dapat melihat dan menilai ajuan ini.&quot;</em></li>
+<li>Status berubah menjadi <strong>Menunggu penilaian</strong>; kolom <strong>TIM PAK</strong> menampilkan nama penilai
+beserta lencana <strong>TIM PAK</strong>, dan kolom <strong>Aksi</strong> menampilkan <strong>Sudah diteruskan</strong>.</li>
+</ol>
+<blockquote>
+<p><strong>Peringatan</strong> — Penugasan bersifat mengikat. Bila penugasan gagal diproses, muncul pesan
+<strong>&quot;Penugasan TIM PAK gagal diproses.&quot;</strong> Periksa apakah anggota TIM PAK masih aktif, lalu ulangi.</p>
+</blockquote>
+<p>Bila belum ada ajuan, tabel menampilkan <strong>&quot;Belum ada ajuan PAK&quot;</strong> dengan penjelasan <em>&quot;Ajuan dosen
+akan tampil di sini setelah dikirim ke TIM PAK.&quot;</em></p>
+<h2>9.3 Verifikasi DUPAK</h2>
+<p>Halaman ini dibuka ketika admin memeriksa DUPAK yang sudah diajukan dosen (status <strong>Diajukan
+DUPAK</strong>).</p>
+<p><img src="images/28-verifikasi-dupak.png" alt="Gambar 28 — Halaman Verifikasi DUPAK" /></p>
+<p><em>Gambar 28. Verifikasi DUPAK: identitas dosen, rekap DUPAK lengkap, dan panel Keputusan Verifikasi.</em></p>
+<p>Bagian atas halaman:</p>
+<ul>
+<li>Judul berupa nama dosen (contoh <em>Lina Erviana, S.Si., M.Pd.Si.</em>), di bawahnya periode
+(<em>2024/2025 · Genap</em>), NIDN, program studi, dan lencana status <strong>Diajukan DUPAK</strong>.</li>
+<li>Tombol <strong>← Kembali ke Dashboard</strong> di kanan atas.</li>
+<li>Kotak <strong>CATATAN TERAKHIR</strong> berisi catatan admin sebelumnya, bila ada.</li>
+</ul>
+<p>Rekap DUPAK ditampilkan persis seperti dokumen resmi, dengan kolom tabel sembilan lajur:</p>
+<ol>
+<li>Baris kepala: <strong>INSTANSI : <nama perguruan tinggi></strong> dan <strong>MASA PENILAIAN : <rentang></strong>
+(tertulis <em>—</em> bila dosen belum mengisi).</li>
+<li><strong>KETERANGAN PERORANGAN</strong> dengan sepuluh butir bernomor: 1 Nama, 2 NUPTK/NIDN, 3 Tempat dan
+Tanggal Lahir, 4 Jenis Kelamin, 5 Pendidikan Terakhir, 6 Jabatan Akademik Dosen, Angka
+Kredit/TMT (dengan sub-butir a. Jurusan/Program Studi dan b. Bidang Ilmu), 7 Pangkat dan
+Golongan Ruang/TMT, 8 Masa kerja golongan lama, 9 Masa kerja golongan baru, 10 Unit Kerja.</li>
+<li>Unsur yang dinilai per bidang — <strong>PENDIDIKAN (BIDANG A)</strong> dan seterusnya — dengan sub-unsur,
+butir kegiatan, angka kredit <strong>LAMA</strong>, <strong>BARU</strong>, <strong>JUMLAH</strong>, serta tombol <strong>Bukti</strong> pada
+kolom <strong>LINK BUKTI</strong>.</li>
+<li>Baris pengesahan di bagian bawah rekap.</li>
+</ol>
+<p>Panel <strong>Keputusan Verifikasi</strong> di bawah rekap berisi petunjuk <em>&quot;Pilih satu keputusan, isi alasan
+bila diperlukan, lalu tekan Simpan.&quot;</em></p>
+<table>
+<thead>
+<tr>
+<th>Keputusan</th>
+<th>Deskripsi pada layar</th>
+<th>Konsekuensi</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Setujui</strong></td>
+<td><em>&quot;DUPAK diterima dan lanjut ke penetapan angka kredit.&quot;</em></td>
+<td>Status <strong>Disetujui</strong>; nilai PAK terkunci dan DUPAK siap dicetak dosen.</td>
+</tr>
+<tr>
+<td><strong>Butuh Perbaikan</strong></td>
+<td><em>&quot;Dikembalikan ke dosen dengan catatan perbaikan.&quot;</em></td>
+<td>Status <strong>Butuh Perbaikan</strong>; dosen membetulkan entri lalu mengajukan ulang.</td>
+</tr>
+<tr>
+<td><strong>Tolak</strong></td>
+<td><em>&quot;DUPAK tidak dapat diproses.&quot;</em></td>
+<td>Status <strong>Ditolak</strong>; usulan dihentikan.</td>
+</tr>
+</tbody>
+</table>
+<p>Isian pada panel:</p>
+<ul>
+<li><strong>Nomor Surat Keputusan</strong> * — wajib saat memilih <strong>Setujui</strong>. Contoh format pada kolom:
+<code>001/SK/PAK/2026</code>. Panjang maksimal 150 karakter.</li>
+<li><strong>Masa Penilaian</strong> — menampilkan rentang yang diisi dosen, atau <strong>&quot;Belum diisi dosen&quot;</strong>.
+Keterangan: <em>&quot;Sesuai masukan dosen saat mengusulkan DUPAK.&quot;</em></li>
+<li><strong>Alasan / catatan untuk dosen</strong> — placeholder <em>&quot;Tuliskan alasan perbaikan atau penolakan...&quot;</em>.
+Wajib diisi saat memilih <strong>Butuh Perbaikan</strong> atau <strong>Tolak</strong>.</li>
+<li>Tekan <strong>Simpan</strong>. Konfirmasi <strong>Simpan keputusan?</strong> mengingatkan bahwa <em>&quot;Keputusan verifikasi
+akan disimpan dan langsung terlihat oleh dosen.&quot;</em></li>
+</ul>
+<p>Keterangan penutup: <em>&quot;Keputusan langsung tampil pada halaman Riwayat Pengajuan dosen.&quot;</em></p>
+<blockquote>
+<p><strong>Peringatan</strong> — Keputusan <strong>Setujui</strong> mengunci nilai PAK: TIM PAK tidak dapat menilai ulang dan
+dosen tidak dapat mengajukan ulang periode tersebut. Pastikan nomor SK sudah benar sebelum
+menyimpan.</p>
+</blockquote>
+<hr />
+<h1>10. Ruang Admin — surat, SKP, dan data kepegawaian</h1>
+<h2>10.1 Surat: dokumen kelengkapan usulan</h2>
+<p>Menu <strong>Surat</strong> pada kelompok <strong>ADMINISTRASI</strong> memuat semua dokumen surat kelengkapan usulan
+jabatan akademik. Keterangan halaman: <em>&quot;Dokumen surat kelengkapan usulan jabatan akademik
+dosen.&quot;</em></p>
+<p><img src="images/29-surat.png" alt="Gambar 29 — Halaman Surat, tab BAP Senat" /></p>
+<p><em>Gambar 29. Halaman Surat: enam tab jenis surat, formulir BAP Senat terbuka.</em></p>
+<p>Enam tab dari kiri ke kanan:</p>
+<table>
+<thead>
+<tr>
+<th>Tab</th>
+<th>Isi</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>1 BAP Senat</strong></td>
+<td>Berita Acara Persetujuan Senat atas usulan kenaikan jabatan akademik dosen.</td>
+</tr>
+<tr>
+<td><strong>2 BAKI</strong></td>
+<td>Berita Acara Komite Integritas Akademik.</td>
+</tr>
+<tr>
+<td><strong>3 Dokmas Jaka</strong></td>
+<td>Dokumen Formasi Jabatan Akademik Dosen. Tab ini masih menampilkan <strong>Belum ada isi</strong>.</td>
+</tr>
+<tr>
+<td><strong>4 Pakta Integritas</strong></td>
+<td>Pernyataan pakta integritas beserta lembar validasi karya ilmiah.</td>
+</tr>
+<tr>
+<td><strong>5 Surat Pernyataan</strong></td>
+<td>Surat pernyataan pimpinan untuk dosen yang diusulkan.</td>
+</tr>
+<tr>
+<td><strong>6 Surat Pengantar</strong></td>
+<td>Surat pengantar usulan, perorangan atau kolektif.</td>
+</tr>
+</tbody>
+</table>
+<p>Setiap tab memakai pola yang sama: formulir di atas (<strong>Simpan</strong> / <strong>Perbarui</strong>), lalu kartu daftar
+berisi surat yang sudah tersimpan dengan keterangan <em>&quot;… terbaru di atas&quot;</em>, kotak pencarian, dan
+tombol <strong>Cetak</strong> per baris. Bila ada isian bermasalah, muncul pesan <em>&quot;Terdapat N isian yang perlu
+diperbaiki sebelum … dapat disimpan.&quot;</em></p>
+<h3>BAP Senat</h3>
+<p>Bagian <strong>Data Berita Acara Persetujuan Senat</strong>:</p>
+<ul>
+<li><strong>Nomor BAP</strong> * — contoh format <code>001/BAP-SENAT/X/2026</code>.</li>
+<li><strong>Tanggal</strong> * — format <code>DD-MM-YYYY</code>; dapat dipilih lewat kalender atau diketik.</li>
+<li><strong>Nama Dosen</strong> * — dropdown <strong>Pilih dosen</strong>.</li>
+<li><strong>Bidang Keilmuan</strong> * — dropdown <strong>Pilih bidang keilmuan</strong>, dikelompokkan per rumpun ilmu A–F:
+A. Komputer &amp; Teknologi, B. Bahasa &amp; Linguistik, C. Pendidikan &amp; Keguruan, D. Humaniora, Sosial &amp;
+Keagamaan, E. Ekonomi, dan F. IPA (Pendidikan IPA, Pendidikan Sains, Pendidikan Biologi).</li>
+<li><strong>Pilihan Kenaikan Jabatan Akademik</strong> * — tujuan kenaikan, misalnya <em>Lektor</em> atau <em>Lektor
+Kepala</em>.</li>
+<li><strong>Tempat Pelaksanaan</strong> * — contoh <em>Ruang Rapat Senat Lt. 2</em>. Dicetak pada daftar hadir rapat
+(halaman 2).</li>
+<li><strong>Materi Rapat</strong> * — contoh <em>Pemberian pertimbangan/persetujuan kenaikan jabatan akademik
+dosen</em>.</li>
+<li><strong>Jumlah Kuorum</strong> * — dua pilihan: <strong>Otomatis (jumlah anggota senat)</strong> atau <strong>Manual (isi
+sendiri)</strong>. Pada mode manual, isi <strong>Jumlah Kuorum Manual</strong> (contoh <code>12</code>). Angka ini tercetak
+pada kalimat <em>&quot;yang dihadiri oleh sejumlah … orang anggota senat&quot;</em>.</li>
+<li><strong>Anggota Senat</strong> * — pilih beberapa anggota dengan menahan <code>Ctrl</code> (Windows) atau <code>Cmd</code>
+(macOS). Keterangan pada layar: <em>&quot;Urutan pilihan menentukan urutan nama pada daftar hadir
+cetak: pilihan pertama paling atas, pilihan …&quot;</em></li>
+</ul>
+<p>Tombol <strong>Simpan</strong> menyimpan BAP; <strong>Perbarui</strong> muncul saat menyunting. Daftar <strong>Berita Acara
+Persetujuan Senat</strong> memiliki pencarian <em>&quot;Cari nomor atau dosen…&quot;</em> dan tombol <strong>Cetak</strong> untuk
+membuka PDF BAP.</p>
+<h3>BAKI</h3>
+<p>Bagian <strong>Data Berita Acara Komite Integritas Akademik</strong>:</p>
+<ul>
+<li><strong>Nomor Surat</strong> * — contoh <code>001/BAKI/X/2026</code>.</li>
+<li><strong>Tanggal</strong> * — format <code>DD-MM-YYYY</code>.</li>
+<li><strong>Tempat Pelaksanaan</strong> — contoh <em>Ruang Rapat Tim Komite Lt. 2</em>, dicetak pada daftar hadir
+rapat halaman 2.</li>
+<li>Pilihan dosen yang dibahas serta tombol <strong>Simpan</strong> / <strong>Perbarui</strong>.</li>
+</ul>
+<p>Daftar <strong>BAKI</strong> menyediakan pencarian <em>&quot;Cari nomor atau dosen…&quot;</em> dan tombol <strong>Cetak</strong>.</p>
+<h3>Pakta Integritas</h3>
+<p>Formulir memuat <strong>Tanggal Pakta</strong> (format <code>DD-MM-YYYY</code>) serta bagian validasi:</p>
+<ul>
+<li><strong>Nomor Validasi Surat</strong> — contoh <code>750/STKIP PGRI PACITAN/KL/TX/2025</code>. Keterangan: <em>&quot;Dipakai
+sebagai nomor pada lembar validasi karya ilmiah (opsional).&quot;</em></li>
+<li><strong>Tanggal Pengesahan Validasi</strong> — dicetak sebagai <em>&quot;<Kota>, tanggal&quot;</em> pada lembar validasi;
+kosong berarti memakai tanggal pakta.</li>
+<li>Daftar karya ilmiah dosen yang dapat dicentang. Keterangan: <em>&quot;Karya yang dicentang akan dicetak
+pada tabel surat. Tanpa centang berarti semua karya ilmiah dosen dicetak.&quot;</em> Bila dosen belum
+punya karya, muncul <strong>&quot;Belum ada karya ilmiah yang terdaftar untuk dosen ini.&quot;</strong></li>
+<li>Tombol <strong>Simpan</strong> / <strong>Perbarui</strong>. Pada daftar <strong>Pakta Integritas</strong>, tombol <strong>Cetak</strong> membuka
+dialog pilihan jenis cetak: <strong>Pernyataan</strong> atau <strong>Validasi</strong>.</li>
+</ul>
+<h3>Surat Pernyataan</h3>
+<p>Keterangan: <em>&quot;Catat surat pernyataan pimpinan untuk dosen yang diusulkan beserta tanggal
+suratnya.&quot;</em> Isian:</p>
+<table>
+<thead>
+<tr>
+<th>Isian</th>
+<th>Keterangan</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Nama Pimpinan</strong> *</td>
+<td>Dropdown <strong>Pilih pimpinan</strong> dengan pencarian <em>&quot;Cari nama pimpinan…&quot;</em>. Tiap pilihan tampil sebagai <em>Nama — Jabatan Struktural</em>. Bila kosong, muncul <strong>&quot;Belum ada pejabat struktural.&quot;</strong> dengan tautan untuk menambahkannya lebih dulu.</td>
+</tr>
+<tr>
+<td><strong>Dosen Yang Di Usulkan</strong> *</td>
+<td>Dropdown <strong>Pilih dosen</strong> dengan pencarian <em>&quot;Cari nama dosen…&quot;</em>; tiap pilihan tampil sebagai <em>Nama — NIDN</em>.</td>
+</tr>
+<tr>
+<td><strong>Tanggal Surat</strong> *</td>
+<td>Format <code>DD-MM-YYYY</code>.</td>
+</tr>
+</tbody>
+</table>
+<p>Daftar <strong>Pernyataan Pimpinan</strong> menampilkan surat tersimpan sebagai <strong>No. <nomor surat></strong> dengan
+tombol <strong>Cetak</strong> dan <strong>Ubah</strong>. Bila belum ada, muncul petunjuk <em>&quot;Isi formulir di atas untuk
+menambahkan surat pertama.&quot;</em></p>
+<h3>Surat Pengantar</h3>
+<p>Keterangan: <em>&quot;Surat pengantar usulan jabatan akademik dosen — perorangan (satu dosen) atau
+kolektif (beberapa dosen).&quot;</em></p>
+<ul>
+<li><strong>Bentuk surat</strong> — pilih <strong>Perorangan</strong> (<em>&quot;Surat memuat satu dosen (dipilih dari daftar
+nama).&quot;</em>) atau <strong>Kolektif</strong> (<em>&quot;Surat memuat lebih dari satu dosen (dipilih dari beberapa nama,
+dicetak sebagai tabel).&quot;</em>).</li>
+<li><strong>Nomor Surat</strong> * — contoh <code>613/STKIP PGRI/KP/III/2026</code>.</li>
+<li><strong>Tanggal Surat</strong> * — format <code>DD-MM-YYYY</code>.</li>
+<li><strong>Lampiran</strong> — contoh <code>1 berkas</code>.</li>
+<li><strong>Perihal</strong> — contoh <em>Usulan Jabatan Akademik</em>.</li>
+<li><strong>Tujuan Surat (Yth.)</strong> — contoh <em>Kepala LLDIKTI Wilayah VII Jawa Timur</em>. Keterangan: <em>&quot;Dicetak
+pada baris pertama: 'Kepada. Yth. …'.&quot;</em></li>
+<li><strong>Kota Tujuan Surat</strong> — contoh <em>Surabaya</em>. Keterangan: <em>&quot;Dicetak pada baris ketiga, di bawah
+'di'.&quot;</em></li>
+<li><strong>Nama Dosen</strong> * — pada mode perorangan berupa dropdown <strong>Pilih dosen</strong>; pada mode kolektif
+berupa pilihan banyak dosen.</li>
+<li><strong>Diusulkan ke</strong> — hanya pada mode perorangan: jabatan akademik yang diusulkan, dicetak sebagai
+baris <strong>&quot;Diusulkan&quot;</strong> pada PDF.</li>
+</ul>
+<p>Daftar <strong>Surat Pengantar</strong> memiliki pencarian <em>&quot;Cari nama atau nomor surat…&quot;</em> dan tombol <strong>Cetak</strong>
+untuk membuka PDF surat.</p>
+<h2>10.2 SKP: Sasaran Kinerja Pegawai</h2>
+<p><img src="images/30-skp.png" alt="Gambar 30 — Halaman SKP" /></p>
+<p><em>Gambar 30. Halaman SKP: formulir Tambah Data SKP di atas dan Daftar SKP di bawah.</em></p>
+<p>Keterangan halaman: <em>&quot;Sasaran Kinerja Pegawai: dosen yang dinilai, pejabat penilai, atasan
+penilai, serta jangka waktu penilaian.&quot;</em></p>
+<p>Bagian <strong>01 Tambah Data SKP</strong> — <em>&quot;Lengkapi siapa yang dinilai, siapa penilainya, dan jangka
+waktunya.&quot;</em> Enam isian wajib, tersusun dua kolom:</p>
+<table>
+<thead>
+<tr>
+<th>Isian</th>
+<th>Pilihan</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Dosen yang Dinilai</strong> *</td>
+<td>Dropdown <strong>Pilih dosen</strong>.</td>
+</tr>
+<tr>
+<td><strong>Prodi Dosen yang Dinilai</strong> *</td>
+<td>Dropdown <strong>Pilih prodi</strong>.</td>
+</tr>
+<tr>
+<td><strong>Pejabat Penilai</strong> *</td>
+<td>Dropdown <strong>Pilih pejabat penilai</strong>.</td>
+</tr>
+<tr>
+<td><strong>Atasan Penilai</strong> *</td>
+<td>Dropdown <strong>Pilih atasan penilai</strong>.</td>
+</tr>
+<tr>
+<td><strong>Jangka Waktu Penilaian (Mulai)</strong> *</td>
+<td>Tanggal awal; keterangan <em>&quot;Klik ikon kalender untuk memilih tanggal mulai penilaian.&quot;</em></td>
+</tr>
+<tr>
+<td><strong>Jangka Waktu Penilaian (Akhir)</strong> *</td>
+<td>Tanggal akhir; keterangan <em>&quot;Klik ikon kalender untuk memilih tanggal akhir penilaian.&quot;</em></td>
+</tr>
+</tbody>
+</table>
+<p>Tekan <strong>+ Simpan</strong>. Bila menyunting data yang sudah ada, tombol berubah menjadi <strong>Simpan
+Perubahan</strong> dan tersedia <strong>Batal</strong>.</p>
+<p>Kartu <strong>Daftar SKP</strong> menampilkan jumlah data dan keterangan <em>&quot;Data SKP diurutkan dari jangka waktu
+terbaru.&quot;</em> Kotak pencarian berplaceholder <em>&quot;Cari dosen, status, atau penilai…&quot;</em>. Kolom: <strong>No</strong>,
+<strong>Dosen yang Dinilai</strong>, <strong>Status</strong>, <strong>Pejabat Penilai</strong>, <strong>Atasan Penilai</strong>, <strong>Jangka Waktu
+Penilaian</strong>, <strong>Aksi</strong> (ikon cetak, ubah, dan hapus). Bila kosong, muncul <strong>&quot;Belum ada data SKP&quot;</strong>.</p>
+<p>Tombol cetak membuka dua jenis berkas: halaman cetak SKP (<code>skp.cetak</code>) dan versi cetak dengan
+parameter <code>print</code>, keduanya pada tab baru.</p>
+<blockquote>
+<p><strong>Catatan</strong> — SKP menjadi dasar penilaian perilaku kerja dosen dan dapat disanggah lewat
+keberatan SKP (Bab 13). Pastikan pejabat penilai dan atasan penilai sudah benar sebelum
+menyimpan, karena keduanya menentukan siapa yang berhak menilai.</p>
+</blockquote>
+<h2>10.3 Data kepegawaian: jabatan dan kepangkatan</h2>
+<p>Kelompok menu <strong>KEPEGAWAIAN</strong> pada sidebar berisi tiga data master yang dipakai sebagai pilihan
+dropdown di seluruh aplikasi:</p>
+<table>
+<thead>
+<tr>
+<th>Menu</th>
+<th>Keterangan halaman</th>
+<th>Contoh isi</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Jabatan Akademik</strong></td>
+<td><em>&quot;Kelola daftar jabatan akademik dosen (mis. Asisten Ahli, Lektor, Lektor Kepala).&quot;</em></td>
+<td>Asisten Ahli, Lektor, Lektor Kepala, Guru Besar</td>
+</tr>
+<tr>
+<td><strong>Jabatan Struktural</strong></td>
+<td><em>&quot;Kelola daftar jabatan struktural pada lingkungan perguruan tinggi.&quot;</em></td>
+<td>Kepala Biro, Kepala Lembaga, Kepala UPT</td>
+</tr>
+<tr>
+<td><strong>Kepangkatan</strong></td>
+<td><em>&quot;Kelola daftar pangkat dan golongan kepegawaian dosen.&quot;</em></td>
+<td>Penata Tingkat I — <code>III/d</code></td>
+</tr>
+</tbody>
+</table>
+<h3>Jabatan Akademik</h3>
+<p><img src="images/31-jabatan-fungsional.png" alt="Gambar 31 — Halaman Jabatan Akademik" /></p>
+<p><em>Gambar 31. Daftar Jabatan Akademik beserta jumlah data, pencarian, dan aksi Edit/Hapus.</em></p>
+<p>Kartu <strong>Daftar Jabatan Akademik</strong> menampilkan lencana jumlah data (contoh <em>4 data</em>) dan keterangan
+<em>&quot;Data master hanya terdiri dari ID dan nama.&quot;</em> Tabel memuat kolom <strong>ID</strong>, <strong>NAMA</strong>, dan <strong>AKSI</strong>.
+Klik judul kolom <strong>ID</strong> atau <strong>NAMA</strong> untuk mengurutkan; tanda panah kecil menunjukkan kolom yang
+sedang dipakai.</p>
+<p>Langkah menambah data:</p>
+<ol>
+<li>Tekan <strong>+ Tambah Data</strong> di kanan atas.</li>
+<li>Isi <strong>Nama</strong> — placeholder <code>Contoh: Lektor Kepala</code>, maksimal 100 karakter.</li>
+<li>Tekan <strong>Simpan Data</strong>.</li>
+</ol>
+<p>Langkah mengubah: tekan <strong>Edit</strong> pada baris yang dituju, ubah <strong>Nama</strong>, lalu tekan <strong>Simpan
+Perubahan</strong>. Tombol <strong>Batal</strong> membatalkan tanpa menyimpan. Keterangan pada formulir: <em>&quot;Perubahan
+langsung tersimpan setelah tombol ditekan.&quot;</em></p>
+<p>Langkah menghapus: tekan <strong>Hapus</strong>, lalu setujui pertanyaan konfirmasi <em>&quot;Hapus data Jabatan
+Akademik '<nama>'? Tindakan ini tidak dapat dibatalkan.&quot;</em></p>
+<p>Kotak pencarian berplaceholder <em>&quot;Cari nama…&quot;</em> menyaring tabel seketika; tombol <strong>×</strong> di dalamnya
+membersihkan pencarian. Pilihan <strong>10 / 25 / 50 / 100</strong> di atas tabel mengatur jumlah baris per
+halaman.</p>
+<h3>Jabatan Struktural</h3>
+<p><img src="images/32-jabatan-struktural.png" alt="Gambar 32 — Halaman Jabatan Struktural" /></p>
+<p><em>Gambar 32. Daftar Jabatan Struktural dengan 24 data contoh.</em></p>
+<p>Tampilan dan langkah kerjanya sama dengan Jabatan Akademik: kartu <strong>Daftar Jabatan Struktural</strong>,
+pencarian <em>&quot;Cari nama…&quot;</em>, kolom <strong>ID</strong>, <strong>NAMA</strong>, <strong>AKSI</strong>, serta tombol <strong>+ Tambah Data</strong>.
+Bedanya hanya isi: jabatan struktural adalah jabatan di lingkungan perguruan tinggi, misalnya
+<em>Kepala Biro Administrasi Akademik &amp; Kemahasiswaan</em> atau <em>Kepala UPT Perpustakaan</em>.</p>
+<p>Daftar ini dipakai oleh menu <strong>Surat</strong> (pilihan <strong>Nama Pimpinan</strong> pada Surat Pernyataan) dan oleh
+menu <strong>Pejabat Struktural</strong> (Bab 11). Karena itu, tambahkan jabatan struktural lebih dulu sebelum
+mengisi surat pernyataan pimpinan.</p>
+<h3>Kepangkatan</h3>
+<p><img src="images/33-kepangkatan.png" alt="Gambar 33 — Halaman Kepangkatan" /></p>
+<p><em>Gambar 33. Daftar Kepangkatan: kolom tambahan Golongan di antara Nama dan Aksi.</em></p>
+<p>Kepangkatan memiliki satu kolom tambahan: <strong>Golongan</strong>. Pada formulir, selain <strong>Nama</strong> (placeholder
+<code>Contoh: Penata Tingkat I</code>) terdapat isian <strong>Golongan Ruang</strong> dengan placeholder <code>Contoh: IIIa</code>,
+maksimal 20 karakter. Bila golongan dikosongkan, tabel menampilkan tanda <code>—</code>.</p>
+<p>Langkah kerjanya tetap sama: <strong>+ Tambah Data</strong> → isi <strong>Nama</strong> dan <strong>Golongan Ruang</strong> → <strong>Simpan
+Data</strong>; <strong>Edit</strong> → <strong>Simpan Perubahan</strong>; <strong>Hapus</strong> → setujui konfirmasi.</p>
+<blockquote>
+<p><strong>Peringatan</strong> — ketiga data master ini dipakai sebagai rujukan di banyak tempat (profil dosen,
+SKP, surat, dan usulan jabatan). Menghapus satu baris dapat membuat data lama kehilangan
+rujukan. Ubah nama terlebih dahulu bila hanya ingin membetulkan ejaan.</p>
+</blockquote>
+<hr />
+<h1>11. Ruang Admin — data instansi dan pengaturan sistem</h1>
+<h2>11.1 Data Instansi</h2>
+<p>Menu <strong>Instansi → Data Instansi</strong>. Keterangan halaman: <em>&quot;Lengkapi identitas instansi yang akan
+digunakan pada dokumen dan pengajuan jabatan akademik.&quot;</em></p>
+<p><img src="images/34-data-instansi.png" alt="Gambar 34 — Halaman Data Instansi" /></p>
+<p><em>Gambar 34. Data Instansi: bagian 01 Identitas Instansi dan awal bagian 02 Logo Instansi.</em></p>
+<p>Formulir dibagi menjadi beberapa bagian bernomor. Setiap bagian diakhiri tombol simpan tersendiri.</p>
+<h3>01 Identitas Instansi</h3>
+<p><em>&quot;Nama, legalitas, alamat, dan kontak resmi instansi.&quot;</em></p>
+<table>
+<thead>
+<tr>
+<th>Isian</th>
+<th>Placeholder / keterangan</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Nama Instansi</strong> *</td>
+<td><code>Contoh: Universitas Athena Nusantara</code></td>
+</tr>
+<tr>
+<td><strong>Nomor SK Operasional</strong> *</td>
+<td><code>Contoh: SK-MENDIKBUD/001/2026</code></td>
+</tr>
+<tr>
+<td><strong>No. Telp</strong> *</td>
+<td><code>Contoh: (022) 1234567</code></td>
+</tr>
+<tr>
+<td><strong>Kota Instansi</strong> *</td>
+<td><code>Contoh: Bandung</code> — <em>&quot;Dipakai pada baris tanda tangan surat.&quot;</em></td>
+</tr>
+<tr>
+<td><strong>Website</strong> (opsional)</td>
+<td><code>Contoh: https://athena.ac.id</code></td>
+</tr>
+<tr>
+<td><strong>Alamat</strong> *</td>
+<td><code>Alamat lengkap instansi</code></td>
+</tr>
+</tbody>
+</table>
+<h3>02 Logo Instansi</h3>
+<p><em>&quot;Unggah logo resmi instansi dalam format gambar.&quot;</em> Bila logo sudah ada, muncul keterangan
+<em>&quot;Unggah berkas baru untuk mengganti logo saat ini.&quot;</em> Logo ini tercetak pada kop surat dan berita
+acara.</p>
+<h3>Bagian LLDIKTI</h3>
+<p>Tiga isian opsional: <strong>Wilayah LLDIKTI</strong> (<code>Contoh: VII</code>), <strong>Nama Pimpinan</strong>
+(<code>Contoh: Prof. Dr. Dyah Sawitri, S.E., M.M.</code>), dan <strong>NIP Pimpinan</strong>
+(<code>Contoh: 196704192005012001</code>). Ketiganya dipakai pada bagian tanda tangan dokumen.</p>
+<p>Tekan <strong>Simpan Data Instansi</strong> di bagian bawah. Bila ada isian bermasalah, muncul pesan
+<em>&quot;Terdapat N isian yang perlu diperbaiki sebelum data dapat disimpan.&quot;</em> Tombol <strong>Pejabat
+Struktural</strong> di kanan atas membuka menu 11.3.</p>
+<blockquote>
+<p><strong>Catatan</strong> — Nama instansi, kota, dan logo dipakai berulang pada kop semua surat dan BAP. Isi
+bagian ini sebelum membuat surat pertama.</p>
+</blockquote>
+<h2>11.2 Prodi</h2>
+<p>Menu <strong>Instansi → Prodi</strong>. Keterangan halaman: <em>&quot;Kelola daftar program studi beserta kode
+singkatannya, misalnya Prodi Bahasa Indonesia dengan kode PBI.&quot;</em></p>
+<p><img src="images/38-prodi.png" alt="Gambar 38 — Halaman Prodi" /></p>
+<p><em>Gambar 38. Daftar Prodi: delapan data contoh, kolom Nama Prodi, Kode Prodi, dan Aksi.</em></p>
+<p>Kartu <strong>Daftar Prodi</strong> menampilkan lencana jumlah data dan keterangan <em>&quot;Data master program studi
+berisi nama dan kode prodi.&quot;</em> Kolom tabel: <strong>NAMA PRODI</strong>, <strong>KODE PRODI</strong>, <strong>AKSI</strong>. Kode prodi
+tampil sebagai lencana kecil (contoh <code>88201</code>, <code>PBI</code>). Kotak pencarian berplaceholder <em>&quot;Cari nama
+atau kode prodi…&quot;</em>.</p>
+<p>Di bawah tabel terdapat keterangan jumlah baris, misalnya <em>&quot;Menampilkan 1–8 dari 8 data&quot;</em>, serta
+tombol halaman <strong>Pertama</strong>, <strong>Sebelumnya</strong>, nomor halaman, <strong>Berikutnya</strong>, dan <strong>Terakhir</strong>.</p>
+<p>Menambah prodi: tekan <strong>+ Tambah Prodi</strong>, lalu isi:</p>
+<ul>
+<li><strong>Nama Prodi</strong> * — placeholder <code>Contoh: Bahasa Indonesia</code>, maksimal 150 karakter.</li>
+<li><strong>Kode Prodi</strong> * — placeholder <code>Contoh: PBI</code>, maksimal 20 karakter. Keterangan: <em>&quot;Gunakan
+singkatan huruf kapital. Kode prodi harus unik dan otomatis disimpan dalam huruf kapital.&quot;</em></li>
+</ul>
+<p>Tekan <strong>Simpan Prodi</strong>. Untuk mengubah, tekan <strong>Edit</strong> pada baris, ubah isian, lalu <strong>Simpan
+Perubahan</strong>. Untuk menghapus, tekan <strong>Hapus</strong> dan setujui konfirmasi.</p>
+<p>Bila tabel kosong, muncul <strong>&quot;Belum ada data prodi&quot;</strong> beserta ajakan menambah data pertama.</p>
+<h2>11.3 Pejabat Struktural</h2>
+<p>Menu <strong>Instansi → Pejabat Struktural</strong>. Keterangan halaman: <em>&quot;Susunan pejabat struktural instansi
+berdasarkan jabatan struktural dan data dosen.&quot;</em></p>
+<p><img src="images/35-pejabat-struktural.png" alt="Gambar 35 — Halaman Pejabat Struktural" /></p>
+<p><em>Gambar 35. Daftar Pejabat Struktural: kolom Jabatan Struktural, Nama Pejabat, dan Aksi.</em></p>
+<p>Kartu <strong>Daftar Pejabat Struktural</strong> menampilkan lencana jumlah data (contoh <em>14 data</em>) dan
+keterangan <em>&quot;Jabatan diambil dari data master jabatan struktural dan pejabat dari data dosen.&quot;</em></p>
+<p>Tabel memakai kolom <strong>JABATAN STRUKTURAL</strong>, <strong>NAMA PEJABAT</strong>, <strong>AKSI</strong>:</p>
+<ul>
+<li>Kolom jabatan menampilkan nama jabatan dalam lencana ungu, misalnya <em>Kepala Biro Administrasi
+Akademik &amp; Kemahasiswaan</em>.</li>
+<li>Kolom nama menampilkan nama dosen, NIDN dalam huruf kecil, dan — bila ada — nama prodi di
+belakangnya, misalnya <em>Ketua — Bakti Sutopo, S.S., M.A. — 0708090001 · Pendidikan Bahasa dan
+Sastra Indonesia (PBSI)</em>.</li>
+<li>Tombol <strong>Edit</strong> dan <strong>Hapus</strong> pada kolom aksi.</li>
+</ul>
+<p>Kotak pencarian berplaceholder <em>&quot;Cari jabatan atau nama…&quot;</em>. Tombol <strong>Data Instansi</strong> di kanan atas
+kembali ke halaman 11.1.</p>
+<p>Menambah pejabat:</p>
+<ol>
+<li>Tekan <strong>+ Tambah Pejabat</strong>. Halaman <strong>Tambah Pejabat Struktural</strong> terbuka dengan keterangan
+<em>&quot;Pilih jabatan struktural dan dosen yang menjabat pada posisi tersebut.&quot;</em></li>
+<li>Pilih <strong>Jabatan Struktural</strong> — dropdown <strong>Pilih jabatan struktural</strong>. Bila semua jabatan sudah
+terisi, muncul <em>&quot;Tidak ada jabatan struktural yang bisa dipilih — semua sudah terisi atau
+datanya …&quot;</em>. Tambah data master lebih dulu di menu <strong>Jabatan Struktural</strong> (Bab 10.3).</li>
+<li>Pilih <strong>Dosen</strong> — dropdown <strong>Pilih dosen</strong>.</li>
+<li>Tekan <strong>Simpan Pejabat</strong>. Saat menyunting, judul halaman menjadi <strong>Edit Pejabat Struktural</strong> dan
+tombolnya <strong>Simpan Perubahan</strong>; tersedia juga <strong>Batal</strong> dan tautan <strong>Kembali</strong>.</li>
+</ol>
+<p>Bila daftar masih kosong, muncul <strong>&quot;Belum ada data struktur instansi&quot;</strong> dengan tombol <strong>Tambah
+Pejabat</strong> di dalamnya.</p>
+<blockquote>
+<p><strong>Catatan</strong> — Satu jabatan struktural hanya boleh diisi satu dosen. Untuk mengganti pejabat,
+sunting baris yang ada (<strong>Edit</strong>) atau hapus lebih dulu, jangan menambah baris baru dengan jabatan
+yang sama.</p>
+</blockquote>
+<h2>11.4 Senat</h2>
+<p>Menu <strong>Instansi → Senat</strong>. Keterangan halaman: <em>&quot;Susunan anggota senat instansi beserta
+jabatannya, dipilih dari data dosen aktif.&quot;</em></p>
+<p><img src="images/36-senat.png" alt="Gambar 36 — Halaman Senat" /></p>
+<p><em>Gambar 36. Senat: formulir Tambah Anggota Senat di atas, Daftar Anggota Senat di bawah.</em></p>
+<h3>01 Tambah Anggota Senat</h3>
+<p><em>&quot;Pilih dosen aktif, lalu tentukan jabatannya pada senat.&quot;</em></p>
+<table>
+<thead>
+<tr>
+<th>Isian</th>
+<th>Keterangan</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Nama Dosen</strong> *</td>
+<td>Dropdown <strong>Pilih dosen</strong> dengan pencarian <em>&quot;Cari nama dosen…&quot;</em>. Bila tidak ada pilihan, muncul <em>&quot;Belum ada dosen aktif yang dapat dipilih.&quot;</em></td>
+</tr>
+<tr>
+<td><strong>Jabatan</strong> *</td>
+<td>Dropdown <strong>Pilih jabatan</strong>: <strong>Ketua</strong>, <strong>Sekretaris</strong>, <strong>Anggota</strong>, <strong>Anggota/Ex Officio</strong>.</td>
+</tr>
+<tr>
+<td><strong>Merangkap Jabatan</strong> (opsional)</td>
+<td>Dropdown <strong>Tidak merangkap</strong>. Keterangan: <em>&quot;Isi bila dosen merangkap jabatan lain, mis. Ketua merangkap Anggota.&quot;</em> Pilihan mengikuti jabatan utama dan tidak menawarkan jabatan yang sama.</td>
+</tr>
+</tbody>
+</table>
+<p>Keterangan di bawah dropdown jabatan: <em>&quot;Satu dosen boleh merangkap jabatan. Ketua hanya boleh satu
+orang; ubah atau hapus dulu ketua atas nama …&quot;</em> — nama yang disebut adalah ketua senat saat ini.
+Opsi <strong>Ketua</strong> otomatis dinonaktifkan dan diberi akhiran <strong>— sudah terisi</strong> selama ketua belum
+diganti. <strong>Ketua tidak dapat dipilih</strong> sebagai jabatan rangkapan.</p>
+<p>Tekan <strong>+ Tambah ke Senat</strong>. Saat menyunting, formulir berjudul <strong>Edit Anggota Senat</strong> dan tombolnya
+<strong>Simpan Perubahan</strong>.</p>
+<h3>Daftar Anggota Senat</h3>
+<p>Lencana jumlah anggota (contoh <em>29 orang</em>) disertai keterangan: <em>&quot;Ketua &amp; sekretaris ditampilkan
+lebih dulu, lalu anggota dan anggota/ex officio sesuai abjad. Dosen yang merangkap jabatan tetap
+tampil satu baris.&quot;</em> Kotak pencarian berplaceholder <em>&quot;Cari nama atau jabatan…&quot;</em>.</p>
+<p>Kolom: <strong>NO</strong>, <strong>NAMA</strong> (nama dosen dan NIDN), <strong>JABATAN</strong>, <strong>AKSI</strong> (ikon pensil dan tempat
+sampah). Jabatan tampil sebagai lencana berwarna: hijau untuk <strong>Ketua merangkap Anggota</strong> atau
+<strong>Ketua</strong>, abu-abu untuk <strong>Sekretaris merangkap Anggota</strong>, dan sebagainya. Bila kosong: <strong>&quot;Belum
+ada anggota senat&quot;</strong>.</p>
+<p>Anggota senat yang terdaftar di sini muncul pada pilihan <strong>Anggota Senat</strong> di formulir BAP Senat
+(Bab 10.1), dan urutan pilihan di BAP menentukan urutan nama pada daftar hadir cetak.</p>
+<h2>11.5 Tim Komite</h2>
+<p>Menu <strong>Instansi → Tim Komite</strong>. Keterangan halaman: <em>&quot;Susunan anggota tim komite instansi beserta
+jabatannya, dipilih dari data dosen aktif.&quot;</em></p>
+<p><img src="images/37-tim-komite.png" alt="Gambar 37 — Halaman Tim Komite" /></p>
+<p><em>Gambar 37. Tim Komite: formulir Tambah Anggota Tim Komite dan daftar dengan kotak centang.</em></p>
+<p>Struktur halaman sama dengan Senat, dengan beberapa perbedaan:</p>
+<ul>
+<li>Bagian <strong>01 Tambah Anggota Tim Komite</strong> — <em>&quot;Pilih dosen aktif, lalu tentukan jabatannya pada tim
+komite.&quot;</em> Isian <strong>Nama Dosen</strong> * dan <strong>Jabatan</strong> * (hanya <strong>Ketua</strong> dan <strong>Anggota</strong>).</li>
+<li>Keterangan pembatas: <em>&quot;Satu dosen hanya dapat terdaftar sekali pada tim komite. Ketua hanya boleh
+satu orang; ubah atau hapus dulu ketua atas nama Dr. Mukodi, S.Pd.I., M.S.I.&quot;</em></li>
+<li>Tombol <strong>+ Tambah ke Tim Komite</strong>.</li>
+<li><strong>Daftar Anggota Tim Komite</strong> — <em>&quot;Diurutkan sesuai urutan input data oleh admin.&quot;</em> Lencana jumlah
+anggota (contoh <em>7 orang</em>), kotak pencarian <em>&quot;Cari nama atau jabatan…&quot;</em>, dan tombol <strong>Hapus
+terpilih</strong> di samping pencarian.</li>
+<li>Kolom <strong>NO</strong>, kotak centang, <strong>NAMA</strong>, <strong>JABATAN</strong>, <strong>AKSI</strong>. Centang beberapa baris lalu tekan
+<strong>Hapus terpilih</strong>; label tombol berubah menjadi <strong>Hapus (n)</strong> sesuai jumlah baris yang dicentang.</li>
+<li>Tombol <strong>Senat</strong> di kanan atas berpindah ke halaman 11.4.</li>
+</ul>
+<p>Anggota tim komite dipakai pada BAKI (Berita Acara Komite Integritas Akademik) di menu <strong>Surat</strong>.</p>
+<h2>11.6 Panduan Penilaian</h2>
+<p>Menu <strong>Administrasi → Panduan Penilaian</strong>. Keterangan halaman: <em>&quot;Acuan penilaian angka kredit yang
+dibaca TIM PAK. Unggah berkas PDF atau kirim link berkas, lalu periksa hasilnya pada pratinjau di
+bawah.&quot;</em></p>
+<p><img src="images/39-panduan-penilaian.png" alt="Gambar 39 — Halaman Panduan Penilaian" /></p>
+<p><em>Gambar 39. Panduan Penilaian: bagian 01 Sumber Panduan dengan mode Kirim Link File aktif.</em></p>
+<h3>01 Sumber Panduan</h3>
+<p><em>&quot;Acuan penilaian angka kredit yang dipakai TIM PAK. Isi panduan ditampilkan pada pratinjau di bawah
+halaman ini.&quot;</em> Pilih salah satu sumber:</p>
+<ul>
+<li><strong>Upload File</strong> — <em>&quot;Unggah berkas PDF dari perangkat, maksimal 10 MB.&quot;</em> Format PDF, maksimal
+<code>10 MB</code>.</li>
+<li><strong>Kirim Link File</strong> — <em>&quot;Tempat tautan berkas, misalnya Google Drive.&quot;</em> Isi <strong>Link Berkas
+Panduan</strong> * dengan contoh <code>https://drive.google.com/file/d/xxxxxxxx/view</code>. Keterangan: <em>&quot;Tautan
+<code>/view</code> Google Drive otomatis diubah menjadi <code>/preview</code> agar tampil pada pratinjau.&quot;</em></li>
+</ul>
+<p>Di bawah formulir tampil keterangan waktu pembaruan terakhir, misalnya <em>&quot;Terakhir diperbarui 18
+November 2026, 16.49 WIB oleh Wulan Trisnawaty, M.Pd.&quot;</em> Tekan <strong>Simpan Panduan</strong> untuk menyimpan.
+Lencana <strong>Tautan Berkas</strong> di kanan atas bagian menunjukkan jenis sumber yang sedang dipakai.</p>
+<h3>02 Isi Panduan</h3>
+<p>Bagian ini menampilkan alamat berkas dan pratinjau dokumen di dalam halaman. Bila pratinjau kosong,
+muncul saran: <em>&quot;Sebagian tautan membatasi tampilan di dalam halaman. Bila pratinjau kosong, buka
+tautannya di tab baru.&quot;</em> Tombol <strong>Hapus Panduan</strong> (dengan konfirmasi <strong>Hapus panduan penilaian?</strong>)
+mengosongkan panduan; setelah itu muncul ajakan <em>&quot;Unggah berkas PDF atau kirim link berkas pada
+formulir di atas agar TIM PAK dapat membacanya.&quot;</em></p>
+<blockquote>
+<p><strong>Catatan</strong> — Panduan ini dibaca TIM PAK dari menu <strong>Panduan Penilaian</strong> di ruang TIM PAK
+(Bab 12). Perubahan langsung terlihat oleh semua penilai, jadi simpan hanya berkas yang sudah
+final.</p>
+</blockquote>
+<h2>11.7 Pengaturan sistem</h2>
+<p>Menu <strong>Pengaturan</strong> pada kelompok <strong>PENGATURAN</strong> di sidebar. Keterangan halaman: <em>&quot;Kelola token
+GitHub untuk pembaruan aplikasi, bersihkan cache, jalankan migrasi tabel, buat symlink storage,
+serta backup dan import database. Setiap tindakan dicatat pada terminal log di bawah.&quot;</em></p>
+<p><img src="images/40-pengaturan.png" alt="Gambar 40 — Halaman Pengaturan" /></p>
+<p><em>Gambar 40. Pengaturan: bagian 01 Nama Web dan 02 Data Update.</em></p>
+<p>Halaman ini terdiri atas lima bagian bernomor.</p>
+<h3>01 Nama Web</h3>
+<p><em>&quot;Nama yang tampil di sidebar, judul tab, dan footer seluruh halaman.&quot;</em> Isian <strong>Nama web</strong> * dengan
+placeholder <code>Contoh: Athena</code>, <strong>maksimal 10 karakter</strong>. Keterangan di bawahnya menyebut nama yang
+sedang dipakai, misalnya <em>&quot;Nama saat ini: SIMJAD&quot;</em>. Tekan <strong>Simpan Nama Web</strong>.</p>
+<h3>02 Data Update</h3>
+<p><em>&quot;Token GitHub untuk menarik pembaruan dari repositori.&quot;</em></p>
+<ul>
+<li><strong>Token GitHub</strong> * — placeholder <code>github_pat_xxxxxxxxxxxxxxxxxxxx</code>. Keterangan: <em>&quot;Format wajib
+<code>github_patxxxxxxxxx</code>. Token disimpan pada berkas <code>.token-gh</code> (tidak ikut ter-commit).&quot;</em></li>
+<li>Titik status di bawah isian: hijau dengan teks <strong>Token tersimpan: …</strong> bila sudah ada, atau kuning
+dengan teks <strong>Belum ada token tersimpan.</strong> Tekan <strong>Simpan Token</strong>.</li>
+<li>Kotak <strong>Perbarui aplikasi</strong> — <em>&quot;Menjalankan <code>git pull --ff-only</code> pada cabang main.&quot;</em> Tekan
+<strong>Update Aplikasi</strong>.</li>
+</ul>
+<h3>03 Pemeliharaan Sistem</h3>
+<p><em>&quot;Tindakan cepat untuk cache, skema database, aset frontend, dan tautan penyimpanan.&quot;</em> Empat baris
+tindakan:</p>
+<table>
+<thead>
+<tr>
+<th>Tindakan</th>
+<th>Perintah yang dijalankan</th>
+<th>Tombol</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Clear cache</strong></td>
+<td><code>php artisan optimize:clear</code></td>
+<td><strong>Bersihkan Cache</strong></td>
+</tr>
+<tr>
+<td><strong>Migrasi tabel</strong></td>
+<td><code>php artisan migrate --force</code></td>
+<td><strong>Migrasi Tabel</strong> (konfirmasi <em>&quot;Jalankan migrasi tabel database sekarang?&quot;</em>)</td>
+</tr>
+<tr>
+<td><strong>Symlink storage</strong></td>
+<td><code>php artisan storage:link --force</code></td>
+<td><strong>Buat Symlink</strong>. Lencana <strong>Tertaut</strong> (hijau) atau <strong>Belum</strong> (kuning) menunjukkan status tautan.</td>
+</tr>
+<tr>
+<td><strong>Build aset (CSS &amp; JS)</strong></td>
+<td><code>npm run build</code> — <em>&quot;Lakukan setelah menarik pembaruan aplikasi.&quot;</em></td>
+<td><strong>Build Aset</strong></td>
+</tr>
+</tbody>
+</table>
+<h3>04 Backup &amp; Import Database</h3>
+<p><em>&quot;Unduh salinan seluruh tabel, atau pulihkan database dari berkas <code>.sql</code>.&quot;</em></p>
+<ul>
+<li><strong>Backup database</strong> — <em>&quot;Menulis struktur dan isi seluruh tabel, lalu mengunduhnya sebagai berkas
+<code>backup-YYYYMMDD-HHMMSS.sql</code>.&quot;</em> Tekan <strong>Backup Database</strong> dan setujui konfirmasi <strong>Backup
+database?</strong> Selama proses berjalan muncul bilah kemajuan; setelah selesai tersedia tautan <strong>Unduh
+ulang hasil backup</strong>.</li>
+<li><strong>Import database</strong> — pilih <strong>Berkas backup</strong> * (<code>.sql</code>, maksimal <code>100 MB</code>). Keterangan: <em>&quot;Berkas
+dijalankan bertahap sehingga tabel yang namanya sama akan ditimpa.&quot;</em> Tekan <strong>Import Database</strong> dan
+setujui konfirmasi <strong>Import database?</strong></li>
+<li><strong>Hapus seluruh data</strong> — <em>&quot;Mengosongkan profil, riwayat, kegiatan, pengajuan, dan berkas syarat
+khusus seluruh dosen. Akun pengguna, nama web, serta data master (instansi, prodi, jabatan,
+kepangkatan) tetap disimpan.&quot;</em> Tombol merah <strong>Hapus Semua Data</strong> meminta konfirmasi <strong>Hapus seluruh
+data?</strong></li>
+</ul>
+<h3>05 Terminal log</h3>
+<p><em>&quot;Setiap tindakan dicatat pada terminal log di bawah.&quot;</em> Bagian ini menampilkan jumlah tindakan
+(contoh <em>&quot;3 tindakan&quot;</em>) dan isi log sesi berjalan. Bila belum ada, muncul <em>&quot;belum ada tindakan pada
+sesi ini.&quot;</em> Tombol <strong>Hapus log</strong> mengosongkan seluruh isi terminal log.</p>
+<blockquote>
+<p><strong>Peringatan</strong> — <strong>Import Database</strong> menimpa tabel yang namanya sama, dan <strong>Hapus Semua Data</strong>
+menghapus permanen seluruh data dosen. Selalu tekan <strong>Backup Database</strong> lebih dulu. Kedua tindakan
+tidak dapat dibatalkan.</p>
+</blockquote>
+<h2>11.8 WhatsApp API</h2>
+<p>Menu <strong>Pengaturan → WhatsApp API</strong>. Keterangan halaman: <em>&quot;Hubungkan aplikasi ke WhatsApp gateway,
+pantau status koneksi secara realtime, dan uji pengiriman pesan.&quot;</em> Lencana di kanan atas menunjukkan
+keadaan konfigurasi, misalnya <strong>Gateway tersimpan</strong>.</p>
+<p><img src="images/41-whatsapp-api.png" alt="Gambar 41 — Halaman WhatsApp API" /></p>
+<p><em>Gambar 41. WhatsApp API tab Konfigurasi Gateway: URL gateway, kartu status, dan QR Code.</em></p>
+<p>Halaman memiliki dua tab: <strong>1 Konfigurasi Gateway</strong> dan <strong>2 Uji Pengiriman</strong>.</p>
+<h3>Tab 1 — Konfigurasi Gateway</h3>
+<ul>
+<li><strong>URL Gateway</strong> — <em>&quot;Alamat dasar REST API gateway, tanpa garis miring di akhir. Skema <code>http://</code>
+ditambahkan otomatis bila tidak ditulis.&quot;</em> Placeholder <code>http://localhost:3000</code>. Keterangan
+tambahan: halaman memakai endpoint <code>/status</code>, <code>/qr</code>, dan <code>/send-message</code>; variasi jalur umum
+(termasuk <code>/status/default</code> dan <code>/qr/default</code> untuk gateway multi-sesi) dicoba otomatis. Nama
+sesi/device aktif mengikuti <code>WHATSAPP_SESSION</code> pada berkas <code>.env</code>. Tekan <strong>Simpan URL</strong>.</li>
+<li><strong>Koneksi Gateway</strong> — kartu <em>&quot;Realtime · 10 detik&quot;</em> berisi <strong>Alamat</strong>, <strong>Latensi</strong>, dan
+<strong>Diperiksa</strong>. Selama pemeriksaan pertama muncul <strong>Memeriksa…</strong> dan <em>&quot;Menunggu pemeriksaan
+pertama…&quot;</em>.</li>
+<li><strong>Perangkat WhatsApp</strong> — kartu <em>&quot;Status sesi gateway&quot;</em> berisi <strong>Sesi / Device</strong> (contoh <code>default</code>),
+<strong>Nomor</strong>, <strong>Nama</strong>, dan <strong>Diperiksa</strong>.</li>
+<li><strong>QR Code</strong> — <em>&quot;Pindai untuk menautkan perangkat WhatsApp ke gateway. Gunakan 'Putuskan Koneksi'
+untuk melepas perangkat dan menampilkan QR baru.&quot;</em> Tombol <strong>Muat Ulang QR</strong> dan <strong>Putuskan
+Koneksi</strong>. Keterangan: <em>&quot;QR diperbarui otomatis setiap 20 detik selama WhatsApp belum terhubung.
+Setelah berhasil dipindai, blok ini akan berubah menjadi status terhubung.&quot;</em> Tersedia juga tautan
+<strong>Buka QR langsung di gateway</strong> dan <strong>Lihat respons status mentah</strong>. Selama menunggu, kotak QR
+menampilkan <em>&quot;QR code akan tampil setelah status gateway diperiksa.&quot;</em></li>
+</ul>
+<h3>Tab 2 — Uji Pengiriman</h3>
+<p>Judul bagian <strong>Kirim Pesan Uji</strong> dengan keterangan <em>&quot;Pesan benar-benar dikirim ke nomor tujuan
+melalui gateway yang tersimpan.&quot;</em></p>
+<table>
+<thead>
+<tr>
+<th>Isian</th>
+<th>Keterangan</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Nomor tujuan</strong> *</td>
+<td>Placeholder <code>0812-3456-7890</code>. Nomor berawalan <code>0</code> diubah menjadi <code>62</code> sebelum dikirim.</td>
+</tr>
+<tr>
+<td><strong>Pesan</strong></td>
+<td>Placeholder <code>Contoh: Uji koneksi WhatsApp API Athena berhasil.</code></td>
+</tr>
+</tbody>
+</table>
+<p>Tekan <strong>Kirim Pesan Uji</strong>; hasil pengiriman tampil pada tab yang sama.</p>
+<blockquote>
+<p><strong>Catatan</strong> — Bila gateway belum menyala, kartu status tetap menampilkan <strong>Memeriksa…</strong> dan QR
+tidak muncul. Periksa alamat gateway lebih dulu, lalu tekan <strong>Muat Ulang QR</strong>.</p>
+</blockquote>
+<hr />
+<h1>12. Ruang TIM PAK</h1>
+<p>TIM PAK (Tim Penilai Angka Kredit) bekerja pada satu tugas: memberi angka kredit atas setiap butir
+kegiatan yang diajukan dosen. Menu yang tersedia hanya <strong>Dashboard</strong>, <strong>Pengajuan Masuk</strong>, dan
+<strong>Panduan Penilaian</strong>.</p>
+<h2>12.1 Dashboard TIM PAK</h2>
+<p><img src="images/43-dashboard-tim-pak.png" alt="Gambar 43 — Dashboard TIM PAK" /></p>
+<p><em>Gambar 43. Dashboard TIM PAK: banner RUANG TIM PAK, lima kartu ringkasan, dan tabel pengajuan masuk
+(gambar yang sama dipakai pada Bab 3.3).</em></p>
+<p>Halaman dibuka dengan banner hijau bertanda <strong>RUANG TIM PAK</strong> dan sapaan <em>&quot;Selamat pagi, Wulan!&quot;</em>
+disertai ajakan <em>&quot;Tinjau dan nilai usulan angka kredit dosen yang masuk.&quot;</em> Di kanan banner tampil
+kotak <strong>PERIODE AKTIF</strong> (contoh <em>2026</em>) dan tombol <strong>Pengajuan Masuk</strong>.</p>
+<p>Lima kartu ringkasan:</p>
+<table>
+<thead>
+<tr>
+<th>Kartu</th>
+<th>Arti</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Total Pengajuan</strong> (label <em>Semua</em>)</td>
+<td>Seluruh ajuan DUPAK dosen.</td>
+</tr>
+<tr>
+<td><strong>Belum Dinilai</strong> (<em>Proses</em>)</td>
+<td><em>&quot;Menunggu penilaian TIM PAK&quot;</em>.</td>
+</tr>
+<tr>
+<td><strong>Disetujui</strong> (<em>Final</em>)</td>
+<td><em>&quot;Ajuan yang telah disetujui&quot;</em>.</td>
+</tr>
+<tr>
+<td><strong>Perlu Perbaikan</strong> (<em>Revisi</em>)</td>
+<td><em>&quot;Dikembalikan ke dosen&quot;</em>.</td>
+</tr>
+<tr>
+<td><strong>Ditolak</strong> (<em>Tolak</em>)</td>
+<td><em>&quot;DUPAK ditolak admin&quot;</em>.</td>
+</tr>
+</tbody>
+</table>
+<p>Di bawahnya, kartu <strong>Pengajuan DUPAK Masuk</strong> dengan lencana jumlah data dan keterangan <em>&quot;Daftar
+pengajuan DUPAK yang masuk dari dosen untuk dinilai.&quot;</em> Tersedia kotak pencarian <em>&quot;Cari dosen,
+periode…&quot;</em>, filter <strong>Semua status</strong>, dan pilihan <strong>10 / 25 / 50 / 100</strong> data per halaman. Kolom:
+<strong>DOSEN</strong> (nama, NIDN, dan tanda <code>—</code> bila prodi kosong), <strong>PERIODE</strong>, <strong>STATUS</strong>, <strong>DIAJUKAN</strong>, dan
+<strong>AKSI</strong> berisi tombol <strong>Nilai</strong>.</p>
+<h2>12.2 Pengajuan Masuk</h2>
+<p>Menu <strong>Penilaian → Pengajuan Masuk</strong>. Judul halaman <strong>Pengajuan DUPAK Masuk</strong>, keterangan: <em>&quot;Daftar
+usulan angka kredit yang dikirim dosen. Buka salah satu baris untuk mengisi kolom angka kredit
+baru.&quot;</em></p>
+<p><img src="images/44-pengajuan-masuk.png" alt="Gambar 44 — Halaman Pengajuan Masuk" /></p>
+<p><em>Gambar 44. Pengajuan Masuk: dua ajuan contoh, status Disetujui dan Menunggu penilaian.</em></p>
+<p>Kartu <strong>Daftar Pengajuan</strong> memuat lencana jumlah data dan pengingat <em>&quot;Buka salah satu baris untuk
+mengisi kolom angka kredit baru.&quot;</em> Alat bantu yang sama seperti dashboard: pencarian <em>&quot;Cari dosen,
+periode…&quot;</em>, filter <strong>Semua status</strong>, dan pilihan jumlah baris per halaman.</p>
+<p>Tombol pada kolom <strong>AKSI</strong> menyesuaikan keadaan ajuan:</p>
+<table>
+<thead>
+<tr>
+<th>Keadaan ajuan</th>
+<th>Tombol</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Belum dinilai (<strong>Menunggu penilaian</strong>)</td>
+<td><strong>Nilai</strong></td>
+</tr>
+<tr>
+<td>Sudah dinilai, belum diputuskan</td>
+<td><strong>Lihat / Ubah</strong></td>
+</tr>
+<tr>
+<td>Sudah <strong>Disetujui</strong> admin (nilai terkunci)</td>
+<td><strong>Lihat</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Klik judul kolom <strong>DOSEN</strong>, <strong>PERIODE</strong>, <strong>STATUS</strong>, atau <strong>DIAJUKAN</strong> untuk mengurutkan. Bila tidak
+ada data, muncul <strong>&quot;Belum ada pengajuan masuk&quot;</strong>.</p>
+<h2>12.3 Menilai satu pengajuan</h2>
+<p><img src="images/45-nilai-pengajuan.png" alt="Gambar 45 — Halaman Penilaian DUPAK" /></p>
+<p><em>Gambar 45. Halaman penilaian: rekap bergaya formulir DUPAK dengan kolom isian Baru.</em></p>
+<p>Halaman <strong>Penilaian DUPAK</strong> menampilkan nama dosen sebagai judul, lalu baris keterangan berisi
+periode (contoh <em>2025/2026 · Genap</em>), NIDN, prodi, dan lencana status (contoh <strong>Menunggu
+penilaian</strong>). Tombol <strong>← Daftar Pengajuan</strong> di kanan atas kembali ke daftar.</p>
+<p>Tabel penilaian disusun seperti formulir DUPAK:</p>
+<ul>
+<li>Baris kepala <strong>UNSUR YANG DINILAI</strong> dengan kolom <strong>NO</strong> dan <strong>UNSUR, SUB UNSUR, DAN BUTIR
+KEGIATAN</strong>, serta grup <strong>ANGKA KREDIT MENURUT</strong> → <strong>INSTANSI PENGUSUL</strong> dengan subkolom <strong>LAMA</strong>,
+<strong>BARU</strong>, <strong>JUMLAH</strong>, dan <strong>LINK BUKTI</strong>.</li>
+<li>Lima bidang: <strong>I PENDIDIKAN (BIDANG A)</strong>, <strong>II PELAKSANAAN PENDIDIKAN (BIDANG B)</strong>, <strong>III
+PENELITIAN (BIDANG C)</strong>, <strong>IV PENGABDIAN KEPADA MASYARAKAT (BIDANG D)</strong>, dan <strong>V PENUNJANG (BIDANG
+E)</strong>.</li>
+<li>Setiap bidang dipecah menjadi komponen (A, B, …), rincian komponen (1, 2, …), lalu butir kegiatan.
+Contoh pada Bidang A: <em>1. Magister (S2)</em> dan <em>2. Doktor (S3)</em>; pada Bidang B: <em>1. Mengajar kelas
+A 10 sks</em> dan <em>2. Mengajar Kelas B 6 sks</em>.</li>
+<li>Kolom <strong>LAMA</strong> berisi angka yang sudah ada, kolom <strong>BARU</strong> berisi kotak isian (contoh <code>1.00</code>), dan
+kolom <strong>JUMLAH</strong> terisi otomatis.</li>
+<li>Kolom <strong>LINK BUKTI</strong> memuat tautan <strong>Bukti</strong> untuk membuka bukti kegiatan di tab baru. Periksa
+setiap bukti sebelum memberi nilai.</li>
+<li>Baris <strong>JUMLAH</strong> per bidang dan baris <strong>JUMLAH TOTAL</strong> di paling bawah dihitung otomatis dari
+angka yang Anda isi.</li>
+</ul>
+<p>Keterangan di bawah tabel: <em>&quot;Kolom Baru diisi oleh TIM PAK saat menilai usulan; baris Jumlah di
+setiap bidang dan Jumlah Total di paling bawah dihitung otomatis dari nilai tersebut.&quot;</em></p>
+<p>Langkah menilai:</p>
+<ol>
+<li>Buka <strong>Pengajuan Masuk</strong>, tekan <strong>Nilai</strong> pada baris dosen.</li>
+<li>Periksa setiap butir dan bukti lewat tautan <strong>Bukti</strong>.</li>
+<li>Isi kolom <strong>Baru</strong> untuk butir yang dinilai. Butir tanpa angka dianggap nol.</li>
+<li>Periksa baris <strong>JUMLAH</strong> tiap bidang dan <strong>JUMLAH TOTAL</strong>.</li>
+<li>Tekan <strong>Update Nilai</strong>. Muncul konfirmasi <strong>Simpan penilaian?</strong> dengan pesan <em>&quot;Nilai angka
+kredit akan disimpan dan langsung terlihat oleh dosen.&quot;</em> Setujui untuk menyimpan.</li>
+</ol>
+<p>Setelah disimpan, dosen melihat nilai tersebut pada tab <strong>Review</strong> pengajuannya dan dapat menekan
+<strong>Ajukan Dupak</strong> (Bab 5.6).</p>
+<blockquote>
+<p><strong>Peringatan</strong> — Nilai yang sudah tersimpan langsung terlihat oleh dosen. Bila ajuan sudah
+<strong>Disetujui</strong> admin, halaman ini berubah menjadi hanya-baca: keterangan <em>&quot;DUPAK periode ini sudah
+disetujui admin. Nilai terkunci dan halaman ini hanya untuk dilihat.&quot;</em> dan tombol <strong>Update Nilai</strong>
+dinonaktifkan.</p>
+</blockquote>
+<h2>12.4 Panduan Penilaian untuk TIM PAK</h2>
+<p>Menu <strong>Penilaian → Panduan Penilaian</strong> menampilkan judul <strong>Panduan Penilaian</strong> dengan keterangan
+<em>&quot;Acuan penilaian angka kredit yang dipakai TIM PAK. Isi panduan ditampilkan pada pratinjau di bawah
+halaman ini.&quot;</em> Isinya berasal dari berkas yang diunggah admin pada Bab 11.6.</p>
+<p><img src="images/46-panduan-penilaian-tim-pak.png" alt="Gambar 46 — Panduan Penilaian versi TIM PAK" /></p>
+<p><em>Gambar 46. Panduan Penilaian di ruang TIM PAK: kartu Isi Panduan dan pratinjau dokumen acuan.</em></p>
+<p>Kartu <strong>01 Isi Panduan</strong> menampilkan alamat berkas atau tautan yang dipakai, lalu pratinjau dokumen di
+bawahnya. Ikon di sudut kanan atas pratinjau membuka dokumen pada tab baru — berguna bila ingin
+memperbesar atau mencetak. Gunakan halaman ini sebagai rujukan angka kredit sebelum mengisi kolom
+<strong>Baru</strong>.</p>
+<p>Bila admin belum mengisi panduan, halaman menampilkan ajakan agar admin mengunggah berkas lebih dulu.</p>
+<hr />
+<h1>13. SKP: Keberatan dan Usulan</h1>
+<p>Sasaran Kinerja Pegawai (SKP) dinilai lewat enam unsur perilaku kerja. Bab ini menjelaskan dua sisi
+yang saling berhadapan: dosen yang <strong>menerima</strong> penilaian (menu <strong>SKP-Dosen</strong>) dan dosen yang
+<strong>memberi</strong> penilaian karena ditugaskan admin sebagai Pejabat Penilai atau Atasan Pejabat Penilai
+(menu <strong>Usulan SKP</strong>).</p>
+<h2>13.1 SKP-Dosen: daftar penilaian yang diterima</h2>
+<p>Menu <strong>SKP-Dosen</strong> menampilkan judul <strong>SKP-Dosen</strong> dengan keterangan <em>&quot;Hasil penilaian SKP dari
+Pejabat Penilai untuk Anda. Ajukan keberatan bila ada nilai yang tidak sesuai, atau setujui bila
+sudah sesuai.&quot;</em></p>
+<p><img src="images/47-skp-dosen.png" alt="Gambar 47 — Halaman SKP-Dosen" /></p>
+<p><em>Gambar 47. SKP-Dosen: satu baris penilaian dengan tombol Ajukan Keberatan dan Setujui.</em></p>
+<p>Kartu <strong>Daftar Penilaian SKP</strong> berlabel jumlah penilaian dan keterangan <em>&quot;Hanya penilaian atas nama
+Anda yang ditampilkan.&quot;</em> Kotak pencarian <em>&quot;Cari jangka waktu…&quot;</em> dan pilihan <strong>10 / 25 / 50 / 100</strong>
+data per halaman tersedia di atas tabel.</p>
+<p>Kolom tabel: <strong>NO</strong>, <strong>NAMA DOSEN YANG DINILAI</strong> (nama, NIDN, dan <em>&quot;Penilai: …&quot;</em>), <strong>JANGKA WAKTU
+PENILAIAN</strong> (contoh <em>01 Januari 2025 s.d. 01 Januari 2026</em>), <strong>JUMLAH</strong> (contoh <code>559</code>), <strong>NILAI
+PERILAKU KERJA</strong> (lencana angka, contoh <code>93,17</code>), dan <strong>AKSI</strong>.</p>
+<p>Isi kolom <strong>AKSI</strong> bergantung pada keadaan penilaian:</p>
+<table>
+<thead>
+<tr>
+<th>Keadaan</th>
+<th>Tampilan pada kolom AKSI</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Belum dinilai Pejabat Penilai</td>
+<td>Teks <em>&quot;Menunggu penilaian&quot;</em>.</td>
+</tr>
+<tr>
+<td>Sudah dinilai, belum disetujui</td>
+<td><strong>Ajukan Keberatan</strong> dan <strong>Setujui</strong>.</td>
+</tr>
+<tr>
+<td>Keberatan sudah diajukan</td>
+<td><strong>Ubah Keberatan</strong> + <em>&quot;Keberatan diajukan 12 Maret 2026&quot;</em>.</td>
+</tr>
+<tr>
+<td>Sudah disetujui dosen</td>
+<td>Lencana <strong>Disetujui</strong> dan tombol <strong>Batalkan Persetujuan</strong>.</td>
+</tr>
+<tr>
+<td>Sudah disetujui atasan penilai</td>
+<td>Lencana <strong>Disetujui</strong> + <em>&quot;Sudah disetujui atasan penilai&quot;</em>.</td>
+</tr>
+</tbody>
+</table>
+<p>Dua catatan di kaki kartu: <em>&quot;Nilai perilaku kerja = rata-rata nilai keenam unsur.&quot;</em> dan <em>&quot;Keberatan
+yang diajukan tercetak pada blok 5 halaman cetak SKP.&quot;</em></p>
+<h2>13.2 Mengajukan keberatan</h2>
+<p>Tekan <strong>Ajukan Keberatan</strong> pada baris penilaian. Halaman <strong>Ajukan Keberatan SKP</strong> terbuka dengan
+tautan <strong>← Kembali ke SKP-Dosen</strong> di kiri atas dan keterangan <em>&quot;Ajukan keberatan atas nilai SKP yang
+Anda terima beserta tanggal pengajuannya. Keberatan tercetak pada blok 5 halaman cetak SKP.&quot;</em></p>
+<p><img src="images/48-keberatan-skp.png" alt="Gambar 48 — Formulir Ajukan Keberatan SKP" /></p>
+<p><em>Gambar 48. Formulir keberatan: ringkasan penilaian (01) dan isian keberatan (02).</em></p>
+<p>Halaman dibagi dua blok bernomor:</p>
+<ol>
+<li><strong>Penilaian yang Diberatkan</strong> — hanya-baca. Memuat nama dosen, periode dan prodi (contoh
+<em>Aditya Prihantara, S.Kom, M.Kom — 01 Januari 2025 s.d. 01 Januari 2026 (Prodi Pendidikan Guru
+Sekolah Dasar (PGSD))</em>), lalu <strong>PEJABAT PENILAI</strong>, <strong>TANGGAL PENILAIAN</strong>, <strong>JUMLAH NILAI</strong>, dan
+<strong>NILAI PERILAKU KERJA</strong>. Periksa dulu angka-angka ini.</li>
+<li><strong>Keberatan atas Nilai SKP</strong> — <em>&quot;Isi uraian keberatan dan tanggal pengajuannya.&quot;</em> Dua isian wajib:
+<ul>
+<li><strong>Uraian Keberatan</strong> (wajib) — kotak teks, plaseholder <em>&quot;Tuliskan alasan keberatan atas nilai SKP
+yang Anda terima…&quot;</em>, keterangan <em>&quot;Keberatan ini tercetak pada blok 5 halaman cetak SKP
+(maksimal 2000 karakter).&quot;</em></li>
+<li><strong>Tanggal Ajuan Keberatan</strong> (wajib) — plaseholder <code>DD-MM-YYYY</code>, <em>&quot;Pilih lewat kalender atau ketik
+format DD-MM-YYYY.&quot;</em></li>
+</ul>
+</li>
+</ol>
+<p>Tekan <strong>Ajukan Keberatan</strong> untuk menyimpan, atau <strong>Batal</strong> untuk kembali tanpa mengubah apa pun.
+Setelah tersimpan, halaman daftar menampilkan tautan <strong>Ubah Keberatan</strong> beserta tanggal keberatan.</p>
+<blockquote>
+<p><strong>Catatan</strong> — Satu penilaian hanya punya satu keberatan. Menekan <strong>Ubah Keberatan</strong> memperbarui
+uraian dan tanggal yang sama, bukan menambah keberatan baru.</p>
+</blockquote>
+<p>Setelah keberatan diajukan, Pejabat Penilai menulis tanggapan (13.4), lalu dosen dapat menekan
+<strong>Setujui</strong>. Tombol ini meminta konfirmasi <strong>&quot;Setujui penilaian SKP periode 2025/2026 tanpa
+keberatan?&quot;</strong> — persetujuan mengunci nilai dari perubahan Pejabat Penilai. Bila belum disetujui
+atasan penilai, persetujuan masih dapat dibatalkan lewat <strong>Batalkan Persetujuan</strong> (konfirmasi:
+<em>&quot;Batalkan persetujuan penilaian SKP periode 2025/2026? Nilai dapat diubah kembali oleh Pejabat
+Penilai.&quot;</em>).</p>
+<h2>13.3 Usulan SKP: menilai perilaku kerja dosen lain</h2>
+<p>Menu <strong>Usulan SKP</strong> dipakai bila admin menugaskan Anda sebagai <strong>Pejabat Penilai</strong> atau <strong>Atasan
+Pejabat Penilai</strong> SKP. Keterangannya: <em>&quot;Daftar dosen yang perlu Anda nilai perilaku kerjanya sebagai
+Pejabat Penilai SKP, atau yang menunggu keputusan keberatan dan persetujuan Anda sebagai Atasan
+Pejabat Penilai.&quot;</em></p>
+<p><img src="images/49-usulan-skp.png" alt="Gambar 49 — Halaman Usulan SKP" /></p>
+<p><em>Gambar 49. Usulan SKP: daftar dosen yang menunggu penilaian, dengan tombol Input Nilai.</em></p>
+<p>Kartu <strong>Daftar Usulan SKP</strong> berlabel jumlah dosen dan pengingat <em>&quot;Klik &quot;Edit Nilai&quot; untuk mengisi
+perilaku kerja dosen.&quot;</em> Kolom tabel: <strong>NO</strong>, <strong>DOSEN YANG DINILAI</strong> (nama + NIDN), <strong>PRODI</strong>,
+<strong>JANGKA WAKTU</strong> (contoh <em>01 Januari 2025 s.d. 01 Januari 2026</em>), <strong>JUMLAH</strong> (contoh <code>559</code>), <strong>NILAI
+PERILAKU KERJA</strong> (lencana angka, contoh <code>93,17</code>), dan <strong>AKSI</strong>.</p>
+<p>Isi kolom <strong>AKSI</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Peran Anda pada SKP itu</th>
+<th>Tindakan yang tampil</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Pejabat Penilai, belum disetujui dosen</td>
+<td><strong>Input Nilai</strong>, dan <strong>Tanggapan Keberatan</strong> / <strong>Ubah Tanggapan</strong> bila dosen mengajukan keberatan.</td>
+</tr>
+<tr>
+<td>Pejabat Penilai, dosen sudah menyetujui</td>
+<td>Lencana <strong>Disetujui dosen</strong> (nilai terkunci).</td>
+</tr>
+<tr>
+<td>Atasan Pejabat Penilai</td>
+<td><strong>Keputusan atas Keberatan</strong> / <strong>Ubah Keputusan</strong> bila syaratnya terpenuhi, serta isian <strong>tanggal persetujuan</strong> + tombol <strong>Setujui</strong>.</td>
+</tr>
+</tbody>
+</table>
+<p>Bila belum ada penugasan, muncul <strong>&quot;Belum ada dosen yang perlu dinilai&quot;</strong> dengan keterangan <em>&quot;Admin
+akan menugaskan Anda sebagai Pejabat Penilai SKP.&quot;</em></p>
+<h3>Mengisi nilai</h3>
+<p>Klik <strong>Input Nilai</strong> (atau <strong>Edit Nilai</strong>). Formulir <strong>01 Nilai Perilaku Kerja</strong> terbuka di atas
+tabel, memuat nama dosen, periode, dan prodi. Aturan kategori tertera di dalam formulir: <strong>≥86 Sangat
+Baik · 71–85 Baik · 56–70 Cukup · ≤55 Kurang</strong>. <em>&quot;Jumlah dan nilai perilaku kerja (rata-rata nilai)
+dihitung otomatis.&quot;</em></p>
+<p>Enam isian wajib, masing-masing bilangan bulat <code>0</code>–<code>100</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Unsur</th>
+<th>Keterangan</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Orientasi Pelayanan</strong></td>
+<td>Sikap terhadap pelayanan.</td>
+</tr>
+<tr>
+<td><strong>Integritas</strong></td>
+<td>Kejujuran dan konsistensi.</td>
+</tr>
+<tr>
+<td><strong>Komitmen</strong></td>
+<td>Kesetiaan pada tugas dan organisasi.</td>
+</tr>
+<tr>
+<td><strong>Disiplin</strong></td>
+<td>Ketaatan pada aturan waktu dan kerja.</td>
+</tr>
+<tr>
+<td><strong>Kerjasama</strong></td>
+<td>Kemampuan bekerja bersama.</td>
+</tr>
+<tr>
+<td><strong>Kepemimpinan</strong></td>
+<td>Kemampuan memimpin dan mengarahkan.</td>
+</tr>
+</tbody>
+</table>
+<p>Terakhir isi <strong>Tanggal Penilaian</strong> (plaseholder <code>DD-MM-YYYY</code>) — tanggal ini tercetak pada blok 9
+halaman cetak SKP (<em>&quot;DIBUAT TANGGAL, ...&quot;</em>). Tekan <strong>Simpan Nilai</strong>, atau <strong>Batal</strong> untuk menutup
+formulir.</p>
+<blockquote>
+<p><strong>Peringatan</strong> — Bila ada isian yang salah, muncul kotak <strong>&quot;Periksa kembali data Anda.&quot;</strong> dengan
+<em>&quot;Terdapat N isian yang perlu diperbaiki sebelum data dapat disimpan.&quot;</em> Pesan yang mungkin muncul:
+<em>&quot;Nilai wajib diisi untuk seluruh unsur perilaku kerja.&quot;</em>, <em>&quot;Nilai angka harus antara 0 sampai
+100.&quot;</em>, dan <em>&quot;Tanggal penilaian harus berformat DD-MM-YYYY.&quot;</em></p>
+</blockquote>
+<p>Setelah disimpan, dosen menerima notifikasi WhatsApp dan nilai muncul pada menu <strong>SKP-Dosen</strong> miliknya
+untuk disetujui atau diberatkan (13.1–13.2).</p>
+<h2>13.4 Menanggapi keberatan dosen</h2>
+<p>Bila dosen mengajukan keberatan, tautan <strong>Tanggapan Keberatan</strong> muncul pada kolom <strong>AKSI</strong>. Halaman
+<strong>Tanggapan Keberatan SKP</strong> berisi keterangan <em>&quot;Tanggapi keberatan yang diajukan dosen beserta tanggal
+tanggapan. Tanggapan tercetak pada blok 6 halaman cetak SKP.&quot;</em></p>
+<ol>
+<li>Blok <strong>Uraian Keberatan</strong> — hanya-baca, berisi alasan yang ditulis dosen.</li>
+<li>Blok <strong>Tanggapan atas Keberatan</strong> — <em>&quot;Isi tanggapan dan tanggal tanggapan.&quot;</em> Isi <strong>Tanggapan
+Keberatan</strong> (wajib, maksimal 2000 karakter, plaseholder <em>&quot;Tuliskan tanggapan atas keberatan
+dosen…&quot;</em>) dan <strong>Tanggal Tanggapan</strong> (wajib, <code>DD-MM-YYYY</code>).</li>
+<li>Tekan <strong>Simpan Tanggapan</strong> — berubah menjadi <strong>Perbarui Tanggapan</strong> bila sudah pernah disimpan.</li>
+</ol>
+<h2>13.5 Keputusan dan persetujuan Atasan Pejabat Penilai</h2>
+<p>Sebagai <strong>Atasan Pejabat Penilai</strong>, Anda menutup rangkaian SKP:</p>
+<ol>
+<li><strong>Keputusan atas Keberatan</strong> — tautan ini hanya aktif bila keberatan sudah ditanggapi Pejabat
+Penilai dan sudah disetujui dosen. Halaman <strong>Keputusan atas Keberatan SKP</strong> menampilkan ringkasan
+tiga tanggal (<strong>Keberatan Dosen</strong>, <strong>Tanggapan Pejabat Penilai</strong>, <strong>Persetujuan Dosen</strong>) lalu
+meminta <strong>Keputusan</strong> (wajib, maksimal 2000 karakter) dan <strong>Tanggal Keputusan</strong> (<code>DD-MM-YYYY</code>).
+Tombolnya <strong>Simpan Keputusan</strong> / <strong>Perbarui Keputusan</strong>. Keputusan tercetak pada blok 7 halaman
+cetak SKP.</li>
+<li><strong>Setujui</strong> — isi <strong>tanggal persetujuan</strong> (<code>DD-MM-YYYY</code>, terisi tanggal hari ini) pada kolom
+<strong>AKSI</strong>, lalu tekan <strong>Setujui</strong>. Persetujuan baru bisa dilakukan setelah dosen menyetujui
+penilaian, dan tercetak pada blok 11 halaman cetak SKP.</li>
+</ol>
+<p>Setelah atasan menyetujui, dosen tidak dapat lagi membatalkan persetujuannya dan Pejabat Penilai tidak
+dapat mengubah nilai.</p>
+<hr />
+<h1>14. Referensi status dan alur DUPAK</h1>
+<p>Bab ini merangkum seluruh status yang mungkin Anda temui beserta siapa yang berwenang mengubahnya.
+Gunakan bab ini saat lencana status pada layar tidak Anda pahami.</p>
+<h2>14.1 Status usulan DUPAK</h2>
+<table>
+<thead>
+<tr>
+<th>Status di layar</th>
+<th>Arti</th>
+<th>Yang bertindak berikutnya</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Menunggu penugasan admin</strong></td>
+<td>Kegiatan sudah diajukan dosen, tetapi admin belum menugaskan TIM PAK.</td>
+<td>Admin (menugaskan TIM PAK).</td>
+</tr>
+<tr>
+<td><strong>Menunggu penilaian</strong></td>
+<td>Sudah sampai di meja TIM PAK, angka kredit belum diisi.</td>
+<td>TIM PAK (Bab 12.3).</td>
+</tr>
+<tr>
+<td><strong>Sudah dinilai</strong></td>
+<td>TIM PAK selesai mengisi kolom <strong>Baru</strong>.</td>
+<td>Dosen — memeriksa hasil lalu menekan <strong>Ajukan Dupak</strong>.</td>
+</tr>
+<tr>
+<td><strong>Diajukan DUPAK</strong></td>
+<td>Dosen sudah mengajukan usulan; menunggu keputusan admin.</td>
+<td>Admin (Bab 9.2).</td>
+</tr>
+<tr>
+<td><strong>Disetujui</strong></td>
+<td>Admin menyetujui; angka kredit terkunci dan DUPAK siap dicetak.</td>
+<td>Dosen (mencetak DUPAK).</td>
+</tr>
+<tr>
+<td><strong>Butuh Perbaikan</strong></td>
+<td>Dikembalikan admin dengan catatan; entri masih dapat diubah.</td>
+<td>Dosen (memperbaiki lalu mengajukan ulang).</td>
+</tr>
+<tr>
+<td><strong>Ditolak</strong></td>
+<td>Usulan dihentikan admin dengan alasan tertulis.</td>
+<td>Tidak ada — periode dapat diajukan lagi pada periode berikutnya.</td>
+</tr>
+</tbody>
+</table>
+<p>Status <strong>Diajukan DUPAK</strong>, <strong>Disetujui</strong>, <strong>Butuh Perbaikan</strong>, dan <strong>Ditolak</strong> dihitung sebagai
+tahap DUPAK, sehingga periodenya tampil pada menu <strong>Riwayat DUPAK</strong> — bukan lagi pada daftar
+pengajuan kegiatan.</p>
+<h2>14.2 Status berkas syarat khusus (BKD dan IKD)</h2>
+<table>
+<thead>
+<tr>
+<th>Status di layar</th>
+<th>Arti</th>
+<th>Yang bertindak berikutnya</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Belum diajukan</strong></td>
+<td>Berkas belum diunggah, atau masih berupa draf.</td>
+<td>Dosen (mengunggah berkas).</td>
+</tr>
+<tr>
+<td><strong>Menunggu verifikasi</strong></td>
+<td>Berkas sudah dikirim dan menunggu pemeriksaan admin.</td>
+<td>Admin (Bab 9.1).</td>
+</tr>
+<tr>
+<td><strong>Diterima</strong></td>
+<td>Berkas lolos verifikasi.</td>
+<td>Dosen (melanjutkan pengisian kegiatan).</td>
+</tr>
+<tr>
+<td><strong>Ditolak</strong></td>
+<td>Berkas dikembalikan dengan catatan per jenis berkas.</td>
+<td>Dosen (mengunggah ulang).</td>
+</tr>
+</tbody>
+</table>
+<p>Status BKD dan IKD disimpan terpisah, lalu status ajuan keseluruhan diturunkan darinya: bila salah
+satu <strong>Ditolak</strong> maka ajuan <strong>Ditolak</strong>; bila ada yang <strong>Menunggu verifikasi</strong> maka ajuan <strong>Menunggu
+verifikasi</strong>; bila masih ada yang <strong>Belum diajukan</strong> maka ajuan <strong>Belum diajukan</strong>.</p>
+<h2>14.3 Status pengajuan jabatan</h2>
+<table>
+<thead>
+<tr>
+<th>Status di layar</th>
+<th>Arti</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Draft</strong></td>
+<td>Baru disimpan, belum dikirim.</td>
+</tr>
+<tr>
+<td><strong>Diajukan</strong></td>
+<td>Sudah dikirim untuk diperiksa.</td>
+</tr>
+<tr>
+<td><strong>Diverifikasi</strong></td>
+<td>Lolos pemeriksaan berkas.</td>
+</tr>
+<tr>
+<td><strong>Disetujui</strong></td>
+<td>Usulan jabatan disetujui.</td>
+</tr>
+<tr>
+<td><strong>Ditolak</strong></td>
+<td>Usulan jabatan ditolak.</td>
+</tr>
+</tbody>
+</table>
+<h2>14.4 Status SKP</h2>
+<table>
+<thead>
+<tr>
+<th>Keadaan</th>
+<th>Penanda pada layar</th>
+<th>Siapa yang bertindak</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Belum dinilai</td>
+<td><em>&quot;Menunggu penilaian&quot;</em> pada <strong>SKP-Dosen</strong></td>
+<td>Pejabat Penilai (Bab 13.3).</td>
+</tr>
+<tr>
+<td>Sudah dinilai</td>
+<td>Lencana angka pada <strong>NILAI PERILAKU KERJA</strong>; tombol <strong>Ajukan Keberatan</strong> dan <strong>Setujui</strong> muncul</td>
+<td>Dosen (Bab 13.2).</td>
+</tr>
+<tr>
+<td>Keberatan diajukan</td>
+<td><strong>Ubah Keberatan</strong> + <em>&quot;Keberatan diajukan …&quot;</em>; tombol <strong>Tanggapan Keberatan</strong> di sisi penilai</td>
+<td>Pejabat Penilai (Bab 13.4).</td>
+</tr>
+<tr>
+<td>Disetujui dosen</td>
+<td>Lencana <strong>Disetujui</strong> pada <strong>SKP-Dosen</strong>, <strong>Disetujui dosen</strong> pada <strong>Usulan SKP</strong></td>
+<td>Atasan Pejabat Penilai (Bab 13.5).</td>
+</tr>
+<tr>
+<td>Diputuskan atasan</td>
+<td><strong>Ubah Keputusan</strong> pada kolom <strong>AKSI</strong></td>
+<td>Atasan Pejabat Penilai (menyetujui).</td>
+</tr>
+<tr>
+<td>Selesai</td>
+<td><em>&quot;Sudah disetujui atasan penilai&quot;</em></td>
+<td>Tidak ada — dokumen siap dicetak admin.</td>
+</tr>
+</tbody>
+</table>
+<p>Nilai SKP terkunci selama dosen sudah menyetujui. Pejabat Penilai baru dapat mengubahnya kembali bila
+dosen menekan <strong>Batalkan Persetujuan</strong> — dan pembatalan itu tidak tersedia lagi setelah atasan
+menyetujui.</p>
+<h2>14.5 Siapa berwenang atas apa</h2>
+<table>
+<thead>
+<tr>
+<th>Tindakan</th>
+<th>Dosen</th>
+<th>TIM PAK</th>
+<th>Admin</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Mengisi entri kegiatan</td>
+<td>✔</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Mengajukan ke TIM PAK</td>
+<td>✔</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Menugaskan TIM PAK</td>
+<td>—</td>
+<td>—</td>
+<td>✔</td>
+</tr>
+<tr>
+<td>Mengisi angka kredit (<strong>Baru</strong>)</td>
+<td>—</td>
+<td>✔</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Mengajukan DUPAK</td>
+<td>✔</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Menyetujui / mengembalikan / menolak DUPAK</td>
+<td>—</td>
+<td>—</td>
+<td>✔</td>
+</tr>
+<tr>
+<td>Mencetak DUPAK dan lampirannya</td>
+<td>✔</td>
+<td>—</td>
+<td>✔</td>
+</tr>
+<tr>
+<td>Verifikasi BKD dan IKD</td>
+<td>mengunggah</td>
+<td>—</td>
+<td>✔ memutuskan</td>
+</tr>
+<tr>
+<td>Menilai SKP</td>
+<td>menerima/menyanggah</td>
+<td>—</td>
+<td>✔ (Pejabat Penilai ditunjuk admin)</td>
+</tr>
+<tr>
+<td>Mengubah data instansi dan pengaturan</td>
+<td>—</td>
+<td>—</td>
+<td>✔</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Catatan</strong> — Satu akun dapat memegang lebih dari satu peran. Bila tombol yang Anda butuhkan tidak
+tampil, periksa peran aktif pada menu akun di kanan atas (Bab 2.3) — kemungkinan Anda sedang berada
+pada peran yang berbeda.</p>
+</blockquote>
+<hr />
+<h1>15. Pertanyaan umum dan penanganan masalah</h1>
+<h2>15.1 Masuk dan akun</h2>
+<p><strong>Saya lupa password. Bagaimana mengatasinya?</strong></p>
+<p>Aplikasi tidak menyediakan pemulihan mandiri. Pada halaman masuk, klik <strong>Lupa password?</strong> — tautan itu
+membuka aplikasi surel dengan alamat admin dan subjek <em>&quot;Bantuan akun SIMJAD&quot;</em> (nama web mengikuti
+<strong>Pengaturan → Nama Web</strong>). Anda juga dapat memakai tombol <strong>Hubungi Admin via WhatsApp</strong> di bagian
+bawah sidebar. Admin akan mengatur ulang kata sandi Anda dari menu <strong>Administrasi → Data Dosen</strong>.</p>
+<p><strong>NIDN saya ditolak saat masuk.</strong></p>
+<p>Pastikan yang diketik adalah NIDN (bukan NIP atau surel) dan tanpa spasi. Bila tetap gagal, akun Anda
+mungkin belum dibuat admin — minta admin menambahkannya lewat <strong>Data Dosen</strong> atau <strong>Import Data
+Dosen</strong> (Bab 8).</p>
+<p><strong>Menu saya tidak selengkap rekan saya.</strong></p>
+<p>Menu ditentukan oleh peran aktif. Bila akun Anda memegang lebih dari satu peran, halaman <strong>Pilih
+peran</strong> muncul setelah masuk (Gambar 42, Bab 2.3). Pilih peran lain untuk melihat menunya.</p>
+<p><strong>Halaman menampilkan &quot;403&quot; atau &quot;Anda tidak memiliki akses&quot;.</strong></p>
+<p>Anda membuka halaman milik peran lain — misalnya tautan lama TIM PAK dibuka saat peran <strong>Dosen</strong>
+aktif. Kembali ke <strong>Dashboard</strong> lalu ganti peran.</p>
+<h2>15.2 Pengisian kegiatan dan pengajuan</h2>
+<p><strong>Tombol pengisian kegiatan tidak muncul pada periode tertentu.</strong></p>
+<p>Periode yang sudah <strong>Disetujui</strong> admin terkunci: tombol <strong>Ajukan ke TIM PAK</strong> tidak aktif dan nilai
+tidak dapat diubah lagi. Gunakan periode berikutnya untuk kegiatan baru. Untuk periode yang belum ada
+sama sekali, buat lewat <strong>Pengajuan Baru</strong> (Bab 5.2).</p>
+<p><strong>Bukti kegiatan ditolak saat disimpan.</strong></p>
+<p>Kolom <strong>Link Bukti</strong> hanya menerima alamat lengkap yang dimulai <code>http://</code> atau <code>https://</code>. Unggah
+berkas bukti ke penyimpanan daring (Google Drive, OneDrive, dan sejenisnya), atur agar dapat dibuka
+publik, lalu tempelkan tautannya. Jangan menempelkan tautan folder lokal seperti <code>D:\…</code>.</p>
+<p><strong>Mengapa kolom angka kredit tidak bisa saya isi?</strong></p>
+<p>Kolom <strong>Baru</strong> hanya untuk TIM PAK. Dosen melihat angka tersebut setelah TIM PAK menyimpan penilaian
+(Bab 12.3); sebelum itu kolom <strong>Baru</strong> masih kosong dan yang tampil hanya nilai <strong>Lama</strong>.</p>
+<p><strong>Status berhenti di &quot;Menunggu penugasan admin&quot;.</strong></p>
+<p>Admin belum menunjuk TIM PAK untuk periode Anda. Hubungi admin kepegawaian; setelah penugasan
+diberikan, status berubah menjadi <strong>Menunggu penilaian</strong> dan ajuan muncul pada <strong>Pengajuan Masuk</strong>
+milik TIM PAK.</p>
+<p><strong>Saya sudah menekan &quot;Ajukan Dupak&quot;, tetapi ada yang salah.</strong></p>
+<p>Selama admin belum memutuskan, ajuan berstatus <strong>Diajukan DUPAK</strong> dan belum dapat ditarik kembali.
+Bila admin mengembalikannya sebagai <strong>Butuh Perbaikan</strong>, perbaiki entri lalu ajukan ulang. Bila
+<strong>Ditolak</strong>, alasannya tercatat pada kolom catatan dan periode itu dianggap selesai — usulan
+berikutnya dibuat pada periode lain.</p>
+<p><strong>DUPAK saya sudah &quot;Disetujui&quot; tetapi angka kredit ingin diubah.</strong></p>
+<p>Nilai terkunci setelah persetujuan admin — termasuk bagi TIM PAK. Perubahan hanya mungkin melalui
+admin, dan praktisnya diusulkan pada periode berikutnya.</p>
+<h2>15.3 Berkas syarat khusus</h2>
+<p><strong>Unggahan BKD saya gagal.</strong></p>
+<p>Berkas harus <strong>PDF</strong> dan maksimal <strong>3 MB</strong>. Untuk IKD batasnya <strong>5 MB</strong>. Kompres berkas terlebih
+dahulu, atau pindai ulang dengan resolusi lebih rendah. Nama berkas sebaiknya tanpa tanda baca khusus.</p>
+<p><strong>Status BKD &quot;Diterima&quot; tetapi IKD masih &quot;Belum diajukan&quot;.</strong></p>
+<p>Kedua berkas diperiksa terpisah. Status ajuan keseluruhan baru menjadi <strong>Diterima</strong> bila keduanya
+lolos. Unggah IKD, lalu kirim berkasnya untuk diverifikasi.</p>
+<p><strong>Saya ingin mengganti berkas yang sudah diajukan.</strong></p>
+<p>Berkas berstatus <strong>Menunggu verifikasi</strong> tidak dapat diganti. Tunggu keputusan admin; bila
+<strong>Ditolak</strong>, unggahan baru terbuka beserta catatan alasannya.</p>
+<h2>15.4 Mencetak dokumen</h2>
+<p><strong>Cetakan DUPAK terpotong atau kolomnya berdesakan.</strong></p>
+<p>Gunakan orientasi <strong>Landscape</strong>, ukuran <strong>A4</strong>, dan skala <strong>100%</strong> (jangan <em>Fit to page</em>). Matikan
+opsi <em>header/footer</em> peramban agar nomor halaman tidak menimpa tabel.</p>
+<p><strong>Tombol cetak tidak ada pada DUPAK saya.</strong></p>
+<p>Tombol <strong>Cetak PDF</strong> tersedia pada tab <strong>Riwayat Ajuan</strong> di menu <strong>Riwayat DUPAK</strong>, dan tombol <strong>Cetak
+Dupak ke PDF</strong> pada panel <strong>Review</strong> (Bab 5.7). Bila rekap yang terbuka masih kosong pada kolom
+<strong>Baru</strong>, artinya TIM PAK belum menyimpan nilai untuk periode tersebut — bukan masalah pencetakan.</p>
+<p><strong>Tautan Bukti tidak tercetak.</strong></p>
+<p>Ini disengaja: halaman cetak tidak memuat kolom <strong>Link Bukti</strong>, agar dokumen resmi tetap bersih. Bukti
+tetap tersimpan dan dapat diperiksa pada layar.</p>
+<h2>15.5 Notifikasi WhatsApp tidak masuk</h2>
+<ol>
+<li>Pastikan nomor HP Anda terisi pada <strong>Profil → Data Pribadi</strong>. Nomor dengan awalan <code>0</code> atau <code>8</code>
+otomatis dinormalkan menjadi <code>62…</code>, jadi tulis nomor aktif apa adanya.</li>
+<li>Pastikan admin sudah menghubungkan gateway pada menu <strong>WhatsApp API</strong> (Bab 11.8) — status
+perangkat harus <strong>Terhubung</strong>, bukan <em>Belum terhubung</em> atau <em>Terputus</em>.</li>
+<li>Notifikasi hanya dikirim untuk peristiwa tertentu: ajuan PAK masuk, DUPAK masuk, berkas masuk,
+keputusan berkas, keputusan DUPAK, SKP masuk, dan SKP dinilai.</li>
+<li>Bila gateway belum diatur, aplikasi tetap berjalan normal — hanya pesan WhatsApp yang tidak
+terkirim. Semua informasi tetap dapat dilihat pada menu masing-masing.</li>
+</ol>
+<h2>15.6 Khusus admin</h2>
+<p><strong>Import data dosen gagal.</strong></p>
+<p>Berkas harus <strong><code>.xlsx</code></strong> (bukan <code>.xls</code> atau <code>.csv</code>) dan maksimal <strong>10 MB</strong>. Kolom wajib: nama dan
+NIDN. Baris yang bermasalah akan dilewati dan dilaporkan pada ringkasan hasil import
+(<em>&quot;… baris dilewati&quot;</em>); perbaiki baris tersebut, lalu unggah ulang berkasnya.</p>
+<p><strong>Perubahan pengaturan tidak berpengaruh.</strong></p>
+<p>Setelah menyimpan pada <strong>Pengaturan</strong>, muat ulang halaman dengan <code>Ctrl + F5</code>. Untuk perubahan tampilan
+yang disimpan sebagai berkas, jalankan <strong>Build aset</strong> pada bagian <strong>Pemeliharaan Sistem</strong> (Bab 11.7).</p>
+<p><strong>Backup atau import database berhenti di tengah jalan.</strong></p>
+<p>Kedua proses berjalan bertahap dan menampilkan kemajuannya pada terminal log. Jangan menutup tab
+selama proses berlangsung. Bila gagal, periksa pesan terakhir pada log tersebut sebelum mencoba lagi.</p>
+<h2>15.7 Ringkasan masalah dan solusi</h2>
+<table>
+<thead>
+<tr>
+<th>Gejala</th>
+<th>Kemungkinan sebab</th>
+<th>Tindakan</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Tetap berada di halaman masuk</td>
+<td>Sesi kedaluwarsa atau kata sandi salah</td>
+<td>Masuk ulang; bila gagal, minta reset admin.</td>
+</tr>
+<tr>
+<td>Data yang baru disimpan tidak tampil</td>
+<td>Halaman masih tersimpan di cache peramban</td>
+<td>Muat ulang dengan <code>Ctrl + F5</code>.</td>
+</tr>
+<tr>
+<td>Tabel kosong padahal ada data</td>
+<td>Filter status atau kata kunci pencarian masih aktif</td>
+<td>Kosongkan kotak pencarian, pilih <strong>Semua status</strong>.</td>
+</tr>
+<tr>
+<td>Tombol abu-abu</td>
+<td>Status data mengunci tindakan (mis. nilai sudah disetujui)</td>
+<td>Periksa status pada Bab 14.</td>
+</tr>
+<tr>
+<td>Berkas tidak bisa diunggah</td>
+<td>Format bukan PDF atau ukuran melebihi batas</td>
+<td>Perkecil berkas, unggah ulang.</td>
+</tr>
+<tr>
+<td>Lencana status tidak dikenal</td>
+<td>Halaman perlu dimuat ulang setelah tindakan pengguna lain</td>
+<td>Muat ulang; bila tetap, laporkan ke admin.</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Catatan</strong> — Bila masalah berlanjut, catat tiga hal sebelum melapor: halaman yang dibuka, teks
+pesan yang muncul, dan waktu kejadian. Ketiganya mempercepat penelusuran oleh admin.</p>
+</blockquote>
+<hr />
+<h1>16. Lampiran — daftar gambar</h1>
+<p>Seluruh tangkapan layar tersimpan pada folder <code>docs/manual/images/</code>. Nomor gambar mengikuti urutan
+pengambilan, bukan urutan bab; nomor <code>19</code> tidak dipakai. Data pada gambar adalah data contoh.</p>
+<table>
+<thead>
+<tr>
+<th>No.</th>
+<th>Berkas</th>
+<th>Isi</th>
+<th>Bab</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>01</td>
+<td><code>01-halaman-masuk.png</code></td>
+<td>Halaman masuk: NIDN, password, tombol masuk</td>
+<td>2.1</td>
+</tr>
+<tr>
+<td>02</td>
+<td><code>02-dashboard-dosen.png</code></td>
+<td>Dashboard dosen: kartu ringkasan dan riwayat pengajuan</td>
+<td>3.1</td>
+</tr>
+<tr>
+<td>03</td>
+<td><code>03-profil-portofolio.png</code></td>
+<td>Portofolio dosen: ringkasan profil dan menu profil</td>
+<td>4.1</td>
+</tr>
+<tr>
+<td>04</td>
+<td><code>04-data-pribadi.png</code></td>
+<td>Formulir data pribadi dosen</td>
+<td>4.2</td>
+</tr>
+<tr>
+<td>05</td>
+<td><code>05-riwayat-pendidikan.png</code></td>
+<td>Daftar riwayat pendidikan</td>
+<td>4.3</td>
+</tr>
+<tr>
+<td>06</td>
+<td><code>06-tambah-pendidikan.png</code></td>
+<td>Formulir tambah riwayat pendidikan</td>
+<td>4.3</td>
+</tr>
+<tr>
+<td>07</td>
+<td><code>07-riwayat-pekerjaan.png</code></td>
+<td>Riwayat pekerjaan dan kepangkatan</td>
+<td>4.4</td>
+</tr>
+<tr>
+<td>08</td>
+<td><code>08-status-jabatan.png</code></td>
+<td>Status jabatan akademik saat mengajukan</td>
+<td>4.5</td>
+</tr>
+<tr>
+<td>09</td>
+<td><code>09-pilih-periode.png</code></td>
+<td>Pemilihan periode pengajuan</td>
+<td>5.1</td>
+</tr>
+<tr>
+<td>10</td>
+<td><code>10-masa-penilaian.png</code></td>
+<td>Penentuan masa penilaian</td>
+<td>5.2</td>
+</tr>
+<tr>
+<td>11</td>
+<td><code>11-pengajuan-baru.png</code></td>
+<td>Pengajuan baru, tab Pendidikan</td>
+<td>5.3</td>
+</tr>
+<tr>
+<td>12</td>
+<td><code>12-form-penelitian.png</code></td>
+<td>Tab Penelitian dengan entri tersimpan</td>
+<td>5.3</td>
+</tr>
+<tr>
+<td>13</td>
+<td><code>13-form-review.png</code></td>
+<td>Tab Review pengajuan</td>
+<td>5.4</td>
+</tr>
+<tr>
+<td>14</td>
+<td><code>14-riwayat-pengajuan.png</code></td>
+<td>Riwayat Pengajuan, tab Riwayat Nilai PAK</td>
+<td>7.1</td>
+</tr>
+<tr>
+<td>15</td>
+<td><code>15-riwayat-ikd.png</code></td>
+<td>Riwayat IKD</td>
+<td>6.4</td>
+</tr>
+<tr>
+<td>16</td>
+<td><code>16-panduan-pengajuan.png</code></td>
+<td>Panduan Pengajuan</td>
+<td>7.2</td>
+</tr>
+<tr>
+<td>17</td>
+<td><code>17-karya-tulis.png</code></td>
+<td>Riwayat karya tulis</td>
+<td>4.6</td>
+</tr>
+<tr>
+<td>18</td>
+<td><code>18-syarat-khusus.png</code></td>
+<td>Halaman Indikator Kinerja Dosen (berkas syarat khusus)</td>
+<td>6.2</td>
+</tr>
+<tr>
+<td>20</td>
+<td><code>20-dashboard-admin.png</code></td>
+<td>Dashboard admin</td>
+<td>3.2</td>
+</tr>
+<tr>
+<td>21</td>
+<td><code>21-data-dosen.png</code></td>
+<td>Data Dosen</td>
+<td>8.1</td>
+</tr>
+<tr>
+<td>22</td>
+<td><code>22-tambah-data-dosen.png</code></td>
+<td>Formulir Tambah Data Dosen</td>
+<td>8.2</td>
+</tr>
+<tr>
+<td>23</td>
+<td><code>23-import-data-dosen.png</code></td>
+<td>Import Data Dosen</td>
+<td>8.3</td>
+</tr>
+<tr>
+<td>24</td>
+<td><code>24-riwayat-dosen.png</code></td>
+<td>Riwayat Dosen</td>
+<td>8.4</td>
+</tr>
+<tr>
+<td>25</td>
+<td><code>25-detail-riwayat-dosen.png</code></td>
+<td>Detail riwayat dosen</td>
+<td>8.4</td>
+</tr>
+<tr>
+<td>26</td>
+<td><code>26-verifikasi-berkas.png</code></td>
+<td>Verifikasi Berkas Syarat Khusus</td>
+<td>9.1</td>
+</tr>
+<tr>
+<td>27</td>
+<td><code>27-ajuan-pak.png</code></td>
+<td>Ajuan PAK</td>
+<td>9.2</td>
+</tr>
+<tr>
+<td>28</td>
+<td><code>28-verifikasi-dupak.png</code></td>
+<td>Verifikasi DUPAK</td>
+<td>9.3</td>
+</tr>
+<tr>
+<td>29</td>
+<td><code>29-surat.png</code></td>
+<td>Surat, tab BAP Senat</td>
+<td>10.1</td>
+</tr>
+<tr>
+<td>30</td>
+<td><code>30-skp.png</code></td>
+<td>SKP versi admin</td>
+<td>10.2</td>
+</tr>
+<tr>
+<td>31</td>
+<td><code>31-jabatan-fungsional.png</code></td>
+<td>Jabatan Akademik</td>
+<td>10.3</td>
+</tr>
+<tr>
+<td>32</td>
+<td><code>32-jabatan-struktural.png</code></td>
+<td>Jabatan Struktural</td>
+<td>10.3</td>
+</tr>
+<tr>
+<td>33</td>
+<td><code>33-kepangkatan.png</code></td>
+<td>Kepangkatan</td>
+<td>10.3</td>
+</tr>
+<tr>
+<td>34</td>
+<td><code>34-data-instansi.png</code></td>
+<td>Data Instansi</td>
+<td>11.1</td>
+</tr>
+<tr>
+<td>35</td>
+<td><code>35-pejabat-struktural.png</code></td>
+<td>Pejabat Struktural</td>
+<td>11.3</td>
+</tr>
+<tr>
+<td>36</td>
+<td><code>36-senat.png</code></td>
+<td>Senat</td>
+<td>11.4</td>
+</tr>
+<tr>
+<td>37</td>
+<td><code>37-tim-komite.png</code></td>
+<td>Tim Komite</td>
+<td>11.5</td>
+</tr>
+<tr>
+<td>38</td>
+<td><code>38-prodi.png</code></td>
+<td>Prodi</td>
+<td>11.2</td>
+</tr>
+<tr>
+<td>39</td>
+<td><code>39-panduan-penilaian.png</code></td>
+<td>Panduan Penilaian versi admin</td>
+<td>11.6</td>
+</tr>
+<tr>
+<td>40</td>
+<td><code>40-pengaturan.png</code></td>
+<td>Pengaturan sistem</td>
+<td>11.7</td>
+</tr>
+<tr>
+<td>41</td>
+<td><code>41-whatsapp-api.png</code></td>
+<td>WhatsApp API</td>
+<td>11.8</td>
+</tr>
+<tr>
+<td>42</td>
+<td><code>42-pilih-peran.png</code></td>
+<td>Halaman pilih peran</td>
+<td>2.2</td>
+</tr>
+<tr>
+<td>43</td>
+<td><code>43-dashboard-tim-pak.png</code></td>
+<td>Dashboard TIM PAK</td>
+<td>3.3, 12.1</td>
+</tr>
+<tr>
+<td>44</td>
+<td><code>44-pengajuan-masuk.png</code></td>
+<td>Pengajuan Masuk (TIM PAK)</td>
+<td>12.2</td>
+</tr>
+<tr>
+<td>45</td>
+<td><code>45-nilai-pengajuan.png</code></td>
+<td>Penilaian DUPAK oleh TIM PAK</td>
+<td>12.3</td>
+</tr>
+<tr>
+<td>46</td>
+<td><code>46-panduan-penilaian-tim-pak.png</code></td>
+<td>Panduan Penilaian versi TIM PAK</td>
+<td>12.4</td>
+</tr>
+<tr>
+<td>47</td>
+<td><code>47-skp-dosen.png</code></td>
+<td>SKP-Dosen</td>
+<td>13.1</td>
+</tr>
+<tr>
+<td>48</td>
+<td><code>48-keberatan-skp.png</code></td>
+<td>Formulir Ajukan Keberatan SKP</td>
+<td>13.2</td>
+</tr>
+<tr>
+<td>49</td>
+<td><code>49-usulan-skp.png</code></td>
+<td>Usulan SKP</td>
+<td>13.3</td>
+</tr>
+</tbody>
+</table>
+<h2>16.1 Peta bab ke gambar</h2>
+<table>
+<thead>
+<tr>
+<th>Bab</th>
+<th>Gambar yang dipakai</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2. Masuk dan peran</td>
+<td>01, 42</td>
+</tr>
+<tr>
+<td>3. Dashboard</td>
+<td>02, 20, 43</td>
+</tr>
+<tr>
+<td>4. Profil dan portofolio</td>
+<td>03, 04, 05, 06, 07, 08, 17</td>
+</tr>
+<tr>
+<td>5. Pengajuan DUPAK</td>
+<td>09, 10, 11, 12, 13</td>
+</tr>
+<tr>
+<td>6. Berkas syarat khusus</td>
+<td>18, 15</td>
+</tr>
+<tr>
+<td>7. Riwayat dan panduan</td>
+<td>14, 16</td>
+</tr>
+<tr>
+<td>8. Administrasi data dosen</td>
+<td>21, 22, 23, 24, 25</td>
+</tr>
+<tr>
+<td>9. Verifikasi ajuan</td>
+<td>26, 27, 28</td>
+</tr>
+<tr>
+<td>10. Surat, SKP, kepegawaian</td>
+<td>29, 30, 31, 32, 33</td>
+</tr>
+<tr>
+<td>11. Instansi dan pengaturan</td>
+<td>34, 38, 35, 36, 37, 39, 40, 41</td>
+</tr>
+<tr>
+<td>12. TIM PAK</td>
+<td>43, 44, 45, 46</td>
+</tr>
+<tr>
+<td>13. SKP dan keberatan</td>
+<td>47, 48, 49</td>
+</tr>
+</tbody>
+</table>
+<p>Bab 1, 14, 15, dan 16 bersifat penjelasan dan tidak memuat gambar baru; gambar yang dirujuk di sana
+telah tampil pada bab sebelumnya.</p>
+<blockquote>
+<p><strong>Catatan</strong> — Bila Anda memindahkan atau mengganti nama berkas gambar, perbarui juga tautan
+<code>images/…</code> pada bab terkait agar pratinjau tetap tampil.</p>
+</blockquote>
+
+</body>
+</html>
