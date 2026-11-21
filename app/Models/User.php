@@ -116,6 +116,7 @@ class User extends Authenticatable
             $disk->deleteDirectory("syarat-khusus/{$user->nidn}");
             $disk->deleteDirectory("riwayat-pendidikan/{$user->nidn}");
             $disk->deleteDirectory("riwayat-pekerjaan/{$user->nidn}");
+            $disk->deleteDirectory("pendukung-dupak/{$user->nidn}");
         });
     }
 
@@ -137,6 +138,11 @@ class User extends Authenticatable
     public function karyaTulis(): HasMany
     {
         return $this->hasMany(KaryaTulis::class);
+    }
+
+    public function pendukungDupak(): HasMany
+    {
+        return $this->hasMany(PendukungDupak::class);
     }
 
     public function riwayatKepangkatan(): HasMany

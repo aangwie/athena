@@ -71,14 +71,30 @@
                         <h3 class="text-sm font-extrabold text-slate-800">
                             {{ $isEdit ? 'Edit Karya Tulis' : 'Tambah Karya Tulis' }}
                         </h3>
-                        <p class="mt-0.5 text-xs text-slate-400">Isi jenis karya dan judul, lalu tempelkan tautan bukti dari Google Drive.</p>
+                        <p class="mt-0.5 text-xs text-slate-400">Pilih kategori kegiatan dan jenis karya, lalu tempelkan tautan bukti dari Google Drive.</p>
                     </div>
                 </div>
 
                 <div class="grid gap-5 px-5 py-5 sm:px-6">
+                    {{-- Kategori kegiatan dipilih lebih dahulu, sebelum jenis karya ilmiah. --}}
+                    <div>
+                        <label for="kategori_kegiatan" class="form-label">Kategori Kegiatan <span class="text-rose-500">*</span></label>
+                        <select id="kategori_kegiatan" name="kategori_kegiatan" required
+                                data-select-search="Cari kategori kegiatan…"
+                                @class(['form-select', 'border-rose-300 bg-rose-50/40' => $errors->has('kategori_kegiatan')])>
+                            <option value="">Pilih kategori kegiatan</option>
+                            @foreach ($kategoriList as $kategori)
+                                <option value="{{ $kategori }}" @selected(old('kategori_kegiatan', $editItem?->kategori_kegiatan) === $kategori)>
+                                    {{ $kategori }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('kategori_kegiatan') <p class="form-error">{{ $message }}</p> @enderror
+                    </div>
+
                     <div class="grid gap-5 sm:grid-cols-2">
                         <div>
-                            <label for="karya_ilmiah" class="form-label">Karya Ilmiah <span class="text-rose-500">*</span></label>
+                            <label for="karya_ilmiah" class="form-label">Judul Publikasi <span class="text-rose-500">*</span></label>
                             <select id="karya_ilmiah" name="karya_ilmiah" required
                                     data-select-search="Cari jenis karya ilmiah…"
                                     data-karya-jurnal="{{ json_encode($jenisJurnal, JSON_UNESCAPED_SLASHES) }}"
@@ -95,7 +111,7 @@
                         </div>
 
                         <div>
-                            <label for="judul" class="form-label">Judul <span class="text-rose-500">*</span></label>
+                            <label for="judul" class="form-label">Nama Jurnal/Prosiding <span class="text-rose-500">*</span></label>
                             <input type="text" id="judul" name="judul" value="{{ old('judul', $editItem?->judul) }}"
                                    placeholder="Judul lengkap karya ilmiah" maxlength="255" required
                                    @class(['form-input', 'border-rose-300 bg-rose-50/40' => $errors->has('judul')])>
@@ -251,6 +267,9 @@
                                     <span class="inline-flex rounded-full bg-teal-50 px-2 py-0.5 text-[10px] font-bold text-teal-700 ring-1 ring-teal-100 ring-inset">
                                         {{ $item->karya_ilmiah }}
                                     </span>
+                                    @if ($item->kategori_kegiatan)
+                                        <p class="mt-1 max-w-[20rem] text-[11px] leading-relaxed text-slate-400">{{ $item->kategori_kegiatan }}</p>
+                                    @endif
                                 </td>
                                 <td class="px-5 py-3">
                                     <p class="max-w-[20rem] truncate font-semibold text-slate-800" title="{{ $item->judul }}">{{ $item->judul }}</p>

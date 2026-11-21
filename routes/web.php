@@ -18,6 +18,7 @@ use App\Http\Controllers\Kepegawaian\KepangkatanController;
 use App\Http\Controllers\ManualController;
 use App\Http\Controllers\NotifikasiController;
 use App\Http\Controllers\PanduanPenilaianController;
+use App\Http\Controllers\PendukungDupakController;
 use App\Http\Controllers\PengajuanDosenController;
 use App\Http\Controllers\PengajuanDupakController;
 use App\Http\Controllers\PengaturanController;
@@ -144,6 +145,12 @@ Route::middleware('auth')->group(function () {
         Route::post('/riwayat-karya-tulis', [KaryaTulisController::class, 'store'])->name('karya-tulis.store');
         Route::put('/riwayat-karya-tulis/{karyaTulis}', [KaryaTulisController::class, 'update'])->name('karya-tulis.update');
         Route::delete('/riwayat-karya-tulis/{karyaTulis}', [KaryaTulisController::class, 'destroy'])->name('karya-tulis.destroy');
+
+        // Dokumen pendukung DUPAK: check similarity, bukti korespondensi, profil SINTA, dan artikel.
+        Route::get('/pendukung-dupak', [PendukungDupakController::class, 'index'])->name('pendukung-dupak.index');
+        Route::post('/pendukung-dupak', [PendukungDupakController::class, 'store'])->name('pendukung-dupak.store');
+        Route::put('/pendukung-dupak/{pendukungDupak}', [PendukungDupakController::class, 'update'])->name('pendukung-dupak.update');
+        Route::delete('/pendukung-dupak/{pendukungDupak}', [PendukungDupakController::class, 'destroy'])->name('pendukung-dupak.destroy');
         Route::post('/pengajuan/ajukan-ulang', [PengajuanDosenController::class, 'ajukanUlang'])->name('pengajuan.ajukan-ulang');
         Route::get('/pengajuan/cetak', [PengajuanDosenController::class, 'cetak'])->name('pengajuan.cetak');
         Route::post('/pengajuan/pendidikan', [PengajuanDosenController::class, 'storePendidikan'])->name('pengajuan.pendidikan.store');
@@ -185,6 +192,10 @@ Route::middleware('auth')->group(function () {
         Route::delete('/riwayat-pekerjaan/angka-kredit/{riwayatAngkaKredit}', [RiwayatPekerjaanController::class, 'destroyAngkaKredit'])->name('pekerjaan.angka-kredit.destroy');
     });
 
+    // Berkas pendukung DUPAK dibuka oleh pemiliknya (dosen) maupun admin untuk verifikasi.
+    Route::get('/pendukung-dupak/{pendukungDupak}/berkas', [PendukungDupakController::class, 'berkas'])
+        ->name('pendukung-dupak.berkas');
+
     Route::middleware('dosen')->prefix('skp-usulan')->name('skp-usulan.')->group(function () {
         Route::get('/', [SkpUsulanController::class, 'index'])->name('index');
         Route::get('/{skp}/tanggapan', [SkpUsulanController::class, 'tanggapan'])->name('tanggapan.edit');
@@ -213,6 +224,11 @@ Route::middleware('auth')->group(function () {
     Route::middleware('admin')->prefix('ajuan-pak')->name('ajuan-pak.')->group(function () {
         Route::get('/', [PengajuanDupakController::class, 'ajuanPak'])->name('index');
         Route::put('/{pengajuan}/tugaskan', [PengajuanDupakController::class, 'tugaskan'])->name('tugaskan');
+    });
+
+    // Admin hanya membaca daftar dokumen pendukung DUPAK seluruh dosen (tanpa formulir & aksi).
+    Route::middleware('admin')->prefix('pendukung-dupak')->name('pendukung-dupak.')->group(function () {
+        Route::get('/', [PendukungDupakController::class, 'indexAdmin'])->name('index');
     });
 
     Route::middleware('admin')->prefix('verifikasi-berkas')->name('verifikasi-berkas.')->group(function () {

@@ -117,6 +117,18 @@
                                 <span class="sidebar-label">Riwayat DUPAK</span>
                             </a>
                         @endif
+                        {{-- Pendukung DUPAK hanya terbuka bagi dosen yang sudah memiliki jabatan akademik. --}}
+                        @if ($user->isDosen() && $punyaJabatanAkademik)
+                            <a href="{{ route('profil.pendukung-dupak.index') }}" title="Pendukung DUPAK"
+                               @class(['sidebar-link', 'sidebar-link-active' => request()->routeIs('profil.pendukung-dupak.*')])>
+                                <svg class="size-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                    <path d="M6 3.5h8.5L19 8v12.5H6V3.5Z" stroke-linejoin="round" />
+                                    <path d="M14 3.5V8h4.5" stroke-linejoin="round" />
+                                    <path d="m9 14 2 2 3.5-4" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                                <span class="sidebar-label">Pendukung DUPAK</span>
+                            </a>
+                        @endif
                         {{-- Riwayat IKD tampil untuk semua dosen: dosen yang sudah memiliki jabatan
                              akademik tetap perlu melihat arsip berkas BKD & IKD pengajuan pertamanya. --}}
                         @if ($user->isDosen())
@@ -246,6 +258,14 @@
                                     <path d="M12 3.5 5.5 6v5.2c0 4.2 2.8 7.9 6.5 9.3 3.7-1.4 6.5-5.1 6.5-9.3V6L12 3.5Z" stroke-linejoin="round" />
                                 </svg>
                                 <span class="sidebar-label">Verifikasi Berkas</span>
+                            </a>
+                            <a href="{{ route('pendukung-dupak.index') }}" title="Pendukung DUPAK" @class(['sidebar-link', 'sidebar-link-active' => request()->routeIs('pendukung-dupak.index')])>
+                                <svg class="size-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                    <path d="M6 3.5h8.5L19 8v12.5H6V3.5Z" stroke-linejoin="round" />
+                                    <path d="M14 3.5V8h4.5" stroke-linejoin="round" />
+                                    <path d="m9 14 2 2 3.5-4" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                                <span class="sidebar-label">Pendukung DUPAK</span>
                             </a>
                             <a href="{{ route('panduan.penilaian.index') }}" title="Panduan Penilaian" @class(['sidebar-link', 'sidebar-link-active' => request()->routeIs('panduan.penilaian*')])>
                                 <svg class="size-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">

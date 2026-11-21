@@ -29,6 +29,7 @@ class KaryaTulisTest extends TestCase
     private function payload(array $overrides = []): array
     {
         return array_merge([
+            'kategori_kegiatan' => 'Hasil penelitian atau pemikiran yang dipublikasikan dalam bentuk jurnal nasional terakreditasi Kemendiktisaintek',
             'karya_ilmiah' => 'Jurnal Nasional Terakreditasi Kemendiktisaintek (1,2,3,4,5,6)',
             'judul' => 'Penerapan Augmented Reality pada Pembelajaran Pemrograman Dasar',
             'link_bukti' => 'https://drive.google.com/file/d/1AbCdEfGhIjKlMnOpQrStUvWxYz/view?usp=sharing',
@@ -48,6 +49,12 @@ class KaryaTulisTest extends TestCase
             ->assertOk()
             ->assertSee('Riwayat Karya Tulis')
             ->assertSee('Tambah Karya Tulis')
+            // Label formulir: kategori kegiatan, jenis publikasi, lalu nama jurnal/prosiding.
+            ->assertSee('Kategori Kegiatan')
+            ->assertSee('Pilih kategori kegiatan')
+            ->assertSee('Judul Publikasi')
+            ->assertSee('Nama Jurnal/Prosiding')
+            ->assertSee('data-select-search="Cari kategori kegiatan…"', false)
             ->assertSee('Karya Ilmiah')
             ->assertSee('Link Bukti Google Drive')
             ->assertSee('data-datatable', false)
@@ -93,7 +100,7 @@ class KaryaTulisTest extends TestCase
             ->from('/profil/riwayat-karya-tulis')
             ->post('/profil/riwayat-karya-tulis', ['karya_ilmiah' => '', 'judul' => '', 'link_bukti' => 'bukan-url'])
             ->assertRedirect('/profil/riwayat-karya-tulis')
-            ->assertSessionHasErrors(['karya_ilmiah', 'judul', 'link_bukti']);
+            ->assertSessionHasErrors(['kategori_kegiatan', 'karya_ilmiah', 'judul', 'link_bukti']);
 
         $this->assertDatabaseCount('karya_tulis', 0);
     }
@@ -118,6 +125,60 @@ class KaryaTulisTest extends TestCase
             ->assertSessionHasErrors('karya_ilmiah');
 
         $this->assertDatabaseCount('karya_tulis', 0);
+    }
+
+    public function test_kategori_kegiatan_is_chosen_from_select_options_and_saved(): void
+    {
+        $dosen = $this->makeDosen();
+
+        $response = $this->actingAs($dosen)
+            ->get('/profil/riwayat-karya-tulis')
+            ->assertOk()
+            ->assertSee('Kategori Kegiatan')
+            ->assertSee('Pilih kategori kegiatan');
+
+        foreach (KaryaTulis::KATEGORI_KEGIATAN as $kategori) {
+            $response->assertSee('<option value="'.$kategori.'"', false);
+        }
+
+        // Kategori kegiatan wajib dipilih.
+        $this->actingAs($dosen)
+            ->from('/profil/riwayat-karya-tulis')
+            ->post('/profil/riwayat-karya-tulis', $this->payload(['kategori_kegiatan' => '']))
+            ->assertSessionHasErrors('kategori_kegiatan');
+
+        // Teks bebas di luar daftar pilihan ditolak.
+        $this->actingAs($dosen)
+            ->from('/profil/riwayat-karya-tulis')
+            ->post('/profil/riwayat-karya-tulis', $this->payload(['kategori_kegiatan' => 'Kategori karangan sendiri']))
+            ->assertSessionHasErrors('kategori_kegiatan');
+
+        $this->assertDatabaseCount('karya_tulis', 0);
+
+        // Kategori terpilih tersimpan dan tercentang kembali saat data disunting.
+        $this->actingAs($dosen)
+            ->post('/profil/riwayat-karya-tulis', $this->payload([
+                'kategori_kegiatan' => KaryaTulis::KATEGORI_KEGIATAN[2],
+            ]))
+            ->assertRedirect(route('profil.karya-tulis.index'))
+            ->assertSessionHasNoErrors();
+
+        $karya = KaryaTulis::firstOrFail();
+        $this->assertSame(KaryaTulis::KATEGORI_KEGIATAN[2], $karya->kategori_kegiatan);
+
+        $this->actingAs($dosen)
+            ->get(route('profil.karya-tulis.index', ['edit' => $karya->id]))
+            ->assertOk()
+            ->assertSee('<option value="'.KaryaTulis::KATEGORI_KEGIATAN[2].'" selected>', false);
+
+        // Kategori ikut diperbarui saat data disunting.
+        $this->actingAs($dosen)
+            ->put(route('profil.karya-tulis.update', $karya), $this->payload([
+                'kategori_kegiatan' => KaryaTulis::KATEGORI_KEGIATAN[3],
+            ]))
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame(KaryaTulis::KATEGORI_KEGIATAN[3], $karya->refresh()->kategori_kegiatan);
     }
 
     public function test_jurnal_fields_are_required_and_saved_for_jurnal_types(): void

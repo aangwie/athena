@@ -36,6 +36,19 @@ class KaryaTulis extends Model
     /** Jenis karya ilmiah berupa prosiding — memerlukan nama prosiding, ISSN, URL, dan URL plagiasi. */
     public const JENIS_PROSIDING = 'Prosiding Internasional Bereputasi';
 
+    /**
+     * Pilihan "Kategori Kegiatan" pada formulir Riwayat Karya Tulis — kategori
+     * publikasi pada kegiatan DUPAK Bidang C (menghasilkan karya ilmiah).
+     *
+     * @var list<string>
+     */
+    public const KATEGORI_KEGIATAN = [
+        'Hasil penelitian atau pemikiran yang dipublikasikan dalam bentuk jurnal nasional terakreditasi Kemendiktisaintek',
+        'Hasil penelitian atau pemikiran yang dipublikasikan dalam bentuk prosiding terindeks basis data internasional',
+        'Hasil penelitian atau pemikiran yang dipublikasikan dalam bentuk jurnal internasional bereputasi',
+        'Hasil penelitian pemikiran yang dipublikasikan dalam bentuk karya seni yang diakui oleh perguruan tinggi',
+    ];
+
     protected $table = 'karya_tulis';
 
     /**
@@ -43,6 +56,7 @@ class KaryaTulis extends Model
      */
     protected $fillable = [
         'user_id',
+        'kategori_kegiatan',
         'karya_ilmiah',
         'judul',
         'link_bukti',

@@ -19,6 +19,8 @@ class KaryaTulisController extends Controller
             'items' => $items,
             'editItem' => $items->firstWhere('id', (int) $request->query('edit')),
             'jenisList' => KaryaTulis::JENIS,
+            // Kategori kegiatan yang mendahului pilihan jenis karya ilmiah.
+            'kategoriList' => KaryaTulis::KATEGORI_KEGIATAN,
             // Bidang tambahan per jenis: jurnal (nama & alamat web) atau prosiding.
             'jenisJurnal' => KaryaTulis::JENIS_JURNAL,
             'jenisProsiding' => KaryaTulis::JENIS_PROSIDING,
@@ -71,6 +73,7 @@ class KaryaTulisController extends Controller
         $prosiding = $jenis === KaryaTulis::JENIS_PROSIDING;
 
         $data = $request->validate([
+            'kategori_kegiatan' => ['required', 'string', Rule::in(KaryaTulis::KATEGORI_KEGIATAN)],
             'karya_ilmiah' => ['required', 'string', Rule::in(KaryaTulis::JENIS)],
             'judul' => ['required', 'string', 'max:255'],
             'link_bukti' => ['required', 'string', 'max:2048', 'url:http,https'],
@@ -84,6 +87,8 @@ class KaryaTulisController extends Controller
             // ISSN bersifat opsional pada jurnal maupun prosiding (boleh diisi atau dikosongkan).
             'issn' => ['nullable', 'string', 'max:50'],
         ], [
+            'kategori_kegiatan.required' => 'Kategori kegiatan wajib dipilih.',
+            'kategori_kegiatan.in' => 'Kategori kegiatan harus salah satu pilihan yang tersedia.',
             'karya_ilmiah.required' => 'Karya ilmiah wajib dipilih.',
             'karya_ilmiah.in' => 'Karya ilmiah harus salah satu pilihan yang tersedia.',
             'judul.required' => 'Judul wajib diisi.',
@@ -106,6 +111,7 @@ class KaryaTulisController extends Controller
             'url_plagiasi.url' => 'URL plagiasi harus berupa URL yang valid, diawali http:// atau https://.',
             'url_plagiasi.max' => 'URL plagiasi maksimal 2048 karakter.',
         ], [
+            'kategori_kegiatan' => 'kategori kegiatan',
             'karya_ilmiah' => 'karya ilmiah',
             'judul' => 'judul',
             'link_bukti' => 'link bukti',
@@ -119,6 +125,7 @@ class KaryaTulisController extends Controller
 
         // Bidang jenis lain dikosongkan agar tidak ada data basi saat jenis karya diganti.
         return [
+            'kategori_kegiatan' => $data['kategori_kegiatan'],
             'karya_ilmiah' => $data['karya_ilmiah'],
             'judul' => $data['judul'],
             'link_bukti' => $data['link_bukti'],

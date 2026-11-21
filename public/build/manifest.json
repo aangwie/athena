@@ -1,0 +1,32 @@
+{
+  "_csrf-DwYGG5d5.js": {
+    "file": "assets/csrf-DwYGG5d5.js",
+    "name": "csrf"
+  },
+  "resources/css/app.css": {
+    "file": "assets/app-DgBIJA__.css",
+    "src": "resources/css/app.css",
+    "isEntry": true
+  },
+  "resources/js/app.js": {
+    "file": "assets/app-DzW4EaEG.js",
+    "name": "app",
+    "src": "resources/js/app.js",
+    "isEntry": true,
+    "imports": [
+      "_csrf-DwYGG5d5.js"
+    ],
+    "css": [
+      "assets/app-BSxcChcp.css"
+    ]
+  },
+  "resources/js/whatsapp.js": {
+    "file": "assets/whatsapp-BV9ZjYuk.js",
+    "name": "whatsapp",
+    "src": "resources/js/whatsapp.js",
+    "isEntry": true,
+    "imports": [
+      "_csrf-DwYGG5d5.js"
+    ]
+  }
+}

@@ -434,21 +434,27 @@ Buka **Menu Utama → Riwayat Karya Tulis**.
 
 Bagian **01 Tambah Karya Tulis** berisi:
 
-- **Karya Ilmiah** — dropdown **Pilih jenis karya ilmiah**. Pilihan mengikuti jenis yang
+- **Kategori Kegiatan** — dropdown **Pilih kategori kegiatan**. Pilihannya mengikuti kategori
+  publikasi DUPAK Bidang C: *Hasil penelitian atau pemikiran yang dipublikasikan dalam bentuk
+  jurnal nasional terakreditasi Kemendiktisaintek*, *… dalam bentuk prosiding terindeks basis
+  data internasional*, *… dalam bentuk jurnal internasional bereputasi*, dan *Hasil penelitian
+  pemikiran yang dipublikasikan dalam bentuk karya seni yang diakui oleh perguruan tinggi*.
+- **Judul Publikasi** — dropdown **Pilih jenis karya ilmiah**. Pilihan mengikuti jenis yang
   dipakai pada kegiatan DUPAK, misalnya *Jurnal Nasional Tidak Terakreditasi*, *Jurnal Ilmiah
   Internasional*, *Seminar Nasional*, atau *Buku Referensi*.
-- **Judul** — judul lengkap karya.
+- **Nama Jurnal/Prosiding** — judul lengkap karya.
 - **Link Bukti Google Drive** — contoh format `https://drive.google.com/file/d/…/view`.
   Pastikan akses berkas disetel *"Anyone with the link"* agar tautan dapat dibuka.
 - Untuk jurnal dan prosiding, tersedia pula isian **Nama Jurnal**/**Nama Prosiding** dan
   **ISSN** (opsional).
 - Tekan **+ Tambah Karya Tulis**.
 
-Tabel **Daftar Karya Tulis** menampilkan jumlah data, kolom **No**, **Karya Ilmiah**,
-**Judul** (beserta tanggal pencatatan), **Bukti**, dan **Aksi**. Kolom **Bukti** berisi
-tautan **Buka** (membuka Google Drive) dan **Pratinjau**. Ikon pensil menyunting, ikon tempat
-sampah menghapus setelah konfirmasi. Gunakan kotak **Cari karya ilmiah atau judul…** untuk
-menyaring daftar. Tombol **Profil** di kanan atas kembali ke portofolio.
+Tabel **Daftar Karya Tulis** menampilkan jumlah data, kolom **No**, **Karya Ilmiah**
+(beserta kategori kegiatannya), **Judul** (beserta tanggal pencatatan), **Bukti**, dan
+**Aksi**. Kolom **Bukti** berisi tautan **Buka** (membuka Google Drive) dan **Pratinjau**.
+Ikon pensil menyunting, ikon tempat sampah menghapus setelah konfirmasi. Gunakan kotak
+**Cari karya ilmiah atau judul…** untuk menyaring daftar. Tombol **Profil** di kanan atas
+kembali ke portofolio.
 
 ---
 
