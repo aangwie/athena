@@ -862,32 +862,6 @@ const boot = () => {
         syncKaryaJenis();
     }
 
-    // Pendukung DUPAK: isian berkas/tautan tampil mengikuti jenis dokumen terpilih.
-    const pendukungJenis = document.querySelector('#jenis');
-
-    if (pendukungJenis && document.querySelector('[data-pendukung-grup]')) {
-        const grupPendukung = document.querySelectorAll('[data-pendukung-grup]');
-
-        const syncPendukungJenis = () => {
-            const jenis = pendukungJenis.value;
-
-            grupPendukung.forEach((grup) => {
-                const tampil = grup.dataset.pendukungGrup === jenis;
-
-                grup.classList.toggle('hidden', !tampil);
-
-                // Isian pada grup tersembunyi dinonaktifkan agar tidak ikut tervalidasi/terkirim.
-                grup.querySelectorAll('input, select, textarea').forEach((el) => {
-                    el.disabled = !tampil;
-                    el.required = tampil && el.dataset.wajib !== undefined;
-                });
-            });
-        };
-
-        pendukungJenis.addEventListener('change', syncPendukungJenis);
-        syncPendukungJenis();
-    }
-
     // Select dengan pencarian: input [data-select-filter="#id-select"] menyaring opsi select tujuannya.
     document.querySelectorAll('[data-select-filter]').forEach((input) => {
         const select = document.querySelector(input.dataset.selectFilter);

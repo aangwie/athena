@@ -17,206 +17,190 @@ class PendukungDupakController extends Controller
     /** Folder penyimpanan berkas pada disk privat (tidak dapat diakses langsung). */
     private const FOLDER = 'pendukung-dupak';
 
-    /** Ukuran maksimal berkas PDF dalam KB (10 MB). */
-    public const MAKS_KB = 10240;
-
+    /**
+     * Halaman Syarat Khusus DUPAK milik dosen: formulir 21 baris beserta entri
+     * yang sudah pernah disimpan.
+     */
     public function index(Request $request): View
     {
-        $items = $request->user()->pendukungDupak()->latest()->get();
-
-        // Parameter ?edit= memakai ulang formulir yang sama di halaman ini.
         return view('profil.pendukung-dupak.index', [
-            'items' => $items,
-            'editItem' => $items->firstWhere('id', (int) $request->query('edit')),
-            'jenisList' => PendukungDupak::JENIS,
-            'keteranganList' => PendukungDupak::KETERANGAN,
-            'maksKb' => self::MAKS_KB,
+            'item' => $request->user()->pendukungDupak()->first(),
         ]);
     }
 
     /**
-     * Admin memilih dosen terlebih dahulu, lalu tabel menampilkan dokumen pendukung
-     * dosen tersebut. Halaman ini hanya menampilkan data (tanpa formulir & aksi).
+     * Simpan entri Syarat Khusus DUPAK dosen. Satu dosen hanya memiliki satu
+     * entri, sehingga pengiriman ulang formulir memperbarui entri yang ada.
+     */
+    public function simpan(Request $request): RedirectResponse
+    {
+        $item = $request->user()->pendukungDupak()->first();
+
+        $data = $this->lampirkanBerkas($request, $this->validated($request, $item), $item);
+
+        $request->user()->pendukungDupak()->updateOrCreate([], $data);
+
+        return redirect()
+            ->route('profil.pendukung-dupak.index')
+            ->with('status', 'Syarat Khusus DUPAK berhasil disimpan.');
+    }
+
+    /**
+     * Admin memilih dosen terlebih dahulu, lalu tabel menampilkan hasil isian
+     * syarat khusus dosen tersebut. Halaman ini hanya menampilkan data.
      */
     public function indexAdmin(Request $request): View
     {
-        // Jumlah dokumen per dosen: dipakai untuk label pilihan dan menyaring dosen
-        // yang benar-benar memiliki dokumen pendukung.
-        $jumlahDokumen = PendukungDupak::query()
-            ->selectRaw('user_id, COUNT(*) as total')
-            ->groupBy('user_id')
-            ->pluck('total', 'user_id');
-
+        // Hanya dosen yang sudah mengirim syarat khusus yang dapat dipilih.
         $dosenList = User::berRole(['dosen'])
-            ->filter(fn (User $dosen) => $jumlahDokumen->has($dosen->id))
+            ->filter(fn (User $dosen) => $dosen->pendukungDupak()->exists())
             ->values();
 
         $dosenTerpilih = $dosenList->firstWhere('id', $request->integer('dosen'));
 
         return view('admin.pendukung-dupak.index', [
             'dosenList' => $dosenList,
-            'jumlahDokumen' => $jumlahDokumen,
             'dosenTerpilih' => $dosenTerpilih,
-            'items' => $dosenTerpilih
-                ? $dosenTerpilih->pendukungDupak()->latest()->get()
-                : collect(),
+            'item' => $dosenTerpilih?->pendukungDupak()->first(),
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
-    {
-        $data = $this->validated($request);
-        $data = $this->lampirkanBerkas($request, $data);
-
-        $request->user()->pendukungDupak()->create($data);
-
-        return redirect()
-            ->route('profil.pendukung-dupak.index')
-            ->with('status', 'Dokumen pendukung DUPAK berhasil ditambahkan.');
-    }
-
-    public function update(Request $request, PendukungDupak $pendukungDupak): RedirectResponse
-    {
-        $this->ensureOwner($request, $pendukungDupak);
-
-        $data = $this->validated($request, $pendukungDupak);
-        $data = $this->lampirkanBerkas($request, $data, $pendukungDupak);
-
-        $pendukungDupak->update($data);
-
-        return redirect()
-            ->route('profil.pendukung-dupak.index')
-            ->with('status', 'Dokumen pendukung DUPAK berhasil diperbarui.');
-    }
-
-    public function destroy(Request $request, PendukungDupak $pendukungDupak): RedirectResponse
-    {
-        $this->ensureOwner($request, $pendukungDupak);
-
-        $this->hapusBerkas($pendukungDupak->berkas_path);
-        $pendukungDupak->delete();
-
-        return redirect()
-            ->route('profil.pendukung-dupak.index')
-            ->with('status', 'Dokumen pendukung DUPAK berhasil dihapus.');
-    }
-
     /**
-     * Tampilkan berkas pendukung DUPAK. Pemilik membuka berkasnya sendiri,
+     * Tampilkan berkas bukti syarat khusus. Pemilik membuka berkasnya sendiri,
      * admin boleh membuka berkas seluruh dosen untuk keperluan verifikasi.
      */
-    public function berkas(Request $request, PendukungDupak $pendukungDupak): StreamedResponse
+    public function berkas(Request $request, PendukungDupak $pendukungDupak, string $field): StreamedResponse
     {
         $user = $request->user();
 
         abort_unless($pendukungDupak->user_id === $user->id || $user->isAdmin(), 404);
+        abort_unless(array_key_exists($field, PendukungDupak::BERKAS), 404);
 
-        $path = $pendukungDupak->berkas_path;
+        $path = $pendukungDupak->pathBerkas($field);
 
-        abort_unless($path && Storage::disk('local')->exists($path), 404);
+        abort_unless(filled($path) && Storage::disk('local')->exists($path), 404);
 
-        return Storage::disk('local')->response($path, $pendukungDupak->namaBerkas() ?: basename($path), [
+        return Storage::disk('local')->response($path, $pendukungDupak->namaBerkas($field) ?: basename($path), [
             'Content-Type' => 'application/pdf',
         ]);
     }
 
-    private function ensureOwner(Request $request, PendukungDupak $pendukungDupak): void
-    {
-        abort_unless($pendukungDupak->user_id === $request->user()->id, 404);
-    }
-
     /**
+     * Aturan validasi dibangun dari definisi baris formulir: isian wajib, pilihan
+     * dropdown, tautan, dan batas ukuran berkas mengikuti lampiran syarat khusus.
+     *
      * @return array<string, mixed>
      */
     private function validated(Request $request, ?PendukungDupak $item = null): array
     {
-        $jenis = (string) $request->input('jenis');
-        $memakaiBerkas = $jenis !== PendukungDupak::JENIS_PROFIL_SINTA;
+        $rules = [];
 
-        // Berkas baru wajib saat menambah, saat jenis dokumen diganti, atau saat
-        // baris lama belum memiliki berkas. Berkas lama boleh dipertahankan saat
-        // menyunting jenis yang sama.
-        $wajibBerkas = $memakaiBerkas
-            && ($item === null || $item->jenis !== $jenis || blank($item->berkas_path));
+        foreach (PendukungDupak::BARIS as $baris) {
+            $field = $baris['field'];
+            $wajib = (bool) ($baris['wajib'] ?? false);
 
-        return $request->validate([
-            'jenis' => ['required', 'string', Rule::in(array_keys(PendukungDupak::JENIS))],
-            'berkas' => [
-                'exclude_if:jenis,'.PendukungDupak::JENIS_PROFIL_SINTA,
-                $wajibBerkas ? 'required' : 'nullable',
-                'file',
-                'mimes:pdf',
-                'max:'.self::MAKS_KB,
-            ],
-            'tautan' => [
-                'exclude_unless:jenis,'.PendukungDupak::JENIS_PROFIL_SINTA,
-                'required',
-                'string',
-                'max:2048',
-                'url:http,https',
-            ],
-        ], [
-            'jenis.required' => 'Jenis dokumen wajib dipilih.',
-            'jenis.in' => 'Jenis dokumen harus salah satu pilihan yang tersedia.',
-            'berkas.required' => 'Berkas wajib diunggah.',
-            'berkas.file' => 'Berkas gagal diunggah.',
-            'berkas.mimes' => 'Berkas harus berformat PDF.',
-            'berkas.max' => 'Ukuran berkas maksimal 10 MB.',
-            'tautan.required' => 'Tautan profil SINTA wajib diisi.',
-            'tautan.url' => 'Tautan profil SINTA harus berupa URL yang valid, diawali http:// atau https://.',
-            'tautan.max' => 'Tautan profil SINTA maksimal 2048 karakter.',
-        ], [
-            'jenis' => 'jenis dokumen',
-            'berkas' => 'berkas',
-            'tautan' => 'tautan profil SINTA',
-        ]);
+            $rules[$field] = match ($baris['tipe']) {
+                // Berkas lama boleh dipertahankan saat formulir dikirim ulang.
+                'berkas' => [
+                    ($item?->adaBerkas($field) ?? false) ? 'nullable' : 'required',
+                    'file',
+                    'mimes:pdf',
+                    'max:'.$baris['maks_kb'],
+                ],
+                'tautan' => [
+                    $wajib ? 'required' : 'nullable',
+                    'string',
+                    'max:2048',
+                    'url:http,https',
+                ],
+                'pilihan' => [
+                    $wajib ? 'required' : 'nullable',
+                    'string',
+                    Rule::in($baris['opsi']),
+                ],
+                'tanggal' => [
+                    $wajib ? 'required' : 'nullable',
+                    'date',
+                ],
+                default => [
+                    $wajib ? 'required' : 'nullable',
+                    'string',
+                    'max:'.$baris['max'],
+                ],
+            };
+        }
+
+        return $request->validate($rules, $this->pesanValidasi(), $this->atributValidasi());
     }
 
     /**
-     * Simpan berkas unggahan (bila ada) dan kosongkan kolom yang tidak dipakai
-     * jenis dokumen terpilih, sehingga tidak ada data basi saat jenis diganti.
+     * @return array<string, string>
+     */
+    private function pesanValidasi(): array
+    {
+        $pesan = [];
+
+        foreach (PendukungDupak::BARIS as $baris) {
+            $field = $baris['field'];
+            $label = $baris['label'];
+            $berkas = $baris['tipe'] === 'berkas';
+
+            $pesan[$field.'.required'] = $berkas ? $label.' wajib diunggah.' : $label.' wajib diisi.';
+            $pesan[$field.'.file'] = $label.' gagal diunggah.';
+            $pesan[$field.'.mimes'] = $label.' harus berformat PDF.';
+            $pesan[$field.'.max'] = match (true) {
+                $berkas => $label.' maksimal '.PendukungDupak::labelUkuran($baris['maks_kb']).'.',
+                isset($baris['max']) => $label.' maksimal '.$baris['max'].' karakter.',
+                default => $label.' maksimal 2048 karakter.',
+            };
+            $pesan[$field.'.url'] = $label.' harus berupa URL yang valid, diawali http:// atau https://.';
+            $pesan[$field.'.date'] = $label.' harus berupa tanggal yang valid.';
+            $pesan[$field.'.in'] = $label.' harus salah satu pilihan yang tersedia.';
+        }
+
+        return $pesan;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function atributValidasi(): array
+    {
+        return array_column(PendukungDupak::BARIS, 'label', 'field');
+    }
+
+    /**
+     * Simpan berkas bukti yang diunggah dan hapus berkas lama saat diganti.
      *
      * @param  array<string, mixed>  $data
      * @return array<string, mixed>
      */
     private function lampirkanBerkas(Request $request, array $data, ?PendukungDupak $item = null): array
     {
-        unset($data['berkas']);
+        foreach (array_keys(PendukungDupak::BERKAS) as $kunci) {
+            // Berkas unggahan tidak masuk ke kolom tabel; hanya path & nama aslinya.
+            unset($data[$kunci]);
 
-        if ($data['jenis'] === PendukungDupak::JENIS_PROFIL_SINTA) {
-            // Pindah ke tautan: berkas lama tidak dipakai lagi.
-            $this->hapusBerkas($item?->berkas_path);
+            if (! $request->hasFile($kunci)) {
+                continue;
+            }
 
-            $data['berkas_path'] = null;
-            $data['berkas_nama'] = null;
+            $lama = $item?->pathBerkas($kunci);
 
-            return $data;
+            if (filled($lama)) {
+                Storage::disk('local')->delete($lama);
+            }
+
+            $file = $request->file($kunci);
+
+            $data[PendukungDupak::kolomBerkas($kunci)] = $file->storeAs(
+                self::FOLDER.'/'.$request->user()->nidn,
+                sprintf('%s_%s_%s.pdf', $kunci, $request->user()->nidn, Str::random(16)),
+                'local',
+            );
+            $data['berkas_'.$kunci.'_nama'] = $file->getClientOriginalName();
         }
-
-        $data['tautan'] = null;
-
-        if (! $request->hasFile('berkas')) {
-            return $data;
-        }
-
-        $this->hapusBerkas($item?->berkas_path);
-
-        $file = $request->file('berkas');
-
-        $data['berkas_path'] = $file->storeAs(
-            self::FOLDER.'/'.$request->user()->nidn,
-            sprintf('%s_%s_%s.pdf', $data['jenis'], $request->user()->nidn, Str::random(16)),
-            'local',
-        );
-        $data['berkas_nama'] = $file->getClientOriginalName();
 
         return $data;
-    }
-
-    private function hapusBerkas(?string $path): void
-    {
-        if (filled($path)) {
-            Storage::disk('local')->delete($path);
-        }
     }
 }
