@@ -578,6 +578,8 @@ class SuratController extends Controller
             'jabatan' => $jabatanTerakhir?->jabatanFungsional?->nama ?: ($user?->jabatan_fungsional ?: '—'),
             'jabatan_tmt' => $jabatanTerakhir?->tmtLabel() ?? '—',
             'pendidikan' => $pendidikan?->jenjangLabel() ?? '—',
+            // Bidang ilmu diisi manual pada Profil → Riwayat Pekerjaan.
+            'bidang_ilmu' => $profil?->bidang_ilmu ?: '—',
             'fakultas' => '—',
             'prodi' => $user?->program_studi ?: '—',
         ];

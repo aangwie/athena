@@ -107,13 +107,14 @@
                 <tbody>
                     @foreach ([
                         'Nama' => $identitas['nama'],
-                        'NIDN' => $identitas['nidn'],
-                        'NUPTK' => $identitas['nuptk'] ?: '—',
+                        // Sama seperti surat lainnya: NIDN dan NUPTK ditulis pada satu baris.
+                        'NIDN/NUPTK' => $identitas['nidn'].' / '.($identitas['nuptk'] ?: '—'),
                         'Status dosen tetap' => 'Non PNS',
                         'Tempat tanggal lahir' => $identitas['ttl'],
                         'Pangkat golongan ruang / TMT' => $identitas['pangkat'].' / '.$identitas['pangkat_tmt'],
                         'Jabatan / TMT' => $identitas['jabatan'].' / '.$identitas['jabatan_tmt'],
                         'Pendidikan tertinggi' => $identitas['pendidikan'],
+                        'Bidang Ilmu' => $identitas['bidang_ilmu'],
                         'Jurusan /program studi' => $identitas['prodi'],
                     ] as $label => $nilai)
                         <tr>
@@ -126,9 +127,9 @@
             </table>
 
             <p class="mt-2 text-[16px] leading-snug text-justify">
-                Dengan ini menyatakan bahwa semua Karya Ilmiah yang digunakan untuk usulan kenaikan jabatan
-                akademik dosen telah memenuhi integritas akademik, di antara karya ilmiah tersebut sebagai
-                pemenuhan persyaratan khusus di bawah ini:
+                Dengan ini menyatakan bahwa <strong>semua Karya Ilmiah yang digunakan untuk usulan kenaikan jabatan
+                akademik dosen telah memenuhi integritas akademik</strong>, di antara <strong>karya ilmiah tersebut sebagai
+                pemenuhan persyaratan khusus</strong> di bawah ini:
             </p>
 
             <table class="cetak-tabel mt-2 w-full border-collapse border border-slate-900 text-[16px] leading-tight">

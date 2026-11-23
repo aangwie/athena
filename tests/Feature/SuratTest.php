@@ -7,6 +7,7 @@ use App\Models\JabatanFungsional;
 use App\Models\JabatanStruktural;
 use App\Models\KaryaTulis;
 use App\Models\Kepangkatan;
+use App\Models\ProfilDosen;
 use App\Models\StrukturInstansi;
 use App\Models\SuratPaktaIntegritas;
 use App\Models\SuratPernyataanPimpinan;
@@ -573,6 +574,12 @@ class SuratTest extends TestCase
             ->assertOk()
             ->assertSee('Surat Pernyataan Pakta Integritas')
             ->assertSee('Dr. Ayu Lestari, M.Kom.')
+            // NIDN & NUPTK digabung pada satu baris, seperti surat lainnya.
+            ->assertSee('NIDN/NUPTK')
+            ->assertSee('1987654321 / —')
+            // Bidang ilmu tercetak di bawah pendidikan tertinggi.
+            ->assertSee('Pendidikan tertinggi')
+            ->assertSee('Bidang Ilmu')
             ->assertSee('Rekayasa Perangkat Lunak')
             // Tanggal penanda tangan: "Kota, DD Bulan YYYY".
             ->assertSee('Bandung, 31 Oktober 2026')
@@ -589,6 +596,40 @@ class SuratTest extends TestCase
             ->assertSee('<div class="h-[2.5cm]" aria-hidden="true"></div>', false)
             // Huruf naskah Times New Roman 16px (kop memakai partial kop-surat tersendiri).
             ->assertSee("font-family: 'Times New Roman', Times, serif;", false);
+    }
+
+    public function test_cetak_pakta_integritas_merges_nidn_nuptk_and_prints_bidang_ilmu(): void
+    {
+        Instansi::create(['nama_instansi' => 'Universitas Athena', 'kota' => 'Bandung']);
+
+        $dosen = $this->makeUser('dosen');
+        // NUPTK & bidang ilmu diambil dari Profil → Riwayat Pekerjaan dosen.
+        ProfilDosen::create([
+            'user_id' => $dosen->id,
+            'nuptk' => '1234567890123456',
+            'bidang_ilmu' => 'Sistem Informasi',
+        ]);
+
+        $pakta = $this->makePakta($dosen);
+
+        $html = $this->actingAs($this->makeUser('admin'))
+            ->get(route('surat.pakta-integritas.cetak', $pakta))
+            ->assertOk()
+            // NIDN dan NUPTK dicetak menyatu pada satu baris.
+            ->assertSee('NIDN/NUPTK')
+            ->assertSee('1987654321 / 1234567890123456')
+            // Baris NIDN dan NUPTK terpisah tidak lagi dicetak.
+            ->assertDontSee('>NIDN<', false)
+            ->assertDontSee('>NUPTK<', false)
+            // Bidang ilmu tercetak di bawah pendidikan tertinggi.
+            ->assertSee('Bidang Ilmu')
+            ->assertSee('Sistem Informasi')
+            ->getContent();
+
+        $this->assertMatchesRegularExpression(
+            '/Pendidikan tertinggi.*Bidang Ilmu.*Sistem Informasi/s',
+            $html,
+        );
     }
 
     public function test_admin_can_open_pakta_integritas_validasi_preview(): void
